@@ -1,0 +1,828 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
+    <meta name="theme-color" content="#0f172a">
+    <meta name="mobile-web-app-capable" content="yes">
+    <title>SKM INTEGRATE POS - ERP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- ភ្ជាប់ឯកសារ CSS មកពីខាងក្រៅ -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <!-- ផ្ទាំងសារលោតជូនដំណឹង (Toast) -->
+    <div id="toastNotification" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: bold; font-size: 16px; text-align: center; border: 1px solid rgba(255,255,255,0.2);"></div>
+
+    <!-- ផ្ទាំងចូលប្រព័ន្ធ (Login) -->
+    <div id="authScreen">
+        <div id="loginForm" class="auth-card">
+            <h2 style="color: var(--primary); margin-bottom: 10px; font-size: 24px;">🔐 ចូលប្រព័ន្ធ</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 14px;">ប្រព័ន្ធគ្រប់គ្រង SKM INTEGRATE POS</p>
+            <div style="text-align: left; margin-bottom: 15px;">
+                <label style="font-size: 14px; margin-bottom: 5px; display: block;">ឈ្មោះអ្នកប្រើប្រាស់ (Username):</label>
+                <input type="text" id="loginUsername" class="form-control" placeholder="ឧ. admin, staff01..." style="font-size: 16px; width: 100%;" autocomplete="off">
+            </div>
+            <div style="text-align: left; margin-bottom: 25px;">
+                <label style="font-size: 14px; margin-bottom: 5px; display: block;">លេខកូដសម្ងាត់ (Password):</label>
+                <input type="password" id="loginPassword" class="form-control" placeholder="******" style="font-size: 16px; width: 100%;">
+            </div>
+            <button class="btn btn-primary" style="width: 100%; padding: 12px; margin-bottom: 15px; font-size: 16px;" onclick="window.handleLogin()">ចូលប្រព័ន្ធ (Login)</button>
+            <a href="#" style="color: var(--text-muted); font-size: 14px; text-decoration: underline;" onclick="window.toggleForgotPass(true)">ភ្លេចលេខកូដសម្ងាត់? (Forgot Password)</a>
+        </div>
+        
+        <div id="forgotPassForm" class="auth-card" style="display: none;">
+            <h2 style="color: var(--warning); margin-bottom: 10px; font-size: 24px;">🔄 ភ្លេចលេខកូដ</h2>
+            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 14px;">ប្រើលេខ PIN សម្ងាត់ ដើម្បីបង្កើតលេខកូដថ្មី</p>
+            <div style="text-align: left; margin-bottom: 15px;"><input type="text" id="resetUsername" class="form-control" placeholder="ឈ្មោះអ្នកប្រើប្រាស់ (Username)" style="width: 100%;"></div>
+            <div style="text-align: left; margin-bottom: 15px;"><input type="password" id="resetPin" class="form-control" placeholder="លេខ PIN សម្ងាត់ (សួរមេការ)" style="width: 100%;"></div>
+            <div style="text-align: left; margin-bottom: 25px;"><input type="password" id="newResetPassword" class="form-control" placeholder="លេខកូដសម្ងាត់ថ្មី (New Password)" style="width: 100%;"></div>
+            <button class="btn btn-warning" style="width: 100%; padding: 12px; margin-bottom: 15px; font-size: 16px;" onclick="window.handleResetPassword()">បញ្ជាក់ការផ្លាស់ប្តូរ (Reset)</button>
+            <a href="#" style="color: var(--text-muted); font-size: 14px; text-decoration: underline;" onclick="window.toggleForgotPass(false)">ត្រឡប់ទៅការចូលប្រព័ន្ធវិញ</a>
+        </div>
+    </div>
+
+    <!-- ផ្ទាំងចាក់សោ License -->
+    <div id="licenseLockScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 100001; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;">
+        <h1 style="color: var(--danger); font-size: 32px; margin-bottom: 10px;">🔒 ប្រព័ន្ធត្រូវបានចាក់សោរ</h1>
+        <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 16px;">សិទ្ធិប្រើប្រាស់របស់អ្នកបានផុតកំណត់ ឬមិនទាន់បានបញ្ចូលកូដ។ សូមទាក់ទងអ្នកអភិវឌ្ឍន៍។</p>
+        <div style="background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
+            <input type="text" id="licenseInputBox" class="form-control" placeholder="បញ្ចូលលេខកូដ (License Key)..." style="margin-bottom: 15px; font-size: 16px; text-align: center; width: 100%;">
+            <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px;" onclick="window.verifyAndSaveLicense()">🔓 បើកដំណើរការ</button>
+        </div>
+    </div>
+
+    <div class="sidebar-overlay" onclick="window.toggleDesktopSidebar()"></div>
+
+    <!-- របារបញ្ជីចំហៀង (Sidebar) -->
+    <div class="sidebar" id="appSidebar">
+        <div class="brand" onclick="window.openShopNameModal()" title="ចុចដើម្បីប្តូរឈ្មោះហាង ឬ Logo (Admin ប៉ុណ្ណោះ)">
+            <img id="sidebarLogo" src="" style="display:none; width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; border: 2px solid var(--primary);">
+            <span id="displayShopName" style="display: flex; align-items: center; justify-content: center; gap: 5px;">SKM INTEGRATE <i id="editShopIcon" style="font-size: var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i></span>
+            <span class="sub-text">ប្រព័ន្ធគ្រប់គ្រង ERP & POS</span>
+        </div>
+        
+        <div style="margin: 0 15px 15px 15px; padding: 10px; background: rgba(0,0,0,0.1); border: 1px solid var(--border); border-radius: 8px; text-align: center;">
+            <div style="font-size: var(--fs-12); color: var(--text-muted);">គណនីបច្ចុប្បន្ន</div>
+            <div id="sidebarUserRoleDisplay" style="color: var(--primary); font-weight: bold; font-size: var(--fs-14); margin-top: 5px;">👑 Admin</div>
+        </div>
+
+        <div class="nav-item active" id="nav-dashboard" onclick="window.switchTab('dashboard', '📊 ផ្ទាំងព័ត៌មានទូទៅ (Dashboard)', this)"><i>📊</i> ផ្ទាំងធំ</div>
+        <div class="nav-item" id="nav-inventory" onclick="window.switchTab('inventory', '📦 គ្រប់គ្រងស្តុក (Inventory)', this)"><i>📦</i> គ្រប់គ្រងស្តុក</div>
+        <div class="nav-item" id="nav-pos" onclick="window.switchTab('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', this)"><i>🛒</i> ប្រព័ន្ធលក់ (POS)</div>
+        <div class="nav-item" id="nav-customers" onclick="window.switchTab('customers', '👥 គ្រប់គ្រងអតិថិជន (Customers)', this)"><i>👥</i> អតិថិជន</div>
+        <div class="nav-item" id="nav-unpaid" onclick="window.switchTab('unpaid', '📝 វិក្កយបត្រ & ទូទាត់ (Invoices)', this)"><i>📝</i> វិក្កយបត្រ & ទូទាត់</div>
+        <div class="nav-item" id="nav-expenses" onclick="window.switchTab('expenses', '📉 ការចំណាយ (Expenses)', this)"><i>📉</i> ការចំណាយ</div>
+        <div class="nav-item" id="nav-history" onclick="window.switchTab('history', '📜 ប្រវត្តិប្រតិបត្តិការ (Activity Logs)', this)"><i>📜</i> ប្រតិបត្តិការ</div>
+        <div class="nav-item" id="nav-settings" onclick="window.switchTab('settings', '⚙️ ការកំណត់ប្រព័ន្ធ (Settings)', this)"><i>⚙️</i> ការកំណត់</div>
+        <div class="nav-item" id="nav-about" onclick="window.switchTab('about', 'ℹ️ អំពីប្រព័ន្ធ (About & Version)', this)"><i>ℹ️</i> អំពីប្រព័ន្ធ</div>
+        
+        <div style="flex-grow: 1;"></div>
+        <div class="nav-item" style="color: var(--danger); border-top: 1px solid var(--border); margin-top: 10px;" onclick="window.handleLogout()"><i>🚪</i> ចាកចេញ (Logout)</div>
+    </div>
+
+    <!-- ផ្នែកបង្ហាញខាងស្តាំ (Main Content) -->
+    <div class="main-content">
+        <div class="header" id="topHeaderBar" style="background: var(--primary);">
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <button class="sidebar-toggle-btn" onclick="window.toggleDesktopSidebar()">☰</button>
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <span style="font-size: 20px;"></span>
+                    <h2 id="pageTitle" style="font-size: var(--fs-18); color: #fff;">ប្រព័ន្ធលក់ (Point of Sale)</h2>
+                </div>
+            </div>
+            
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+                <div style="font-size: var(--fs-13); color: #fff; font-weight: bold; padding: 5px 12px; background: rgba(0,0,0,0.25); border-radius: 20px; display: flex; align-items: center; gap: 6px;" id="currentUserDisplay">
+                    <span>👤</span> អ្នកគ្រប់គ្រងប្រព័ន្ធ
+                </div>
+                <div style="font-size: var(--fs-13); color: #fff;" id="currentDate"></div>
+            </div>
+        </div>
+
+        <div class="content-body" id="mainScroller">
+            
+            <!-- ផ្ទាំងធំ (Dashboard) -->
+            <div id="tab-dashboard" class="tab-content">
+                <div class="dashboard-grid-menu" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; margin-bottom: 25px;">
+                    <button id="grid-btn-pos" class="btn btn-primary" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos'))"><i style="font-size: 30px; margin-bottom: 5px;">🛒</i>លក់ (POS)</button>
+                    <button id="grid-btn-inv" class="btn btn-success" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('inventory', '📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory'))"><i style="font-size: 30px; margin-bottom: 5px;">📦</i>ស្តុកទំនិញ</button>
+                    <button id="grid-btn-unpaid" class="btn btn-warning" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('unpaid', '📝 វិក្កយបត្រ & ទូទាត់', document.getElementById('nav-unpaid'))"><i style="font-size: 30px; margin-bottom: 5px;">📝</i>វិក្កយបត្រ</button>
+                    <button id="grid-btn-exp" class="btn btn-danger" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('expenses', '📉 ការចំណាយ (Expenses)', document.getElementById('nav-expenses'))"><i style="font-size: 30px; margin-bottom: 5px;">📉</i>ចំណាយ</button>
+                    <button id="grid-btn-cust" class="btn btn-outline" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onclick="window.switchTab('customers', '👥 គ្រប់គ្រងអតិថិជន', document.getElementById('nav-customers'))"><i style="font-size: 30px; margin-bottom: 5px;">👥</i>អតិថិជន</button>
+                </div>
+
+                <div class="toolbar" style="margin-bottom: 20px;">
+                    <span style="font-size: var(--fs-14); font-weight:bold; color: var(--text-main);">📅 ជ្រើសរើសកាលបរិច្ឆេទបង្ហាញ៖ </span>
+                    <input type="date" id="dashDateFrom" class="form-control" style="width: 150px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី">
+                    <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
+                    <input type="date" id="dashDateTo" class="form-control" style="width: 150px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី">
+                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card"><span>មុខទំនិញសរុប (Items)</span><h3 id="dashTotalItems">0</h3></div>
+                    <div class="stat-card"><span>ស្តុកសរុប (Total Qty)</span><h3 id="dashTotalQty">0</h3></div>
+                    <div class="stat-card success"><span>ចំណូលលក់បាន (Revenue)</span><h3 id="dashTotalRevenue">$0.00</h3></div>
+                    <div class="stat-card danger"><span>ចំណាយសរុប (Expenses)</span><h3 id="dashTotalExpenses">$0.00</h3></div>
+                    <div class="stat-card warning"><span>ប្រាក់រង់ចាំទូទាត់ (Pending)</span><h3 id="dashTotalUnpaid">$0.00</h3></div>
+                    <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><span>ប្រាក់ចំណេញសុទ្ធ (Net Profit)</span><h3 id="dashNetProfit" style="font-weight: 900; color: #a78bfa;">$0.00</h3></div>
+                </div>
+                
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+    <h3 style="margin-bottom: 0; color: var(--primary); font-size: var(--fs-18);">ជិតអស់ពីស្តុក (Low Stock Alert)</h3>
+    <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="window.toggleLowStockSection()">🔽 បិទ/បើក</button>
+</div>
+<div id="lowStockCardContainer" style="transition: all 0.3s ease; overflow: hidden;">
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr><th>ឈ្មោះទំនិញ</th><th>ប្រភេទ</th><th>ស្តុកនៅសល់</th><th>សកម្មភាព</th></tr>
+            </thead>
+            <tbody id="lowStockTable"></tbody>
+        </table>
+    </div>
+</div>
+
+                <h3 style="margin-top: 25px; margin-bottom: 15px; color: var(--success); font-size: var(--fs-18);">🏆 ទំនិញលក់ដាច់ជាងគេ (Top Selling Items)</h3>
+                <div class="table-responsive"><table><thead><tr><th>ចំណាត់ថ្នាក់</th><th>ឈ្មោះទំនិញ</th><th>ចំនួនលក់បាន</th><th>ចំណូលសរុប</th></tr></thead><tbody id="topSellingTable"></tbody></table></div>
+            </div>
+
+            <!-- ផ្ទាំងស្តុក (Inventory) -->
+            <div id="tab-inventory" class="tab-content">
+                <div class="toolbar" style="display: flex; flex-direction: column; gap: 10px;">
+                    <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: nowrap;">
+                        <input type="text" id="searchInput" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ (លេខកូដ, ឈ្មោះ)..." oninput="window.renderInventory()" style="flex: 1; height: 42px;">
+                        
+                        <div class="view-toggle-group" style="display: flex; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; height: 42px; align-items: center; padding: 2px; gap: 2px;">
+                            <button id="btnGridView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: var(--primary); color: #fff; height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setInventoryView('grid')" title="មើលជារូបភាព">🔲</button>
+                            <button id="btnListView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: transparent; color: var(--text-main); height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setInventoryView('list')" title="មើលជាបញ្ជីអក្សរ">📄</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap;">
+                        <select id="filterCategory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ប្រភេទ</option></select>
+                        <select id="filterStatus" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ស្ថានភាពស្តុក</option><option value="in_stock">✅ នៅមានស្តុក (>0)</option><option value="out_stock">❌ អស់ស្តុក (0)</option></select>
+                    </div>
+
+                    <div style="display: flex; gap: 8px; width: 100%; align-items: center; justify-content: flex-end; flex-wrap: wrap;" id="inventoryActionButtonsGroup">
+                        <input type="file" id="importCSVFile" accept=".csv" style="display: none;" onchange="window.importCSV(event)">
+                        <div style="display: flex; gap: 5px;" id="inventoryExcelAction">
+                            <button class="btn btn-outline" onclick="document.getElementById('importCSVFile').click()" title="Import Excel (CSV)">📥 Excel</button>
+                            <button class="btn btn-outline" onclick="window.exportCSV()" title="Export Excel (CSV)">📤 Excel</button>
+                        </div>
+                        <button class="btn btn-primary" onclick="window.openProductModal()" id="btnAddNewProduct">➕ បន្ថែមទំនិញ</button>
+                    </div>
+                </div>
+                <div id="productGridContainer"></div>
+            </div>
+
+            <!-- ផ្ទាំងលក់ (POS) -->
+            <div id="tab-pos" class="tab-content active">
+                <div class="pos-container">
+                    <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%;">
+                        <div style="display: flex; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: nowrap; flex-shrink: 0; align-items: center;">
+                            <input type="text" id="posSearch" class="form-control" placeholder="🔍 ស្វែងរក ឬ ស្កេនបាកូដ រួចចុច Enter..." oninput="window.renderPOSProducts()" onkeypress="window.handleBarcodeScan(event)" style="flex: 1; min-width: 150px; width: auto; height: 42px;">
+                            
+                            <div class="view-toggle-group" style="display: flex; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; width: auto; height: 42px; align-items: center; padding: 2px; gap: 2px;">
+                                <button id="btnPOSGridView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: var(--primary); color: #fff; height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setPOSView('grid')" title="មើលជារូបភាព">🔲</button>
+                                <button id="btnPOSListView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: transparent; color: var(--text-main); height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setPOSView('list')" title="មើលជាបញ្ជីអក្សរ">📄</button>
+                            </div>
+                        </div>
+                        
+                        <div id="posCategoryTabs">
+                            <!-- បង្កើតប្រភេទស្វ័យប្រវត្តិ -->
+                        </div>
+
+                        <div id="posProductGridContainer" style="flex: 1; overflow-y: auto; overflow-x: hidden; padding-bottom: 20px;"></div>
+                    </div>
+                    
+                    <div class="pos-cart" id="mobileCartContainer">
+                        <div class="cart-header">🛒 កន្ត្រកទំនិញ <button class="btn-outline" style="border:none; padding:4px 8px; font-size:var(--fs-13);" onclick="window.clearCart()" title="លុបទំនិញទាំងអស់ចេញពីកន្ត្រក">🗑️ បោះបង់</button></div>
+                        <div class="cart-items" id="cartItems"><div style="text-align: center; color: var(--text-muted); margin-top: 50px; font-size: var(--fs-14);">មិនទាន់មានទំនិញទេ</div></div>
+                        
+                        <div class="cart-summary-toggle" id="toggleCartBtn" onclick="window.toggleCartSummary()">
+                            <span id="mobileCartTotalInfo">▲ ផ្ទាំងគិតលុយ (Checkout) - 0 មុខ ($0.00) ▲</span>
+                        </div>
+                        
+                        <div class="cart-summary" id="cartSummaryBody">
+                            <div class="summary-row" id="posSellerRowContainer" style="align-items: center; border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 10px;">
+                                <span style="font-size: var(--fs-13); color: var(--text-muted);">អ្នកលក់ (Seller):</span>
+                                <span id="posCurrentSellerDisplay" style="font-weight: bold; color: var(--primary); font-size: var(--fs-14);">Admin</span>
+                            </div>
+
+                            <div class="summary-row" style="align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
+                                <span style="font-size: var(--fs-13); color: var(--text-muted);">អត្រាប្តូរប្រាក់ (Rate):</span>
+                                <span style="display:flex; align-items:center; gap:5px;"><input type="number" id="globalExchangeRate" class="form-control" style="width: 80px; padding: 2px 5px; height: 28px; text-align: center;" value="4000" oninput="window.renderCart()"> ៛</span>
+                            </div>
+                            <div class="summary-row" style="margin-top: 10px;"><span>សរុបចំនួន (Qty):</span><span id="cartTotalQty" style="font-weight:bold;">0</span></div>
+                            
+                            <div class="summary-row" id="posDiscountContainer" style="align-items: center;">
+                                <span style="display:flex; align-items:center; gap:5px;">
+                                    បញ្ចុះតម្លៃ: 
+                                    <input type="number" id="posDiscount" class="form-control" style="width: 60px; padding: 2px 5px; height: 28px; text-align: center;" placeholder="0" oninput="window.renderCart()" min="0">
+                                    <select id="posDiscountType" class="form-control" style="width: 50px; padding: 2px; height: 28px; font-size: var(--fs-13);" onchange="window.renderCart()">
+                                        <option value="%">%</option>
+                                        <option value="$">$</option>
+                                    </select>
+                                </span>
+                                <span id="cartDiscountAmount" style="color: var(--danger);">-$0.00</span>
+                            </div>
+                            <div class="summary-row" id="posTaxContainer" style="align-items: center; display: none;">
+                                <span>ពន្ធអាករ (VAT <span id="cartTaxRateDisplay">0</span>%):</span>
+                                <span id="cartTaxAmount" style="color: var(--warning);">+$0.00</span>
+                            </div>
+
+                            <div class="summary-row summary-total"><span>សរុបទឹកប្រាក់:</span><span style="text-align:right;"><div id="cartTotalAmount">$0.00</div><div id="cartTotalAmountRiel" style="font-size: var(--fs-14); color: var(--text-muted); font-weight: normal; margin-top: 4px;"></div></span></div>
+                            <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border);">
+                                <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%;">
+                                <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
+                                <datalist id="customerDatalist"></datalist>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-shrink: 0;">
+                                <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.checkout('unpaid')">📝 រង់ចាំទូទាត់</button>
+                                <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.openCheckoutModal()">💰 ទូទាត់រួច</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ផ្ទាំងវិក្កយបត្រជំពាក់ (Unpaid/Invoices) -->
+            <div id="tab-unpaid" class="tab-content">
+                <div class="toolbar">
+                    <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderUnpaid()" style="width: 200px;">
+                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
+                        <input type="date" id="invoiceDateFrom" class="form-control" style="width: 130px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ចាប់ពីថ្ងៃទី">
+                        <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
+                        <input type="date" id="invoiceDateTo" class="form-control" style="width: 130px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ដល់ថ្ងៃទី">
+                    </div>
+                    <div style="flex-grow: 1;"></div>
+                    <button class="btn btn-outline" style="color: var(--success); border-color: var(--success);" onclick="window.exportInvoicesCSV()">📥 ទាញយក (Excel)</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="mainUnpaidTable">
+                        <thead></thead>
+                        <tbody id="unpaidTable"></tbody>
+                    </table>
+                </div>
+                
+                <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 20px;">
+                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួច: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                </div>
+            </div>
+
+            <!-- ផ្ទាំងការចំណាយ (Expenses) -->
+            <div id="tab-expenses" class="tab-content">
+                <div class="toolbar">
+                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.renderExpenses()" style="width: 250px;">
+                    <div style="flex-grow: 1;"></div>
+                    <button class="btn btn-primary" onclick="window.openExpenseModal()">➕ កត់ត្រាចំណាយថ្មី</button>
+                </div>
+                
+                <div class="table-responsive">
+                    <table id="mainExpenseTable">
+                        <thead>
+                            <tr>
+                                <th>កាលបរិច្ឆេទ</th>
+                                <th>ចំណាត់ថ្នាក់ (Category)</th>
+                                <th>ទឹកប្រាក់ចំណាយ</th>
+                                <th>បរិយាយ / ចំណាំ</th>
+                                <th style="text-align: center;">សកម្មភាព</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expenseTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end;">
+                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
+                </div>
+            </div>
+
+            <!-- ផ្ទាំងអតិថិជន (Customers) -->
+            <div id="tab-customers" class="tab-content">
+                <div class="toolbar">
+                    <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderCustomers()" style="width: 300px;">
+                    <div style="flex-grow: 1;"></div>
+                    <input type="file" id="importCustomerFile" accept=".json" style="display: none;" onchange="window.importCustomers(event)">
+                    <button class="btn btn-outline" onclick="window.exportCustomers()">📤 Export JSON</button>
+                    <button class="btn btn-outline" onclick="document.getElementById('importCustomerFile').click()">📥 Import JSON</button>
+                    <button class="btn btn-primary" onclick="window.openCustomerModal()">➕ បន្ថែមអតិថិជន</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="mainCustomerTable">
+                        <thead>
+                            <tr>
+                                <th onclick="window.sortTable('mainCustomerTable', 0)">ឈ្មោះអតិថិជន ↕️</th>
+                                <th onclick="window.sortTable('mainCustomerTable', 1)">លេខទូរស័ព្ទ ↕️</th>
+                                <th onclick="window.sortTable('mainCustomerTable', 2, 'number')">សរុបទិញ (Paid) ↕️</th>
+                                <th onclick="window.sortTable('mainCustomerTable', 3, 'number')">កំពុងជំពាក់ (Unpaid) ↕️</th>
+                                <th style="text-align: center;">សកម្មភាព</th>
+                            </tr>
+                            <tr class="filter-row">
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainCustomerTable')" placeholder="ស្វែងរក..."></th>
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainCustomerTable')" placeholder="ស្វែងរក..."></th>
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainCustomerTable')" placeholder="ស្វែងរក..."></th>
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainCustomerTable')" placeholder="ស្វែងរក..."></th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="customerTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ផ្ទាំងប្រវត្តិប្រតិបត្តិការ (History Log) -->
+            <div id="tab-history" class="tab-content">
+                <div class="toolbar">
+                    <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderHistory()" style="width: 250px;">
+                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
+                        <input type="date" id="historyDateFrom" class="form-control" style="width: 130px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
+                        <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
+                        <input type="date" id="historyDateTo" class="form-control" style="width: 130px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
+                    </div>
+                    <div style="flex-grow: 1;"></div>
+                    <button class="btn btn-outline" onclick="window.clearHistory()">🗑️ លុបប្រវត្តិទាំងអស់</button>
+                </div>
+                <div class="table-responsive">
+                    <table id="mainHistoryTable">
+                        <thead>
+                            <tr>
+                                <th onclick="window.sortTable('mainHistoryTable', 0)">កាលបរិច្ឆេទ ↕️</th>
+                                <th onclick="window.sortTable('mainHistoryTable', 1)">សកម្មភាព ↕️</th>
+                                <th onclick="window.sortTable('mainHistoryTable', 2)">ឈ្មោះទំនិញ/អតិថិជន ↕️</th>
+                                <th onclick="window.sortTable('mainHistoryTable', 3)">ប្រភេទ ↕️</th>
+                                <th onclick="window.sortTable('mainHistoryTable', 4, 'number')">ចំនួន ↕️</th>
+                                <th onclick="window.sortTable('mainHistoryTable', 5)">ចំណាំ ↕️</th>
+                            </tr>
+                            <tr class="filter-row">
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainHistoryTable')" placeholder="ស្វែងរក..."></th>
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainHistoryTable')" placeholder="ស្វែងរក..."></th>
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainHistoryTable')" placeholder="ស្វែងរក..."></th>
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainHistoryTable')" placeholder="ស្វែងរក..."></th>
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainHistoryTable')" placeholder="ស្វែងរក..."></th>
+                                <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainHistoryTable')" placeholder="ស្វែងរក..."></th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- ផ្ទាំងការកំណត់ (Settings) -->
+            <div id="tab-settings" class="tab-content">
+                <div style="max-width: 900px; margin: auto; display: flex; flex-direction: column; gap: 25px;">
+                    <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
+                        <h2 style="font-size: var(--fs-20); margin-bottom: 20px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px;">🎨 ការកំណត់រូបរាង និងពណ៌ (Appearance & Colors)</h2>
+                        
+                        <div style="margin-bottom: 25px;">
+                            <label style="display: block; font-size: var(--fs-16); font-weight: bold; margin-bottom: 15px;">ពណ៌ផ្ទៃខាងក្រោយ (Theme Mode):</label>
+                            <div style="display: flex; gap: 15px;">
+                                <button id="themeModeDarkBtn" class="btn btn-outline active" style="flex: 1; justify-content: center; padding: 12px;" onclick="window.setThemeMode('dark')">🌙 ងងឹត (Dark)</button>
+                                <button id="themeModeLightBtn" class="btn btn-outline" style="flex: 1; justify-content: center; padding: 12px;" onclick="window.setThemeMode('light')">☀️ ភ្លឺ (Light)</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <label style="display: block; font-size: var(--fs-16); font-weight: bold; margin-bottom: 15px;">ពណ៌គោល (Accent Color):</label>
+                            <div style="display: flex; gap: 15px; flex-wrap: wrap; align-items: center;" id="colorSwatchesContainer">
+                                <div class="color-swatch active" data-color="#10b981" style="background-color: #10b981;" onclick="window.setAccentColor('#10b981', '#059669')" title="បៃតង (Emerald Green)"></div>
+                                <div class="color-swatch" data-color="#38bdf8" style="background-color: #38bdf8;" onclick="window.setAccentColor('#38bdf8', '#0284c7')" title="ខៀវ (Sky Blue)"></div>
+                                <div class="color-swatch" data-color="#be123c" style="background-color: #be123c;" onclick="window.setAccentColor('#be123c', '#9f1239')" title="ក្រហម (Rose Red)"></div>
+                                <div class="color-swatch" data-color="#8b5cf6" style="background-color: #8b5cf6;" onclick="window.setAccentColor('#8b5cf6', '#6d28d9')" title="ស្វាយ (Purple)"></div>
+                                <div class="color-swatch" data-color="#f59e0b" style="background-color: #f59e0b;" onclick="window.setAccentColor('#f59e0b', '#b45309')" title="ទឹកក្រូច (Amber)"></div>
+                                <div class="color-swatch" data-color="#64748b" style="background-color: #64748b;" onclick="window.setAccentColor('#64748b', '#475569')" title="ប្រផេះ (Slate)"></div>
+                                
+                                <div style="display: flex; align-items: center; gap: 10px; margin-left: 10px; border-left: 2px solid var(--border); padding-left: 15px;">
+                                    <label for="customColorPicker" style="font-size: var(--fs-14); cursor: pointer; color: var(--text-muted);">ជ្រើសរើសពណ៌ផ្សេង:</label>
+                                    <input type="color" id="customColorPicker" style="width: 40px; height: 40px; padding: 0; border: none; cursor: pointer; outline: none; background: transparent; border-radius: 8px;" onchange="window.handleCustomColor(this.value)" title="ចុចដើម្បីរើសពណ៌តាមចិត្ត">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="adminUserManagementBlock" style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--success);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 15px; margin-bottom: 20px;">
+                            <div>
+                                <h2 style="font-size: var(--fs-20); color: var(--success);">👥 គ្រប់គ្រងគណនីបុគ្គលិក (User Management)</h2>
+                                <p style="color: var(--text-muted); font-size: var(--fs-13); margin-top: 5px;">បង្កើត លុប ឬកែប្រែគណនី និងកំណត់សិទ្ធិ (Role) អោយបុគ្គលិកប្រើប្រាស់។</p>
+                            </div>
+                            <button class="btn btn-success" onclick="window.openUserModal()">➕ បង្កើតគណនីថ្មី</button>
+                        </div>
+                        
+                        <div class="table-responsive">
+                            <table id="mainUserTable" style="font-size: var(--fs-13);">
+                                <thead>
+                                    <tr>
+                                        <th onclick="window.sortTable('mainUserTable', 0)">ឈ្មោះពេញ ↕️</th>
+                                        <th onclick="window.sortTable('mainUserTable', 1)">ឈ្មោះ Login ↕️</th>
+                                        <th onclick="window.sortTable('mainUserTable', 2)">សិទ្ធិប្រើប្រាស់ ↕️</th>
+                                        <th onclick="window.sortTable('mainUserTable', 3)">លេខ PIN ↕️</th>
+                                        <th style="text-align: center;">សកម្មភាព</th>
+                                    </tr>
+                                    <tr class="filter-row">
+                                        <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
+                                        <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
+                                        <th><select class="col-filter" onchange="window.filterTable('mainUserTable')"><option value="">ទាំងអស់</option><option value="Admin">Admin</option><option value="Sales">Sales</option><option value="Warehouse">Warehouse</option></select></th>
+                                        <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody id="userListTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border);">
+                        <h2 style="font-size: var(--fs-20); margin-bottom: 20px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px;">⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)</h2>
+                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 25px;">កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។</p>
+
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setCust" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">អតិថិជន (Customers):</strong> អនុញ្ញាតឲ្យកត់ត្រា និងគ្រប់គ្រងទិន្នន័យអតិថិជន។</span></label>
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setUnpaid" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">ជំពាក់/រង់ចាំទូទាត់ (Unpaid Invoices):</strong> អនុញ្ញាតឲ្យលក់ជំពាក់។</span></label>
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setLogs" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">ប្រវត្តិប្រតិបត្តិការ (Logs):</strong> កត់ត្រារាល់សកម្មភាព។</span></label>
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setCost" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">តម្លៃដើម (Cost Price):</strong> អនុញ្ញាតឲ្យវាយបញ្ចូលតម្លៃដើម។</span></label>
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setDiscount" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">ការបញ្ចុះតម្លៃ (Discount):</strong> បង្ហាញប្រអប់បញ្ចុះតម្លៃ។</span></label>
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setShowSeller" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">បង្ហាញឈ្មោះអ្នកលក់ (Show Seller):</strong> បង្ហាញឈ្មោះបុគ្គលិកនៅលើផ្ទាំងគិតលុយ (POS)។</span></label>
+                        
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:20px; font-size: var(--fs-16);">
+                            <input type="checkbox" id="setTax" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;">
+                            <span><strong style="color:var(--text-main);">ពន្ធអាករ (TAX/VAT):</strong> គិតពន្ធលើការលក់ ចំនួន</span>
+                            <input type="number" id="setTaxRate" class="form-control" style="width: 80px; padding: 5px; height: 35px; text-align: center;" value="10" onchange="window.saveSysSettings()"> %
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border);">
+                        <h2 style="font-size: var(--fs-20); margin-bottom: 20px; color: var(--warning); border-bottom: 1px solid var(--border); padding-bottom: 10px;">🔐 ផ្លាស់ប្តូរលេខកូដសម្ងាត់គណនីរបស់អ្នក</h2>
+                        <div style="max-width: 400px;">
+                            <label style="display: block; margin-bottom: 5px; font-size: var(--fs-14);">លេខកូដចាស់ (Old Password):</label>
+                            <input type="password" id="chgOldPassword" class="form-control" style="margin-bottom: 15px; width: 100%;">
+                            
+                            <label style="display: block; margin-bottom: 5px; font-size: var(--fs-14);">លេខកូដថ្មី (New Password):</label>
+                            <input type="password" id="chgNewPassword" class="form-control" style="margin-bottom: 15px; width: 100%;">
+                            
+                            <button class="btn btn-warning" onclick="window.handleChangePassword()">🔄 ផ្លាស់ប្តូរលេខកូដ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ផ្ទាំងអំពីប្រព័ន្ធ (About) -->
+            <div id="tab-about" class="tab-content">
+                <div style="display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: auto;">
+                    <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center;">
+                        <h1 style="color: var(--primary); font-size: var(--fs-28); margin-bottom: 5px;">SKM <span style="color: var(--warning);">INTEGRATE</span></h1>
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 7.0 (Smart Counter & Excel Features)</p>
+                        <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
+                            <span class="badge" style="background: rgba(56, 189, 248, 0.1); color: var(--primary); padding: 6px 12px; font-size: var(--fs-13);">ERP System</span>
+                            <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 6px 12px; font-size: var(--fs-13);">POS Ready</span>
+                            <span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); padding: 6px 12px; font-size: var(--fs-13);">Offline App</span>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--warning);">
+                        <h2 style="font-size: var(--fs-18); margin-bottom: 15px; color: var(--warning); border-bottom: 1px solid var(--border); padding-bottom: 10px;">🔑 ព័ត៌មានសិទ្ធិប្រើប្រាស់ (License Status)</h2>
+                        <div id="licenseInfoDisplay" style="font-size: var(--fs-15); line-height: 2; margin-bottom: 15px;"></div>
+                        <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
+                            <label style="display: block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">បញ្ចូល ឬប្តូរលេខកូដថ្មី (License Key):</label>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                                <input type="text" id="aboutLicenseInput" class="form-control" placeholder="ដាក់លេខកូដ License Key..." style="flex: 1; min-width: 220px; width: 100%;">
+                                <button class="btn btn-primary" onclick="window.verifyAndSaveLicenseFromAbout()">🔄 បញ្ចូលកូដថ្មី</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
+                        <h2 style="font-size: var(--fs-18); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">💾 គ្រប់គ្រងទិន្នន័យ (Backup & Restore All)</h2>
+                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 15px;">ទាញយកទិន្នន័យទាំងអស់ក្នុង App នេះ (ស្តុក, ប្រវត្តិ, វិក្កយបត្រ, អតិថិជន) រក្សាទុក ដើម្បីការពារការបាត់បង់ ឬផ្ទេរទៅឧបករណ៍ផ្សេង។</p>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="window.exportData()">💾 Backup ទិន្នន័យទាំងអស់</button>
+                            <button class="btn btn-warning" onclick="document.getElementById('importBackupFile2').click()">📂 Restore បញ្ចូលទិន្នន័យវិញ</button>
+                            <input type="file" id="importBackupFile2" accept=".json" style="display: none;" onchange="window.importData(event)">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ========================================================
+         MODALS (ផ្ទាំងលោតផ្សេងៗ)
+         ======================================================== -->
+
+    <!-- Modal: បង្កើត/កែប្រែ គណនី -->
+    <div class="modal-overlay" id="userManageModal" style="z-index: 1005;">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 id="userModalTitle" style="font-size: var(--fs-20);">👤 បង្កើតគណនីបុគ្គលិកថ្មី</h2>
+                <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeUserModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="editUserId">
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 5px;">ឈ្មោះពេញ (Full Name):</label>
+                    <input type="text" id="nuFullName" class="form-control" placeholder="ឧ. កញ្ញា ស្រីនាថ" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 5px;">ឈ្មោះ Login (Username):</label>
+                    <input type="text" id="nuUsername" class="form-control" placeholder="ឧ. seryneath01" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 5px;">លេខកូដសម្ងាត់ (Password):</label>
+                    <input type="text" id="nuPassword" class="form-control" placeholder="******" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 5px;">លេខ PIN សម្រាប់សង្គ្រោះគណនី (Recovery PIN):</label>
+                    <input type="number" id="nuPin" class="form-control" placeholder="ឧ. 1234" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom: 5px;">សិទ្ធិប្រើប្រាស់ (Role):</label>
+                    <select id="nuRole" class="form-control" style="width: 100%;">
+                        <option value="sales">🛒 ផ្នែកលក់ (Sales) - អាចចូលបានតែ POS ប៉ុណ្ណោះ</option>
+                        <option value="warehouse">📦 ផ្នែកឃ្លាំង (Warehouse) - អាចចូលមើលនិងបន្ថែមស្តុក</option>
+                        <option value="admin">👑 អ្នកគ្រប់គ្រង (Admin) - មានសិទ្ធិពេញលេញ</option>
+                    </select>
+                </div>
+                <hr style="border: none; border-top: 1px dashed var(--border); margin: 20px 0;">
+                <div style="background: rgba(225, 29, 72, 0.1); border: 1px solid var(--danger); padding: 15px; border-radius: 8px;">
+                    <label style="display:block; margin-bottom: 5px; color: var(--danger); font-weight: bold;">🔒 បញ្ជាក់លេខកូដ Admin របស់អ្នក:</label>
+                    <input type="password" id="adminConfirmPassword" class="form-control" placeholder="បញ្ចូលលេខកូដ Admin ដើម្បីយល់ព្រម" style="border-color: var(--danger); width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="window.closeUserModal()">បោះបង់</button>
+                <button class="btn btn-success" onclick="window.saveNewUser()">រក្សាទុកគណនី</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: ទូទាត់ប្រាក់ (Checkout) -->
+    <div class="modal-overlay" id="checkoutModal" style="z-index: 1005;">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 style="font-size: var(--fs-20);">💵 ទូទាត់ប្រាក់ (Checkout)</h2>
+                <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="document.getElementById('checkoutModal').style.display='none'">✕</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 25px 20px;">
+                <div style="font-size: var(--fs-15); margin-bottom: 5px; color: var(--text-muted);">សរុបប្រាក់ត្រូវបង់ (Grand Total):</div>
+                <div id="checkoutTotalDisplay" style="font-size: 28px; font-weight: bold; color: var(--success); margin-bottom: 15px; line-height: 1.3;"></div>
+
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; margin-top: 15px;">
+                    <div style="flex: 1; text-align: left;">
+                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់ទទួល ($):</label>
+                        <input type="number" id="checkoutReceivedUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0.00" oninput="window.calculateChange()" autocomplete="off">
+                    </div>
+                    <div style="flex: 1; text-align: left;">
+                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់ទទួល (៛):</label>
+                        <input type="number" id="checkoutReceivedRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0" oninput="window.calculateChange()" autocomplete="off">
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                    <div style="font-size: var(--fs-14); color: var(--text-muted); margin-bottom: 5px;">ប្រាក់អាប់ (Change):</div>
+                    <div id="checkoutChangeDisplay" style="font-size: 24px; font-weight: bold; color: var(--warning);">$0.00 | 0 ៛</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between; gap: 15px;">
+                <button class="btn btn-outline" style="flex:1; padding: 12px;" onclick="document.getElementById('checkoutModal').style.display='none'">បោះបង់</button>
+                <button class="btn btn-success" style="flex:2; font-size: var(--fs-16); padding: 12px;" onclick="window.processCheckoutPaid()">✅ បញ្ជាក់ការទូទាត់</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Modal: សងប្រាក់ជំពាក់ (Debt Payment) -->
+    <div class="modal-overlay" id="debtPaymentModal" style="z-index: 1006;">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 style="font-size: var(--fs-20);">💸 សងប្រាក់ជំពាក់</h2>
+                <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="document.getElementById('debtPaymentModal').style.display='none'">✕</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 25px 20px;">
+                
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: var(--fs-14);">
+                    <span style="color: var(--text-muted);">ប្រាក់សរុបក្នុងវិក្កយបត្រ:</span>
+                    <span id="debtTotalDisplay" style="font-weight: bold; color: var(--text-main);">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: var(--fs-14);">
+                    <span style="color: var(--text-muted);">ប្រាក់បានសងរួច:</span>
+                    <span id="debtPaidDisplay" style="font-weight: bold; color: var(--success);">$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: var(--fs-16); border-bottom: 1px dashed var(--border); padding-bottom: 10px;">
+                    <span style="color: var(--danger);">ប្រាក់នៅខ្វះ (Remaining):</span>
+                    <span id="debtRemainingDisplay" style="font-weight: bold; color: var(--danger);">$0.00</span>
+                </div>
+
+                <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                    <div style="flex: 1; text-align: left;">
+                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់សងឥឡូវ ($):</label>
+                        <input type="number" id="debtPayUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0.00" oninput="window.calculateDebtChange()" autocomplete="off">
+                    </div>
+                    <div style="flex: 1; text-align: left;">
+                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់សងឥឡូវ (៛):</label>
+                        <input type="number" id="debtPayRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0" oninput="window.calculateDebtChange()" autocomplete="off">
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                    <div style="font-size: var(--fs-14); color: var(--text-muted); margin-bottom: 5px;">ប្រាក់អាប់ (Change):</div>
+                    <div id="debtChangeDisplay" style="font-size: 24px; font-weight: bold; color: var(--warning);">$0.00 | 0 ៛</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between; gap: 15px;">
+                <button class="btn btn-outline" style="flex:1; padding: 12px;" onclick="document.getElementById('debtPaymentModal').style.display='none'">បោះបង់</button>
+                <button class="btn btn-success" style="flex:2; font-size: var(--fs-16); padding: 12px;" onclick="window.processDebtPayment()">✅ បញ្ជាក់ការសងប្រាក់</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal: កត់ត្រាចំណាយ (Expense Modal) -->
+    <div class="modal-overlay" id="expenseModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header"><h2 style="font-size: var(--fs-20);">📉 កត់ត្រាចំណាយថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeExpenseModal()">✕</button></div>
+            <div class="modal-body">
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ប្រភេទចំណាយ *</label>
+                    <select id="expCategory" class="form-control" style="width: 100%;">
+                        <option value="ថ្លៃទឹក/ភ្លើង">⚡ ថ្លៃទឹក / ភ្លើង</option>
+                        <option value="ឈ្នួលផ្ទះ/ហាង">🏠 ឈ្នួលផ្ទះ / ហាង</option>
+                        <option value="ទិញសម្ភារៈ/ស្តុក">📦 ទិញសម្ភារៈ / ស្តុក</option>
+                        <option value="ប្រាក់ខែបុគ្គលិក">👨‍💼 ប្រាក់ខែបុគ្គលិក</option>
+                        <option value="ចំណាយផ្សេងៗ">🏷️ ចំណាយផ្សេងៗ</option>
+                    </select>
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ទឹកប្រាក់ចំណាយ ($) *</label>
+                    <input type="number" id="expAmount" class="form-control" placeholder="0.00" style="width: 100%;">
+                </div>
+                <div>
+                    <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">បរិយាយ / ចំណាំ</label>
+                    <textarea id="expNote" class="form-control" placeholder="សរសេរចំណាំ..." style="height: 60px; resize:none; width: 100%;"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeExpenseModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveExpense()">រក្សាទុក</button></div>
+        </div>
+    </div>
+
+    <!-- Modal: ប្រអប់សារ (Message Box) -->
+    <div class="modal-overlay" id="ksMsgBox" style="z-index: 999999;">
+        <div class="modal" style="max-width: 400px; text-align: center; margin: auto;">
+            <div class="modal-body">
+                <h3 id="ksMsgTitle" style="margin-bottom: 10px; color: var(--primary); font-size: var(--fs-18);">ជូនដំណឹង</h3>
+                <p id="ksMsgText" style="color: var(--text-main); font-size: var(--fs-15);"></p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; border-top: none; padding-top: 0;" id="ksMsgActions"></div>
+        </div>
+    </div>
+
+    <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile) -->
+    <div class="modal-overlay" id="shopNameModal" style="z-index: 9000;">
+        <div class="modal" style="max-width: 350px;">
+            <div class="modal-header"><h2 style="font-size: var(--fs-18);">✏️ ប្តូរឈ្មោះហាង និង Logo</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeShopNameModal()">✕</button></div>
+            <div class="modal-body">
+                <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">ឈ្មោះហាង:</label>
+                <input type="text" id="newShopNameInput" class="form-control" placeholder="វាយឈ្មោះហាងនៅទីនេះ..." style="text-align: center; font-size: var(--fs-16); width: 100%;">
+                
+                <div style="margin-top: 15px;">
+                    <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">លេខទូរស័ព្ទហាង:</label>
+                    <input type="text" id="newShopPhoneInput" class="form-control" placeholder="ឧ. 012 345 678" style="font-size: var(--fs-14); width: 100%;">
+                </div>
+                <div style="margin-top: 15px;">
+                    <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">អាសយដ្ឋានហាង:</label>
+                    <textarea id="newShopAddressInput" class="form-control" placeholder="ឧ. ផ្ទះលេខ ១, ផ្លូវ ០០..." style="font-size: var(--fs-14); height: 60px; resize:none; width: 100%;"></textarea>
+                </div>
+
+                <div style="margin-top: 15px; display: flex; gap: 10px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                    <div style="flex: 1;">
+                        <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">ឡូហ្គោហាង:</label>
+                        <input type="file" id="shopLogoInput" accept="image/*" style="display:none;" onchange="window.handleShopLogo(event)">
+                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopLogoInput').click()">📸 ឡូហ្គោ</button>
+                        <div style="text-align: center; margin-top: 10px;"><img id="shopLogoPreview" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; display: none; margin: auto; border: 2px solid var(--border);"></div>
+                    </div>
+                    <div style="flex: 1;">
+                        <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">QR ទូទាត់ប្រាក់:</label>
+                        <input type="file" id="shopQRInput" accept="image/*" style="display:none;" onchange="window.handleShopQR(event)">
+                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopQRInput').click()">📷 QR Code</button>
+                        <div style="text-align: center; margin-top: 10px;"><img id="shopQRPreview" src="" style="width: 60px; height: 60px; object-fit: contain; display: none; margin: auto; border: 2px solid var(--border);"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: center;"><button class="btn btn-outline" onclick="window.closeShopNameModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveShopName()">រក្សាទុក</button></div>
+        </div>
+    </div>
+
+    <!-- Modal: បង្កើត/កែប្រែ ទំនិញ (Product) -->
+    <div class="modal-overlay" id="productModal">
+        <div class="modal">
+            <div class="modal-header"><h2 id="modalTitle" style="font-size: var(--fs-20);">ទំនិញថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeModal()">✕</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="pId">
+                <div class="form-row">
+                    <div style="flex: 2;"><label>ឈ្មោះទំនិញ *</label><input type="text" id="pName" class="form-control" style="width: 100%;"></div>
+                    <div><label>ប្រភេទ (Category)</label><input type="text" id="pCategory" class="form-control" list="catList" style="width: 100%;"><datalist id="catList"></datalist></div>
+                </div>
+                <div class="form-row">
+                    <div id="costPriceContainer"><label>តម្លៃដើម (Cost) $</label><input type="number" id="pCost" class="form-control" placeholder="0.00" style="width: 100%;"></div>
+                    <div><label>តម្លៃលក់ (Price) $</label><input type="number" id="pPrice" class="form-control" placeholder="0.00" style="width: 100%;"></div>
+                    <div><label>តម្លៃលក់ (Riel) ៛</label><input type="number" id="pRiel" class="form-control" placeholder="0" style="width: 100%;"></div>
+                </div>
+                <div class="form-row">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            <label style="margin-bottom:0;">លេខកូដ / Barcode</label>
+                            <button type="button" class="btn btn-outline" style="padding:2px 8px; font-size:11px;" onclick="window.generateProductBarcode()">✨ បង្កើតកូដស្វ័យប្រវត្តិ</button>
+                        </div>
+                        <input type="text" id="pCustomId" class="form-control" placeholder="ស្កេន ឬ ដាក់លេខកូដ..." style="width: 100%;">
+                    </div>
+                    <div><label>ខ្នាត/ឯកតា (Unit)</label><input type="text" id="pUnit" class="form-control" placeholder="ឧ. កេះ, បេ" style="width: 100%;"></div>
+                </div>
+                <div class="form-row" style="margin-top: 15px;">
+                    <div><label>ចំនួនស្តុក (Qty)</label><input type="number" id="pQty" class="form-control" value="0" style="width: 100%;"></div>
+                </div>
+                <div><label>ការពណ៌នា</label><textarea id="pDesc" class="form-control" style="height: 60px; resize:none; width: 100%;"></textarea></div>
+                <div style="margin-top: 15px;">
+                    <label>រូបភាព (URL ឬ ចុចអាប់ឡូត)</label>
+                    <input type="file" id="imageInput" accept="image/*" style="display: none;" onchange="window.handleImage(event)">
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" id="pImage" class="form-control" placeholder="URL រូបភាព..." style="flex:1; width: 100%;" oninput="window.updateImagePreview(this.value)">
+                        <button class="btn btn-outline" onclick="document.getElementById('imageInput').click()">📸 ជ្រើសរើស</button>
+                    </div>
+                    <div style="margin-top: 10px; text-align: center;"><img id="imagePreviewBox" src="" alt="Preview" style="max-height: 120px; max-width: 100%; display: none; border-radius: 8px; border: 1px solid var(--border); margin: auto;"></div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveProduct()">រក្សាទុក</button></div>
+        </div>
+    </div>
+
+    <!-- Modal: បង្កើត/កែប្រែ អតិថិជន (Customer) -->
+    <div class="modal-overlay" id="customerModal">
+        <div class="modal" style="max-width: 400px;">
+            <div class="modal-header"><h2 id="customerModalTitle" style="font-size: var(--fs-20);">អតិថិជនថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeCustomerModal()">✕</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="cId">
+                <div style="margin-bottom: 15px;"><label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ឈ្មោះអតិថិជន *</label><input type="text" id="cName" class="form-control" style="width: 100%;"></div>
+                <div><label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">លេខទូរស័ព្ទ</label><input type="text" id="cPhone" class="form-control" style="width: 100%;"></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeCustomerModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveCustomer()">រក្សាទុក</button></div>
+        </div>
+    </div>
+
+    <!-- Modal: ប្រវត្តិអតិថិជន (Customer History) -->
+    <div class="modal-overlay" id="customerHistoryModal" style="z-index: 1001;">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header"><h2 style="font-size: var(--fs-20);">🛍️ ប្រវត្តិទិញរបស់: <span id="chCustName" style="color: var(--primary);"></span></h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeCustomerHistoryModal()">✕</button></div>
+            <div class="modal-body"><div class="table-responsive"><table style="font-size: var(--fs-13);"><thead><tr><th>កាលបរិច្ឆេទ</th><th>ទំនិញដែលបានទិញ (សង្ខេប)</th><th>សរុប</th><th>ស្ថានភាព</th><th>សកម្មភាព</th></tr></thead><tbody id="customerHistoryTableBody"></tbody></table></div></div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeCustomerHistoryModal()">បិទ</button></div>
+        </div>
+    </div>
+
+    <!-- Modal: មើលវិក្កយបត្រ (Invoice View/Print) -->
+    <div class="modal-overlay" id="invoiceViewModal" style="z-index: 1002;">
+        <div class="modal" style="max-width: 500px;">
+            <div class="modal-header"><h2 style="font-size: var(--fs-20);">👁️ លម្អិតវិក្កយបត្រ</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeInvoiceViewModal()">✕</button></div>
+            <div class="modal-body" style="background: #e2e8f0;">
+                <div id="invoiceCaptureArea">
+                    <div style="text-align: center; margin-bottom: 10px;">
+                        <img id="viewInvoiceLogo" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; display: none; margin: 0 auto 5px;">
+                        <h3 style="margin-bottom: 5px; color: #000; font-size: var(--fs-18); font-weight:bold;" id="viewShopName">SKM INTEGRATE</h3>
+                        <div id="viewShopContact" style="font-size: 12px; color: #555; margin-bottom: 5px;"></div>
+                        <p id="viewInvoiceType" style="text-align:center; font-size: var(--fs-14); font-weight:bold; color: #000; margin-top: 10px; margin-bottom: 5px;">វិក្កយបត្រ / Invoice</p>
+                        <p id="viewInvoiceDate" style="text-align:center; font-size: var(--fs-12); color: #555; margin-bottom: 2px;"></p>
+                        <p id="viewInvoiceIdDisplay" style="text-align:center; font-size: var(--fs-12); color: #555; margin-bottom: 10px;"></p>
+                    </div>
+                    <div id="invoiceViewContent"></div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between;"><div><button class="btn btn-outline" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: var(--success);" onclick="window.downloadInvoicePNG()">🖼️ ទាញយក (PNG)</button></div><div style="display: flex; gap: 10px;"><button class="btn btn-outline" onclick="window.reprintInvoice()">🖨️ បោះពុម្ព</button><button class="btn btn-primary" onclick="window.closeInvoiceViewModal()">បិទ</button></div></div>
+        </div>
+    </div>
+
+    <!-- Modal: កែប្រែវិក្កយបត្រជំពាក់ (Edit Unpaid Invoice) -->
+    <div class="modal-overlay" id="invoiceEditModal">
+        <div class="modal" style="max-width: 700px;">
+            <div class="modal-header"><h2 style="font-size: var(--fs-20);">✏️ កែប្រែវិក្កយបត្ររង់ចាំទូទាត់</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeInvoiceEditModal()">✕</button></div>
+            <div class="modal-body">
+                <input type="hidden" id="editInvId">
+                <div class="form-row"><div><label>ឈ្មោះអតិថិជន *</label><input type="text" id="editInvName" class="form-control" list="customerDatalist" onchange="window.autoFillCustomerPhone('edit')" style="width: 100%;"></div><div><label>លេខទូរស័ព្ទ</label><input type="text" id="editInvPhone" class="form-control" style="width: 100%;"></div></div>
+                <hr style="border: none; border-top: 1px dashed var(--border); margin: 20px 0;">
+                <h3 style="margin-bottom: 10px; font-size: var(--fs-16);">ទំនិញក្នុងវិក្កយបត្រ</h3>
+                <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end;"><div style="flex: 1;"><select id="editInvAddItemSelect" class="form-control" style="width: 100%;"><option value="">-- ជ្រើសរើសទំនិញបន្ថែម --</option></select></div><button class="btn btn-primary" onclick="window.addItemToEditingInvoice()">➕ បន្ថែម</button></div>
+                <div class="table-responsive"><table style="font-size: var(--fs-13);"><thead><tr><th>ទំនិញ</th><th style="width: 100px; text-align: center;">ចំនួន</th><th style="width: 100px; text-align: right;">តម្លៃលក់</th><th style="width: 100px; text-align: right;">សរុប</th><th style="width: 50px; text-align: center;">លុប</th></tr></thead><tbody id="editInvItemsList"></tbody></table></div>
+                <div style="text-align: right; margin-top: 15px; font-size: var(--fs-18);">សរុបទឹកប្រាក់ថ្មី: <strong id="editInvTotalPreview" style="color: var(--success);">$0.00</strong></div>
+            </div>
+            <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeInvoiceEditModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveInvoiceChanges()">រក្សាទុករាល់ការផ្លាស់ប្តូរ</button></div>
+        </div>
+    </div>
+
+    <!-- កន្លែងសម្រាប់ព្រីន (Print Area) -->
+    <div id="printReceiptArea" style="display: none;"></div>
+
+    <!-- ភ្ជាប់ឯកសារ JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>

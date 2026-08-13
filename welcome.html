@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome - SKM INTEGRATE</title>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #0f172a; /* ពណ៌ផ្ទៃខាងក្រោយងងឹតដូចប្រព័ន្ធយើង */
+            font-family: 'Battambang', sans-serif;
+            color: #f8fafc;
+        }
+        .welcome-card {
+            text-align: center;
+            background: #1e293b;
+            padding: 50px 40px;
+            border-radius: 20px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            border: 1px solid #334155;
+            max-width: 400px;
+            width: 90%;
+            animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .logo-placeholder {
+            font-size: 60px;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #10b981;
+            margin: 0 0 10px 0;
+            font-size: 28px;
+        }
+        p {
+            color: #94a3b8;
+            margin-bottom: 30px;
+            font-size: 15px;
+        }
+        .btn-enter {
+            background-color: #10b981;
+            color: white;
+            text-decoration: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 10px;
+            display: inline-block;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .btn-enter:hover {
+            background-color: #059669;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="welcome-card">
+        <div class="logo-placeholder">🏪</div>
+        <h1>SKM INTEGRATE</h1>
+        <p>ប្រព័ន្ធគ្រប់គ្រងការលក់ និងស្តុកទំនិញឆ្លាតវៃ (ERP & POS)</p>
+        
+        <!-- កន្លែងនេះហើយដែលវានឹង Link ទៅកាន់ File ចាស់របស់បង -->
+        <a href="index.html" class="btn-enter">ចូលប្រើប្រាស់ប្រព័ន្ធ (Enter App) ➔</a>
+    </div>
+
+</body>
+</html>
