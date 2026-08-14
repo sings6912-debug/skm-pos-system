@@ -1,6 +1,10 @@
 // ==========================================================================
-// 1. MULTI-BRANCH CONFIGURATION & STORAGE ISOLATION
+// 1. SUPABASE & MULTI-BRANCH CONFIGURATION
 // ==========================================================================
+const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
 const urlParams = new URLSearchParams(window.location.search);
 const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
 const getBranchKey = (key) => `ks2_${SHOP_BRANCH_ID}_${key}`;
@@ -132,7 +136,7 @@ window.saveNewUser = function() {
 window.deleteUserAccount = function(id) { const u = userAccounts.find(x => x.id === id); if (!u) return; if (u.username === 'admin') return window.ksMsg("មិនអាចលុបគណនី Admin ដើមបានទេ!"); if (u.id === activeUser.id) return window.ksMsg("មិនអាចលុបគណនីកំពុងប្រើប្រាស់បានទេ!"); window.ksMsg(`តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិកឈ្មោះ "${u.fullName||u.username}" មែនទេ?`, "បញ្ជាក់ការលុបគណនី", true, () => { userAccounts = userAccounts.filter(x => x.id !== id); localStorage.setItem(getBranchKey('auth_users_pro'), JSON.stringify(userAccounts)); window.renderUsersList(); window.ksMsg("គណនីត្រូវបានលុបដោយជោគជ័យ!"); }); };
 
 // ==========================================================================
-// 5. GLOBAL APP VARIABLES & INITIALIZATION
+// 5. GLOBAL APP VARIABLES & SUPABASE SYNC FUNCTIONS
 // ==========================================================================
 let inventory = []; let historyLog = []; let invoices = []; let cart = []; let customers = []; let expenses = [];
 let shopName = 'SKM INTEGRATE'; let shopLogo = ''; let shopQR = ''; let shopPhone = ''; let shopAddress = ''; 
@@ -155,7 +159,6 @@ window.switchTab = function(tabId, title, elem) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); if(elem) elem.classList.add('active'); document.getElementById('pageTitle').innerText = title;
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById('tab-' + tabId).classList.add('active');
     
-    // ➕ បន្ថែមការទម្លាក់ Header មកវិញជានិច្ចសម្រាប់ផ្ទាំង Dashboard និង About
     if (tabId === 'dashboard' || tabId === 'about') {
         const header = document.getElementById('topHeaderBar');
         if(header) header.classList.remove('hidden-header');
@@ -165,15 +168,44 @@ window.switchTab = function(tabId, title, elem) {
     window.renderAll();
 };
 
-window.onload = () => {
+// ទាញយកទិន្នន័យពី Supabase
+window.loadDataFromSupabase = async function() {
+    try {
+        let { data, error } = await supabaseClient
+            .from('branch_store')
+            .select('data_json')
+            .eq('branch_id', SHOP_BRANCH_ID)
+            .single();
+
+        if (data && data.data_json) {
+            let d = data.data_json;
+            inventory = d.inventory || [];
+            historyLog = d.historyLog || [];
+            invoices = d.invoices || [];
+            expenses = d.expenses || [];
+            customers = d.customers || [];
+            shopName = d.shopName || 'SKM INTEGRATE';
+            shopLogo = d.shopLogo || '';
+            shopQR = d.shopQR || '';
+            shopPhone = d.shopPhone || '';
+            shopAddress = d.shopAddress || '';
+            if(d.sysSettings) sysSettings = {...sysSettings, ...d.sysSettings};
+            if(d.userAccounts) userAccounts = d.userAccounts;
+        }
+    } catch(e) {
+        console.error("Error loading from Supabase:", e);
+    }
+};
+
+window.onload = async () => {
     window.loadThemeSettings(); window.checkLicense(); window.checkAuthentication(); setInterval(() => document.getElementById('currentDate').innerText = window.fDate(), 1000);
+    
+    // ទាញទិន្នន័យពី Supabase មកផ្ដើមដាក់ក្នុង App
+    await window.loadDataFromSupabase();
+
     try { 
-        let rawInv = JSON.parse(localStorage.getItem(getBranchKey('inv_pro')));
-        inventory = (!rawInv || !Array.isArray(rawInv)) ? [] : rawInv.filter(item => item !== null && typeof item === 'object');
-        historyLog = JSON.parse(localStorage.getItem(getBranchKey('hist_pro'))) || []; invoices = JSON.parse(localStorage.getItem(getBranchKey('invoices_pro'))) || []; expenses = JSON.parse(localStorage.getItem(getBranchKey('expenses_pro'))) || [];
-        shopName = localStorage.getItem(getBranchKey('shop_name')) || 'SKM INTEGRATE'; shopLogo = localStorage.getItem(getBranchKey('shop_logo')) || ''; shopQR = localStorage.getItem(getBranchKey('shop_qr')) || ''; customers = JSON.parse(localStorage.getItem(getBranchKey('customers_pro'))) || []; shopPhone = localStorage.getItem(getBranchKey('shop_phone')) || ''; shopAddress = localStorage.getItem(getBranchKey('shop_address')) || ''; 
-        let savedSettings = JSON.parse(localStorage.getItem(getBranchKey('sys_settings'))); if(savedSettings) sysSettings = {...sysSettings, ...savedSettings}; 
-        currentInventoryView = localStorage.getItem(getBranchKey('inv_view_mode')) || 'grid'; currentPOSView = localStorage.getItem(getBranchKey('pos_view_mode')) || 'grid'; 
+        currentInventoryView = localStorage.getItem(getBranchKey('inv_view_mode')) || 'grid'; 
+        currentPOSView = localStorage.getItem(getBranchKey('pos_view_mode')) || 'grid'; 
     } catch(e) {}
     
     document.getElementById('displayShopName').innerHTML = `${shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
@@ -181,9 +213,6 @@ window.onload = () => {
     
     window.loadSettingsToUI(); window.applyPermissions(); window.updateCategories(); window.setInventoryView(currentInventoryView, true); window.setPOSView(currentPOSView, true); window.renderAll();
     
-    // -------------------------------------------------------------
-    // Header Scroll Hiding Logic (Modified)
-    // -------------------------------------------------------------
     const header = document.getElementById('topHeaderBar'); 
     let lastScrollTop = 0;
     const delta = 10; 
@@ -191,7 +220,6 @@ window.onload = () => {
     function setupScrollHiding(el) {
         if (!el) return;
         el.addEventListener('scroll', function() {
-            // 🛑 បើស្ថិតក្នុងផ្ទាំង Dashboard ឬ About មិនបាច់លាក់ Header ទេ។
             const isDashboardActive = document.getElementById('tab-dashboard').classList.contains('active');
             const isAboutActive = document.getElementById('tab-about').classList.contains('active');
             if (isDashboardActive || isAboutActive) {
@@ -214,12 +242,44 @@ window.onload = () => {
     setupScrollHiding(document.getElementById('posProductGridContainer'));
 };
 
-window.saveData = function() {
+window.saveData = async function() {
     inventory = inventory.filter(item => item !== null && typeof item === 'object');
-    localStorage.setItem(getBranchKey('inv_pro'), JSON.stringify(inventory)); localStorage.setItem(getBranchKey('hist_pro'), JSON.stringify(historyLog)); localStorage.setItem(getBranchKey('invoices_pro'), JSON.stringify(invoices)); localStorage.setItem(getBranchKey('expenses_pro'), JSON.stringify(expenses));
-    localStorage.setItem(getBranchKey('shop_name'), shopName); localStorage.setItem(getBranchKey('shop_logo'), shopLogo); localStorage.setItem(getBranchKey('shop_qr'), shopQR); localStorage.setItem(getBranchKey('customers_pro'), JSON.stringify(customers)); localStorage.setItem(getBranchKey('sys_settings'), JSON.stringify(sysSettings)); localStorage.setItem(getBranchKey('shop_phone'), shopPhone); localStorage.setItem(getBranchKey('shop_address'), shopAddress); 
-    const counter = localStorage.getItem(getBranchKey('invoice_counter')); if(counter) localStorage.setItem(getBranchKey('invoice_counter_backup'), counter); 
-    window.updateCategories(); window.applyPermissions(); window.renderAll();
+    
+    let packageData = {
+        inventory, historyLog, invoices, expenses,
+        shopName, shopLogo, shopQR, customers, sysSettings, userAccounts,
+        shopPhone, shopAddress
+    };
+
+    // 1. រក្សាទុកក្នុង LocalStorage ជា Backup ពេល Offline
+    localStorage.setItem(getBranchKey('inv_pro'), JSON.stringify(inventory));
+    localStorage.setItem(getBranchKey('hist_pro'), JSON.stringify(historyLog));
+    localStorage.setItem(getBranchKey('invoices_pro'), JSON.stringify(invoices));
+    localStorage.setItem(getBranchKey('expenses_pro'), JSON.stringify(expenses));
+    localStorage.setItem(getBranchKey('shop_name'), shopName);
+    localStorage.setItem(getBranchKey('shop_logo'), shopLogo);
+    localStorage.setItem(getBranchKey('shop_qr'), shopQR);
+    localStorage.setItem(getBranchKey('customers_pro'), JSON.stringify(customers));
+    localStorage.setItem(getBranchKey('sys_settings'), JSON.stringify(sysSettings));
+    localStorage.setItem(getBranchKey('shop_phone'), shopPhone);
+    localStorage.setItem(getBranchKey('shop_address'), shopAddress);
+
+    // 2. រក្សាទុកឡើងទៅ Supabase Database តាម branch_id
+    try {
+        await supabaseClient
+            .from('branch_store')
+            .upsert({ 
+                branch_id: SHOP_BRANCH_ID, 
+                data_json: packageData,
+                updated_at: new Date()
+            }, { onConflict: 'branch_id' });
+    } catch(e) {
+        console.error("Error saving to Supabase:", e);
+    }
+
+    window.updateCategories(); 
+    window.applyPermissions(); 
+    window.renderAll();
 };
 
 // ==========================================================================
@@ -438,7 +498,6 @@ window.renderPOSProducts = function() {
         });
         if (posCat !== 'all') availableItems = availableItems.filter(p => p && p.category === posCat);
 
-        // តម្រៀបអីវ៉ាន់អស់ស្តុកទៅក្រោមគេ
         availableItems.sort((a, b) => {
             let outA = (parseFloat(a.qty)||0) <= 0 ? 1 : 0; let outB = (parseFloat(b.qty)||0) <= 0 ? 1 : 0;
             if (outA !== outB) return outA - outB; 
@@ -774,7 +833,7 @@ window.viewInvoice = function(id) {
         content += `<tr><td style="font-size:var(--fs-12);">ប្រាក់អាប់:</td><td style="text-align:right; font-size:var(--fs-12);">${cStr.join(' | ')}</td></tr>`; 
     }
     content += `</table>`;
-    if (shopQR) content += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:var(--fs-12); margin-bottom:5px; font-weight:bold; color:#000;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${shopQR}" style="width: 120px; height: 120px; object-fit: contain; filter: grayscale(100%);"></div>`;
+    if (shopQR) content += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold; color:#000;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${shopQR}" style="width: 120px; height: 120px; object-fit: contain; filter: grayscale(100%);"></div>`;
     content += `<div style="text-align: center; font-size: var(--fs-11); color:#555; margin-top: 10px;">(Rate: 1$ = ${inv.rate||4000}៛)</div></div><div style="text-align:center; font-size:var(--fs-12); color:#000; margin-top: 15px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</div>`;
     document.getElementById('invoiceViewContent').innerHTML = content; document.getElementById('invoiceViewModal').style.display = 'flex';
 };
@@ -909,7 +968,6 @@ window.importData = function(e) {
 window.exportCustomers = function() { if(!customers.length) return window.ksMsg('គ្មានទិន្នន័យអតិថិជនដើម្បី Export ទេ!'); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(customers, null, 2)], { type: "application/json" })); a.download = `Customers_Backup_${Date.now()}.json`; a.click(); };
 window.importCustomers = function(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { const data = JSON.parse(ev.target.result); if(Array.isArray(data)) { let cCount = 0; data.forEach(newCust => { if(!customers.find(c => String(c.name).toLowerCase() === String(newCust.name).toLowerCase())) { customers.push({ id: newCust.id||'C_'+Date.now()+Math.random(), name: newCust.name, phone: newCust.phone||'' }); cCount++; } }); window.saveData(); window.ksMsg(`បាននាំចូលអតិថិជនថ្មីចំនួន ${cCount} នាក់!`, 'ជោគជ័យ'); } else window.ksMsg('ទម្រង់ឯកសារមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); } catch(err) { window.ksMsg('មិនអាចអានឯកសារបានទេ!', 'បរាជ័យ'); } e.target.value = ''; }; r.readAsText(file); };
 
-// មុខងារសម្រាប់ចុចបិទ/បើក (Collapse/Expand) ផ្ទាំង Low Stock Alert
 window.toggleLowStockSection = function() {
     const container = document.getElementById('lowStockCardContainer');
     if (!container) return;
