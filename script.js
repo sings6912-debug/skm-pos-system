@@ -107,17 +107,12 @@ window.renderUsersList = function() {
 window.openUserModal = function() { document.getElementById('editUserId').value = ''; document.getElementById('userModalTitle').innerText = '👤 បង្កើតគណនីបុគ្គលិកថ្មី'; document.getElementById('nuFullName').value = ''; document.getElementById('nuUsername').value = ''; document.getElementById('nuPassword').value = ''; document.getElementById('nuPin').value = ''; document.getElementById('nuRole').value = 'sales'; document.getElementById('adminConfirmPassword').value = ''; document.getElementById('nuUsername').disabled = false; document.getElementById('userManageModal').style.display = 'flex'; };
 window.editUserAccount = function(id) { const u = userAccounts.find(x => x.id === id); if(!u) return; document.getElementById('editUserId').value = u.id; document.getElementById('userModalTitle').innerText = '✏️ កែប្រែគណនីបុគ្គលិក'; document.getElementById('nuFullName').value = u.fullName||''; document.getElementById('nuUsername').value = u.username; document.getElementById('nuPassword').value = u.password; document.getElementById('nuPin').value = u.pin||''; document.getElementById('nuRole').value = u.role; document.getElementById('adminConfirmPassword').value = ''; document.getElementById('nuUsername').disabled = (u.username === 'admin'); document.getElementById('userManageModal').style.display = 'flex'; };
 window.closeUserModal = function() { document.getElementById('userManageModal').style.display = 'none'; };
-
 window.saveNewUser = function() {
-    const editId = document.getElementById('editUserId').value; const fname = document.getElementById('nuFullName').value.trim(); const uname = document.getElementById('nuUsername').value.trim(); const pass = document.getElementById('nuPassword').value.trim(); const pin = document.getElementById('nuPin').value.trim(); let role = document.getElementById('nuRole').value; const adminPass = document.getElementById('adminConfirmPassword').value; 
-    if (!uname || !pass || !role || !adminPass) return window.ksMsg('សូមបំពេញព័ត៌មានដែលចាំបាច់ និងបញ្ជាក់លេខកូដ Admin របស់អ្នក!'); 
-    const myAccount = userAccounts.find(x => x.username === activeUser.username); 
-    if (myAccount.password !== adminPass) return window.ksMsg('លេខកូដ Admin របស់អ្នកមិនត្រឹមត្រូវទេ! ប្រតិបត្តិការត្រូវបានបដិសេធ។', 'បរាជ័យ');
+    const editId = document.getElementById('editUserId').value; const fname = document.getElementById('nuFullName').value.trim(); const uname = document.getElementById('nuUsername').value.trim(); const pass = document.getElementById('nuPassword').value.trim(); const pin = document.getElementById('nuPin').value.trim(); let role = document.getElementById('nuRole').value; const adminPass = document.getElementById('adminConfirmPassword').value; if (!uname || !pass || !role || !adminPass) return window.ksMsg('សូមបំពេញព័ត៌មានដែលចាំបាច់ និងបញ្ជាក់លេខកូដ Admin របស់អ្នក!'); const myAccount = userAccounts.find(x => x.username === activeUser.username); if (myAccount.password !== adminPass) return window.ksMsg('លេខកូដ Admin របស់អ្នកមិនត្រឹមត្រូវទេ! ប្រតិបត្តិការត្រូវបានបដិសេធ។', 'បរាជ័យ');
     if (editId) { const existingUser = userAccounts.find(x => x.id === editId); if(existingUser.username === 'admin' && role !== 'admin') return window.ksMsg('គណនី admin ដើម មិនអាចដកសិទ្ធិជា admin វិញបានទេ!', 'បម្រាម'); const conflict = userAccounts.find(x => String(x.username).toLowerCase() === uname.toLowerCase() && x.id !== editId); if(conflict) return window.ksMsg('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមរើសឈ្មោះផ្សេង។', 'បរាជ័យ'); existingUser.fullName = fname; existingUser.username = uname; existingUser.password = pass; existingUser.pin = pin||'0000'; existingUser.role = role; if(existingUser.id === activeUser.id) { activeUser = existingUser; localStorage.setItem('ks_active_user_obj', JSON.stringify(activeUser)); } window.ksMsg('គណនីត្រូវបានកែប្រែដោយជោគជ័យ!', 'ជោគជ័យ'); } 
     else { if (userAccounts.find(x => String(x.username).toLowerCase() === uname.toLowerCase())) return window.ksMsg('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមរើសឈ្មោះផ្សេង។', 'បរាជ័យ'); userAccounts.push({ id: 'U_' + Date.now(), username: uname, password: pass, role: role, pin: pin||'0000', fullName: fname }); window.ksMsg(`គណនី ${uname} ត្រូវបានបង្កើតដោយជោគជ័យ!`, 'ជោគជ័យ'); }
     localStorage.setItem('ks_auth_users_pro', JSON.stringify(userAccounts)); window.closeUserModal(); window.renderUsersList();
 };
-
 window.deleteUserAccount = function(id) { const u = userAccounts.find(x => x.id === id); if (!u) return; if (u.username === 'admin') return window.ksMsg("មិនអាចលុបគណនី Admin ដើមបានទេ!"); if (u.id === activeUser.id) return window.ksMsg("មិនអាចលុបគណនីកំពុងប្រើប្រាស់បានទេ!"); window.ksMsg(`តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិកឈ្មោះ "${u.fullName||u.username}" មែនទេ?`, "បញ្ជាក់ការលុបគណនី", true, () => { userAccounts = userAccounts.filter(x => x.id !== id); localStorage.setItem('ks_auth_users_pro', JSON.stringify(userAccounts)); window.renderUsersList(); window.ksMsg("គណនីត្រូវបានលុបដោយជោគជ័យ!"); }); };
 
 let inventory = []; let historyLog = []; let invoices = []; let cart = []; let customers = []; let expenses = [];
@@ -160,9 +155,6 @@ window.onload = () => {
     
     window.loadSettingsToUI(); window.applyPermissions(); window.updateCategories(); window.setInventoryView(currentInventoryView, true); window.setPOSView(currentPOSView, true); window.renderAll();
     
-    // 🔄 ហៅមុខងារទាញទិន្នន័យពី Cloud ពេលបើកកម្មវិធី
-    loadFromSupabase();
-
     const slider = document.getElementById('posCategoryTabs');
     if (slider) {
         let isDown = false; let startX; let scrollLeft;
@@ -185,212 +177,11 @@ window.onload = () => {
 
 window.saveData = function() {
     inventory = inventory.filter(item => item !== null && typeof item === 'object');
-    localStorage.setItem('ks_inv_pro', JSON.stringify(inventory)); 
-    localStorage.setItem('ks_hist_pro', JSON.stringify(historyLog)); 
-    localStorage.setItem('ks_invoices_pro', JSON.stringify(invoices)); 
-    localStorage.setItem('ks_expenses_pro', JSON.stringify(expenses));
-    localStorage.setItem('ks_shop_name', shopName); 
-    localStorage.setItem('ks_shop_logo', shopLogo); 
-    localStorage.setItem('ks_shop_qr', shopQR); 
-    localStorage.setItem('ks_customers_pro', JSON.stringify(customers)); 
-    localStorage.setItem('ks_sys_settings', JSON.stringify(sysSettings)); 
-    localStorage.setItem('ks_shop_phone', shopPhone); 
-    localStorage.setItem('ks_shop_address', shopAddress); 
-    
-    const counter = localStorage.getItem('ks_invoice_counter'); 
-    if(counter) localStorage.setItem('ks_invoice_counter_backup', counter); 
-    
-    window.updateCategories(); 
-    window.applyPermissions(); 
-    window.renderAll();
-
-    syncToSupabase();
+    localStorage.setItem('ks_inv_pro', JSON.stringify(inventory)); localStorage.setItem('ks_hist_pro', JSON.stringify(historyLog)); localStorage.setItem('ks_invoices_pro', JSON.stringify(invoices)); localStorage.setItem('ks_expenses_pro', JSON.stringify(expenses));
+    localStorage.setItem('ks_shop_name', shopName); localStorage.setItem('ks_shop_logo', shopLogo); localStorage.setItem('ks_shop_qr', shopQR); localStorage.setItem('ks_customers_pro', JSON.stringify(customers)); localStorage.setItem('ks_sys_settings', JSON.stringify(sysSettings)); localStorage.setItem('ks_shop_phone', shopPhone); localStorage.setItem('ks_shop_address', shopAddress); 
+    const counter = localStorage.getItem('ks_invoice_counter'); if(counter) localStorage.setItem('ks_invoice_counter_backup', counter); 
+    window.updateCategories(); window.applyPermissions(); window.renderAll();
 };
-
-async function syncToSupabase() {
-    try {
-        if (inventory.length > 0) {
-            await db.from('products').upsert(inventory.map(item => ({
-                id: String(item.id || 'P_' + Date.now()),
-                custom_id: item.customId || '',
-                name: item.name || '',
-                category: item.category || '',
-                cost: Number(item.cost || 0),
-                price: Number(item.price || 0),
-                riel: Number(item.riel || 0),
-                unit: item.unit || '',
-                qty: Number(item.qty || 0),
-                description: item.desc || '',
-                image: item.image || '',
-                shop_id: 'default_shop'
-            })));
-        }
-
-        if (invoices.length > 0) {
-            await db.from('invoices').upsert(invoices.map(inv => ({
-                id: String(inv.id || 'INV_' + Date.now()),
-                timestamp: Number(inv.timestamp || Date.now()),
-                date: inv.date || '',
-                customer: inv.customer || '',
-                phone: inv.phone || '',
-                items: inv.items || [],
-                rate: Number(inv.rate || 0),
-                total_amount: Number(inv.totalAmount || 0),
-                total_riel: Number(inv.totalRiel || 0),
-                discount: Number(inv.discount || 0),
-                discount_type: inv.discountType || '',
-                tax_rate: Number(inv.taxRate || 0),
-                received_usd: Number(inv.receivedUsd || 0),
-                received_riel: Number(inv.receivedRiel || 0),
-                change_usd: Number(inv.changeUsd || 0),
-                change_riel: Number(inv.changeRiel || 0),
-                status: inv.status || '',
-                seller: inv.seller || '',
-                paid_usd: Number(inv.paidUsd || 0),
-                shop_id: 'default_shop'
-            })));
-        }
-
-        if (customers.length > 0) {
-            await db.from('customers').upsert(customers.map(cust => ({
-                id: String(cust.id || 'C_' + Date.now()),
-                name: cust.name || '',
-                phone: cust.phone || '',
-                shop_id: 'default_shop'
-            })));
-        }
-
-        // ➕ បន្ថែមការផ្ញើទិន្នន័យ ការចំណាយ (Expenses) ទៅកាន់ Cloud
-        if (expenses.length > 0) {
-            await db.from('expenses').upsert(expenses.map(e => ({
-                id: String(e.id || 'EXP_' + Date.now()),
-                timestamp: Number(e.timestamp || Date.now()),
-                date: e.date || '',
-                category: e.category || '',
-                amount: Number(e.amount || 0),
-                note: e.note || '',
-                seller: e.seller || '',
-                shop_id: 'default_shop'
-            })));
-        }
-
-        // ➕ បន្ថែមការផ្ញើទិន្នន័យ ប្រវត្តិប្រតិបត្តិការ (History Logs) ទៅកាន់ Cloud
-        if (historyLog.length > 0) {
-            await db.from('history_logs').upsert(historyLog.map(h => ({
-                id: Number(h.id || Date.now()),
-                date: h.date || '',
-                type: h.type || '',
-                item_name: h.itemName || '',
-                qty: Number(h.qty || 0),
-                note: h.note || '',
-                shop_id: 'default_shop'
-            })));
-        }
-
-        console.log('Sync to Supabase completed successfully!');
-    } catch (err) {
-        console.error('Sync error:', err);
-    }
-}
-
-async function loadFromSupabase() {
-    try {
-        console.log('កំពុងទាញទិន្នន័យពី Cloud...');
-        
-        // 1. ទាញយក Products
-        const { data: prodData, error: prodErr } = await db.from('products').select('*');
-        if (!prodErr && prodData && prodData.length > 0) {
-            inventory = prodData.map(p => ({
-                id: p.id,
-                customId: p.custom_id || p.id,
-                name: p.name,
-                category: p.category,
-                cost: Number(p.cost),
-                price: Number(p.price),
-                riel: Number(p.riel),
-                unit: p.unit,
-                qty: Number(p.qty),
-                desc: p.description,
-                image: p.image
-            }));
-            localStorage.setItem('ks_inv_pro', JSON.stringify(inventory));
-        }
-
-        // 2. ទាញយក Invoices
-        const { data: invData, error: invErr } = await db.from('invoices').select('*');
-        if (!invErr && invData && invData.length > 0) {
-            invoices = invData.map(inv => ({
-                id: inv.id,
-                timestamp: inv.timestamp,
-                date: inv.date,
-                customer: inv.customer,
-                phone: inv.phone,
-                items: typeof inv.items === 'string' ? JSON.parse(inv.items) : inv.items,
-                rate: inv.rate,
-                totalAmount: Number(inv.total_amount),
-                totalRiel: Number(inv.total_riel),
-                discount: Number(inv.discount),
-                discountType: inv.discount_type,
-                taxRate: Number(inv.tax_rate),
-                receivedUsd: Number(inv.received_usd),
-                receivedRiel: Number(inv.received_riel),
-                changeUsd: Number(inv.change_usd),
-                changeRiel: Number(inv.change_riel),
-                status: inv.status,
-                seller: inv.seller,
-                paidUsd: Number(inv.paid_usd)
-            }));
-            localStorage.setItem('ks_invoices_pro', JSON.stringify(invoices));
-        }
-
-        // 3. ទាញយក Customers
-        const { data: custData, error: custErr } = await db.from('customers').select('*');
-        if (!custErr && custData && custData.length > 0) {
-            customers = custData.map(c => ({
-                id: c.id,
-                name: c.name,
-                phone: c.phone
-            }));
-            localStorage.setItem('ks_customers_pro', JSON.stringify(customers));
-        }
-
-        // 4. ➕ ទាញយក ការចំណាយ (Expenses)
-        const { data: expData, error: expErr } = await db.from('expenses').select('*').order('timestamp', { ascending: false });
-        if (!expErr && expData && expData.length > 0) {
-            expenses = expData.map(e => ({
-                id: e.id,
-                timestamp: Number(e.timestamp),
-                date: e.date,
-                category: e.category,
-                amount: Number(e.amount),
-                note: e.note,
-                seller: e.seller
-            }));
-            localStorage.setItem('ks_expenses_pro', JSON.stringify(expenses));
-        }
-
-        // 5. ➕ ទាញយក ប្រវត្តិប្រតិបត្តិការ (History Logs)
-        const { data: histData, error: histErr } = await db.from('history_logs').select('*').order('id', { ascending: false });
-        if (!histErr && histData && histData.length > 0) {
-            historyLog = histData.map(h => ({
-                id: Number(h.id),
-                date: h.date,
-                type: h.type,
-                itemName: h.item_name,
-                qty: Number(h.qty),
-                note: h.note
-            }));
-            localStorage.setItem('ks_hist_pro', JSON.stringify(historyLog));
-        }
-
-        // Refresh UI បន្ទាប់ពីទាញទិន្នន័យរួច
-        window.updateCategories();
-        window.renderAll();
-        console.log('ទាញយកទិន្នន័យជោគជ័យ!');
-    } catch (err) {
-        console.error('កំហុសក្នុងការទាញទិន្នន័យពី Cloud:', err);
-    }
-}
 
 window.logAction = function(type, itemName, qty, note) { if(!sysSettings.logs) return; let executor = activeUser ? (activeUser.fullName ? activeUser.fullName : activeUser.username) : 'system'; historyLog.unshift({ id: Date.now(), date: window.fDate(), type, itemName, qty, note: `${note} (${executor})` }); if(historyLog.length > 500) historyLog.pop(); };
 
@@ -602,6 +393,7 @@ window.renderPOSProducts = function() {
         });
         if (posCat !== 'all') availableItems = availableItems.filter(p => p && p.category === posCat);
 
+        // តម្រៀបអីវ៉ាន់អស់ស្តុកទៅក្រោមគេ
         availableItems.sort((a, b) => {
             let outA = (parseFloat(a.qty)||0) <= 0 ? 1 : 0; let outB = (parseFloat(b.qty)||0) <= 0 ? 1 : 0;
             if (outA !== outB) return outA - outB; 
@@ -751,7 +543,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     receiptHTML += `<table style="width:100%; font-size: 12px; margin-top: 5px;">`;
     if (discountValue > 0) receiptHTML += `<tr><td>បញ្ចុះតម្លៃ:</td><td style="text-align:right;">${discountType === '%' ? `${discountValue}%` : window.fMoney(discountValue)}</td></tr>`;
     if (appliedTaxRate > 0) receiptHTML += `<tr><td>VAT (${appliedTaxRate}%):</td><td style="text-align:right;">បូកបញ្ចូល</td></tr>`;
-    receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">${window.fMoney(window.cartFinalUsd)}</td></tr>`; 
+    receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">${window.fMoney(window.cartFinalUsd)}</td></tr>`;
     if(window.cartFinalRiel > 0) receiptHTML += `<tr><td></td><td style="text-align:right; font-weight:bold; font-size:14px;">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</td></tr>`;
     
     if(status === 'paid' && (rUsd > 0 || rRiel > 0)) { 
@@ -1055,6 +847,7 @@ window.importData = function(e) {
 window.exportCustomers = function() { if(!customers.length) return window.ksMsg('គ្មានទិន្នន័យអតិថិជនដើម្បី Export ទេ!'); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(customers, null, 2)], { type: "application/json" })); a.download = `Customers_Backup_${Date.now()}.json`; a.click(); };
 window.importCustomers = function(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { const data = JSON.parse(ev.target.result); if(Array.isArray(data)) { let cCount = 0; data.forEach(newCust => { if(!customers.find(c => String(c.name).toLowerCase() === String(newCust.name).toLowerCase())) { customers.push({ id: newCust.id||'C_'+Date.now()+Math.random(), name: newCust.name, phone: newCust.phone||'' }); cCount++; } }); window.saveData(); window.ksMsg(`បាននាំចូលអតិថិជនថ្មីចំនួន ${cCount} នាក់!`, 'ជោគជ័យ'); } else window.ksMsg('ទម្រង់ឯកសារមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); } catch(err) { window.ksMsg('មិនអាចអានឯកសារបានទេ!', 'បរាជ័យ'); } e.target.value = ''; }; r.readAsText(file); };
 
+// មុខងារសម្រាប់ចុចបិទ/បើក (Collapse/Expand) ផ្ទាំង Low Stock Alert
 window.toggleLowStockSection = function() {
     const container = document.getElementById('lowStockCardContainer');
     if (!container) return;
@@ -1064,8 +857,3 @@ window.toggleLowStockSection = function() {
         container.style.display = 'none';
     }
 };
-
-// 🔗 Supabase Client Initialization (នៅខាងក្រោមគេបង្អស់)
-const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
-const SUPABASE_KEY = 'sb_publishable_0wpeDrvEWGskqHgBMBW1vA_QDixgV7o';
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
