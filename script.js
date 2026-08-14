@@ -174,14 +174,6 @@ window.onload = () => {
     
     window.loadSettingsToUI(); window.applyPermissions(); window.updateCategories(); window.setInventoryView(currentInventoryView, true); window.setPOSView(currentPOSView, true); window.renderAll();
     
-    const slider = document.getElementById('posCategoryTabs');
-    if (slider) {
-        let isDown = false; let startX; let scrollLeft;
-        slider.addEventListener('mousedown', (e) => { isDown = true; startX = e.pageX - slider.offsetLeft; scrollLeft = slider.scrollLeft; });
-        slider.addEventListener('mouseleave', () => { isDown = false; }); slider.addEventListener('mouseup', () => { isDown = false; });
-        slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); slider.scrollLeft = scrollLeft - ((e.pageX - slider.offsetLeft) - startX) * 2; });
-    }
-    
     // -------------------------------------------------------------
     // Header Scroll Hiding Logic (Smooth & Anti-Jitter)
     // -------------------------------------------------------------
@@ -538,7 +530,24 @@ window.toggleCartSummary = function() {
     }
 };
 
-window.openCheckoutModal = function() { if(cart.length === 0) return window.ksMsg('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); let displayHtml = `${window.fMoney(window.cartFinalUsd)}`; if(window.cartFinalRiel > 0) displayHtml += ` <br><span style="font-size: 18px; color: var(--text-muted);">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</span>`; document.getElementById('checkoutTotalDisplay').innerHTML = displayHtml; document.getElementById('checkoutReceivedUsd').value = ''; document.getElementById('checkoutReceivedRiel').value = ''; document.getElementById('checkoutChangeDisplay').innerText = '$0.00 | 0 ៛'; document.getElementById('checkoutModal').style.display = 'flex'; if (window.cartFinalUsd > 0) setTimeout(() => document.getElementById('checkoutReceivedUsd').focus(), 100); else setTimeout(() => document.getElementById('checkoutReceivedRiel').focus(), 100); };
+window.openCheckoutModal = function() { 
+    if(cart.length === 0) return window.ksMsg('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); 
+    let displayHtml = `${window.fMoney(window.cartFinalUsd)}`; 
+    if(window.cartFinalRiel > 0) displayHtml += ` <br><span style="font-size: 18px; color: var(--text-muted);">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</span>`; 
+    
+    document.getElementById('checkoutTotalDisplay').innerHTML = displayHtml; 
+    document.getElementById('checkoutReceivedUsd').value = ''; 
+    document.getElementById('checkoutReceivedRiel').value = ''; 
+    document.getElementById('checkoutChangeDisplay').innerText = '$0.00 | 0 ៛'; 
+    document.getElementById('checkoutModal').style.display = 'flex'; 
+    
+    if (window.innerWidth <= 768) {
+        document.getElementById('mobileCartContainer').classList.remove('open');
+    }
+
+    if (window.cartFinalUsd > 0) setTimeout(() => document.getElementById('checkoutReceivedUsd').focus(), 100); 
+    else setTimeout(() => document.getElementById('checkoutReceivedRiel').focus(), 100); 
+};
 window.calculateChange = function() { let rate = window.cartRate; let recvUsd = parseFloat(document.getElementById('checkoutReceivedUsd').value) || 0; let recvRiel = parseFloat(document.getElementById('checkoutReceivedRiel').value) || 0; let totalKhr = Math.round(window.cartFinalRiel); let recvKhr = (recvUsd * rate) + recvRiel; let changeKhr = recvKhr - totalKhr; if (changeKhr < 0) changeKhr = 0; let changeUsd = changeKhr / rate; document.getElementById('checkoutChangeDisplay').innerText = `${window.fMoney(changeUsd)} | ${Math.round(changeKhr).toLocaleString()} ៛`; };
 window.processCheckoutPaid = function() { let rate = window.cartRate; let recvUsd = parseFloat(document.getElementById('checkoutReceivedUsd').value) || 0; let recvRiel = parseFloat(document.getElementById('checkoutReceivedRiel').value) || 0; let totalKhr = Math.round(window.cartFinalRiel); let recvKhr = (recvUsd * rate) + recvRiel; let changeKhr = recvKhr - totalKhr; if (changeKhr < 0) changeKhr = 0; let changeUsd = changeKhr / rate; document.getElementById('checkoutModal').style.display = 'none'; window.checkout('paid', recvUsd, recvRiel, changeUsd, changeKhr); };
 

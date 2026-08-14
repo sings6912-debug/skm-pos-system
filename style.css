@@ -44,7 +44,7 @@
    2. BASE & RESET STYLES
    ========================================================================== */
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kantumruy Pro', 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
-html, body { overscroll-behavior-y: none; overscroll-behavior-x: none; height: 100vh; overflow: hidden; }
+html, body { overscroll-behavior-y: none; overscroll-behavior-x: none; height: 100%; height: 100dvh; overflow: hidden; }
 body { background: var(--bg-dark); color: var(--text-main); display: flex; font-size: var(--fs-14); transition: background 0.3s, color 0.3s; }
 
 #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 100000; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px); }
@@ -71,11 +71,10 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
 .nav-item:hover, .nav-item.active { background: rgba(16, 185, 129, 0.1); color: var(--primary); border-left-color: var(--primary); }
 .nav-item i { font-size: var(--fs-18); width: 30px; text-align: center; font-style: normal; display: flex; justify-content: center; align-items: center;}
 
-/* កែប្រែឱ្យមាន position: relative ដើម្បីទ្រទ្រង់ Header แบบ absolute */
-.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; position: relative; transition: width 0.3s;}
+.main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; transition: width 0.3s;}
 
 /* ==========================================================================
-   4. HEADER (ABSOLUTE POSITION - NO JITTER & NO BLANK SPACE)
+   4. HEADER (SMOOTH SCROLL HIDING - NO JITTER)
    ========================================================================== */
 .header { 
     background: var(--primary); 
@@ -88,22 +87,18 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
     gap: 15px; 
     flex-shrink: 0; 
     z-index: 10; 
-    
-    position: absolute; /* ប្រើ absolute ដើម្បីកុំឱ្យវាទៅរុញច្រានទំហំ Content ពេលលាក់ */
+    position: sticky; 
     top: 0; 
-    left: 0;
-    width: 100%;
     height: 60px;
     box-sizing: border-box;
-    
-    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    /* ប្រើប្រាស់ transform សម្រាប់លាក់ឡើងលើដោយរលូន មិនញ័រ និងមិនបន្សល់ចន្លោះទទេ */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
 }
 
 .header.hidden-header { 
     transform: translateY(-100%);
-    opacity: 0;
-    pointer-events: none;
+    margin-bottom: -60px;
 }
 
 .header h2 { font-size: var(--fs-18); color: #fff;}
@@ -112,17 +107,7 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
 /* ==========================================================================
    5. CONTENT BODY & DASHBOARD PANELS
    ========================================================================== */
-.content-body { 
-    flex: 1; 
-    overflow-x: hidden; 
-    overflow-y: auto; 
-    padding: 15px; 
-    padding-top: 75px; /* ទុកចន្លោះខាងលើស្មើនឹងកម្ពស់ Header (60px + គម្លាត 15px) កុំឱ្យអត្ថបទរត់បាំង */
-    display: flex; 
-    flex-direction: column; 
-    -webkit-overflow-scrolling: touch; 
-    min-height: 0;
-}
+.content-body { flex: 1; overflow-x: hidden; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; min-height: 0;}
 .tab-content { display: none; width: 100%; flex: 1; animation: fadeIn 0.3s; min-height: 0;}
 .tab-content.active { display: block; }
 #tab-pos.active { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
@@ -274,7 +259,7 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
 /* ==========================================================================
    8. MODALS & POPUPS
    ========================================================================== */
-.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 10px;}
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 100050; padding: 10px;}
 .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 15px; width: 100%; max-width: 650px; max-height: 95vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2);}
 .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
 .modal-body { padding: 20px; overflow-y: auto; -webkit-overflow-scrolling: touch;}
@@ -344,6 +329,11 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
     
     .view-toggle-group { width: auto; flex-shrink: 0; } .modal { max-width: 100%; max-height: 98vh; } .modal-body { padding: 15px; }
     .filter-row { display: none; } 
+
+    /* New rules added for mobile fix */
+    .table-responsive { -webkit-overflow-scrolling: touch; }
+    th, td { padding: 8px 5px; font-size: var(--fs-12); white-space: nowrap; }
+    #posProductGridContainer { padding-bottom: 70px; }
 }
 
 /* ==========================================================================
