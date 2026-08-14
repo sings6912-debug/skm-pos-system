@@ -74,7 +74,7 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
 .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; transition: width 0.3s;}
 
 /* ==========================================================================
-   4. HEADER (SMOOTH HIDING - NO FLICKER & NO BLANK SPACE)
+   4. HEADER (SMOOTH HIDING - FIXED HEIGHT & NO JITTER)
    ========================================================================== */
 .header { 
     background: var(--primary); 
@@ -83,26 +83,22 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
     display: flex; 
     justify-content: space-between; 
     align-items: center; 
-    flex-wrap: wrap; 
-    gap: 10px; 
+    flex-wrap: nowrap; 
+    gap: 15px; 
     flex-shrink: 0; 
     z-index: 10; 
     position: sticky; 
     top: 0; 
-    max-height: 100px;
-    opacity: 1;
-    visibility: visible;
-    overflow: hidden;
-    transition: max-height 0.3s ease-in-out, opacity 0.3s ease-in-out, padding 0.3s ease-in-out, border-bottom 0.3s ease-in-out;
+    height: 60px;
+    box-sizing: border-box;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+    will-change: transform;
 }
 
 .header.hidden-header { 
-    max-height: 0;
+    transform: translateY(-100%);
     opacity: 0;
-    visibility: hidden;
-    padding-top: 0;
-    padding-bottom: 0;
-    border-bottom: none;
+    pointer-events: none;
 }
 
 .header h2 { font-size: var(--fs-18); color: #fff;}
