@@ -1,12 +1,24 @@
+/* ==========================================================================
+   1. ROOT VARIABLES & THEMES
+   ========================================================================== */
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+
 :root { 
-    --primary: #10b981; --primary-hover: #059669; 
-    --bg-dark: #0f172a; --bg-card: #1e293b; 
-    --text-main: #f8fafc; --text-muted: #94a3b8; 
-    --danger: #e11d48; --success: #10b981; --warning: #f59e0b; --border: #334155; 
+    --primary: #10b981; 
+    --primary-hover: #059669; 
+    --bg-dark: #0f172a; 
+    --bg-card: #1e293b; 
+    --text-main: #f8fafc; 
+    --text-muted: #94a3b8; 
+    --danger: #e11d48; 
+    --success: #10b981; 
+    --warning: #f59e0b; 
+    --border: #334155; 
     
     --fs-10: 10px; --fs-11: 11px; --fs-12: 12px; --fs-13: 13px; 
     --fs-14: 14px; --fs-15: 15px; --fs-16: 16px; --fs-18: 18px; 
     --fs-20: 20px; --fs-24: 24px; --fs-28: 28px;
+    --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 :root.light-theme {
@@ -28,13 +40,25 @@
 :root.light-theme .modal { background: #fff; }
 :root.light-theme .toolbar { background: #fff; }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Battambang', 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
+/* ==========================================================================
+   2. BASE & RESET STYLES
+   ========================================================================== */
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kantumruy Pro', 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
 html, body { overscroll-behavior-y: none; overscroll-behavior-x: none; height: 100vh; overflow: hidden; }
 body { background: var(--bg-dark); color: var(--text-main); display: flex; font-size: var(--fs-14); transition: background 0.3s, color 0.3s; }
 
 #authScreen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 100000; display: flex; justify-content: center; align-items: center; padding: 20px; backdrop-filter: blur(10px); }
 .auth-card { background: var(--bg-card); padding: 35px 30px; border-radius: 15px; border: 1px solid var(--border); width: 100%; max-width: 400px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); text-align: center; }
 
+/* Custom Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+/* ==========================================================================
+   3. SIDEBAR NAVIGATION
+   ========================================================================== */
 .sidebar { width: 250px; background: var(--bg-card); border-right: 1px solid var(--border); display: flex; flex-direction: column; padding: 20px 0; transition: width 0.3s ease, transform 0.3s ease; z-index: 100; overflow-y: auto;}
 .sidebar::-webkit-scrollbar { width: 4px; }
 .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
@@ -49,11 +73,38 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
 
 .main-content { flex: 1; display: flex; flex-direction: column; overflow: hidden; width: 100%; transition: width 0.3s;}
 
-.header { background: var(--primary); padding: 12px 20px; border-bottom: 1px solid rgba(0,0,0,0.1); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; flex-shrink: 0; z-index: 10; position: sticky; top: 0; transition: transform 0.3s ease, margin-bottom 0.3s ease, opacity 0.3s ease; }
-.header.hidden-header { transform: translateY(-100%); margin-bottom: -65px; opacity: 0; pointer-events: none; }
+/* ==========================================================================
+   4. HEADER (FIXED SCROLL HIDING - NO FLICKER)
+   ========================================================================== */
+.header { 
+    background: var(--primary); 
+    padding: 12px 20px; 
+    border-bottom: 1px solid rgba(0,0,0,0.1); 
+    display: flex; 
+    justify-content: space-between; 
+    align-items: center; 
+    flex-wrap: wrap; 
+    gap: 10px; 
+    flex-shrink: 0; 
+    z-index: 10; 
+    position: sticky; 
+    top: 0; 
+    /* ប្រើតែ transform សម្រាប់ការលាក់ ដោយគ្មាន margin-bottom នាំឱ្យញ័រ */
+    transition: transform var(--transition-smooth); 
+    will-change: transform;
+}
+
+/* លាក់ Header ដោយ Push ឡើងលើផុតពីអេក្រង់ */
+.header.hidden-header { 
+    transform: translateY(-100%); 
+}
+
 .header h2 { font-size: var(--fs-18); color: #fff;}
 .sidebar-toggle-btn { cursor: pointer; font-size: var(--fs-24); color: white; background: transparent; border: none; margin-right: 15px; display: inline-block;}
 
+/* ==========================================================================
+   5. CONTENT BODY & DASHBOARD PANELS
+   ========================================================================== */
 .content-body { flex: 1; overflow-x: hidden; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; -webkit-overflow-scrolling: touch; min-height: 0;}
 .tab-content { display: none; width: 100%; flex: 1; animation: fadeIn 0.3s; min-height: 0;}
 .tab-content.active { display: block; }
@@ -107,6 +158,9 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
 
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; background: rgba(30,41,59,0.5); padding: 15px; border-radius: 10px; border: 1px solid var(--border); align-items: center; transition: background 0.3s;}
 
+/* ==========================================================================
+   6. INVENTORY & POS PRODUCT GRID
+   ========================================================================== */
 .product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; transition: 0.3s;}
 .product-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; display: flex; flex-direction: column; transition: 0.3s; position: relative;}
 .product-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
@@ -182,6 +236,9 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
 :root.light-theme .pos-tab.active { background: #0f172a !important; color: #ffffff !important; border-color: #0f172a !important; }
 .pos-tab:hover:not(.active) { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
 
+/* ==========================================================================
+   7. SHOPPING CART & SUMMARY
+   ========================================================================== */
 .pos-cart { flex: 0 0 340px; width: 340px; background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; display: flex; flex-direction: column; overflow: hidden; height: 100%;}
 .cart-header { padding: 15px; border-bottom: 1px solid var(--border); font-weight: bold; background: rgba(0,0,0,0.1); font-size: var(--fs-16); display: flex; justify-content: space-between; align-items: center; flex-shrink: 0;}
 .cart-items { flex: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; min-height: 0;} 
@@ -197,6 +254,9 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
 .cart-qty-input::-webkit-outer-spin-button, .cart-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
 .cart-qty-input[type=number] { -moz-appearance: textfield; }
 
+/* ==========================================================================
+   8. MODALS & POPUPS
+   ========================================================================== */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); backdrop-filter: blur(5px); display: none; justify-content: center; align-items: center; z-index: 1000; padding: 10px;}
 .modal { background: var(--bg-card); border: 1px solid var(--border); border-radius: 15px; width: 100%; max-width: 650px; max-height: 95vh; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.2);}
 .modal-header { padding: 15px 20px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;}
@@ -210,19 +270,17 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
 .color-swatch:hover { transform: scale(1.1); }
 .color-swatch.active { border-color: #fff; box-shadow: 0 0 0 2px var(--text-muted); transform: scale(1.1); }
 
-::-webkit-scrollbar { width: 6px; height: 6px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
-
 .sidebar-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 90; backdrop-filter: blur(2px);}
 
 #invoiceCaptureArea { background: #ffffff !important; padding: 20px; border-radius: 8px; border: 1px solid #ccc; color: #000000 !important; width: 100%; max-width: 400px; margin: 0 auto; overflow-x: hidden; box-sizing: border-box;}
-#invoiceCaptureArea * { color: #000000 !important; font-family: 'Battambang', sans-serif !important; box-sizing: border-box;}
+#invoiceCaptureArea * { color: #000000 !important; font-family: 'Kantumruy Pro', sans-serif !important; box-sizing: border-box;}
 #invoiceCaptureArea table { border-collapse: collapse; width: 100%; table-layout: fixed; }
 #invoiceCaptureArea th { border-bottom: 1px dashed #000; padding: 8px 5px; background: transparent !important; color: #000 !important; font-weight: bold;}
 #invoiceCaptureArea td { padding: 8px 5px; border-bottom: none; }
 
+/* ==========================================================================
+   9. MOBILE & TABLET RESPONSIVE
+   ========================================================================== */
 @media (max-width: 900px) { .pos-cart { flex: 0 0 300px; width: 300px; } }
 @media (max-width: 768px) {
     body { overflow: hidden; } .main-content { overflow: hidden; } 
@@ -271,32 +329,31 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
     .filter-row { display: none; } 
 }
 
-/* ==========================================
-   ១១. ទម្រង់សម្រាប់ព្រីនវិក្កយបត្រ (THERMAL PRINT 58mm & 80mm)
-   ========================================== */
+/* ==========================================================================
+   10. THERMAL PRINT STYLES (58mm & 80mm)
+   ========================================================================== */
 @media print {
-    @page { margin: 0; size: auto; } /* ឱ្យម៉ាស៊ីនព្រីនកាត់ក្រដាសដោយស្វ័យប្រវត្តិ */
+    @page { margin: 0; size: auto; }
     body * { visibility: hidden; }
     
     #printReceiptArea, #printReceiptArea * { 
         visibility: visible; 
-        color: #000 !important; /* ប្តូរទៅពណ៌ខ្មៅដិត 100% សម្រាប់ Thermal Printer */
-        font-family: 'Battambang', sans-serif !important; 
+        color: #000 !important; 
+        font-family: 'Kantumruy Pro', sans-serif !important; 
     }
     
     #printReceiptArea { 
         position: absolute; 
         left: 0; top: 0; 
         width: 100%; 
-        max-width: 80mm; /* ទំហំអតិបរមា 80mm បើព្រីន 58mm វានឹងបង្រួមដោយស្វ័យប្រវត្តិ */
+        max-width: 80mm; 
         margin: 0 auto;
-        padding: 5px; /* កាត់បន្ថយគម្លាតឱ្យនៅតូចបំផុតដើម្បីសន្សំក្រដាស */
+        padding: 5px; 
         background: #fff;
         font-size: 12px; 
         line-height: 1.4;
     }
     
-    /* រចនាទម្រង់តារាងសារជាថ្មី */
     #printReceiptArea table { width: 100%; border-collapse: collapse; margin-bottom: 5px; table-layout: fixed; }
     #printReceiptArea th, #printReceiptArea td { padding: 4px 0; border: none; vertical-align: top; }
     

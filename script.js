@@ -1,3 +1,13 @@
+// ==========================================================================
+// 1. MULTI-BRANCH CONFIGURATION & STORAGE ISOLATION
+// ==========================================================================
+const urlParams = new URLSearchParams(window.location.search);
+const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
+const getBranchKey = (key) => `ks2_${SHOP_BRANCH_ID}_${key}`;
+
+// ==========================================================================
+// 2. THEME & ACCENT COLOR SETTINGS
+// ==========================================================================
 window.darkenHex = function(hex, percent) {
     let r = parseInt(hex.substring(1,3),16); let g = parseInt(hex.substring(3,5),16); let b = parseInt(hex.substring(5,7),16);
     r = parseInt(r * (100 - percent) / 100); g = parseInt(g * (100 - percent) / 100); b = parseInt(b * (100 - percent) / 100);
@@ -6,25 +16,28 @@ window.darkenHex = function(hex, percent) {
 window.handleCustomColor = function(hexColor) { let hoverColor = window.darkenHex(hexColor, 20); window.setAccentColor(hexColor, hoverColor); };
 window.setAccentColor = function(primary, hover) {
     document.documentElement.style.setProperty('--primary', primary); document.documentElement.style.setProperty('--primary-hover', hover);
-    let colorData = { primary: primary, hover: hover }; localStorage.setItem('ks_accent_color', JSON.stringify(colorData));
+    let colorData = { primary: primary, hover: hover }; localStorage.setItem(getBranchKey('accent_color'), JSON.stringify(colorData));
     document.querySelectorAll('.color-swatch').forEach(el => { if(el.getAttribute('data-color') === primary) el.classList.add('active'); else el.classList.remove('active'); });
     const picker = document.getElementById('customColorPicker'); if(picker) picker.value = primary;
 };
 window.setThemeMode = function(mode) {
     if(mode === 'light') document.documentElement.classList.add('light-theme'); else document.documentElement.classList.remove('light-theme');
-    localStorage.setItem('ks_theme', mode); window.updateThemeUI(mode);
+    localStorage.setItem(getBranchKey('theme'), mode); window.updateThemeUI(mode);
 };
 window.updateThemeUI = function(mode) {
     const darkBtn = document.getElementById('themeModeDarkBtn'); const lightBtn = document.getElementById('themeModeLightBtn'); if(!darkBtn || !lightBtn) return;
     if(mode === 'light') { lightBtn.classList.add('active'); darkBtn.classList.remove('active'); } else { darkBtn.classList.add('active'); lightBtn.classList.remove('active'); }
 };
 window.loadThemeSettings = function() {
-    let mode = localStorage.getItem('ks_theme') || 'dark'; window.setThemeMode(mode);
-    let savedAccent = localStorage.getItem('ks_accent_color');
+    let mode = localStorage.getItem(getBranchKey('theme')) || 'dark'; window.setThemeMode(mode);
+    let savedAccent = localStorage.getItem(getBranchKey('accent_color'));
     if(savedAccent) { try { let color = JSON.parse(savedAccent); window.setAccentColor(color.primary, color.hover); } catch(e){} } else { window.setAccentColor('#10b981', '#059669'); }
 };
 window.toggleTheme = function() { const isLight = document.documentElement.classList.contains('light-theme'); window.setThemeMode(isLight ? 'dark' : 'light'); };
 
+// ==========================================================================
+// 3. UTILITY FUNCTIONS & BARCODE SCANNER
+// ==========================================================================
 window.showToast = function(msg, isError = false) {
     const toast = document.getElementById('toastNotification'); toast.style.background = isError ? 'var(--danger)' : 'var(--success)'; toast.innerHTML = msg; toast.style.display = 'block'; toast.style.opacity = '1'; 
     setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.style.display = 'none', 300); }, 2000);
@@ -73,14 +86,17 @@ window.filterTable = function(tableId) {
 };
 
 window.generateInvoiceId = function() {
-    let counters = JSON.parse(localStorage.getItem('ks_invoice_counter')) || { lastDate: '', seq: 0 };
+    let counters = JSON.parse(localStorage.getItem(getBranchKey('invoice_counter'))) || { lastDate: '', seq: 0 };
     let d = new Date(); let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
     if (counters.lastDate === todayStr) counters.seq += 1; else { counters.lastDate = todayStr; counters.seq = 1; }
-    localStorage.setItem('ks_invoice_counter', JSON.stringify(counters)); return `INV-${todayStr}-${String(counters.seq).padStart(3, '0')}`;
+    localStorage.setItem(getBranchKey('invoice_counter'), JSON.stringify(counters)); return `INV-${todayStr}-${String(counters.seq).padStart(3, '0')}`;
 };
 
-let userAccounts = JSON.parse(localStorage.getItem('ks_auth_users_pro')) || [ { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' } ];
-let activeUser = JSON.parse(localStorage.getItem('ks_active_user_obj')) || null; let currentRole = activeUser ? activeUser.role : 'admin';
+// ==========================================================================
+// 4. AUTHENTICATION & USER MANAGEMENT
+// ==========================================================================
+let userAccounts = JSON.parse(localStorage.getItem(getBranchKey('auth_users_pro'))) || [ { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' } ];
+let activeUser = JSON.parse(localStorage.getItem(getBranchKey('active_user_obj'))) || null; let currentRole = activeUser ? activeUser.role : 'admin';
 
 window.checkAuthentication = function() {
     if (!activeUser) { document.getElementById('authScreen').style.display = 'flex'; document.getElementById('loginForm').style.display = 'block'; document.getElementById('forgotPassForm').style.display = 'none'; } 
@@ -89,14 +105,14 @@ window.checkAuthentication = function() {
 
 window.handleLogin = function() {
     const u = document.getElementById('loginUsername').value.trim(); const p = document.getElementById('loginPassword').value.trim(); const foundUser = userAccounts.find(x => String(x.username).toLowerCase() === u.toLowerCase() && String(x.password) === p);
-    if (foundUser) { activeUser = foundUser; currentRole = foundUser.role; localStorage.setItem('ks_active_user_obj', JSON.stringify(activeUser)); document.getElementById('loginUsername').value = ''; document.getElementById('loginPassword').value = ''; window.checkAuthentication(); window.switchTab('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos')); window.ksMsg(`សូមស្វាគមន៍មកកាន់ប្រព័ន្ធ, ${foundUser.fullName ? foundUser.fullName : foundUser.username}!`, "ចូលប្រព័ន្ធជោគជ័យ"); } 
+    if (foundUser) { activeUser = foundUser; currentRole = foundUser.role; localStorage.setItem(getBranchKey('active_user_obj'), JSON.stringify(activeUser)); document.getElementById('loginUsername').value = ''; document.getElementById('loginPassword').value = ''; window.checkAuthentication(); window.switchTab('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos')); window.ksMsg(`សូមស្វាគមន៍មកកាន់ប្រព័ន្ធ, ${foundUser.fullName ? foundUser.fullName : foundUser.username}!`, "ចូលប្រព័ន្ធជោគជ័យ"); } 
     else window.ksMsg("ឈ្មោះ ឬ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!", "បរាជ័យ");
 };
 
-window.handleLogout = function() { window.ksMsg("តើអ្នកពិតជាចង់ចាកចេញពីប្រព័ន្ធមែនទេ?", "បញ្ជាក់ការចាកចេញ", true, () => { activeUser = null; localStorage.removeItem('ks_active_user_obj'); window.checkAuthentication(); }); };
+window.handleLogout = function() { window.ksMsg("តើអ្នកពិតជាចង់ចាកចេញពីប្រព័ន្ធមែនទេ?", "បញ្ជាក់ការចាកចេញ", true, () => { activeUser = null; localStorage.removeItem(getBranchKey('active_user_obj')); window.checkAuthentication(); }); };
 window.toggleForgotPass = function(show) { document.getElementById('loginForm').style.display = show ? 'none' : 'block'; document.getElementById('forgotPassForm').style.display = show ? 'block' : 'none'; };
-window.handleResetPassword = function() { const u = document.getElementById('resetUsername').value.trim(); const pin = document.getElementById('resetPin').value.trim(); const newP = document.getElementById('newResetPassword').value.trim(); const userIndex = userAccounts.findIndex(x => String(x.username).toLowerCase() === u.toLowerCase()); if (userIndex !== -1 && String(userAccounts[userIndex].pin) === pin) { if (!newP) return window.ksMsg("សូមបញ្ចូលលេខកូដថ្មី!"); userAccounts[userIndex].password = newP; localStorage.setItem('ks_auth_users_pro', JSON.stringify(userAccounts)); window.ksMsg("លេខកូដសម្ងាត់ត្រូវបានប្តូរជោគជ័យ! សូមចូលប្រព័ន្ធម្តងទៀត។", "ជោគជ័យ"); window.toggleForgotPass(false); } else window.ksMsg("ឈ្មោះ ឬ លេខ PIN សម្ងាត់មិនត្រឹមត្រូវទេ!", "បរាជ័យ"); };
-window.handleChangePassword = function() { const oldP = document.getElementById('chgOldPassword').value; const newP = document.getElementById('chgNewPassword').value; if (!oldP || !newP) return window.ksMsg("សូមបំពេញចន្លោះអោយបានត្រឹមត្រូវ!"); const userIndex = userAccounts.findIndex(x => x.username === activeUser.username); if (userIndex !== -1 && String(userAccounts[userIndex].password) === oldP) { userAccounts[userIndex].password = newP; localStorage.setItem('ks_auth_users_pro', JSON.stringify(userAccounts)); document.getElementById('chgOldPassword').value = ''; document.getElementById('chgNewPassword').value = ''; window.ksMsg("លេខកូដសម្ងាត់របស់អ្នកត្រូវបានផ្លាស់ប្តូរជោគជ័យ!", "ជោគជ័យ"); } else window.ksMsg("លេខកូដចាស់មិនត្រឹមត្រូវទេ!", "បរាជ័យ"); };
+window.handleResetPassword = function() { const u = document.getElementById('resetUsername').value.trim(); const pin = document.getElementById('resetPin').value.trim(); const newP = document.getElementById('newResetPassword').value.trim(); const userIndex = userAccounts.findIndex(x => String(x.username).toLowerCase() === u.toLowerCase()); if (userIndex !== -1 && String(userAccounts[userIndex].pin) === pin) { if (!newP) return window.ksMsg("សូមបញ្ចូលលេខកូដថ្មី!"); userAccounts[userIndex].password = newP; localStorage.setItem(getBranchKey('auth_users_pro'), JSON.stringify(userAccounts)); window.ksMsg("លេខកូដសម្ងាត់ត្រូវបានប្តូរជោគជ័យ! សូមចូលប្រព័ន្ធម្តងទៀត។", "ជោគជ័យ"); window.toggleForgotPass(false); } else window.ksMsg("ឈ្មោះ ឬ លេខ PIN សម្ងាត់មិនត្រឹមត្រូវទេ!", "បរាជ័យ"); };
+window.handleChangePassword = function() { const oldP = document.getElementById('chgOldPassword').value; const newP = document.getElementById('chgNewPassword').value; if (!oldP || !newP) return window.ksMsg("សូមបំពេញចន្លោះអោយបានត្រឹមត្រូវ!"); const userIndex = userAccounts.findIndex(x => x.username === activeUser.username); if (userIndex !== -1 && String(userAccounts[userIndex].password) === oldP) { userAccounts[userIndex].password = newP; localStorage.setItem(getBranchKey('auth_users_pro'), JSON.stringify(userAccounts)); document.getElementById('chgOldPassword').value = ''; document.getElementById('chgNewPassword').value = ''; window.ksMsg("លេខកូដសម្ងាត់របស់អ្នកត្រូវបានផ្លាស់ប្តូរជោគជ័យ!", "ជោគជ័យ"); } else window.ksMsg("លេខកូដចាស់មិនត្រឹមត្រូវទេ!", "បរាជ័យ"); };
 
 window.renderUsersList = function() {
     if (!activeUser || activeUser.role !== 'admin') return; const tbody = document.getElementById('userListTableBody');
@@ -109,12 +125,15 @@ window.editUserAccount = function(id) { const u = userAccounts.find(x => x.id ==
 window.closeUserModal = function() { document.getElementById('userManageModal').style.display = 'none'; };
 window.saveNewUser = function() {
     const editId = document.getElementById('editUserId').value; const fname = document.getElementById('nuFullName').value.trim(); const uname = document.getElementById('nuUsername').value.trim(); const pass = document.getElementById('nuPassword').value.trim(); const pin = document.getElementById('nuPin').value.trim(); let role = document.getElementById('nuRole').value; const adminPass = document.getElementById('adminConfirmPassword').value; if (!uname || !pass || !role || !adminPass) return window.ksMsg('សូមបំពេញព័ត៌មានដែលចាំបាច់ និងបញ្ជាក់លេខកូដ Admin របស់អ្នក!'); const myAccount = userAccounts.find(x => x.username === activeUser.username); if (myAccount.password !== adminPass) return window.ksMsg('លេខកូដ Admin របស់អ្នកមិនត្រឹមត្រូវទេ! ប្រតិបត្តិការត្រូវបានបដិសេធ។', 'បរាជ័យ');
-    if (editId) { const existingUser = userAccounts.find(x => x.id === editId); if(existingUser.username === 'admin' && role !== 'admin') return window.ksMsg('គណនី admin ដើម មិនអាចដកសិទ្ធិជា admin វិញបានទេ!', 'បម្រាម'); const conflict = userAccounts.find(x => String(x.username).toLowerCase() === uname.toLowerCase() && x.id !== editId); if(conflict) return window.ksMsg('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមរើសឈ្មោះផ្សេង។', 'បរាជ័យ'); existingUser.fullName = fname; existingUser.username = uname; existingUser.password = pass; existingUser.pin = pin||'0000'; existingUser.role = role; if(existingUser.id === activeUser.id) { activeUser = existingUser; localStorage.setItem('ks_active_user_obj', JSON.stringify(activeUser)); } window.ksMsg('គណនីត្រូវបានកែប្រែដោយជោគជ័យ!', 'ជោគជ័យ'); } 
+    if (editId) { const existingUser = userAccounts.find(x => x.id === editId); if(existingUser.username === 'admin' && role !== 'admin') return window.ksMsg('គណនី admin ដើម មិនអាចដកសិទ្ធិជា admin វិញបានទេ!', 'បម្រាម'); const conflict = userAccounts.find(x => String(x.username).toLowerCase() === uname.toLowerCase() && x.id !== editId); if(conflict) return window.ksMsg('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមរើសឈ្មោះផ្សេង។', 'បរាជ័យ'); existingUser.fullName = fname; existingUser.username = uname; existingUser.password = pass; existingUser.pin = pin||'0000'; existingUser.role = role; if(existingUser.id === activeUser.id) { activeUser = existingUser; localStorage.setItem(getBranchKey('active_user_obj'), JSON.stringify(activeUser)); } window.ksMsg('គណនីត្រូវបានកែប្រែដោយជោគជ័យ!', 'ជោគជ័យ'); } 
     else { if (userAccounts.find(x => String(x.username).toLowerCase() === uname.toLowerCase())) return window.ksMsg('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមរើសឈ្មោះផ្សេង។', 'បរាជ័យ'); userAccounts.push({ id: 'U_' + Date.now(), username: uname, password: pass, role: role, pin: pin||'0000', fullName: fname }); window.ksMsg(`គណនី ${uname} ត្រូវបានបង្កើតដោយជោគជ័យ!`, 'ជោគជ័យ'); }
-    localStorage.setItem('ks_auth_users_pro', JSON.stringify(userAccounts)); window.closeUserModal(); window.renderUsersList();
+    localStorage.setItem(getBranchKey('auth_users_pro'), JSON.stringify(userAccounts)); window.closeUserModal(); window.renderUsersList();
 };
-window.deleteUserAccount = function(id) { const u = userAccounts.find(x => x.id === id); if (!u) return; if (u.username === 'admin') return window.ksMsg("មិនអាចលុបគណនី Admin ដើមបានទេ!"); if (u.id === activeUser.id) return window.ksMsg("មិនអាចលុបគណនីកំពុងប្រើប្រាស់បានទេ!"); window.ksMsg(`តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិកឈ្មោះ "${u.fullName||u.username}" មែនទេ?`, "បញ្ជាក់ការលុបគណនី", true, () => { userAccounts = userAccounts.filter(x => x.id !== id); localStorage.setItem('ks_auth_users_pro', JSON.stringify(userAccounts)); window.renderUsersList(); window.ksMsg("គណនីត្រូវបានលុបដោយជោគជ័យ!"); }); };
+window.deleteUserAccount = function(id) { const u = userAccounts.find(x => x.id === id); if (!u) return; if (u.username === 'admin') return window.ksMsg("មិនអាចលុបគណនី Admin ដើមបានទេ!"); if (u.id === activeUser.id) return window.ksMsg("មិនអាចលុបគណនីកំពុងប្រើប្រាស់បានទេ!"); window.ksMsg(`តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិកឈ្មោះ "${u.fullName||u.username}" មែនទេ?`, "បញ្ជាក់ការលុបគណនី", true, () => { userAccounts = userAccounts.filter(x => x.id !== id); localStorage.setItem(getBranchKey('auth_users_pro'), JSON.stringify(userAccounts)); window.renderUsersList(); window.ksMsg("គណនីត្រូវបានលុបដោយជោគជ័យ!"); }); };
 
+// ==========================================================================
+// 5. GLOBAL APP VARIABLES & INITIALIZATION
+// ==========================================================================
 let inventory = []; let historyLog = []; let invoices = []; let cart = []; let customers = []; let expenses = [];
 let shopName = 'SKM INTEGRATE'; let shopLogo = ''; let shopQR = ''; let shopPhone = ''; let shopAddress = ''; 
 let sysSettings = { cust: true, unpaid: true, logs: true, cost: true, discount: true, showSeller: true, tax: false, taxRate: 10 };
@@ -142,12 +161,12 @@ window.switchTab = function(tabId, title, elem) {
 window.onload = () => {
     window.loadThemeSettings(); window.checkLicense(); window.checkAuthentication(); setInterval(() => document.getElementById('currentDate').innerText = window.fDate(), 1000);
     try { 
-        let rawInv = JSON.parse(localStorage.getItem('ks_inv_pro'));
+        let rawInv = JSON.parse(localStorage.getItem(getBranchKey('inv_pro')));
         inventory = (!rawInv || !Array.isArray(rawInv)) ? [] : rawInv.filter(item => item !== null && typeof item === 'object');
-        historyLog = JSON.parse(localStorage.getItem('ks_hist_pro')) || []; invoices = JSON.parse(localStorage.getItem('ks_invoices_pro')) || []; expenses = JSON.parse(localStorage.getItem('ks_expenses_pro')) || [];
-        shopName = localStorage.getItem('ks_shop_name') || 'SKM INTEGRATE'; shopLogo = localStorage.getItem('ks_shop_logo') || ''; shopQR = localStorage.getItem('ks_shop_qr') || ''; customers = JSON.parse(localStorage.getItem('ks_customers_pro')) || []; shopPhone = localStorage.getItem('ks_shop_phone') || ''; shopAddress = localStorage.getItem('ks_shop_address') || ''; 
-        let savedSettings = JSON.parse(localStorage.getItem('ks_sys_settings')); if(savedSettings) sysSettings = {...sysSettings, ...savedSettings}; 
-        currentInventoryView = localStorage.getItem('ks_inv_view_mode') || 'grid'; currentPOSView = localStorage.getItem('ks_pos_view_mode') || 'grid'; 
+        historyLog = JSON.parse(localStorage.getItem(getBranchKey('hist_pro'))) || []; invoices = JSON.parse(localStorage.getItem(getBranchKey('invoices_pro'))) || []; expenses = JSON.parse(localStorage.getItem(getBranchKey('expenses_pro'))) || [];
+        shopName = localStorage.getItem(getBranchKey('shop_name')) || 'SKM INTEGRATE'; shopLogo = localStorage.getItem(getBranchKey('shop_logo')) || ''; shopQR = localStorage.getItem(getBranchKey('shop_qr')) || ''; customers = JSON.parse(localStorage.getItem(getBranchKey('customers_pro'))) || []; shopPhone = localStorage.getItem(getBranchKey('shop_phone')) || ''; shopAddress = localStorage.getItem(getBranchKey('shop_address')) || ''; 
+        let savedSettings = JSON.parse(localStorage.getItem(getBranchKey('sys_settings'))); if(savedSettings) sysSettings = {...sysSettings, ...savedSettings}; 
+        currentInventoryView = localStorage.getItem(getBranchKey('inv_view_mode')) || 'grid'; currentPOSView = localStorage.getItem(getBranchKey('pos_view_mode')) || 'grid'; 
     } catch(e) {}
     
     document.getElementById('displayShopName').innerHTML = `${shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
@@ -163,26 +182,42 @@ window.onload = () => {
         slider.addEventListener('mousemove', (e) => { if (!isDown) return; e.preventDefault(); slider.scrollLeft = scrollLeft - ((e.pageX - slider.offsetLeft) - startX) * 2; });
     }
     
-    const header = document.getElementById('topHeaderBar'); let lastScrollTop = 0;
+    // -------------------------------------------------------------
+    // Header Scroll Hiding Logic (Smooth & Anti-Jitter)
+    // -------------------------------------------------------------
+    const header = document.getElementById('topHeaderBar'); 
+    let lastScrollTop = 0;
+    const delta = 10; // Threshold ការពារការញ័រ
+    
     function setupScrollHiding(el) {
         if (!el) return;
         el.addEventListener('scroll', function() {
             let st = el.scrollTop;
-            if (st > lastScrollTop && st > 30) header.classList.add('hidden-header'); else header.classList.remove('hidden-header');
+            if (Math.abs(lastScrollTop - st) <= delta) return;
+            
+            if (st > lastScrollTop && st > 60) {
+                header.classList.add('hidden-header');
+            } else {
+                header.classList.remove('hidden-header');
+            }
             lastScrollTop = st <= 0 ? 0 : st;
         }, { passive: true });
     }
-    setupScrollHiding(document.getElementById('mainScroller')); setupScrollHiding(document.getElementById('posProductGridContainer'));
+    setupScrollHiding(document.getElementById('mainScroller')); 
+    setupScrollHiding(document.getElementById('posProductGridContainer'));
 };
 
 window.saveData = function() {
     inventory = inventory.filter(item => item !== null && typeof item === 'object');
-    localStorage.setItem('ks_inv_pro', JSON.stringify(inventory)); localStorage.setItem('ks_hist_pro', JSON.stringify(historyLog)); localStorage.setItem('ks_invoices_pro', JSON.stringify(invoices)); localStorage.setItem('ks_expenses_pro', JSON.stringify(expenses));
-    localStorage.setItem('ks_shop_name', shopName); localStorage.setItem('ks_shop_logo', shopLogo); localStorage.setItem('ks_shop_qr', shopQR); localStorage.setItem('ks_customers_pro', JSON.stringify(customers)); localStorage.setItem('ks_sys_settings', JSON.stringify(sysSettings)); localStorage.setItem('ks_shop_phone', shopPhone); localStorage.setItem('ks_shop_address', shopAddress); 
-    const counter = localStorage.getItem('ks_invoice_counter'); if(counter) localStorage.setItem('ks_invoice_counter_backup', counter); 
+    localStorage.setItem(getBranchKey('inv_pro'), JSON.stringify(inventory)); localStorage.setItem(getBranchKey('hist_pro'), JSON.stringify(historyLog)); localStorage.setItem(getBranchKey('invoices_pro'), JSON.stringify(invoices)); localStorage.setItem(getBranchKey('expenses_pro'), JSON.stringify(expenses));
+    localStorage.setItem(getBranchKey('shop_name'), shopName); localStorage.setItem(getBranchKey('shop_logo'), shopLogo); localStorage.setItem(getBranchKey('shop_qr'), shopQR); localStorage.setItem(getBranchKey('customers_pro'), JSON.stringify(customers)); localStorage.setItem(getBranchKey('sys_settings'), JSON.stringify(sysSettings)); localStorage.setItem(getBranchKey('shop_phone'), shopPhone); localStorage.setItem(getBranchKey('shop_address'), shopAddress); 
+    const counter = localStorage.getItem(getBranchKey('invoice_counter')); if(counter) localStorage.setItem(getBranchKey('invoice_counter_backup'), counter); 
     window.updateCategories(); window.applyPermissions(); window.renderAll();
 };
 
+// ==========================================================================
+// 6. LOGGING & PERMISSIONS
+// ==========================================================================
 window.logAction = function(type, itemName, qty, note) { if(!sysSettings.logs) return; let executor = activeUser ? (activeUser.fullName ? activeUser.fullName : activeUser.username) : 'system'; historyLog.unshift({ id: Date.now(), date: window.fDate(), type, itemName, qty, note: `${note} (${executor})` }); if(historyLog.length > 500) historyLog.pop(); };
 
 window.applyPermissions = function() {
@@ -202,10 +237,10 @@ window.applyPermissions = function() {
 window.loadSettingsToUI = function() { document.getElementById('setCust').checked = sysSettings.cust; document.getElementById('setUnpaid').checked = sysSettings.unpaid; document.getElementById('setLogs').checked = sysSettings.logs; document.getElementById('setCost').checked = sysSettings.cost; document.getElementById('setDiscount').checked = sysSettings.discount; if(document.getElementById('setShowSeller')) document.getElementById('setShowSeller').checked = sysSettings.showSeller !== false; if(document.getElementById('setTax')) document.getElementById('setTax').checked = sysSettings.tax; if(document.getElementById('setTaxRate')) document.getElementById('setTaxRate').value = sysSettings.taxRate ? sysSettings.taxRate : 10; };
 window.saveSysSettings = function() { if(currentRole !== 'admin') return window.ksMsg("គ្មានសិទ្ធិកែប្រែការកំណត់ទេ!", "សិទ្ធិមិនគ្រប់គ្រាន់"); sysSettings.cust = document.getElementById('setCust').checked; sysSettings.unpaid = document.getElementById('setUnpaid').checked; sysSettings.logs = document.getElementById('setLogs').checked; sysSettings.cost = document.getElementById('setCost').checked; sysSettings.discount = document.getElementById('setDiscount').checked; if(document.getElementById('setShowSeller')) sysSettings.showSeller = document.getElementById('setShowSeller').checked; if(document.getElementById('setTax')) sysSettings.tax = document.getElementById('setTax').checked; if(document.getElementById('setTaxRate')) sysSettings.taxRate = parseFloat(document.getElementById('setTaxRate').value) || 0; window.saveData(); window.ksMsg("ការកំណត់ត្រូវបានរក្សាទុក!", "ជោគជ័យ"); };
 window.toggleDesktopSidebar = function() { const sidebar = document.getElementById('appSidebar'); if(window.innerWidth > 768) { sidebar.classList.toggle('collapsed'); } else { sidebar.classList.toggle('active-mobile'); document.querySelector('.sidebar-overlay').classList.toggle('active'); } };
-window.checkLicense = function() { const savedKey = localStorage.getItem('ks_license_key'); let isValid = false; if(savedKey) { try { const decoded = atob(savedKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); if(expiry > Date.now()) isValid = true; } } catch(e) {} } const lockScreen = document.getElementById('licenseLockScreen'); const sidebar = document.getElementById('appSidebar'); if(!isValid) { lockScreen.style.display = 'flex'; sidebar.style.pointerEvents = 'none'; } else { lockScreen.style.display = 'none'; sidebar.style.pointerEvents = 'auto'; } };
-window.verifyAndSaveLicense = function() { const inputKey = document.getElementById('licenseInputBox').value.trim(); if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); try { const decoded = atob(inputKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); if(expiry > Date.now()) { localStorage.setItem('ks_license_key', inputKey); window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានបើកដោយជោគជ័យ!', 'ជោគជ័យ', false, () => { location.reload(); }); return; } else return window.ksMsg('❌ លេខកូដនេះបានផុតកំណត់បាត់ទៅហើយ!', 'បរាជ័យ'); } } catch(e) {} window.ksMsg('❌ លេខកូដមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); };
-window.verifyAndSaveLicenseFromAbout = function() { const inputKey = document.getElementById('aboutLicenseInput').value.trim(); if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); try { const decoded = atob(inputKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); if(expiry > Date.now()) { localStorage.setItem('ks_license_key', inputKey); window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!', 'ជោគជ័យ', false, () => { location.reload(); }); return; } else return window.ksMsg('❌ លេខកូដនេះបានផុតកំណត់បាត់ទៅហើយ!', 'បរាជ័យ'); } } catch(e) {} window.ksMsg('❌ លេខកូដមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); };
-window.displayLicenseInfo = function() { const savedKey = localStorage.getItem('ks_license_key'); const infoDisplay = document.getElementById('licenseInfoDisplay'); if(!infoDisplay) return; if(!savedKey) { infoDisplay.innerHTML = '<span style="color: var(--danger);">មិនទាន់បានបញ្ចូលកូដទេ</span>'; return; } try { const decoded = atob(savedKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); const expireDate = new Date(expiry); const diffDays = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24)); let statusHtml = ''; if(diffDays > 10) statusHtml = `<span style="color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px;">✅ ដំណើរការធម្មតា (សល់ ${diffDays} ថ្ងៃ)</span>`; else if (diffDays > 0) statusHtml = `<span style="color: var(--warning); font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 10px; border-radius: 6px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; else statusHtml = `<span style="color: var(--danger); font-weight: bold; background: rgba(225, 29, 72, 0.1); padding: 5px 10px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; infoDisplay.innerHTML = `<div style="margin-bottom: 10px;"><strong>ស្ថានភាព៖</strong> ${statusHtml}</div><div><strong>ថ្ងៃផុតកំណត់៖</strong> <span style="color: var(--text-main); font-weight: bold;">${expireDate.toLocaleDateString('km-KH')} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>`; return; } } catch(e) {} infoDisplay.innerHTML = '<span style="color: var(--danger);">លេខកូដមិនត្រឹមត្រូវទេ</span>'; };
+window.checkLicense = function() { const savedKey = localStorage.getItem(getBranchKey('license_key')); let isValid = false; if(savedKey) { try { const decoded = atob(savedKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); if(expiry > Date.now()) isValid = true; } } catch(e) {} } const lockScreen = document.getElementById('licenseLockScreen'); const sidebar = document.getElementById('appSidebar'); if(!isValid) { lockScreen.style.display = 'flex'; sidebar.style.pointerEvents = 'none'; } else { lockScreen.style.display = 'none'; sidebar.style.pointerEvents = 'auto'; } };
+window.verifyAndSaveLicense = function() { const inputKey = document.getElementById('licenseInputBox').value.trim(); if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); try { const decoded = atob(inputKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); if(expiry > Date.now()) { localStorage.setItem(getBranchKey('license_key'), inputKey); window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានបើកដោយជោគជ័យ!', 'ជោគជ័យ', false, () => { location.reload(); }); return; } else return window.ksMsg('❌ លេខកូដនេះបានផុតកំណត់បាត់ទៅហើយ!', 'បរាជ័យ'); } } catch(e) {} window.ksMsg('❌ លេខកូដមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); };
+window.verifyAndSaveLicenseFromAbout = function() { const inputKey = document.getElementById('aboutLicenseInput').value.trim(); if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); try { const decoded = atob(inputKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); if(expiry > Date.now()) { localStorage.setItem(getBranchKey('license_key'), inputKey); window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!', 'ជោគជ័យ', false, () => { location.reload(); }); return; } else return window.ksMsg('❌ លេខកូដនេះបានផុតកំណត់បាត់ទៅហើយ!', 'បរាជ័យ'); } } catch(e) {} window.ksMsg('❌ លេខកូដមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); };
+window.displayLicenseInfo = function() { const savedKey = localStorage.getItem(getBranchKey('license_key')); const infoDisplay = document.getElementById('licenseInfoDisplay'); if(!infoDisplay) return; if(!savedKey) { infoDisplay.innerHTML = '<span style="color: var(--danger);">មិនទាន់បានបញ្ចូលកូដទេ</span>'; return; } try { const decoded = atob(savedKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); const expireDate = new Date(expiry); const diffDays = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24)); let statusHtml = ''; if(diffDays > 10) statusHtml = `<span style="color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px;">✅ ដំណើរការធម្មតា (សល់ ${diffDays} ថ្ងៃ)</span>`; else if (diffDays > 0) statusHtml = `<span style="color: var(--warning); font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 10px; border-radius: 6px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; else statusHtml = `<span style="color: var(--danger); font-weight: bold; background: rgba(225, 29, 72, 0.1); padding: 5px 10px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; infoDisplay.innerHTML = `<div style="margin-bottom: 10px;"><strong>ស្ថានភាព៖</strong> ${statusHtml}</div><div><strong>ថ្ងៃផុតកំណត់៖</strong> <span style="color: var(--text-main); font-weight: bold;">${expireDate.toLocaleDateString('km-KH')} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>`; return; } } catch(e) {} infoDisplay.innerHTML = '<span style="color: var(--danger);">លេខកូដមិនត្រឹមត្រូវទេ</span>'; };
 
 window.openShopNameModal = function() { 
     if(currentRole !== 'admin') return window.ksMsg('មានតែគណនី Admin ប៉ុណ្ណោះដែលអាចប្តូរឈ្មោះ និង Logo បានកំរិតខ្ពស់!', 'គ្មានសិទ្ធិ'); 
@@ -219,6 +254,9 @@ window.handleShopLogo = function(e) { const file = e.target.files[0]; if(!file) 
 window.handleShopQR = function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 300; let w = img.width, h = img.height; if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } canvas.width=w; canvas.height=h; canvas.getContext('2d').drawImage(img,0,0,w,h); shopQR = canvas.toDataURL('image/jpeg', 0.8); document.getElementById('shopQRPreview').src = shopQR; document.getElementById('shopQRPreview').style.display = 'block'; }; img.src = e.target.result; }; reader.readAsDataURL(file); };
 window.saveShopName = function() { const newName = document.getElementById('newShopNameInput').value.trim(); shopPhone = document.getElementById('newShopPhoneInput').value.trim(); shopAddress = document.getElementById('newShopAddressInput').value.trim(); if(newName !== "") { shopName = newName; document.getElementById('displayShopName').innerHTML = `${shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; if(shopLogo) { document.getElementById('sidebarLogo').src = shopLogo; document.getElementById('sidebarLogo').style.display = 'block'; } window.saveData(); window.closeShopNameModal(); window.ksMsg("ព័ត៌មានហាងត្រូវបានរក្សាទុកដោយជោគជ័យ!", "ជោគជ័យ"); } else window.ksMsg("សូមបញ្ចូលឈ្មោះហាងសិន!"); };
 
+// ==========================================================================
+// 7. RENDER FUNCTIONS (DASHBOARD, INVENTORY, POS, ETC.)
+// ==========================================================================
 window.renderAll = function() { window.renderDashboard(); window.renderInventory(); window.renderPOSProducts(); window.renderUnpaid(); window.renderExpenses(); window.renderHistory(); window.renderCustomers(); window.updateCustomerDatalist(); window.populateEditInvoiceSelect(); window.displayLicenseInfo(); };
 window.resetDashboardDate = function() { document.getElementById('dashDateFrom').value = ''; document.getElementById('dashDateTo').value = ''; window.renderDashboard(); };
 
@@ -277,7 +315,7 @@ window.updateCategories = function() {
     if(posTabs) { let activeCat = window.currentPosCategory ? window.currentPosCategory : 'all'; let tabsHtml = `<button class="pos-tab ${activeCat === 'all' ? 'active' : ''}" onclick="window.setPosCategory('all')">ទាំងអស់ (All)</button>`; cats.forEach(c => { tabsHtml += `<button class="pos-tab ${activeCat === c ? 'active' : ''}" onclick="window.setPosCategory('${c}')">${c}</button>`; }); posTabs.innerHTML = tabsHtml; }
 };
 
-window.setInventoryView = function(mode, skipRender = false) { currentInventoryView = mode; localStorage.setItem('ks_inv_view_mode', mode); const btnGrid = document.getElementById('btnGridView'); const btnList = document.getElementById('btnListView'); if (mode === 'grid') { btnGrid.style.background = 'var(--primary)'; btnGrid.style.color = '#fff'; btnList.style.background = 'transparent'; btnList.style.color = 'var(--text-main)'; } else { btnList.style.background = 'var(--primary)'; btnList.style.color = '#fff'; btnGrid.style.background = 'transparent'; btnGrid.style.color = 'var(--text-main)'; } if (!skipRender) window.renderInventory(); };
+window.setInventoryView = function(mode, skipRender = false) { currentInventoryView = mode; localStorage.setItem(getBranchKey('inv_view_mode'), mode); const btnGrid = document.getElementById('btnGridView'); const btnList = document.getElementById('btnListView'); if (mode === 'grid') { btnGrid.style.background = 'var(--primary)'; btnGrid.style.color = '#fff'; btnList.style.background = 'transparent'; btnList.style.color = 'var(--text-main)'; } else { btnList.style.background = 'var(--primary)'; btnList.style.color = '#fff'; btnGrid.style.background = 'transparent'; btnGrid.style.color = 'var(--text-main)'; } if (!skipRender) window.renderInventory(); };
 
 window.renderInventory = function() {
     const container = document.getElementById('productGridContainer'); if(!container) return;
@@ -376,7 +414,7 @@ window.deleteProduct = function(id) {
 };
 
 window.setPOSView = function(mode, skipRender = false) {
-    currentPOSView = mode; localStorage.setItem('ks_pos_view_mode', mode); const btnGrid = document.getElementById('btnPOSGridView'); const btnList = document.getElementById('btnPOSListView');
+    currentPOSView = mode; localStorage.setItem(getBranchKey('pos_view_mode'), mode); const btnGrid = document.getElementById('btnPOSGridView'); const btnList = document.getElementById('btnPOSListView');
     if (mode === 'grid') { btnGrid.style.background = 'var(--primary)'; btnGrid.style.color = '#fff'; btnList.style.background = 'transparent'; btnList.style.color = 'var(--text-main)'; } else { btnList.style.background = 'var(--primary)'; btnList.style.color = '#fff'; btnGrid.style.background = 'transparent'; btnGrid.style.color = 'var(--text-main)'; } if (!skipRender) window.renderPOSProducts();
 };
 
@@ -823,8 +861,8 @@ window.importCSV = function(e) {
 };
 
 window.exportData = function() { 
-    const dataToBackup = { inventory, historyLog, invoices, expenses, shopName, shopLogo, shopQR, shopPhone, shopAddress, customers, sysSettings, userAccounts, invoiceCounter: JSON.parse(localStorage.getItem('ks_invoice_counter')) }; 
-    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(dataToBackup)], { type: "application/json" })); a.download = `SKM_INTEGRATE_Backup.json`; a.click(); 
+    const dataToBackup = { inventory, historyLog, invoices, expenses, shopName, shopLogo, shopQR, shopPhone, shopAddress, customers, sysSettings, userAccounts, invoiceCounter: JSON.parse(localStorage.getItem(getBranchKey('invoice_counter'))) }; 
+    const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(dataToBackup)], { type: "application/json" })); a.download = `SKM_INTEGRATE_${SHOP_BRANCH_ID}_Backup.json`; a.click(); 
 };
 
 window.importData = function(e) {
@@ -836,9 +874,9 @@ window.importData = function(e) {
                 inventory = data.inventory||[]; historyLog = data.historyLog||[]; invoices = data.invoices||[]; customers = data.customers||[]; expenses = data.expenses||[];
                 if(data.shopName) shopName = data.shopName; if(data.shopLogo) shopLogo = data.shopLogo; if(data.shopQR) shopQR = data.shopQR; if(data.shopPhone) shopPhone = data.shopPhone; if(data.shopAddress) shopAddress = data.shopAddress;
                 if(data.sysSettings) sysSettings = data.sysSettings; if(data.userAccounts) userAccounts = data.userAccounts; 
-                if(data.invoiceCounter) localStorage.setItem('ks_invoice_counter', JSON.stringify(data.invoiceCounter));
+                if(data.invoiceCounter) localStorage.setItem(getBranchKey('invoice_counter'), JSON.stringify(data.invoiceCounter));
             } else if(Array.isArray(data)) inventory = data;
-            window.saveData(); localStorage.setItem('ks_auth_users_pro', JSON.stringify(userAccounts)); document.getElementById('displayShopName').innerHTML = `${shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; if(shopLogo) { document.getElementById('sidebarLogo').src = shopLogo; document.getElementById('sidebarLogo').style.display = 'block'; }
+            window.saveData(); localStorage.setItem(getBranchKey('auth_users_pro'), JSON.stringify(userAccounts)); document.getElementById('displayShopName').innerHTML = `${shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; if(shopLogo) { document.getElementById('sidebarLogo').src = shopLogo; document.getElementById('sidebarLogo').style.display = 'block'; }
             window.loadSettingsToUI(); window.applyPermissions(); window.ksMsg('ទិន្នន័យទាំងអស់ត្រូវបាន Restore ជោគជ័យ!', 'ជោគជ័យ');
         } catch(err) { window.ksMsg('ឯកសារមិនត្រឹមត្រូវតាមទម្រង់ទេ!', 'បរាជ័យ'); } e.target.value = '';
     }; r.readAsText(file);
