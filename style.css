@@ -89,14 +89,15 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
     z-index: 10; 
     position: sticky; 
     top: 0; 
-    /* ប្រើតែ transform សម្រាប់ការលាក់ ដោយគ្មាន margin-bottom នាំឱ្យញ័រ */
-    transition: transform var(--transition-smooth); 
+    /* កែប្រែត្រង់នេះ ដើម្បីឱ្យវាទាញកម្ចីឡើងលើបាត់ចន្លោះទទេស្អាត */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
     will-change: transform;
 }
 
-/* លាក់ Header ដោយ Push ឡើងលើផុតពីអេក្រង់ */
+/* ពេលលាក់ Header គឺទាញ margin-bottom ឱ្យឡើងលើស្មើនឹងកម្ពស់ Header បាត់ចន្លោះទទេ */
 .header.hidden-header { 
     transform: translateY(-100%); 
+    margin-bottom: -65px; 
 }
 
 .header h2 { font-size: var(--fs-18); color: #fff;}
