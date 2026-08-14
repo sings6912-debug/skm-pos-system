@@ -1,0 +1,12 @@
+{
+  "background_color": "#ffffff",
+  "dir": "ltr",
+  "display": "standalone",
+  "name": "SKM POS System",
+  "orientation": "any",
+  "scope": "/",
+  "short_name": "SKM POS System",
+  "start_url": "//skm-pos-system/?branch=HENG",
+  "theme_color": "#0f172a",
+  "description": "SKM POS Management System"
+}
