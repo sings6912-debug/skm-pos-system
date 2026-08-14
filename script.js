@@ -168,7 +168,7 @@ window.switchTab = function(tabId, title, elem) {
     window.renderAll();
 };
 
-// ទាញយកទិន្នន័យពី Supabase
+// ទាញយកទិន្នន័យពី Supabase (មានប្រព័ន្ធការពារទាញពី LocalStorage បើ Supabase គ្មានទិន្នន័យ)[cite: 4]
 window.loadDataFromSupabase = async function() {
     try {
         let { data, error } = await supabaseClient
@@ -191,16 +191,43 @@ window.loadDataFromSupabase = async function() {
             shopAddress = d.shopAddress || '';
             if(d.sysSettings) sysSettings = {...sysSettings, ...d.sysSettings};
             if(d.userAccounts) userAccounts = d.userAccounts;
+        } else {
+            let rawInv = JSON.parse(localStorage.getItem(getBranchKey('inv_pro')));
+            if (rawInv && Array.isArray(rawInv) && rawInv.length > 0) {
+                inventory = rawInv.filter(item => item !== null && typeof item === 'object');
+                historyLog = JSON.parse(localStorage.getItem(getBranchKey('hist_pro'))) || []; 
+                invoices = JSON.parse(localStorage.getItem(getBranchKey('invoices_pro'))) || []; 
+                expenses = JSON.parse(localStorage.getItem(getBranchKey('expenses_pro'))) || [];
+                shopName = localStorage.getItem(getBranchKey('shop_name')) || 'SKM INTEGRATE'; 
+                shopLogo = localStorage.getItem(getBranchKey('shop_logo')) || ''; 
+                shopQR = localStorage.getItem(getBranchKey('shop_qr')) || ''; 
+                customers = JSON.parse(localStorage.getItem(getBranchKey('customers_pro'))) || []; 
+                shopPhone = localStorage.getItem(getBranchKey('shop_phone')) || ''; 
+                shopAddress = localStorage.getItem(getBranchKey('shop_address')) || '';
+                
+                await window.saveData();
+            }
         }
     } catch(e) {
-        console.error("Error loading from Supabase:", e);
+        console.error("Error loading from Supabase, fallback to localStorage:", e);
+        let rawInv = JSON.parse(localStorage.getItem(getBranchKey('inv_pro')));
+        inventory = (!rawInv || !Array.isArray(rawInv)) ? [] : rawInv.filter(item => item !== null && typeof item === 'object');
+        historyLog = JSON.parse(localStorage.getItem(getBranchKey('hist_pro'))) || []; 
+        invoices = JSON.parse(localStorage.getItem(getBranchKey('invoices_pro'))) || []; 
+        expenses = JSON.parse(localStorage.getItem(getBranchKey('expenses_pro'))) || [];
+        shopName = localStorage.getItem(getBranchKey('shop_name')) || 'SKM INTEGRATE'; 
+        shopLogo = localStorage.getItem(getBranchKey('shop_logo')) || ''; 
+        shopQR = localStorage.getItem(getBranchKey('shop_qr')) || ''; 
+        customers = JSON.parse(localStorage.getItem(getBranchKey('customers_pro'))) || []; 
+        shopPhone = localStorage.getItem(getBranchKey('shop_phone')) || ''; 
+        shopAddress = localStorage.getItem(getBranchKey('shop_address')) || '';
     }
 };
 
 window.onload = async () => {
     window.loadThemeSettings(); window.checkLicense(); window.checkAuthentication(); setInterval(() => document.getElementById('currentDate').innerText = window.fDate(), 1000);
     
-    // ទាញទិន្នន័យពី Supabase មកផ្ដើមដាក់ក្នុង App
+    // ទាញទិន្នន័យពី Supabase[cite: 4]
     await window.loadDataFromSupabase();
 
     try { 
@@ -251,7 +278,7 @@ window.saveData = async function() {
         shopPhone, shopAddress
     };
 
-    // 1. រក្សាទុកក្នុង LocalStorage ជា Backup ពេល Offline
+    // 1. រក្សាទុកក្នុង LocalStorage ជា Backup[cite: 4]
     localStorage.setItem(getBranchKey('inv_pro'), JSON.stringify(inventory));
     localStorage.setItem(getBranchKey('hist_pro'), JSON.stringify(historyLog));
     localStorage.setItem(getBranchKey('invoices_pro'), JSON.stringify(invoices));
@@ -264,7 +291,7 @@ window.saveData = async function() {
     localStorage.setItem(getBranchKey('shop_phone'), shopPhone);
     localStorage.setItem(getBranchKey('shop_address'), shopAddress);
 
-    // 2. រក្សាទុកឡើងទៅ Supabase Database តាម branch_id
+    // 2. រក្សាទុកឡើងទៅ Supabase Database[cite: 4]
     try {
         await supabaseClient
             .from('branch_store')
