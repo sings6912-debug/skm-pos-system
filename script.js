@@ -159,16 +159,15 @@ window.switchTab = function(tabId, title, elem) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); if(elem) elem.classList.add('active'); document.getElementById('pageTitle').innerText = title;
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById('tab-' + tabId).classList.add('active');
     
-    if (tabId === 'dashboard' || tabId === 'about') {
-        const header = document.getElementById('topHeaderBar');
-        if(header) header.classList.remove('hidden-header');
-    }
+    // បង្ហាញ Header ជាប់ជានិច្ច មិនបាច់លាក់
+    const header = document.getElementById('topHeaderBar');
+    if(header) header.classList.remove('hidden-header');
 
     if(window.innerWidth <= 768) { document.getElementById('appSidebar').classList.remove('active-mobile'); document.querySelector('.sidebar-overlay').classList.remove('active'); } 
     window.renderAll();
 };
 
-// ទាញយកទិន្នន័យពី Supabase (មានប្រព័ន្ធការពារទាញពី LocalStorage បើ Supabase គ្មានទិន្នន័យ)[cite: 4]
+// ទាញយកទិន្នន័យពី Supabase (មានប្រព័ន្ធការពារទាញពី LocalStorage បើ Supabase គ្មានទិន្នន័យ)
 window.loadDataFromSupabase = async function() {
     try {
         let { data, error } = await supabaseClient
@@ -227,7 +226,7 @@ window.loadDataFromSupabase = async function() {
 window.onload = async () => {
     window.loadThemeSettings(); window.checkLicense(); window.checkAuthentication(); setInterval(() => document.getElementById('currentDate').innerText = window.fDate(), 1000);
     
-    // ទាញទិន្នន័យពី Supabase[cite: 4]
+    // ទាញទិន្នន័យពី Supabase
     await window.loadDataFromSupabase();
 
     try { 
@@ -240,33 +239,11 @@ window.onload = async () => {
     
     window.loadSettingsToUI(); window.applyPermissions(); window.updateCategories(); window.setInventoryView(currentInventoryView, true); window.setPOSView(currentPOSView, true); window.renderAll();
     
-    const header = document.getElementById('topHeaderBar'); 
-    let lastScrollTop = 0;
-    const delta = 10; 
-    
-    function setupScrollHiding(el) {
-        if (!el) return;
-        el.addEventListener('scroll', function() {
-            const isDashboardActive = document.getElementById('tab-dashboard').classList.contains('active');
-            const isAboutActive = document.getElementById('tab-about').classList.contains('active');
-            if (isDashboardActive || isAboutActive) {
-                header.classList.remove('hidden-header');
-                return;
-            }
-            
-            let st = el.scrollTop;
-            if (Math.abs(lastScrollTop - st) <= delta) return;
-            
-            if (st > lastScrollTop && st > 60) {
-                header.classList.add('hidden-header');
-            } else {
-                header.classList.remove('hidden-header');
-            }
-            lastScrollTop = st <= 0 ? 0 : st;
-        }, { passive: true });
+    // បង្ហាញ Header ជាប់ជានិច្ច មិនលាក់ខ្លួនពេលអូស (Scroll)
+    const header = document.getElementById('topHeaderBar');
+    if (header) {
+        header.classList.remove('hidden-header');
     }
-    setupScrollHiding(document.getElementById('mainScroller')); 
-    setupScrollHiding(document.getElementById('posProductGridContainer'));
 };
 
 window.saveData = async function() {
@@ -278,7 +255,7 @@ window.saveData = async function() {
         shopPhone, shopAddress
     };
 
-    // 1. រក្សាទុកក្នុង LocalStorage ជា Backup[cite: 4]
+    // 1. រក្សាទុកក្នុង LocalStorage ជា Backup
     localStorage.setItem(getBranchKey('inv_pro'), JSON.stringify(inventory));
     localStorage.setItem(getBranchKey('hist_pro'), JSON.stringify(historyLog));
     localStorage.setItem(getBranchKey('invoices_pro'), JSON.stringify(invoices));
@@ -291,7 +268,7 @@ window.saveData = async function() {
     localStorage.setItem(getBranchKey('shop_phone'), shopPhone);
     localStorage.setItem(getBranchKey('shop_address'), shopAddress);
 
-    // 2. រក្សាទុកឡើងទៅ Supabase Database[cite: 4]
+    // 2. រក្សាទុកឡើងទៅ Supabase Database
     try {
         await supabaseClient
             .from('branch_store')
