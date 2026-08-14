@@ -154,6 +154,13 @@ window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = fa
 window.switchTab = function(tabId, title, elem) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); if(elem) elem.classList.add('active'); document.getElementById('pageTitle').innerText = title;
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById('tab-' + tabId).classList.add('active');
+    
+    // ➕ បន្ថែមការទម្លាក់ Header មកវិញជានិច្ចសម្រាប់ផ្ទាំង Dashboard និង About
+    if (tabId === 'dashboard' || tabId === 'about') {
+        const header = document.getElementById('topHeaderBar');
+        if(header) header.classList.remove('hidden-header');
+    }
+
     if(window.innerWidth <= 768) { document.getElementById('appSidebar').classList.remove('active-mobile'); document.querySelector('.sidebar-overlay').classList.remove('active'); } 
     window.renderAll();
 };
@@ -175,15 +182,23 @@ window.onload = () => {
     window.loadSettingsToUI(); window.applyPermissions(); window.updateCategories(); window.setInventoryView(currentInventoryView, true); window.setPOSView(currentPOSView, true); window.renderAll();
     
     // -------------------------------------------------------------
-    // Header Scroll Hiding Logic (Smooth & Anti-Jitter)
+    // Header Scroll Hiding Logic (Modified)
     // -------------------------------------------------------------
     const header = document.getElementById('topHeaderBar'); 
     let lastScrollTop = 0;
-    const delta = 10; // Threshold ការពារការញ័រ
+    const delta = 10; 
     
     function setupScrollHiding(el) {
         if (!el) return;
         el.addEventListener('scroll', function() {
+            // 🛑 បើស្ថិតក្នុងផ្ទាំង Dashboard ឬ About មិនបាច់លាក់ Header ទេ។
+            const isDashboardActive = document.getElementById('tab-dashboard').classList.contains('active');
+            const isAboutActive = document.getElementById('tab-about').classList.contains('active');
+            if (isDashboardActive || isAboutActive) {
+                header.classList.remove('hidden-header');
+                return;
+            }
+            
             let st = el.scrollTop;
             if (Math.abs(lastScrollTop - st) <= delta) return;
             
@@ -578,7 +593,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
             inventory[idx].qty -= c.cartQty; 
             window.logAction('sale', c.name, c.cartQty, status === 'paid' ? 'លក់ចេញ (ទូទាត់រួច)' : `លក់ចេញ (រង់ចាំទូទាត់ ដោយ ${custNameInput})`);
             let lineStr = '', uPriceStr = '';
-            if(c.price > 0) { lineStr = window.fMoney(c.price * c.cartQty); uPriceStr = window.fMoney(c.price); } else if(c.riel > 0) { lineStr = ((c.riel||0) * c.cartQty).toLocaleString() + '៛'; uPriceStr = c.riel.toLocaleString() + '៛'; } else { lineStr = '$0.00'; uPriceStr = '$0.00'; }
+            if(c.price > 0) { lineStr = window.fMoney(c.price * c.cartQty); uPriceStr = window.fMoney(c.price); } else if(c.riel > 0) { lineStr = ((c.riel||0) * c.cartQty).toLocaleString() + '៛'; uPriceStr = c.riel.toLocaleString() + '៛'; } else { lineStr = '$0.00'; uPriceStr = '$0.00'; } 
             receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${c.name}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
         }
     });
@@ -820,7 +835,7 @@ window.saveInvoiceChanges = function() {
     const newName = document.getElementById('editInvName').value.trim(); const newPhone = document.getElementById('editInvPhone').value.trim(); if(!newName) return window.ksMsg("សូមបញ្ចូលឈ្មោះអតិថិជន!"); if(editingInvoice.items.length === 0) return window.ksMsg("វិក្កយបត្រត្រូវតែមានទំនិញយ៉ាងហោចណាស់១!"); 
     const origMap = {}; originalInvoiceState.items.forEach(i => origMap[i.id] = i.cartQty); const newMap = {}; editingInvoice.items.forEach(i => newMap[i.id] = i.cartQty); 
     new Set([...Object.keys(origMap), ...Object.keys(newMap)]).forEach(itemId => { const diff = (newMap[itemId]||0) - (origMap[itemId]||0); if(diff !== 0) { const invItem = inventory.find(p => p.id === itemId); if(invItem) { invItem.qty -= diff; window.logAction('update', invItem.name, Math.abs(diff), diff > 0 ? `បន្ថែមទៅវិក្កយបត្រជំពាក់ ${newName}` : `ដកចេញពីវិក្កយបត្រជំពាក់ ${newName}`); } } }); 
-    const targetInvoice = invoices.find(i => i.id === editingInvoice.id); if(targetInvoice) { targetInvoice.customer = newName; targetInvoice.phone = newPhone; targetInvoice.items = [...editingInvoice.items]; targetInvoice.totalAmount = editingInvoice.totalAmount; targetInvoice.totalRiel = editingInvoice.totalRiel; window.logAction('update', newName, 0, 'កែប្រែទិន្នន័យវិក្កយបត្រ'); } 
+    const targetInvoice = invoices.find(i => i.id === editingInvoice.id); if(targetInvoice) { targetInvoice.customer = newName; targetInvoice.phone = newPhone; targetInvoice.items = [...editingInvoice.items]; targetInvoice.totalAmount = editingInvoice.totalAmount; targetInvoice.totalRiel = editingInvoice.totalRiel; window.logAction('update', newName, 'កែប្រែទិន្នន័យវិក្កយបត្រ'); } 
     window.autoRegisterCustomer(newName, newPhone); window.saveData(); window.closeInvoiceEditModal(); window.ksMsg("វិក្កយបត្រត្រូវបានកែប្រែជោគជ័យ!", "ជោគជ័យ"); window.renderUnpaid(); 
 };
 window.populateEditInvoiceSelect = function() { const select = document.getElementById('editInvAddItemSelect'); if(!select) return; let opts = '<option value="">-- ជ្រើសរើសទំនិញបន្ថែម --</option>'; inventory.forEach(p => { if(p.qty > 0) opts += `<option value="${p.id}">${p.name} (${window.fMoney(p.price)} | ស្តុក: ${p.qty} ${p.unit||''})</option>`; }); select.innerHTML = opts; };
