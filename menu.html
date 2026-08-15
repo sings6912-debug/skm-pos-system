@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digital Menu - Self Ordering</title>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    
+    <!-- បណ្ណាល័យ Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-hover: #059669;
+            --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.75);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.12);
+            --danger: #e11d48;
+            --success: #10b981;
+            --glow-color: rgba(16, 185, 129, 0.4);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Battambang', 'Nunito', sans-serif; }
+        
+        body {
+            background: var(--bg-dark);
+            background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-main);
+            padding-bottom: 100px;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95));
+            z-index: -1;
+        }
+
+        /* Header Style */
+        .header {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 20px;
+            text-align: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        .header img {
+            width: 70px; height: 70px; border-radius: 50%; object-fit: cover;
+            margin-bottom: 8px; border: 2px solid var(--primary);
+            box-shadow: 0 0 15px var(--glow-color);
+        }
+        .header h1 { font-size: 20px; color: #fff; font-weight: 900; text-shadow: 0 0 10px var(--glow-color); }
+        .header p { font-size: 13px; color: var(--primary); font-weight: bold; margin-top: 2px; }
+
+        /* Container & Categories */
+        .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+
+        .category-tabs {
+            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;
+            scrollbar-width: none;
+        }
+        .category-tabs::-webkit-scrollbar { display: none; }
+        .cat-tab {
+            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted);
+            padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap;
+            transition: 0.2s;
+        }
+        .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: bold; box-shadow: 0 0 10px var(--glow-color); }
+
+        /* Product Grid Style */
+        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .product-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        }
+        .product-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
+        .product-card:active { transform: scale(0.96); }
+
+        .product-img-wrapper { width: 100%; aspect-ratio: 1; background: rgba(0,0,0,0.2); position: relative; overflow: hidden; }
+        .product-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
+        .product-card:hover .product-img { transform: scale(1.05); }
+
+        .product-info { padding: 12px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+        .p-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; line-height: 1.3; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .p-price { color: var(--success); font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
+        
+        .add-icon-btn {
+            background: rgba(16, 185, 129, 0.2); color: var(--primary); width: 28px; height: 28px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;
+            border: 1px solid var(--primary); transition: 0.2s;
+        }
+        .product-card:hover .add-icon-btn { background: var(--primary); color: #fff; }
+
+        /* Bottom Cart Bar */
+        .cart-bar {
+            position: fixed; bottom: 0; left: 0; width: 100%;
+            background: rgba(15, 23, 42, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-top: 1px solid var(--border);
+            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.5); z-index: 1000;
+            animation: slideUp 0.3s ease;
+        }
+        @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .btn-order {
+            background: var(--primary); color: white; border: none; padding: 12px 24px;
+            border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;
+            box-shadow: 0 5px 15px var(--glow-color); transition: 0.2s;
+        }
+        .btn-order:hover { background: var(--primary-hover); transform: translateY(-2px); }
+
+        /* Modal Overlay & Checkout Redesign */
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
+            display: none; justify-content: center; align-items: flex-end; z-index: 2000;
+        }
+        .modal {
+            background: #111827; width: 100%; max-width: 600px;
+            border-radius: 28px 28px 0 0; padding: 25px; max-height: 90vh; overflow-y: auto;
+            border-top: 1px solid rgba(255,255,255,0.15); box-shadow: 0 -20px 50px rgba(0,0,0,0.7);
+            animation: modalUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        @keyframes modalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+
+        .form-control {
+            width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--border);
+            background: #1f2937; color: var(--text-main); margin-bottom: 15px; font-size: 14px; outline: none;
+            transition: 0.2s;
+        }
+        .form-control:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--glow-color); background: #111827; }
+
+        .cart-item-row {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--border);
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <img id="shopLogo" src="" style="display: none;" alt="Logo">
+        <h1 id="shopName">កំពុងផ្ទុកម៉ឺនុយ...</h1>
+        <p id="branchTitle">សាខា៖ ...</p>
+    </div>
+
+    <div class="container">
+        <!-- ផ្ទាំងប្រភេទរង (Category Filter Tabs) -->
+        <div id="categoryTabsContainer" class="category-tabs">
+            <div class="cat-tab active" onclick="filterCategory('all', this)">ទាំងអស់</div>
+        </div>
+
+        <div id="menuProductGrid" class="product-grid">
+            <!-- ទំនិញនឹងត្រូវទាញយកមកបង្ហាញទីនេះ -->
+        </div>
+    </div>
+
+    <!-- Bottom Cart Floating Bar -->
+    <div class="cart-bar" id="cartBar" style="display: none;">
+        <div>
+            <div style="font-size: 12px; color: var(--text-muted);">ទំនិញក្នុងកន្ត្រក: <span id="cartCount" style="font-weight: bold; color: #fff;">0</span> មុខ</div>
+            <div style="font-size: 18px; font-weight: 900; color: var(--success);" id="cartTotal">$0.00</div>
+        </div>
+        <button class="btn-order" onclick="openCheckoutModal()">មើលកន្ត្រក & កុម្មង់ ➔</button>
+    </div>
+
+    <!-- Modal ពិនិត្យកន្ត្រក និងបញ្ជូន Order (មានបញ្ចូល QR ទូទាត់ប្រាក់របស់ហាង) -->
+    <div class="modal-overlay" id="checkoutModal">
+        <div class="modal">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
+                <h3 style="font-size: 17px; color: #fff; display: flex; align-items: center; gap: 8px;">🛒 កន្ត្រកទំនិញរបស់អ្នក</h3>
+                <button style="background:rgba(255,255,255,0.08); border:none; color:#fff; width:30px; height:30px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center;" onclick="closeCheckoutModal()">✕</button>
+            </div>
+            
+            <div id="cartItemsList" style="margin-bottom: 15px; max-height: 180px; overflow-y: auto; padding-right: 5px;"></div>
+            
+            <div style="border-top: 1px dashed var(--border); padding-top: 15px; margin-bottom: 10px;">
+                <label style="font-size: 13px; display: block; margin-bottom: 5px; color: var(--text-muted);">ឈ្មោះរបស់អ្នក *</label>
+                <input type="text" id="custName" class="form-control" placeholder="វាយឈ្មោះរបស់អ្នក...">
+                
+                <label style="font-size: 13px; display: block; margin-bottom: 5px; color: var(--text-muted);">លេខទូរស័ព្ទ (ជាជម្រើស)</label>
+                <input type="text" id="custPhone" class="form-control" placeholder="ឧ. 012 345 678">
+
+                <label style="font-size: 13px; display: block; margin-bottom: 5px; color: var(--text-muted);">សរសេរបន្ថែម / ចំណាំ (Note)</label>
+                <textarea id="custNote" class="form-control" placeholder="ឧ. មិនដាក់ស្ករ, ហឹរតិចតួច, ឬការបញ្ជាក់ផ្សេងៗ..." style="height: 65px; resize: none;"></textarea>
+            </div>
+
+            <!-- ➕ កន្លែងបង្ហាញ QR ទូទាត់ប្រាក់របស់ហាង (ទាញយកស្វ័យប្រវត្តពី Supabase) -->
+            <div id="qrContainer" style="display: none; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 14px; padding: 12px; margin-bottom: 15px;">
+                <div style="font-size: 13px; font-weight: bold; color: var(--success); margin-bottom: 8px;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</div>
+                <img id="shopQRDisplay" src="" alt="Shop QR Code" style="width: 130px; height: 130px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px;">
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 5px;">
+                <button class="form-control" style="background: rgba(255,255,255,0.05); color: var(--text-main); margin-bottom: 0; width: 110px; cursor: pointer; text-align: center; border-color: var(--border);" onclick="closeCheckoutModal()">បោះបង់</button>
+                <button class="btn-order" style="flex: 1; padding: 14px;" onclick="submitCustomerOrder()">✅ បញ្ជាក់ការកុម្មង់</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
+        document.getElementById('branchTitle').innerText = `សាខា៖ ${SHOP_BRANCH_ID}`;
+
+        let inventory = [];
+        let cart = [];
+        let currentCategory = 'all';
+        let storeShopQR = ''; // រក្សាទុក QR Code របស់ហាង
+
+        async function loadMenuData() {
+            try {
+                let { data, error } = await supabaseClient
+                    .from('branch_store')
+                    .select('data_json')
+                    .eq('branch_id', SHOP_BRANCH_ID)
+                    .single();
+
+                if (data && data.data_json) {
+                    let d = data.data_json;
+                    inventory = (d.inventory || []).filter(p => p && parseFloat(p.qty) > 0);
+                    document.getElementById('shopName').innerText = d.shopName || 'SKM INTEGRATE';
+                    
+                    if (d.shopLogo) {
+                        const logo = document.getElementById('shopLogo');
+                        logo.src = d.shopLogo;
+                        logo.style.display = 'inline-block';
+                    }
+
+                    // ទាញយក QR Code របស់ហាងមកទុកប្រើប្រាស់
+                    if (d.shopQR) {
+                        storeShopQR = d.shopQR;
+                    }
+
+                    buildCategories();
+                } else {
+                    document.getElementById('shopName').innerText = 'រកមិនឃើញទិន្នន័យហាងទេ';
+                }
+            } catch (e) {
+                document.getElementById('shopName').innerText = 'មានបញ្ហាក្នុងការតភ្ជាប់';
+            }
+            renderMenuProducts();
+        }
+
+        function buildCategories() {
+            const categories = [...new Set(inventory.map(p => p.category).filter(Boolean))];
+            const container = document.getElementById('categoryTabsContainer');
+            let html = `<div class="cat-tab active" onclick="filterCategory('all', this)">ទាំងអស់</div>`;
+            categories.forEach(cat => {
+                html += `<div class="cat-tab" onclick="filterCategory('${cat}', this)">${cat}</div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        function filterCategory(cat, el) {
+            currentCategory = cat;
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            el.classList.add('active');
+            renderMenuProducts();
+        }
+
+        function renderMenuProducts() {
+            const grid = document.getElementById('menuProductGrid');
+            let filtered = inventory;
+            if (currentCategory !== 'all') {
+                filtered = inventory.filter(p => p.category === currentCategory);
+            }
+
+            if (filtered.length === 0) {
+                grid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 40px;">គ្មានទំនិញក្នុងប្រភេទនេះទេ</div>';
+                return;
+            }
+
+            grid.innerHTML = filtered.map(p => `
+                <div class="product-card" onclick="addToCart('${p.id}')">
+                    <div class="product-img-wrapper">
+                        <img src="${p.image || 'https://placehold.co/200?text=No+Img'}" class="product-img" alt="Product">
+                    </div>
+                    <div class="product-info">
+                        <div class="p-name">${p.name}</div>
+                        <div class="p-price">
+                            $${parseFloat(p.price || 0).toFixed(2)}
+                            <div class="add-icon-btn">+</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addToCart(id) {
+            const product = inventory.find(p => p.id === id);
+            if (!product) return;
+            const existing = cart.find(c => c.id === id);
+            if (existing) {
+                if (existing.cartQty < product.qty) existing.cartQty++;
+                else alert('ស្តុកមានកំណត់!');
+            } else {
+                cart.push({ ...product, cartQty: 1 });
+            }
+            updateCartBar();
+        }
+
+        function updateCartBar() {
+            const cartBar = document.getElementById('cartBar');
+            const totalCount = cart.reduce((sum, item) => sum + item.cartQty, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.cartQty), 0);
+
+            if (totalCount > 0) {
+                cartBar.style.display = 'flex';
+                document.getElementById('cartCount').innerText = totalCount;
+                document.getElementById('cartTotal').innerText = `$${totalPrice.toFixed(2)}`;
+            } else {
+                cartBar.style.display = 'none';
+            }
+        }
+
+        function openCheckoutModal() {
+            const listEl = document.getElementById('cartItemsList');
+            listEl.innerHTML = cart.map(c => `
+                <div class="cart-item-row">
+                    <div><b>${c.name}</b> <span style="color:var(--text-muted); font-size:12px;">(x${c.cartQty})</span></div>
+                    <div style="font-weight: bold; color: var(--success);">$${(c.price * c.cartQty).toFixed(2)}</div>
+                </div>
+            `).join('');
+
+            // បង្ហាញ QR Code របស់ហាងក្នុង Modal បើមាន
+            const qrContainer = document.getElementById('qrContainer');
+            const shopQRDisplay = document.getElementById('shopQRDisplay');
+            if (storeShopQR && storeShopQR.trim() !== '') {
+                shopQRDisplay.src = storeShopQR;
+                qrContainer.style.display = 'block';
+            } else {
+                qrContainer.style.display = 'none';
+            }
+
+            document.getElementById('checkoutModal').style.display = 'flex';
+        }
+
+        function closeCheckoutModal() {
+            document.getElementById('checkoutModal').style.display = 'none';
+        }
+
+        async function submitCustomerOrder() {
+            const name = document.getElementById('custName').value.trim();
+            const phone = document.getElementById('custPhone').value.trim();
+            const note = document.getElementById('custNote').value.trim();
+            
+            if (!name) {
+                alert('សូមបញ្ចូលឈ្មោះរបស់អ្នកសិន!');
+                return;
+            }
+
+            const totalAmount = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.cartQty), 0);
+            const newInvId = 'ORD-' + Date.now().toString().slice(-6);
+
+            let newOrder = {
+                id: newInvId,
+                timestamp: Date.now(),
+                date: new Date().toLocaleString('km-KH'),
+                customer: name,
+                phone: phone,
+                note: note,
+                items: [...cart],
+                rate: 4000,
+                totalAmount: totalAmount,
+                totalRiel: totalAmount * 4000,
+                status: 'unpaid',
+                seller: 'Customer (Scan QR)'
+            };
+
+            try {
+                let { data, error } = await supabaseClient
+                    .from('branch_store')
+                    .select('data_json')
+                    .eq('branch_id', SHOP_BRANCH_ID)
+                    .single();
+
+                if (data && data.data_json) {
+                    let d = data.data_json;
+                    if (!d.invoices) d.invoices = [];
+                    d.invoices.unshift(newOrder);
+
+                    cart.forEach(c => {
+                        let invItem = (d.inventory || []).find(i => i.id === c.id);
+                        if (invItem) invItem.qty = Math.max(0, invItem.qty - c.cartQty);
+                    });
+
+                    await supabaseClient
+                        .from('branch_store')
+                        .update({ data_json: d, updated_at: new Date() })
+                        .eq('branch_id', SHOP_BRANCH_ID);
+
+                    alert('🎉 ការកុម្មង់របស់អ្នកបានជោគជ័យ! សូមរង់ចាំបុគ្គលិករៀបចំទំនិញជូន។');
+                    cart = [];
+                    document.getElementById('custName').value = '';
+                    document.getElementById('custPhone').value = '';
+                    document.getElementById('custNote').value = '';
+                    closeCheckoutModal();
+                    updateCartBar();
+                    loadMenuData();
+                }
+            } catch (err) {
+                alert('មានបញ្ហាក្នុងការបញ្ជូនទំនិញ សូមព្យាយាមម្តងទៀត!');
+            }
+        }
+
+        window.onload = loadMenuData;
+    </script>
+</body>
+</html>
