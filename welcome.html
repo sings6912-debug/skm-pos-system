@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Welcome - KouSuKe MiSaKi AniMe</title>
+    <title>Welcome - POS & ERP System</title>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- បណ្ណាល័យ Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <style>
         :root {
-            /* ពណ៌ដើម (Default Theme - Sakura Pink ឱ្យស៊ីនឹងឡូហ្គោ) */
-            --primary-color: #f472b6;
-            --glow-color: rgba(244, 114, 182, 0.6);
+            --primary-color: #10b981;
+            --glow-color: rgba(16, 185, 129, 0.5);
         }
 
         body {
@@ -22,227 +25,197 @@
             font-family: 'Battambang', 'Nunito', sans-serif;
             color: #f8fafc;
             overflow: hidden;
-            
-            /* រូបភាពទេសភាពពេញអេក្រង់ដ៏ស្រស់ស្អាតបែប Anime */
+            background-color: #0f172a;
             background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            transition: background 1s ease;
         }
 
-        /* ស្រទាប់ពណ៌ស្រមោលគ្របពីលើរូបទេសភាព */
         body::before {
             content: "";
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
-            transition: background 1.5s ease;
+            background: linear-gradient(135deg, rgba(15, 23, 42, 0.75), rgba(15, 23, 42, 0.85));
+            transition: background 1s ease;
         }
 
-        /* ការប្តូរពណ៌ស្រមោល Background ទៅតាម Theme ដែលបានរើស */
-        body.theme-sakura::before { background: linear-gradient(135deg, rgba(46, 16, 101, 0.4), rgba(131, 24, 67, 0.6)); }
-        body.theme-cyber::before { background: linear-gradient(135deg, rgba(15, 23, 42, 0.5), rgba(74, 4, 78, 0.7)); }
-        body.theme-emerald::before { background: linear-gradient(135deg, rgba(15, 23, 42, 0.6), rgba(6, 78, 59, 0.7)); }
-
-        /* Effect កាតអណ្តែតតិចៗយ៉ាងរលូន */
         .welcome-card-wrapper {
             animation: floatCard 6s ease-in-out infinite;
             z-index: 10;
+            width: 100%;
+            display: flex;
+            justify-content: center;
         }
 
         @keyframes floatCard {
             0% { transform: translateY(0px); }
-            50% { transform: translateY(-12px); }
+            50% { transform: translateY(-10px); }
             100% { transform: translateY(0px); }
         }
 
-        /* ទម្រង់កញ្ចក់ថ្លា (Glassmorphism) */
         .welcome-card {
             text-align: center;
-            background: rgba(15, 23, 42, 0.45);
+            background: rgba(30, 41, 59, 0.6);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            padding: 40px 40px 45px 40px;
-            border-radius: 30px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.2);
+            padding: 40px 30px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(255,255,255,0.15);
             max-width: 420px;
             width: 90%;
-            position: relative;
         }
 
-        /* កន្លែងប្តូរពណ៌ Theme */
-        .theme-picker {
-            display: flex;
-            justify-content: center;
-            gap: 15px;
-            margin-bottom: 25px;
-        }
-
-        .theme-dot {
-            width: 20px;
-            height: 20px;
+        .logo-box {
+            width: 140px;
+            height: 140px;
+            margin: 0 auto 20px;
             border-radius: 50%;
-            cursor: pointer;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
-            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255,255,255,0.05);
+            border: 3px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 0 25px var(--glow-color);
+            overflow: hidden;
         }
 
-        .theme-dot:hover { transform: scale(1.3); }
-        .theme-dot.active { border-color: #fff; transform: scale(1.3); }
-
-        .dot-sakura { background-color: #f472b6; box-shadow: 0 0 12px rgba(244, 114, 182, 0.6); }
-        .dot-cyber { background-color: #a855f7; box-shadow: 0 0 12px rgba(168, 85, 247, 0.6); }
-        .dot-emerald { background-color: #10b981; box-shadow: 0 0 12px rgba(16, 185, 129, 0.6); }
-
-        /* រចនាឡូហ្គោអោយកាត់ជារង្វង់មូល ដើម្បីលាក់ផ្ទៃសៗក្រឡាអុក */
-        .anime-logo {
-            width: 170px;
-            height: 170px;
+        .logo-box img {
+            width: 100%;
+            height: 100%;
             object-fit: cover;
-            border-radius: 50%; /* បង្ខំឱ្យកាត់ជារង្វង់មូល */
-            border: 3px solid rgba(255, 255, 255, 0.8);
-            margin-bottom: 15px;
-            box-shadow: 0 0 20px var(--glow-color); /* ពន្លឺព័ទ្ធជុំវិញរង្វង់ */
-            animation: pulseGlow 3s ease-in-out infinite alternate;
-            transition: box-shadow 0.5s ease;
-            background-color: #fff; /* ចាក់ផ្ទៃសក្នុងរង្វង់ក្រែងឡូហ្គោថ្លា */
         }
 
-        @keyframes pulseGlow {
-            from { box-shadow: 0 0 15px var(--glow-color); transform: scale(1); }
-            to { box-shadow: 0 0 35px var(--glow-color); transform: scale(1.05); }
+        .logo-box .default-icon {
+            font-size: 60px;
         }
 
         h1 {
             color: #ffffff;
-            margin: 5px 0 5px 0;
+            margin: 0 0 10px 0;
             font-size: 26px;
-            font-family: 'Nunito', sans-serif;
+            font-family: 'Nunito', 'Battambang', sans-serif;
             font-weight: 900;
-            letter-spacing: 1px;
-            text-shadow: 0 0 15px var(--glow-color), 0 0 30px var(--glow-color);
-            transition: text-shadow 0.5s ease;
+            text-shadow: 0 0 15px var(--glow-color);
         }
-        
-        .subtitle {
-            font-family: 'Nunito', sans-serif;
-            font-weight: 700;
-            font-size: 14px;
-            letter-spacing: 4px;
+
+        .branch-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
             color: var(--primary-color);
-            margin-bottom: 20px;
-            text-transform: uppercase;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
-            transition: color 0.5s ease;
+            margin-bottom: 15px;
+            font-weight: bold;
         }
 
         p {
-            color: #e2e8f0;
-            margin-bottom: 35px;
+            color: #cbd5e1;
+            margin-bottom: 30px;
             font-size: 14px;
-            line-height: 1.6;
-            text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+            line-height: 1.5;
         }
 
         .btn-enter {
             background-color: var(--primary-color);
             color: white;
             text-decoration: none;
-            padding: 16px 30px;
-            font-size: 18px;
+            padding: 15px 25px;
+            font-size: 17px;
             font-weight: bold;
-            border-radius: 16px;
+            border-radius: 14px;
             display: inline-block;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s ease;
             width: 100%;
             box-sizing: border-box;
             box-shadow: 0 10px 25px var(--glow-color);
-            border: 1px solid rgba(255,255,255,0.3);
-            text-transform: uppercase;
-            letter-spacing: 1.5px;
+            border: 1px solid rgba(255,255,255,0.2);
         }
 
         .btn-enter:hover {
-            transform: translateY(-4px) scale(1.02);
-            box-shadow: 0 15px 35px var(--glow-color);
-            filter: brightness(1.15);
-        }
-
-        .btn-enter:active {
-            transform: translateY(1px);
-        }
-
-        /* ភាគល្អិតតូចៗ (Magical Particles Effect) */
-        .particle {
-            position: absolute;
-            background: #fff;
-            border-radius: 50%;
-            opacity: 0.5;
-            animation: rise 10s infinite linear;
-            pointer-events: none;
-            box-shadow: 0 0 10px #fff, 0 0 20px var(--primary-color);
-            transition: box-shadow 0.5s ease;
-        }
-
-        @keyframes rise {
-            0% { transform: translateY(100vh) scale(0); opacity: 0; }
-            20% { opacity: 0.8; }
-            80% { opacity: 0.5; }
-            100% { transform: translateY(-100px) scale(1.5); opacity: 0; }
+            transform: translateY(-3px);
+            filter: brightness(1.1);
         }
     </style>
 </head>
-<!-- លំនាំដើមខ្ញុំដាក់ពណ៌ Theme Sakura (ផ្កាឈូក) ព្រោះវាស៊ីនឹងឡូហ្គោជាងគេ -->
-<body class="theme-sakura" id="appBody">
-
-    <!-- សម្រាប់ភាគល្អិត (Magical Particles) -->
-    <div class="particle" style="width: 5px; height: 5px; left: 15%; animation-duration: 8s;"></div>
-    <div class="particle" style="width: 8px; height: 8px; left: 35%; animation-duration: 12s; animation-delay: 2s;"></div>
-    <div class="particle" style="width: 4px; height: 4px; left: 65%; animation-duration: 9s; animation-delay: 4s;"></div>
-    <div class="particle" style="width: 9px; height: 9px; left: 85%; animation-duration: 15s; animation-delay: 1s;"></div>
-    <div class="particle" style="width: 6px; height: 6px; left: 50%; animation-duration: 10s; animation-delay: 5s;"></div>
+<body>
 
     <div class="welcome-card-wrapper">
         <div class="welcome-card">
             
-            <!-- កន្លែងជ្រើសរើសពណ៌ Theme (Color Switcher) -->
-            <div class="theme-picker">
-                <!-- ដូរ Sakura មកនៅខាងមុខគេព្រោះជាពណ៌លំនាំដើម -->
-                <div class="theme-dot dot-sakura active" onclick="changeTheme('sakura', '#f472b6', 'rgba(244, 114, 182, 0.6)')" title="Sakura Pink"></div>
-                <div class="theme-dot dot-cyber" onclick="changeTheme('cyber', '#a855f7', 'rgba(168, 85, 247, 0.6)')" title="Cyberpunk Purple"></div>
-                <div class="theme-dot dot-emerald" onclick="changeTheme('emerald', '#10b981', 'rgba(16, 185, 129, 0.6)')" title="Emerald Green"></div>
+            <div class="logo-box" id="logoContainer">
+                <span class="default-icon" id="defaultIcon">🏪</span>
+                <img id="dynamicLogo" src="" alt="Shop Logo" style="display: none;">
             </div>
 
-            <!-- រូបភាពឡូហ្គោហាងរបស់បង (logo1.png) -->
-            <img src="logo1.png" alt="KouSuKe MiSaKi AniMe" class="anime-logo">
+            <h1 id="displayShopName">កំពុងទាញយកទិន្នន័យ...</h1>
+            <div class="branch-tag" id="displayBranchTag">សាខា៖ ទូទៅ</div>
+            <p>ប្រព័ន្ធគ្រប់គ្រងការលក់ និងស្តុកទំនិញឆ្លាតវៃ (ERP & POS)</p>
             
-            <h1>KouSuKe MiSaKi AniMe</h1>
-            <div class="subtitle">Your Doll Haven</div>
-            <p>ប្រព័ន្ធគ្រប់គ្រងការលក់ និងស្តុកទំនិញឆ្លាតវៃ</p>
-            
-            <!-- កន្លែងនេះ Link ទៅកាន់ File ចាស់របស់បង -->
-            <a href="index.html" class="btn-enter">ចូលប្រើប្រាស់ ➔</a>
+            <a href="#" id="enterAppBtn" class="btn-enter">ចូលប្រើប្រាស់ប្រព័ន្ធ ➔</a>
         </div>
     </div>
 
-    <!-- Script សម្រាប់បញ្ជាការប្តូរពណ៌ Theme ភ្លាមៗ -->
     <script>
-        function changeTheme(themeName, primaryColor, glowColor) {
-            const body = document.getElementById('appBody');
-            body.className = '';
-            body.classList.add('theme-' + themeName);
+        const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-            document.documentElement.style.setProperty('--primary-color', primaryColor);
-            document.documentElement.style.setProperty('--glow-color', glowColor);
+        const urlParams = new URLSearchParams(window.location.search);
+        const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
+        const getBranchKey = (key) => `ks2_${SHOP_BRANCH_ID}_${key}`;
 
-            document.querySelectorAll('.theme-dot').forEach(dot => {
-                dot.classList.remove('active');
-            });
-            document.querySelector('.dot-' + themeName).classList.add('active');
+        // កំណត់ Link ប៊ូតុងចូលប្រើប្រាស់ទៅកាន់ index.html តាមសាខាជាក់ស្តែង
+        document.getElementById('enterAppBtn').href = `index.html?branch=${encodeURIComponent(SHOP_BRANCH_ID)}`;
+        document.getElementById('displayBranchTag').innerText = `សាខា៖ ${SHOP_BRANCH_ID}`;
+
+        async function loadShopProfile() {
+            let shopName = 'SKM INTEGRATE';
+            let shopLogo = '';
+
+            try {
+                // ១. ទាញយកទិន្នន័យពី Supabase តាម Branch ID
+                let { data, error } = await supabaseClient
+                    .from('branch_store')
+                    .select('data_json')
+                    .eq('branch_id', SHOP_BRANCH_ID)
+                    .single();
+
+                if (data && data.data_json) {
+                    shopName = data.data_json.shopName || shopName;
+                    shopLogo = data.data_json.shopLogo || '';
+                } else {
+                    // ២. បើគ្មានលើ Supabase ទាញពី LocalStorage
+                    shopName = localStorage.getItem(getBranchKey('shop_name')) || shopName;
+                    shopLogo = localStorage.getItem(getBranchKey('shop_logo')) || '';
+                }
+            } catch (e) {
+                shopName = localStorage.getItem(getBranchKey('shop_name')) || shopName;
+                shopLogo = localStorage.getItem(getBranchKey('shop_logo')) || '';
+            }
+
+            // បង្ហាញឈ្មោះហាង
+            document.getElementById('displayShopName').innerText = shopName;
+
+            // បង្ហាញ Logo របស់ហាងនោះ (បើគ្មានទេ បង្ហាញ Icon ធម្មតា)
+            const logoImg = document.getElementById('dynamicLogo');
+            const defaultIcon = document.getElementById('defaultIcon');
+
+            if (shopLogo && shopLogo.trim() !== '') {
+                logoImg.src = shopLogo;
+                logoImg.style.display = 'block';
+                defaultIcon.style.display = 'none';
+            } else {
+                logoImg.style.display = 'none';
+                defaultIcon.style.display = 'block';
+            }
         }
+
+        window.onload = loadShopProfile;
     </script>
 </body>
 </html>
