@@ -1,12 +1,24 @@
 {
-  "background_color": "#ffffff",
-  "dir": "ltr",
-  "display": "standalone",
   "name": "SKM POS System",
-  "orientation": "any",
-  "scope": "/",
   "short_name": "SKM POS System",
-  "start_url": "//skm-pos-system/?branch=HENG",
+  "start_url": "/skm-pos-system/?branch=HENG",
+  "scope": "/skm-pos-system/",
+  "display": "standalone",
+  "background_color": "#ffffff",
   "theme_color": "#0f172a",
-  "description": "SKM POS Management System"
+  "orientation": "any",
+  "dir": "ltr",
+  "description": "SKM POS Management System",
+  "icons": [
+    {
+      "src": "logo.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
 }

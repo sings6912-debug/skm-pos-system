@@ -826,5 +826,13 @@
 
     <!-- ភ្ជាប់ឯកសារ JavaScript -->
     <script src="script.js"></script>
+<!-- ដាក់កូដចុះឈ្មោះ Service Worker នៅចុងបញ្ចប់នៃ Body -->
+  <script>
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.register('pwabuilder-sw.js', {
+        scope: './'
+      })
+    }
+  </script>
 </body>
 </html>
