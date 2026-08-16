@@ -175,8 +175,8 @@
                     <div style="display: flex; gap: 8px; width: 100%; align-items: center; justify-content: flex-end; flex-wrap: wrap;" id="inventoryActionButtonsGroup">
                         <input type="file" id="importCSVFile" accept=".csv" style="display: none;" onchange="window.importCSV(event)">
                         <div style="display: flex; gap: 5px;" id="inventoryExcelAction">
-                            <button class="btn btn-outline" onclick="document.getElementById('importCSVFile').click()" title="Import Excel (CSV)">📥 Excel</button>
-                            <button class="btn btn-outline" onclick="window.exportCSV()" title="Export Excel (CSV)">📤 Excel</button>
+                            <button class="btn btn-outline" onclick="document.getElementById('importCSVFile').click()" title="Import Excel (CSV)">📥 Import Excel (CSV)</button>
+                            <button class="btn btn-outline" onclick="window.exportCSV()" title="Export Excel (CSV)">📤 Export Excel (CSV)</button>
                         </div>
                         <button class="btn btn-primary" onclick="window.openProductModal()" id="btnAddNewProduct">➕ បន្ថែមទំនិញ</button>
                     </div>
@@ -704,13 +704,13 @@
                         <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">ឡូហ្គោហាង:</label>
                         <input type="file" id="shopLogoInput" accept="image/*" style="display:none;" onchange="window.handleShopLogo(event)">
                         <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopLogoInput').click()">📸 ឡូហ្គោ</button>
-                        <div style="text-align: center; margin-top: 10px;"><img id="shopLogoPreview" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; display: none; margin: auto; border: 2px solid var(--border);"></div>
+                        <div style="text-align: center; margin-top: 10px;"><img id="shopLogoPreview" src="" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; display: none; margin: auto; border: 2px solid var(--border);"></div>
                     </div>
                     <div style="flex: 1;">
                         <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">QR ទូទាត់ប្រាក់:</label>
                         <input type="file" id="shopQRInput" accept="image/*" style="display:none;" onchange="window.handleShopQR(event)">
                         <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopQRInput').click()">📷 QR Code</button>
-                        <div style="text-align: center; margin-top: 10px;"><img id="shopQRPreview" src="" style="width: 60px; height: 60px; object-fit: contain; display: none; margin: auto; border: 2px solid var(--border);"></div>
+                        <div style="text-align: center; margin-top: 10px;"><img id="shopQRPreview" src="" style="width: 120px; height: 120px; object-fit: contain; display: none; margin: auto; border: 2px solid var(--border);"></div>
                     </div>
                 </div>
             </div>
@@ -790,7 +790,7 @@
             <div class="modal-body" style="background: #e2e8f0;">
                 <div id="invoiceCaptureArea">
                     <div style="text-align: center; margin-bottom: 10px;">
-                        <img id="viewInvoiceLogo" src="" style="width: 60px; height: 60px; object-fit: cover; border-radius: 50%; display: none; margin: 0 auto 5px;">
+                        <img id="viewInvoiceLogo" src="" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; display: none; margin: 0 auto 5px;">
                         <h3 style="margin-bottom: 5px; color: #000; font-size: var(--fs-18); font-weight:bold;" id="viewShopName">SKM INTEGRATE</h3>
                         <div id="viewShopContact" style="font-size: 12px; color: #555; margin-bottom: 5px;"></div>
                         <p id="viewInvoiceType" style="text-align:center; font-size: var(--fs-14); font-weight:bold; color: #000; margin-top: 10px; margin-bottom: 5px;">វិក្កយបត្រ / Invoice</p>
