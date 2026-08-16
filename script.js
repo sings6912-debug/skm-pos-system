@@ -63,31 +63,6 @@ window.handleBarcodeScan = function(e) {
 };
 
 let sortDirections = {};
-window.sortTable = function(tableId, colIndex, type = 'string') {
-    let table = document.getElementById(tableId); if(!table) return; let tbody = table.getElementsByTagName("tbody")[0]; let rows = Array.from(tbody.rows);
-    if(rows.length === 1 && rows[0].cells.length === 1) return;
-    let dir = sortDirections[tableId + colIndex] === 'asc' ? 'desc' : 'asc'; sortDirections[tableId + colIndex] = dir;
-    rows.sort((a, b) => {
-        let valA = a.cells[colIndex].hasAttribute('data-sort') ? a.cells[colIndex].getAttribute('data-sort') : a.cells[colIndex].innerText.trim(); 
-        let valB = b.cells[colIndex].hasAttribute('data-sort') ? b.cells[colIndex].getAttribute('data-sort') : b.cells[colIndex].innerText.trim();
-        if (type === 'number') return dir === 'asc' ? (parseFloat(valA)||0) - (parseFloat(valB)||0) : (parseFloat(valB)||0) - (parseFloat(valA)||0); 
-        else return dir === 'asc' ? String(valA).localeCompare(String(valB)) : String(valB).localeCompare(String(valA));
-    });
-    rows.forEach(row => tbody.appendChild(row));
-};
-
-window.filterTable = function(tableId) {
-    let table = document.getElementById(tableId); if(!table) return; let tbody = table.getElementsByTagName("tbody")[0]; let tr = tbody.getElementsByTagName("tr");
-    let filterRow = table.getElementsByTagName("thead")[0].querySelector(".filter-row"); if (!filterRow) return;
-    let allFilters = filterRow.querySelectorAll('input.col-filter, select.col-filter'); let filters = Array.from(allFilters).map(f => f.value.toLowerCase());
-    for (let i = 0; i < tr.length; i++) {
-        let row = tr[i]; if(row.cells.length === 1) continue; let display = true;
-        for (let j = 0; j < filters.length; j++) {
-            if (filters[j]) { let td = row.cells[j]; if (td && String(td.textContent || td.innerText).toLowerCase().indexOf(filters[j]) === -1) { display = false; break; } }
-        }
-        row.style.display = display ? "" : "none";
-    }
-};
 
 window.generateInvoiceId = function() {
     let counters = JSON.parse(localStorage.getItem(getBranchKey('invoice_counter'))) || { lastDate: '', seq: 0 };
@@ -121,7 +96,7 @@ window.handleChangePassword = function() { const oldP = document.getElementById(
 window.renderUsersList = function() {
     if (!activeUser || activeUser.role !== 'admin') return; const tbody = document.getElementById('userListTableBody');
     tbody.innerHTML = userAccounts.map(u => { let badge = u.role === 'admin' ? '<span class="badge badge-admin">👑 Admin</span>' : (u.role === 'sales' ? '<span class="badge badge-sales">🛒 Sales</span>' : '<span class="badge badge-warehouse">📦 Warehouse</span>'); let deleteBtn = `<button class="btn-danger" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="window.deleteUserAccount('${u.id}')">🗑️ លុប</button>`; let editBtn = `<button class="btn-outline" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer; color:var(--warning);" onclick="window.editUserAccount('${u.id}')">✏️ កែប្រែ</button>`; if (u.username === 'admin') deleteBtn = `<span style="color:var(--text-muted); font-size:var(--fs-11);">មិនអាចលុប</span>`; return `<tr><td data-sort="${u.fullName||''}"><span style="font-weight:bold;">${u.fullName||'-'}</span></td><td data-sort="${u.username}"><span style="color:var(--primary);">${u.username}</span></td><td data-sort="${u.role}">${badge}</td><td data-sort="${u.pin||''}"><span style="background:rgba(128,128,128,0.1); padding:2px 5px; border-radius:4px; font-family:monospace; letter-spacing:2px;">${u.pin||'មិនមាន'}</span></td><td style="text-align: center;"><div style="display: inline-flex; gap: 5px; justify-content: center;">${editBtn} ${deleteBtn}</div></td></tr>`; }).join('');
-    window.filterTable('mainUserTable');
+    if(typeof window.filterTable === 'function') window.filterTable('mainUserTable');
 };
 
 window.openUserModal = function() { document.getElementById('editUserId').value = ''; document.getElementById('userModalTitle').innerText = '👤 បង្កើតគណនីបុគ្គលិកថ្មី'; document.getElementById('nuFullName').value = ''; document.getElementById('nuUsername').value = ''; document.getElementById('nuPassword').value = ''; document.getElementById('nuPin').value = ''; document.getElementById('nuRole').value = 'sales'; document.getElementById('adminConfirmPassword').value = ''; document.getElementById('nuUsername').disabled = false; document.getElementById('userManageModal').style.display = 'flex'; };
@@ -292,11 +267,20 @@ window.saveData = async function() {
 window.logAction = function(type, itemName, qty, note) { if(!sysSettings.logs) return; let executor = activeUser ? (activeUser.fullName ? activeUser.fullName : activeUser.username) : 'system'; historyLog.unshift({ id: Date.now(), date: window.fDate(), type, itemName, qty, note: `${note} (${executor})` }); if(historyLog.length > 500) historyLog.pop(); };
 
 window.applyPermissions = function() {
-    let sDash=true, sInv=true, sPOS=true, sCust=sysSettings.cust, sUnpaid=sysSettings.unpaid, sHist=sysSettings.logs, sSet=true, sAbout=true;
-    if(currentRole === 'sales') { sInv = false; sHist = false; sSet = false; sAbout = false; } else if (currentRole === 'warehouse') { sPOS = false; sCust = false; sUnpaid = false; sSet = false; sAbout = false; sHist = false; }
+    let sDash=true, sInv=true, sPOS=true, sCust=sysSettings.cust, sUnpaid=sysSettings.unpaid, sHist=sysSettings.logs, sSet=true, sAbout=true, sExp=true;
+    if(currentRole === 'sales') { sInv = false; sHist = false; sSet = false; sAbout = false; sExp = false; } else if (currentRole === 'warehouse') { sPOS = false; sCust = false; sUnpaid = false; sSet = false; sAbout = false; sHist = false; sExp = false; }
     
-    document.getElementById('nav-dashboard').style.display = sDash ? 'flex' : 'none'; document.getElementById('nav-inventory').style.display = sInv ? 'flex' : 'none'; document.getElementById('nav-pos').style.display = sPOS ? 'flex' : 'none'; document.getElementById('nav-customers').style.display = sCust ? 'flex' : 'none'; document.getElementById('nav-unpaid').style.display = sUnpaid ? 'flex' : 'none'; document.getElementById('nav-expenses').style.display = sUnpaid ? 'flex' : 'none'; document.getElementById('nav-history').style.display = sHist ? 'flex' : 'none'; document.getElementById('nav-settings').style.display = sSet ? 'flex' : 'none'; document.getElementById('nav-about').style.display = sAbout ? 'flex' : 'none';
-    if(document.getElementById('grid-btn-pos')) document.getElementById('grid-btn-pos').style.display = sPOS ? 'flex' : 'none'; if(document.getElementById('grid-btn-inv')) document.getElementById('grid-btn-inv').style.display = sInv ? 'flex' : 'none'; if(document.getElementById('grid-btn-unpaid')) document.getElementById('grid-btn-unpaid').style.display = sUnpaid ? 'flex' : 'none'; if(document.getElementById('grid-btn-exp')) document.getElementById('grid-btn-exp').style.display = sUnpaid ? 'flex' : 'none'; if(document.getElementById('grid-btn-cust')) document.getElementById('grid-btn-cust').style.display = sCust ? 'flex' : 'none'; if(document.getElementById('grid-btn-hist')) document.getElementById('grid-btn-hist').style.display = sHist ? 'flex' : 'none';
+    if(document.getElementById('nav-dashboard')) document.getElementById('nav-dashboard').style.display = sDash ? 'flex' : 'none'; 
+    if(document.getElementById('nav-inventory')) document.getElementById('nav-inventory').style.display = sInv ? 'flex' : 'none'; 
+    if(document.getElementById('nav-pos')) document.getElementById('nav-pos').style.display = sPOS ? 'flex' : 'none'; 
+    if(document.getElementById('nav-customers')) document.getElementById('nav-customers').style.display = sCust ? 'flex' : 'none'; 
+    if(document.getElementById('nav-unpaid')) document.getElementById('nav-unpaid').style.display = sUnpaid ? 'flex' : 'none'; 
+    if(document.getElementById('nav-expenses')) document.getElementById('nav-expenses').style.display = sExp ? 'flex' : 'none'; 
+    if(document.getElementById('nav-history')) document.getElementById('nav-history').style.display = sHist ? 'flex' : 'none'; 
+    if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = sSet ? 'flex' : 'none'; 
+    if(document.getElementById('nav-about')) document.getElementById('nav-about').style.display = sAbout ? 'flex' : 'none';
+    
+    if(document.getElementById('grid-btn-pos')) document.getElementById('grid-btn-pos').style.display = sPOS ? 'flex' : 'none'; if(document.getElementById('grid-btn-inv')) document.getElementById('grid-btn-inv').style.display = sInv ? 'flex' : 'none'; if(document.getElementById('grid-btn-unpaid')) document.getElementById('grid-btn-unpaid').style.display = sUnpaid ? 'flex' : 'none'; if(document.getElementById('grid-btn-exp')) document.getElementById('grid-btn-exp').style.display = sExp ? 'flex' : 'none'; if(document.getElementById('grid-btn-cust')) document.getElementById('grid-btn-cust').style.display = sCust ? 'flex' : 'none'; if(document.getElementById('grid-btn-hist')) document.getElementById('grid-btn-hist').style.display = sHist ? 'flex' : 'none';
     const editIcon = document.getElementById('editShopIcon'); if(editIcon) editIcon.style.display = currentRole === 'admin' ? 'inline' : 'none';
     const showCost = sysSettings.cost && currentRole === 'admin'; if(document.getElementById('costPriceContainer')) document.getElementById('costPriceContainer').style.display = showCost ? 'block' : 'none'; document.querySelectorAll('.p-cost').forEach(el => el.style.display = showCost ? 'inline' : 'none');
     if(document.getElementById('posDiscountContainer')) document.getElementById('posDiscountContainer').style.display = sysSettings.discount ? 'flex' : 'none';
@@ -313,6 +297,7 @@ window.verifyAndSaveLicense = function() { const inputKey = document.getElementB
 window.verifyAndSaveLicenseFromAbout = function() { const inputKey = document.getElementById('aboutLicenseInput').value.trim(); if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); try { const decoded = atob(inputKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); if(expiry > Date.now()) { localStorage.setItem(getBranchKey('license_key'), inputKey); window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!', 'ជោគជ័យ', false, () => { location.reload(); }); return; } else return window.ksMsg('❌ លេខកូដនេះបានផុតកំណត់បាត់ទៅហើយ!', 'បរាជ័យ'); } } catch(e) {} window.ksMsg('❌ លេខកូដមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); };
 window.displayLicenseInfo = function() { const savedKey = localStorage.getItem(getBranchKey('license_key')); const infoDisplay = document.getElementById('licenseInfoDisplay'); if(!infoDisplay) return; if(!savedKey) { infoDisplay.innerHTML = '<span style="color: var(--danger);">មិនទាន់បានបញ្ចូលកូដទេ</span>'; return; } try { const decoded = atob(savedKey); if(decoded.startsWith(SECRET_SALT)) { const expiry = parseInt(decoded.replace(SECRET_SALT, '')); const expireDate = new Date(expiry); const diffDays = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24)); let statusHtml = ''; if(diffDays > 10) statusHtml = `<span style="color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px;">✅ ដំណើរការធម្មតា (សល់ ${diffDays} ថ្ងៃ)</span>`; else if (diffDays > 0) statusHtml = `<span style="color: var(--warning); font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 10px; border-radius: 6px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; else statusHtml = `<span style="color: var(--danger); font-weight: bold; background: rgba(225, 29, 72, 0.1); padding: 5px 10px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; infoDisplay.innerHTML = `<div style="margin-bottom: 10px;"><strong>ស្ថានភាព៖</strong> ${statusHtml}</div><div><strong>ថ្ងៃផុតកំណត់៖</strong> <span style="color: var(--text-main); font-weight: bold;">${expireDate.toLocaleDateString('km-KH')} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>`; return; } } catch(e) {} infoDisplay.innerHTML = '<span style="color: var(--danger);">លេខកូដមិនត្រឹមត្រូវទេ</span>'; };
 
+// =============== បន្ថែមផ្ទៃពណ៌ស ពីក្រោយរូបមុននឹង Save ជា JPEG ជៀសវាងផ្ទៃខ្មៅ ===============
 window.openShopNameModal = function() { 
     if(currentRole !== 'admin') return window.ksMsg('មានតែគណនី Admin ប៉ុណ្ណោះដែលអាចប្តូរឈ្មោះ និង Logo បានកំរិតខ្ពស់!', 'គ្មានសិទ្ធិ'); 
     document.getElementById('newShopNameInput').value = shopName; document.getElementById('newShopPhoneInput').value = shopPhone; document.getElementById('newShopAddressInput').value = shopAddress; 
@@ -321,8 +306,38 @@ window.openShopNameModal = function() {
     document.getElementById('shopNameModal').style.display = 'flex'; 
 };
 window.closeShopNameModal = function() { document.getElementById('shopNameModal').style.display = 'none'; };
-window.handleShopLogo = function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 200; let w = img.width, h = img.height; if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } canvas.width=w; canvas.height=h; canvas.getContext('2d').drawImage(img,0,0,w,h); shopLogo = canvas.toDataURL('image/jpeg', 0.8); document.getElementById('shopLogoPreview').src = shopLogo; document.getElementById('shopLogoPreview').style.display = 'block'; }; img.src = e.target.result; }; reader.readAsDataURL(file); };
-window.handleShopQR = function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 300; let w = img.width, h = img.height; if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } canvas.width=w; canvas.height=h; canvas.getContext('2d').drawImage(img,0,0,w,h); shopQR = canvas.toDataURL('image/jpeg', 0.8); document.getElementById('shopQRPreview').src = shopQR; document.getElementById('shopQRPreview').style.display = 'block'; }; img.src = e.target.result; }; reader.readAsDataURL(file); };
+window.handleShopLogo = function(e) { 
+    const file = e.target.files[0]; if(!file) return; 
+    const reader = new FileReader(); reader.onload = (e) => { 
+        const img = new Image(); img.onload = () => { 
+            const canvas = document.createElement('canvas'); const max = 200; let w = img.width, h = img.height; 
+            if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } 
+            canvas.width = w; canvas.height = h; 
+            const ctx = canvas.getContext('2d'); 
+            // ចាក់ពណ៌ស ឲ្យផ្ទៃទទេ
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); 
+            ctx.drawImage(img, 0, 0, w, h); 
+            shopLogo = canvas.toDataURL('image/jpeg', 0.8); 
+            document.getElementById('shopLogoPreview').src = shopLogo; document.getElementById('shopLogoPreview').style.display = 'block'; 
+        }; img.src = e.target.result; 
+    }; reader.readAsDataURL(file); 
+};
+window.handleShopQR = function(e) { 
+    const file = e.target.files[0]; if(!file) return; 
+    const reader = new FileReader(); reader.onload = (e) => { 
+        const img = new Image(); img.onload = () => { 
+            const canvas = document.createElement('canvas'); const max = 300; let w = img.width, h = img.height; 
+            if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } 
+            canvas.width = w; canvas.height = h; 
+            const ctx = canvas.getContext('2d'); 
+            // ចាក់ពណ៌ស ឲ្យផ្ទៃទទេ
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); 
+            ctx.drawImage(img, 0, 0, w, h); 
+            shopQR = canvas.toDataURL('image/jpeg', 0.8); 
+            document.getElementById('shopQRPreview').src = shopQR; document.getElementById('shopQRPreview').style.display = 'block'; 
+        }; img.src = e.target.result; 
+    }; reader.readAsDataURL(file); 
+};
 window.saveShopName = function() { const newName = document.getElementById('newShopNameInput').value.trim(); shopPhone = document.getElementById('newShopPhoneInput').value.trim(); shopAddress = document.getElementById('newShopAddressInput').value.trim(); if(newName !== "") { shopName = newName; document.getElementById('displayShopName').innerHTML = `${shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; if(shopLogo) { document.getElementById('sidebarLogo').src = shopLogo; document.getElementById('sidebarLogo').style.display = 'block'; } window.saveData(); window.closeShopNameModal(); window.ksMsg("ព័ត៌មានហាងត្រូវបានរក្សាទុកដោយជោគជ័យ!", "ជោគជ័យ"); } else window.ksMsg("សូមបញ្ចូលឈ្មោះហាងសិន!"); };
 
 // ==========================================================================
@@ -339,8 +354,8 @@ window.renderDashboard = function() {
             if(q <= 5) lowItems.push(p); 
         });
         const dateFrom = document.getElementById('dashDateFrom'); const dateTo = document.getElementById('dashDateTo'); 
-        const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).setHours(0,0,0,0) : 0; 
-        const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).setHours(23,59,59,999) : Infinity;
+        const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).getTime() : 0; 
+        const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity;
         let totalSalesRevenue = 0, totalUnpaid = 0, totalExpenses = 0, totalCOGS = 0, salesMap = {};
         
         invoices.forEach(inv => { 
@@ -427,7 +442,7 @@ window.renderInventory = function() {
             });
             finalHtml += `</div>`; container.innerHTML = finalHtml;
         } else {
-            let tableHTML = `<div class="table-responsive"><table id="mainInventoryTable"><thead><tr><th style="width: 60px;">រូបភាព</th><th onclick="window.sortTable('mainInventoryTable', 1)">ឈ្មោះទំនិញ / Barcode ↕️</th><th onclick="window.sortTable('mainInventoryTable', 2)">ប្រភេទ ↕️</th><th onclick="window.sortTable('mainInventoryTable', 3, 'number')">តម្លៃលក់ ↕️</th><th style="text-align:center;" onclick="window.sortTable('mainInventoryTable', 4, 'number')">ស្តុកនៅសល់ ↕️</th>${enableEdit ? '<th style="text-align:center;">សកម្មភាព</th>' : ''}</tr><tr class="filter-row"><th></th><th><input type="text" class="col-filter" onkeyup="window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th>${enableEdit ? '<th></th>' : ''}</tr></thead><tbody>`;
+            let tableHTML = `<div class="table-responsive"><table id="mainInventoryTable"><thead><tr class="header-row"><th style="width: 60px;">រូបភាព</th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 1)">ឈ្មោះទំនិញ / Barcode <span>⬍</span></th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 2)">ប្រភេទ <span>⬍</span></th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 3, 'number')">តម្លៃលក់ <span>⬍</span></th><th style="text-align:center;" onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 4, 'number')">ស្តុកនៅសល់ <span>⬍</span></th>${enableEdit ? '<th style="text-align:center;">សកម្មភាព</th>' : ''}</tr><tr class="filter-row"><th></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th>${enableEdit ? '<th></th>' : ''}</tr></thead><tbody>`;
             filtered.forEach(p => { 
                 if(!p) return;
                 let pQty = parseFloat(p.qty) || 0; let sCol = pQty <= 0 ? 'var(--danger)' : (pQty <= 5 ? 'var(--warning)' : 'var(--success)'); 
@@ -439,13 +454,16 @@ window.renderInventory = function() {
             });
             tableHTML += `</tbody></table></div>`; container.innerHTML = tableHTML;
             let newFilters = document.querySelectorAll('#mainInventoryTable thead .col-filter'); 
-            newFilters.forEach((inp, idx) => { if(oldFilters[idx]) inp.value = oldFilters[idx]; if(idx === activeFilterIndex) setTimeout(() => inp.focus(), 10); }); setTimeout(() => window.filterTable('mainInventoryTable'), 50);
+            newFilters.forEach((inp, idx) => { if(oldFilters[idx]) inp.value = oldFilters[idx]; if(idx === activeFilterIndex) setTimeout(() => inp.focus(), 10); }); 
+            if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainInventoryTable'), 50);
         }
     } catch(err) { container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--danger);">Error Inventory: ${err.message}</div>`; }
 };
 
 window.updateQty = function(id, change) { const item = inventory.find(p => p && p.id === id); if(item) { let old = parseInt(item.qty)||0; item.qty = Math.max(0, old + change); let diff = item.qty - old; if(diff !== 0) { window.logAction(diff > 0 ? 'add' : 'update', item.name, Math.abs(diff), diff > 0 ? 'បន្ថែមស្តុក' : 'ដកស្តុកចេញ'); window.saveData(); } } };
 window.generateProductBarcode = function() { document.getElementById('pCustomId').value = 'SKM' + Math.floor(100000 + Math.random() * 900000); };
+
+// =============== បន្ថែមផ្ទៃពណ៌ស ពីក្រោយរូបមុននឹង Save ជា JPEG (សម្រាប់ទំនិញ) ===============
 window.openProductModal = function() { 
     if(currentRole !== 'admin') return window.ksMsg('គ្មានសិទ្ធិ!'); 
     document.getElementById('pId').value = ''; document.getElementById('pName').value = ''; document.getElementById('pCategory').value = ''; document.getElementById('pCost').value = ''; document.getElementById('pPrice').value = ''; document.getElementById('pUnit').value = ''; document.getElementById('pQty').value = '0'; document.getElementById('pDesc').value = ''; document.getElementById('pImage').value = ''; 
@@ -455,7 +473,22 @@ window.openProductModal = function() {
 };
 window.closeModal = function() { document.getElementById('productModal').style.display = 'none'; };
 window.updateImagePreview = function(src) { const previewBox = document.getElementById('imagePreviewBox'); if (src && src.trim() !== '') { previewBox.src = src; previewBox.style.display = 'block'; } else { previewBox.src = ''; previewBox.style.display = 'none'; } };
-window.handleImage = function(e) { const file = e.target.files[0]; if(!file) return; const reader = new FileReader(); reader.onload = (e) => { const img = new Image(); img.onload = () => { const canvas = document.createElement('canvas'); const max = 400; let w = img.width, h = img.height; if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } canvas.width=w; canvas.height=h; canvas.getContext('2d').drawImage(img,0,0,w,h); const compressedUrl = canvas.toDataURL('image/jpeg', 0.6); document.getElementById('pImage').value = compressedUrl; window.updateImagePreview(compressedUrl); }; img.src = e.target.result; }; reader.readAsDataURL(file); };
+window.handleImage = function(e) { 
+    const file = e.target.files[0]; if(!file) return; 
+    const reader = new FileReader(); reader.onload = (e) => { 
+        const img = new Image(); img.onload = () => { 
+            const canvas = document.createElement('canvas'); const max = 400; let w = img.width, h = img.height; 
+            if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } 
+            canvas.width = w; canvas.height = h; 
+            const ctx = canvas.getContext('2d'); 
+            // ចាក់ពណ៌ស ឲ្យផ្ទៃទទេ
+            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); 
+            ctx.drawImage(img, 0, 0, w, h); 
+            const compressedUrl = canvas.toDataURL('image/jpeg', 0.6); 
+            document.getElementById('pImage').value = compressedUrl; window.updateImagePreview(compressedUrl); 
+        }; img.src = e.target.result; 
+    }; reader.readAsDataURL(file); 
+};
 
 window.saveProduct = function() { 
     const id = document.getElementById('pId').value; const customIdInput = document.getElementById('pCustomId').value.trim();
@@ -527,16 +560,43 @@ window.renderPOSProducts = function() {
             });
             container.innerHTML = finalHtml + `</div>`;
         } else {
-            let tableHTML = `<div class="table-responsive" style="margin-right: 10px; height: 100%;"><table style="font-size: var(--fs-13);"><tbody style="display:block; max-height:100%; overflow-y:auto; width:100%;">`;
+            let tableHTML = `<div class="table-responsive" style="height: 100%;"><table id="mainPOSTable" style="font-size: var(--fs-13); width: 100%;">
+                <thead>
+                    <tr class="header-row">
+                        <th style="width: 60px; text-align:center;">រូបភាព</th>
+                        <th onclick="if(window.sortTable) window.sortTable('mainPOSTable', 1)">ឈ្មោះទំនិញ <span>⬍</span></th>
+                        <th style="width: 120px; text-align:right;" onclick="if(window.sortTable) window.sortTable('mainPOSTable', 2, 'number')">តម្លៃលក់ <span>⬍</span></th>
+                        <th style="width: 90px; text-align:center;">សកម្មភាព</th>
+                    </tr>
+                    <tr class="filter-row">
+                        <th></th>
+                        <th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainPOSTable')" placeholder="ស្វែងរកឈ្មោះ..."></th>
+                        <th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainPOSTable')" placeholder="ស្វែងរកតម្លៃ..."></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>`;
+            
             availableItems.forEach(p => {
                 if(!p) return;
                 let pQty = parseFloat(p.qty) || 0;
                 let stockText = pQty <= 0 ? `<span style="color:var(--danger); font-weight:bold;">អស់ស្តុក</span>` : `<span style="color:${pQty<=5?'var(--warning)':'var(--success)'}">${pQty}</span> ${p.unit||''}`;
                 let rielHtml = (parseFloat(p.riel)||0) > 0 ? `<br><span style="font-size:var(--fs-11); color:var(--text-muted);">${parseFloat(p.riel).toLocaleString()} ៛</span>` : '';
                 let itemOpacity = pQty <= 0 ? 'opacity: 0.6;' : '';
-                tableHTML += `<tr style="display:table; width:100%; table-layout:fixed; border-bottom: 1px solid var(--border); ${itemOpacity}"><td style="width: 60px; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" style="width:45px; height:45px; object-fit:cover; border-radius:6px;"></td><td style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText}</div></td><td style="width: 100px; text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td><td style="width: 80px; text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">➕ បន្ថែម</button></td></tr>`;
+                tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}">
+                    <td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td>
+                    <td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;">
+                        <div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name}</div>
+                        <div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText}</div>
+                    </td>
+                    <td data-sort="${p.price}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td>
+                    <td style="text-align:center; padding: 5px;">
+                        <button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">➕ បន្ថែម</button>
+                    </td>
+                </tr>`;
             });
             container.innerHTML = tableHTML + `</tbody></table></div>`;
+            if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainPOSTable'), 50);
         }
     } catch(err) { container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--danger);">Error POS: ${err.message}</div>`; }
 };
@@ -728,12 +788,13 @@ window.renderExpenses = function() {
         finalHtml += `<tr><td style="font-size:var(--fs-12); color:var(--text-muted);">${e.date}</td><td><span class="badge badge-unpaid">${e.category}</span></td><td style="font-weight:bold; color:var(--danger);">${window.fMoney(e.amount)}</td><td style="font-size:var(--fs-12);">${e.note||'-'}</td><td style="text-align: center;">${deleteBtn}</td></tr>`;
     });
     tbody.innerHTML = finalHtml || '<tr><td colspan="5" style="text-align:center;">មិនទាន់មានទិន្នន័យចំណាយទេ</td></tr>'; document.getElementById('summaryTotalExpense').innerText = window.fMoney(totalExp);
+    if(typeof window.filterTable === 'function') window.filterTable('mainExpenseTable');
 };
 window.deleteExpense = function(id) { if(currentRole !== 'admin') return; window.ksMsg('តើអ្នកពិតជាចង់លុបការចំណាយនេះមែនទេ?', 'បញ្ជាក់ការលុប', true, () => { expenses = expenses.filter(e => e.id !== id); window.saveData(); window.renderExpenses(); window.ksMsg('ការចំណាយត្រូវបានលុប!'); }); };
 
 window.renderUnpaid = function() {
     const search = document.getElementById('searchUnpaid').value.toLowerCase(); let filterEl = document.getElementById('filterInvoiceStatus'); const statusFilter = filterEl ? filterEl.value : 'all'; 
-    const dateFrom = document.getElementById('invoiceDateFrom'); const dateTo = document.getElementById('invoiceDateTo'); const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).setHours(0,0,0,0) : 0; const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).setHours(23,59,59,999) : Infinity;
+    const dateFrom = document.getElementById('invoiceDateFrom'); const dateTo = document.getElementById('invoiceDateTo'); const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).getTime() : 0; const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity;
     let filteredList = invoices.filter(inv => String(inv.customer).toLowerCase().includes(search) || (inv.phone && String(inv.phone).includes(search)) || String(inv.id).toLowerCase().includes(search)); 
     if (statusFilter !== 'all') filteredList = filteredList.filter(inv => inv.status === statusFilter);
     filteredList = filteredList.filter(inv => { let invTime = inv.timestamp || 0; return invTime >= fromTime && invTime <= toTime; });
@@ -752,7 +813,8 @@ window.renderUnpaid = function() {
     });
     
     document.getElementById('unpaidTable').innerHTML = finalHtml || `<tr><td colspan="${isAdmin ? 8 : 7}" style="text-align:center;">មិនមានទិន្នន័យទេ</td></tr>`;
-    document.getElementById('summaryInvoicePaid').innerText = window.fMoney(sumPaid); document.getElementById('summaryInvoiceUnpaid').innerText = window.fMoney(sumUnpaid); setTimeout(() => window.filterTable('mainUnpaidTable'), 50);
+    document.getElementById('summaryInvoicePaid').innerText = window.fMoney(sumPaid); document.getElementById('summaryInvoiceUnpaid').innerText = window.fMoney(sumUnpaid); 
+    if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainUnpaidTable'), 50);
 };
 
 window.exportInvoicesCSV = function() {
@@ -792,7 +854,7 @@ window.renderCustomers = function() {
         });
         tbody.innerHTML = fHtml || '<tr><td colspan="5" style="text-align:center;">មិនមានអតិថិជនទេ</td></tr>';
     }
-    setTimeout(() => window.filterTable('mainCustomerTable'), 50);
+    if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainCustomerTable'), 50);
 };
 
 window.openCustomerModal = function() { document.getElementById('cId').value = ''; document.getElementById('cName').value = ''; document.getElementById('cPhone').value = ''; document.getElementById('customerModalTitle').innerText = 'អតិថិជនថ្មី'; document.getElementById('customerModal').style.display = 'flex'; };
@@ -906,7 +968,7 @@ window.populateEditInvoiceSelect = function() { const select = document.getEleme
 window.renderHistory = function() {
     const searchVal = document.getElementById('historySearch') ? document.getElementById('historySearch').value.toLowerCase() : ''; 
     const dateFrom = document.getElementById('historyDateFrom'); const dateTo = document.getElementById('historyDateTo'); 
-    const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).setHours(0,0,0,0) : 0; const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).setHours(23,59,59,999) : Infinity; 
+    const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).getTime() : 0; const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity; 
     let fHtml = '';
     historyLog.filter(h => (String(h.itemName).toLowerCase().includes(searchVal) || (h.note && String(h.note).toLowerCase().includes(searchVal))) && (h.id >= fromTime && h.id <= toTime)).forEach(h => { 
         let tName = h.type === 'sale' ? 'លក់ចេញ' : (h.type === 'add' ? 'នាំចូលថ្មី/បន្ថែម' : 'កែប្រែទិន្នន័យ'); 
@@ -915,7 +977,8 @@ window.renderHistory = function() {
         let qtyDisplay = h.qty === 0 ? '0' : `${h.qty > 0 ? '+' : (h.type === 'sale'?'-':'')}${Math.abs(h.qty)}${unitStr}`; 
         fHtml += `<tr><td data-sort="${h.id}" style="font-size:var(--fs-12); color:var(--text-muted);">${h.date}</td><td data-sort="${tName}"><span class="badge ${bClass}">${tName}</span></td><td data-sort="${h.itemName}" style="font-weight:bold; color:var(--text-main);">${h.itemName}</td><td data-sort="${catStr}" style="font-size:var(--fs-12); color:var(--text-muted);">${catStr}</td><td data-sort="${h.qty}" style="font-weight:bold; color:${h.type === 'sale' ? 'var(--warning)' : (h.qty > 0 ? 'var(--success)' : 'var(--text-main)')};">${qtyDisplay}</td><td data-sort="${h.note||''}" style="font-size:var(--fs-12);">${h.note||''}</td></tr>`; 
     });
-    document.getElementById('historyTable').innerHTML = fHtml || '<tr><td colspan="6" style="text-align:center;">មិនមានប្រវត្តិទិន្នន័យតាមការស្វែងរកទេ</td></tr>'; setTimeout(() => window.filterTable('mainHistoryTable'), 50);
+    document.getElementById('historyTable').innerHTML = fHtml || '<tr><td colspan="6" style="text-align:center;">មិនមានប្រវត្តិទិន្នន័យតាមការស្វែងរកទេ</td></tr>'; 
+    if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainHistoryTable'), 50);
 };
 window.clearHistory = function() { window.ksMsg('តើអ្នកពិតជាចង់លុបប្រវត្តិប្រតិបត្តិការទាំងអស់មែនទេ?', 'បញ្ជាក់ការលុប', true, () => { historyLog = []; window.saveData(); }); };
 

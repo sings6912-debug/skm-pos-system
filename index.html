@@ -15,6 +15,9 @@
     
     <!-- ➕ បន្ថែមបណ្ណាល័យ Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Library សម្រាប់ទាញយក Excel (SheetJS) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -121,9 +124,9 @@
 
                 <div class="toolbar" style="margin-bottom: 20px;">
                     <span style="font-size: var(--fs-14); font-weight:bold; color: var(--text-main);">📅 ជ្រើសរើសកាលបរិច្ឆេទបង្ហាញ៖ </span>
-                    <input type="date" id="dashDateFrom" class="form-control" style="width: 150px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី">
+                    <input type="datetime-local" step="1" id="dashDateFrom" class="form-control" style="width: 210px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
                     <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
-                    <input type="date" id="dashDateTo" class="form-control" style="width: 150px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី">
+                    <input type="datetime-local" step="1" id="dashDateTo" class="form-control" style="width: 210px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
                 </div>
 
@@ -258,9 +261,9 @@
                 <div class="toolbar">
                     <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderUnpaid()" style="width: 200px;">
                     <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
-                        <input type="date" id="invoiceDateFrom" class="form-control" style="width: 130px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ចាប់ពីថ្ងៃទី">
+                        <input type="datetime-local" step="1" id="invoiceDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
-                        <input type="date" id="invoiceDateTo" class="form-control" style="width: 130px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ដល់ថ្ងៃទី">
+                        <input type="datetime-local" step="1" id="invoiceDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     </div>
                     <div style="flex-grow: 1;"></div>
                     <button class="btn btn-outline" style="color: var(--success); border-color: var(--success);" onclick="window.exportInvoicesCSV()">📥 ទាញយក (Excel)</button>
@@ -268,14 +271,32 @@
                 
                 <div class="table-responsive">
                     <table id="mainUnpaidTable">
-                        <thead></thead>
+                        <thead>
+                            <tr class="header-row">
+                                <th onclick="window.sortTable('mainUnpaidTable', 0)">កាលបរិច្ឆេទ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 1)">ឈ្មោះអតិថិជន <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 2)">ទំនិញ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 3)">សរុប <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 4)">ស្ថានភាព <span>⬍</span></th>
+                                <th>សកម្មភាព</th>
+                            </tr>
+                            <!-- ជួរឈរសម្រាប់វាយបញ្ចូលពាក្យស្វែងរក (Per-Column Filter) -->
+                            <tr class="filter-row">
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol0" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="កាលបរិច្ឆេទ..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol1" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="អតិថិជន..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol2" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="ទំនិញ..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol3" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="សរុប..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol4" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="ស្ថានភាព..."></th>
+                                <th></th>
+                            </tr>
+                        </thead>
                         <tbody id="unpaidTable"></tbody>
                     </table>
                 </div>
                 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 20px;">
-                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួច: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
-                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួចក្នុងតារាង: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់ក្នុងតារាង: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
                 </div>
             </div>
 
@@ -290,12 +311,20 @@
                 <div class="table-responsive">
                     <table id="mainExpenseTable">
                         <thead>
-                            <tr>
-                                <th>កាលបរិច្ឆេទ</th>
-                                <th>ចំណាត់ថ្នាក់ (Category)</th>
-                                <th>ទឹកប្រាក់ចំណាយ</th>
-                                <th>បរិយាយ / ចំណាំ</th>
+                            <tr class="header-row">
+                                <th onclick="window.sortTable('mainExpenseTable', 0)">កាលបរិច្ឆេទ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainExpenseTable', 1)">ចំណាត់ថ្នាក់ (Category) <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainExpenseTable', 2)">ទឹកប្រាក់ចំណាយ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainExpenseTable', 3)">បរិយាយ / ចំណាំ <span>⬍</span></th>
                                 <th style="text-align: center;">សកម្មភាព</th>
+                            </tr>
+                             <!-- ជួរឈរសម្រាប់វាយបញ្ចូលពាក្យស្វែងរក (Per-Column Filter) -->
+                             <tr class="filter-row">
+                                <th><input type="text" class="col-filter" id="expenseFilterCol0" onkeyup="window.filterTable('mainExpenseTable')" placeholder="កាលបរិច្ឆេទ..."></th>
+                                <th><input type="text" class="col-filter" id="expenseFilterCol1" onkeyup="window.filterTable('mainExpenseTable')" placeholder="ចំណាត់ថ្នាក់..."></th>
+                                <th><input type="text" class="col-filter" id="expenseFilterCol2" onkeyup="window.filterTable('mainExpenseTable')" placeholder="ទឹកប្រាក់..."></th>
+                                <th><input type="text" class="col-filter" id="expenseFilterCol3" onkeyup="window.filterTable('mainExpenseTable')" placeholder="ចំណាំ..."></th>
+                                <th></th>
                             </tr>
                         </thead>
                         <tbody id="expenseTableBody"></tbody>
@@ -303,7 +332,7 @@
                 </div>
 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
+                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់ក្នុងតារាង: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
                 </div>
             </div>
 
@@ -320,11 +349,11 @@
                 <div class="table-responsive">
                     <table id="mainCustomerTable">
                         <thead>
-                            <tr>
-                                <th onclick="window.sortTable('mainCustomerTable', 0)">ឈ្មោះអតិថិជន ↕️</th>
-                                <th onclick="window.sortTable('mainCustomerTable', 1)">លេខទូរស័ព្ទ ↕️</th>
-                                <th onclick="window.sortTable('mainCustomerTable', 2, 'number')">សរុបទិញ (Paid) ↕️</th>
-                                <th onclick="window.sortTable('mainCustomerTable', 3, 'number')">កំពុងជំពាក់ (Unpaid) ↕️</th>
+                            <tr class="header-row">
+                                <th onclick="window.sortTable('mainCustomerTable', 0)">ឈ្មោះអតិថិជន <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainCustomerTable', 1)">លេខទូរស័ព្ទ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainCustomerTable', 2, 'number')">សរុបទិញ (Paid) <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainCustomerTable', 3, 'number')">កំពុងជំពាក់ (Unpaid) <span>⬍</span></th>
                                 <th style="text-align: center;">សកម្មភាព</th>
                             </tr>
                             <tr class="filter-row">
@@ -345,9 +374,9 @@
                 <div class="toolbar">
                     <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderHistory()" style="width: 250px;">
                     <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
-                        <input type="date" id="historyDateFrom" class="form-control" style="width: 130px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
+                        <input type="datetime-local" step="1" id="historyDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
-                        <input type="date" id="historyDateTo" class="form-control" style="width: 130px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
+                        <input type="datetime-local" step="1" id="historyDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
                     </div>
                     <div style="flex-grow: 1;"></div>
                     <button class="btn btn-outline" onclick="window.clearHistory()">🗑️ លុបប្រវត្តិទាំងអស់</button>
@@ -355,13 +384,13 @@
                 <div class="table-responsive">
                     <table id="mainHistoryTable">
                         <thead>
-                            <tr>
-                                <th onclick="window.sortTable('mainHistoryTable', 0)">កាលបរិច្ឆេទ ↕️</th>
-                                <th onclick="window.sortTable('mainHistoryTable', 1)">សកម្មភាព ↕️</th>
-                                <th onclick="window.sortTable('mainHistoryTable', 2)">ឈ្មោះទំនិញ/អតិថិជន ↕️</th>
-                                <th onclick="window.sortTable('mainHistoryTable', 3)">ប្រភេទ ↕️</th>
-                                <th onclick="window.sortTable('mainHistoryTable', 4, 'number')">ចំនួន ↕️</th>
-                                <th onclick="window.sortTable('mainHistoryTable', 5)">ចំណាំ ↕️</th>
+                            <tr class="header-row">
+                                <th onclick="window.sortTable('mainHistoryTable', 0)">កាលបរិច្ឆេទ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainHistoryTable', 1)">សកម្មភាព <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainHistoryTable', 2)">ឈ្មោះទំនិញ/អតិថិជន <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainHistoryTable', 3)">ប្រភេទ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainHistoryTable', 4, 'number')">ចំនួន <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainHistoryTable', 5)">ចំណាំ <span>⬍</span></th>
                             </tr>
                             <tr class="filter-row">
                                 <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainHistoryTable')" placeholder="ស្វែងរក..."></th>
@@ -421,11 +450,11 @@
                         <div class="table-responsive">
                             <table id="mainUserTable" style="font-size: var(--fs-13);">
                                 <thead>
-                                    <tr>
-                                        <th onclick="window.sortTable('mainUserTable', 0)">ឈ្មោះពេញ ↕️</th>
-                                        <th onclick="window.sortTable('mainUserTable', 1)">ឈ្មោះ Login ↕️</th>
-                                        <th onclick="window.sortTable('mainUserTable', 2)">សិទ្ធិប្រើប្រាស់ ↕️</th>
-                                        <th onclick="window.sortTable('mainUserTable', 3)">លេខ PIN ↕️</th>
+                                    <tr class="header-row">
+                                        <th onclick="window.sortTable('mainUserTable', 0)">ឈ្មោះពេញ <span>⬍</span></th>
+                                        <th onclick="window.sortTable('mainUserTable', 1)">ឈ្មោះ Login <span>⬍</span></th>
+                                        <th onclick="window.sortTable('mainUserTable', 2)">សិទ្ធិប្រើប្រាស់ <span>⬍</span></th>
+                                        <th onclick="window.sortTable('mainUserTable', 3)">លេខ PIN <span>⬍</span></th>
                                         <th style="text-align: center;">សកម្មភាព</th>
                                     </tr>
                                     <tr class="filter-row">
@@ -833,6 +862,143 @@
         scope: './'
       })
     }
+    
+    // Global filter function for all tables with per-column filtering
+    window.filterTable = function(tableId) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        
+        const tbody = table.querySelector('tbody');
+        const rows = tbody.querySelectorAll('tr');
+        
+        // Find the filter row within the thead
+        const thead = table.querySelector('thead');
+        const filterRow = thead.querySelector('.filter-row');
+        
+        if (!filterRow) return;
+        
+        const filterInputs = filterRow.querySelectorAll('.col-filter');
+
+        rows.forEach(row => {
+            let showRow = true;
+            const cells = row.querySelectorAll('td');
+            
+            filterInputs.forEach((input, index) => {
+                const filterValue = input.value.toLowerCase();
+                if (filterValue && cells[index]) {
+                    // Handle select vs input
+                    let cellText = cells[index].textContent || cells[index].innerText;
+                    
+                    if (input.tagName === 'SELECT') {
+                         if (input.value && cellText.trim() !== input.value) {
+                             showRow = false;
+                         }
+                    } else {
+                         if (cellText.toLowerCase().indexOf(filterValue) === -1) {
+                             showRow = false;
+                         }
+                    }
+                }
+            });
+
+            if (showRow) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Recalculate totals based on visible rows
+        recalculateTotals(tableId, rows);
+    };
+    
+    function recalculateTotals(tableId, rows) {
+        if (tableId === 'mainUnpaidTable') {
+            let totalPaid = 0;
+            let totalUnpaid = 0;
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    let cells = row.querySelectorAll('td');
+                    if(cells.length > 4) {
+                        let amount = parseFloat(cells[3].textContent.replace(/[^0-9.-]+/g,"")) || 0;
+                        let status = cells[4].textContent.trim();
+                        
+                        // Need to adjust this based on actual status text used in script.js
+                        if (status.includes('បានទូទាត់') || status.includes('សងរួច')) {
+                            totalPaid += amount;
+                        } else {
+                            totalUnpaid += amount;
+                        }
+                    }
+                }
+            });
+            const paidEl = document.getElementById('summaryInvoicePaid');
+            const unpaidEl = document.getElementById('summaryInvoiceUnpaid');
+            if(paidEl) paidEl.innerText = '$' + totalPaid.toFixed(2);
+            if(unpaidEl) unpaidEl.innerText = '$' + totalUnpaid.toFixed(2);
+        } else if (tableId === 'mainExpenseTable') {
+            let totalExp = 0;
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    let cells = row.querySelectorAll('td');
+                    if(cells.length > 2) {
+                        totalExp += parseFloat(cells[2].textContent.replace(/[^0-9.-]+/g,"")) || 0;
+                    }
+                }
+            });
+            const expEl = document.getElementById('summaryTotalExpense');
+            if(expEl) expEl.innerText = '$' + totalExp.toFixed(2);
+        }
+    }
+
+    // Global sort function
+    window.sortDirection = {};
+    window.sortTable = function(tableId, n, type = 'string') {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        window.sortDirection[tableId + n] = !window.sortDirection[tableId + n];
+        const dir = window.sortDirection[tableId + n] ? 1 : -1;
+
+        rows.sort((a, b) => {
+            const cellA = a.querySelectorAll('td')[n];
+            const cellB = b.querySelectorAll('td')[n];
+            
+            if (!cellA || !cellB) return 0;
+            
+            const x = cellA.textContent.trim();
+            const y = cellB.textContent.trim();
+
+            if (type === 'number') {
+                const numX = parseFloat(x.replace(/[^0-9.-]+/g, ""));
+                const numY = parseFloat(y.replace(/[^0-9.-]+/g, ""));
+                
+                if (!isNaN(numX) && !isNaN(numY)) {
+                    return (numX - numY) * dir;
+                }
+            }
+            
+            return x.localeCompare(y) * dir;
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+        
+        // Update header icons (optional)
+        const headers = table.querySelectorAll('.header-row th');
+        headers.forEach((th, index) => {
+            const span = th.querySelector('span');
+            if (span) {
+                if (index === n) {
+                    span.innerHTML = dir === 1 ? '↑' : '↓';
+                } else {
+                    span.innerHTML = '⬍';
+                }
+            }
+        });
+    };
   </script>
 </body>
 </html>
