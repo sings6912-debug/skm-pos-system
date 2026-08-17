@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
+        <link rel="stylesheet" href="print.css" media="print">
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
@@ -273,20 +274,24 @@
                     <table id="mainUnpaidTable">
                         <thead>
                             <tr class="header-row">
-                                <th onclick="window.sortTable('mainUnpaidTable', 0)">កាលបរិច្ឆេទ <span>⬍</span></th>
-                                <th onclick="window.sortTable('mainUnpaidTable', 1)">ឈ្មោះអតិថិជន <span>⬍</span></th>
-                                <th onclick="window.sortTable('mainUnpaidTable', 2)">ទំនិញ <span>⬍</span></th>
-                                <th onclick="window.sortTable('mainUnpaidTable', 3)">សរុប <span>⬍</span></th>
-                                <th onclick="window.sortTable('mainUnpaidTable', 4)">ស្ថានភាព <span>⬍</span></th>
-                                <th>សកម្មភាព</th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 0)">លេខវិក្កយបត្រ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 1)">កាលបរិច្ឆេទ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 2)">ឈ្មោះអតិថិជន <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 3)">ទំនិញ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 4)">សរុប <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 5)">ស្ថានភាព <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 6)">អ្នកលក់ <span>⬍</span></th>
+                                <th style="text-align:center;">សកម្មភាព</th>
                             </tr>
                             <!-- ជួរឈរសម្រាប់វាយបញ្ចូលពាក្យស្វែងរក (Per-Column Filter) -->
                             <tr class="filter-row">
-                                <th><input type="text" class="col-filter" id="unpaidFilterCol0" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="កាលបរិច្ឆេទ..."></th>
-                                <th><input type="text" class="col-filter" id="unpaidFilterCol1" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="អតិថិជន..."></th>
-                                <th><input type="text" class="col-filter" id="unpaidFilterCol2" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="ទំនិញ..."></th>
-                                <th><input type="text" class="col-filter" id="unpaidFilterCol3" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="សរុប..."></th>
-                                <th><input type="text" class="col-filter" id="unpaidFilterCol4" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="ស្ថានភាព..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol0" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="លេខ..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol1" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="កាលបរិច្ឆេទ..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol2" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="អតិថិជន..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol3" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="ទំនិញ..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol4" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="សរុប..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol5" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="ស្ថានភាព..."></th>
+                                <th><input type="text" class="col-filter" id="unpaidFilterCol6" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="អ្នកលក់..."></th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -353,7 +358,7 @@
                                 <th onclick="window.sortTable('mainCustomerTable', 0)">ឈ្មោះអតិថិជន <span>⬍</span></th>
                                 <th onclick="window.sortTable('mainCustomerTable', 1)">លេខទូរស័ព្ទ <span>⬍</span></th>
                                 <th onclick="window.sortTable('mainCustomerTable', 2, 'number')">សរុបទិញ (Paid) <span>⬍</span></th>
-                                <th onclick="window.sortTable('mainCustomerTable', 3, 'number')">កំពុងជំពាក់ (Unpaid) <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainCustomerTable', 3, 'number')">រង់ចាំទូទាត់ (Unpaid) <span>⬍</span></th>
                                 <th style="text-align: center;">សកម្មភាព</th>
                             </tr>
                             <tr class="filter-row">
@@ -475,7 +480,7 @@
                         <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 25px;">កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។</p>
 
                         <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setCust" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">អតិថិជន (Customers):</strong> អនុញ្ញាតឲ្យកត់ត្រា និងគ្រប់គ្រងទិន្នន័យអតិថិជន។</span></label>
-                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setUnpaid" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">ជំពាក់/រង់ចាំទូទាត់ (Unpaid Invoices):</strong> អនុញ្ញាតឲ្យលក់ជំពាក់។</span></label>
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setUnpaid" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">រង់ចាំទូទាត់ (Unpaid Invoices):</strong> អនុញ្ញាតឲ្យរក្សាទុកវិក្កយបត្រមិនទាន់ទូទាត់។</span></label>
                         <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setLogs" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">ប្រវត្តិប្រតិបត្តិការ (Logs):</strong> កត់ត្រារាល់សកម្មភាព។</span></label>
                         <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setCost" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">តម្លៃដើម (Cost Price):</strong> អនុញ្ញាតឲ្យវាយបញ្ចូលតម្លៃដើម។</span></label>
                         <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setDiscount" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">ការបញ្ចុះតម្លៃ (Discount):</strong> បង្ហាញប្រអប់បញ្ចុះតម្លៃ។</span></label>
@@ -627,11 +632,11 @@
         </div>
     </div>
     
-    <!-- Modal: សងប្រាក់ជំពាក់ (Debt Payment) -->
+    <!-- Modal: បញ្ជាក់ការទូទាត់ប្រាក់ (Debt Payment) -->
     <div class="modal-overlay" id="debtPaymentModal" style="z-index: 1006;">
         <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
-                <h2 style="font-size: var(--fs-20);">💸 សងប្រាក់ជំពាក់</h2>
+                <h2 style="font-size: var(--fs-20);">💸 បញ្ជាក់ការទូទាត់ប្រាក់</h2>
                 <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="document.getElementById('debtPaymentModal').style.display='none'">✕</button>
             </div>
             <div class="modal-body" style="text-align: center; padding: 25px 20px;">
@@ -641,7 +646,7 @@
                     <span id="debtTotalDisplay" style="font-weight: bold; color: var(--text-main);">$0.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px; font-size: var(--fs-14);">
-                    <span style="color: var(--text-muted);">ប្រាក់បានសងរួច:</span>
+                    <span style="color: var(--text-muted);">ប្រាក់បានទូទាត់រួច:</span>
                     <span id="debtPaidDisplay" style="font-weight: bold; color: var(--success);">$0.00</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: var(--fs-16); border-bottom: 1px dashed var(--border); padding-bottom: 10px;">
@@ -651,11 +656,11 @@
 
                 <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                     <div style="flex: 1; text-align: left;">
-                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់សងឥឡូវ ($):</label>
+                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់ទូទាត់ឥឡូវ ($):</label>
                         <input type="number" id="debtPayUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0.00" oninput="window.calculateDebtChange()" autocomplete="off">
                     </div>
                     <div style="flex: 1; text-align: left;">
-                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់សងឥឡូវ (៛):</label>
+                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់ទូទាត់ឥឡូវ (៛):</label>
                         <input type="number" id="debtPayRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0" oninput="window.calculateDebtChange()" autocomplete="off">
                     </div>
                 </div>
@@ -667,7 +672,7 @@
             </div>
             <div class="modal-footer" style="justify-content: space-between; gap: 15px;">
                 <button class="btn btn-outline" style="flex:1; padding: 12px;" onclick="document.getElementById('debtPaymentModal').style.display='none'">បោះបង់</button>
-                <button class="btn btn-success" style="flex:2; font-size: var(--fs-16); padding: 12px;" onclick="window.processDebtPayment()">✅ បញ្ជាក់ការសងប្រាក់</button>
+                <button class="btn btn-success" style="flex:2; font-size: var(--fs-16); padding: 12px;" onclick="window.processDebtPayment()">✅ បញ្ជាក់ការទូទាត់ប្រាក់</button>
             </div>
         </div>
     </div>
@@ -741,6 +746,13 @@
                         <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopQRInput').click()">📷 QR Code</button>
                         <div style="text-align: center; margin-top: 10px;"><img id="shopQRPreview" src="" style="width: 120px; height: 120px; object-fit: contain; display: none; margin: auto; border: 2px solid var(--border);"></div>
                     </div>
+                </div>
+                
+                <div style="margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                    <label style="font-size: var(--fs-14); display:block; margin-bottom: 8px; color: #38bdf8; font-weight: bold;">🤖 ការកំណត់ Telegram អតិថិជន:</label>
+                    <input type="text" id="newShopTelegramInput" class="form-control" placeholder="Telegram Username (ឧ. Jheng6912)" style="font-size: var(--fs-14); width: 100%; margin-bottom: 10px;">
+                    <input type="text" id="newBotTokenInput" class="form-control" placeholder="Bot Token សម្រាប់ការលោតសារ" style="font-size: var(--fs-14); width: 100%; margin-bottom: 10px;">
+                    <input type="text" id="newChatIdInput" class="form-control" placeholder="Chat ID សម្រាប់ទទួលសារ" style="font-size: var(--fs-14); width: 100%;">
                 </div>
             </div>
             <div class="modal-footer" style="justify-content: center;"><button class="btn btn-outline" onclick="window.closeShopNameModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveShopName()">រក្សាទុក</button></div>
@@ -833,7 +845,7 @@
         </div>
     </div>
 
-    <!-- Modal: កែប្រែវិក្កយបត្រជំពាក់ (Edit Unpaid Invoice) -->
+    <!-- Modal: កែប្រែវិក្កយបត្ររង់ចាំទូទាត់ (Edit Unpaid Invoice) -->
     <div class="modal-overlay" id="invoiceEditModal">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">✏️ កែប្រែវិក្កយបត្ររង់ចាំទូទាត់</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeInvoiceEditModal()">✕</button></div>

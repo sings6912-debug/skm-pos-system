@@ -114,7 +114,7 @@ window.deleteUserAccount = function(id) { const u = userAccounts.find(x => x.id 
 // 5. GLOBAL APP VARIABLES & SUPABASE SYNC FUNCTIONS
 // ==========================================================================
 let inventory = []; let historyLog = []; let invoices = []; let cart = []; let customers = []; let expenses = [];
-let shopName = 'SKM INTEGRATE'; let shopLogo = ''; let shopQR = ''; let shopPhone = ''; let shopAddress = ''; 
+let shopName = 'SKM INTEGRATE'; let shopLogo = ''; let shopQR = ''; let shopPhone = ''; let shopAddress = ''; let shopTelegram = ''; let telegramBotToken = ''; let telegramChatId = ''; 
 let sysSettings = { cust: true, unpaid: true, logs: true, cost: true, discount: true, showSeller: true, tax: false, taxRate: 10 };
 let editingInvoice = null; let originalInvoiceState = null; let viewingInvoiceId = null; let currentInventoryView = 'grid'; let currentPOSView = 'grid'; window.currentPosCategory = 'all';
 window.cartFinalUsd = 0; window.cartFinalRiel = 0; window.cartRate = 4000;
@@ -122,6 +122,29 @@ const SECRET_SALT = "KOUSUKE_ERP_PRO_V1_";
 
 window.fDate = () => { const d = new Date(); return d.toLocaleDateString('km-KH') + ' ' + d.toLocaleTimeString('km-KH'); }; window.fMoney = (num) => '$' + parseFloat(num || 0).toFixed(2);
 window.playBeep = function() { try { const AudioContext = window.AudioContext || window.webkitAudioContext; if(!AudioContext) return; const ctx = new AudioContext(); const osc = ctx.createOscillator(); const gain = ctx.createGain(); osc.connect(gain); gain.connect(ctx.destination); osc.type = 'sine'; osc.frequency.setValueAtTime(850, ctx.currentTime); gain.gain.setValueAtTime(0.05, ctx.currentTime); osc.start(); osc.stop(ctx.currentTime + 0.1); } catch(e) {} };
+
+window.lastInvoiceCount = 0;
+window.playOrderSound = function() {
+    try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if(!AudioContext) return;
+        const ctx = new AudioContext();
+        for (let i = 0; i < 3; i++) {
+            setTimeout(() => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(800, ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.2);
+            }, i * 300);
+        }
+    } catch(e) {}
+};
+
 
 window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = false, onConfirm = null) {
     document.getElementById('ksMsgTitle').innerText = title; document.getElementById('ksMsgText').innerText = text; const actionContainer = document.getElementById('ksMsgActions'); actionContainer.innerHTML = '';
@@ -163,6 +186,9 @@ window.loadDataFromSupabase = async function() {
             shopQR = d.shopQR || '';
             shopPhone = d.shopPhone || '';
             shopAddress = d.shopAddress || '';
+            shopTelegram = d.shopTelegram || '';
+            telegramBotToken = d.telegramBotToken || '';
+            telegramChatId = d.telegramChatId || '';
             if(d.sysSettings) sysSettings = {...sysSettings, ...d.sysSettings};
             if(d.userAccounts) userAccounts = d.userAccounts;
         } else {
@@ -178,6 +204,9 @@ window.loadDataFromSupabase = async function() {
                 customers = JSON.parse(localStorage.getItem(getBranchKey('customers_pro'))) || []; 
                 shopPhone = localStorage.getItem(getBranchKey('shop_phone')) || ''; 
                 shopAddress = localStorage.getItem(getBranchKey('shop_address')) || '';
+                shopTelegram = localStorage.getItem(getBranchKey('shop_telegram')) || '';
+                telegramBotToken = localStorage.getItem(getBranchKey('telegram_bot_token')) || '';
+                telegramChatId = localStorage.getItem(getBranchKey('telegram_chat_id')) || '';
                 
                 await window.saveData();
             }
@@ -195,6 +224,9 @@ window.loadDataFromSupabase = async function() {
         customers = JSON.parse(localStorage.getItem(getBranchKey('customers_pro'))) || []; 
         shopPhone = localStorage.getItem(getBranchKey('shop_phone')) || ''; 
         shopAddress = localStorage.getItem(getBranchKey('shop_address')) || '';
+        shopTelegram = localStorage.getItem(getBranchKey('shop_telegram')) || '';
+        telegramBotToken = localStorage.getItem(getBranchKey('telegram_bot_token')) || '';
+        telegramChatId = localStorage.getItem(getBranchKey('telegram_chat_id')) || '';
     }
 };
 
@@ -219,15 +251,34 @@ window.onload = async () => {
     if (header) {
         header.classList.remove('hidden-header');
     }
+    window.lastInvoiceCount = invoices.length;
+    setInterval(async () => {
+        try {
+            let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).single();
+            if (data && data.data_json && data.data_json.invoices) {
+                let newCount = data.data_json.invoices.length;
+                if (newCount > window.lastInvoiceCount) {
+                    window.playOrderSound();
+                    window.ksMsg('មានការកុម្ម៉ង់ថ្មីចូលពីអតិថិជន! សូមពិនិត្យមើលវិក្កយបត្រ។', '🔔 កុម្ម៉ង់ថ្មី');
+                    invoices = data.data_json.invoices;
+                    inventory = data.data_json.inventory || inventory;
+                    window.lastInvoiceCount = newCount;
+                    if (typeof window.renderUnpaid === 'function') window.renderUnpaid();
+                    if (typeof window.renderInventory === 'function') window.renderInventory();
+                }
+            }
+        } catch(e) {}
+    }, 10000);
 };
 
 window.saveData = async function() {
+    window.lastInvoiceCount = invoices.length;
     inventory = inventory.filter(item => item !== null && typeof item === 'object');
     
     let packageData = {
         inventory, historyLog, invoices, expenses,
         shopName, shopLogo, shopQR, customers, sysSettings, userAccounts,
-        shopPhone, shopAddress
+        shopPhone, shopAddress, shopTelegram, telegramBotToken, telegramChatId
     };
 
     // 1. រក្សាទុកក្នុង LocalStorage ជា Backup
@@ -242,6 +293,9 @@ window.saveData = async function() {
     localStorage.setItem(getBranchKey('sys_settings'), JSON.stringify(sysSettings));
     localStorage.setItem(getBranchKey('shop_phone'), shopPhone);
     localStorage.setItem(getBranchKey('shop_address'), shopAddress);
+    localStorage.setItem(getBranchKey('shop_telegram'), shopTelegram);
+    localStorage.setItem(getBranchKey('telegram_bot_token'), telegramBotToken);
+    localStorage.setItem(getBranchKey('telegram_chat_id'), telegramChatId);
 
     // 2. រក្សាទុកឡើងទៅ Supabase Database
     try {
@@ -300,7 +354,7 @@ window.displayLicenseInfo = function() { const savedKey = localStorage.getItem(g
 // =============== បន្ថែមផ្ទៃពណ៌ស ពីក្រោយរូបមុននឹង Save ជា JPEG ជៀសវាងផ្ទៃខ្មៅ ===============
 window.openShopNameModal = function() { 
     if(currentRole !== 'admin') return window.ksMsg('មានតែគណនី Admin ប៉ុណ្ណោះដែលអាចប្តូរឈ្មោះ និង Logo បានកំរិតខ្ពស់!', 'គ្មានសិទ្ធិ'); 
-    document.getElementById('newShopNameInput').value = shopName; document.getElementById('newShopPhoneInput').value = shopPhone; document.getElementById('newShopAddressInput').value = shopAddress; 
+    document.getElementById('newShopNameInput').value = shopName; document.getElementById('newShopPhoneInput').value = shopPhone; document.getElementById('newShopAddressInput').value = shopAddress; document.getElementById('newShopTelegramInput').value = shopTelegram; document.getElementById('newBotTokenInput').value = telegramBotToken; document.getElementById('newChatIdInput').value = telegramChatId; 
     const preview = document.getElementById('shopLogoPreview'); if(shopLogo) { preview.src = shopLogo; preview.style.display = 'block'; } else preview.style.display = 'none'; 
     const qrPreview = document.getElementById('shopQRPreview'); if(shopQR) { qrPreview.src = shopQR; qrPreview.style.display = 'block'; } else qrPreview.style.display = 'none'; 
     document.getElementById('shopNameModal').style.display = 'flex'; 
@@ -338,7 +392,7 @@ window.handleShopQR = function(e) {
         }; img.src = e.target.result; 
     }; reader.readAsDataURL(file); 
 };
-window.saveShopName = function() { const newName = document.getElementById('newShopNameInput').value.trim(); shopPhone = document.getElementById('newShopPhoneInput').value.trim(); shopAddress = document.getElementById('newShopAddressInput').value.trim(); if(newName !== "") { shopName = newName; document.getElementById('displayShopName').innerHTML = `${shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; if(shopLogo) { document.getElementById('sidebarLogo').src = shopLogo; document.getElementById('sidebarLogo').style.display = 'block'; } window.saveData(); window.closeShopNameModal(); window.ksMsg("ព័ត៌មានហាងត្រូវបានរក្សាទុកដោយជោគជ័យ!", "ជោគជ័យ"); } else window.ksMsg("សូមបញ្ចូលឈ្មោះហាងសិន!"); };
+window.saveShopName = function() { const newName = document.getElementById('newShopNameInput').value.trim(); shopPhone = document.getElementById('newShopPhoneInput').value.trim(); shopAddress = document.getElementById('newShopAddressInput').value.trim(); shopTelegram = document.getElementById('newShopTelegramInput').value.trim(); telegramBotToken = document.getElementById('newBotTokenInput').value.trim(); telegramChatId = document.getElementById('newChatIdInput').value.trim(); if(newName !== "") { shopName = newName; document.getElementById('displayShopName').innerHTML = `${shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; if(shopLogo) { document.getElementById('sidebarLogo').src = shopLogo; document.getElementById('sidebarLogo').style.display = 'block'; } window.saveData(); window.closeShopNameModal(); window.ksMsg("ព័ត៌មានហាងត្រូវបានរក្សាទុកដោយជោគជ័យ!", "ជោគជ័យ"); } else window.ksMsg("សូមបញ្ចូលឈ្មោះហាងសិន!"); };
 
 // ==========================================================================
 // 7. RENDER FUNCTIONS (DASHBOARD, INVENTORY, POS, ETC.)
@@ -384,7 +438,7 @@ window.renderDashboard = function() {
         if(netProfitEl) { netProfitEl.innerText = window.fMoney(netProfit); netProfitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)'; }
         
         const tbody = document.getElementById('lowStockTable'); 
-        if(tbody) { tbody.innerHTML = lowItems.length === 0 ? '<tr><td colspan="4" style="text-align:center;">មិនមានទំនិញជិតអស់ទេ</td></tr>' : lowItems.map(p => { let catStr = p.category ? p.category : '-'; let nameStr = p.name ? String(p.name).replace(/'/g, "\\'") : ''; return `<tr><td>${p.name}</td><td>${catStr}</td><td style="color:${p.qty<=0?'var(--danger)':'var(--warning)'}; font-weight:bold;">${p.qty}</td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:var(--fs-12);" onclick="window.switchTab('inventory','📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory')); document.getElementById('searchInput').value='${nameStr}'; window.renderInventory();">មើល</button></td></tr>`; }).join(''); }
+        if(tbody) { tbody.innerHTML = lowItems.length === 0 ? '<tr><td colspan="4" style="text-align:center;">មិនមានទំនិញជិតអស់ទេ</td></tr>' : lowItems.map(p => { let catStr = p.category ? p.category : '-'; let nameStr = p.name ? String(p.name).replace(/'/g, "\'") : ''; return `<tr><td>${p.name}</td><td>${catStr}</td><td style="color:${p.qty<=0?'var(--danger)':'var(--warning)'}; font-weight:bold;">${p.qty}</td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:var(--fs-12);" onclick="window.switchTab('inventory','📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory')); document.getElementById('searchInput').value='${nameStr}'; window.renderInventory();">មើល</button></td></tr>`; }).join(''); }
         
         let topSellers = Object.values(salesMap).sort((a, b) => b.qty - a.qty).slice(0, 5); 
         const topBody = document.getElementById('topSellingTable');
@@ -702,7 +756,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     let newInvId = window.generateInvoiceId(); let timestampNow = Date.now(); 
 
     let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
-    if(shopLogo) receiptHTML += `<img src="${shopLogo}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
+    if(shopLogo) receiptHTML += `<img src="${shopLogo}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
     receiptHTML += `<h2 style="margin:0; font-size:16px;">${shopName}</h2>`; 
     if(shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${shopPhone}</p>`; 
     if(shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${shopAddress}</p>`; 
@@ -739,13 +793,31 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     }
     receiptHTML += `</table>`;
 
-    if (shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${shopQR}" style="width: 120px; height: 120px; object-fit: contain; filter: grayscale(100%);"></div>`;
+    if (shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${shopQR}" style="width: 180px; height: 180px; object-fit: contain; filter: grayscale(100%);"></div>`;
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`;
     
     window.saveData(); cart = []; document.getElementById('posCustomerName').value = ''; document.getElementById('posCustomerPhone').value = ''; if (document.getElementById('posDiscount')) document.getElementById('posDiscount').value = ''; document.getElementById('mobileCartContainer').classList.remove('open'); window.renderCart(); window.renderPOSProducts(); window.executePrint(receiptHTML);
 };
 
-window.executePrint = function(htmlContent) { const printArea = document.getElementById('printReceiptArea'); printArea.innerHTML = htmlContent; printArea.style.display = 'block'; window.print(); printArea.style.display = 'none'; };
+window.executePrint = function(htmlContent) {
+    const printWindow = window.open('', '', 'width=300,height=600');
+    printWindow.document.write('<html><head><title>Print Receipt</title>');
+    // ភ្ជាប់ឯកសារ print.css សម្រាប់ផ្ទាំងព្រីន
+    printWindow.document.write('<link rel="stylesheet" href="print.css" type="text/css">');
+    printWindow.document.write('</head><body>');
+    printWindow.document.write('<div id="receipt-container">');
+    printWindow.document.write(htmlContent);
+    printWindow.document.write('</div>');
+    printWindow.document.write('</body></html>');
+    printWindow.document.close();
+    printWindow.focus();
+    
+    // រង់ចាំបន្តិចមុននឹងព្រីន ដើម្បីឱ្យ CSS ផ្ទុកបានពេញលេញ
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 500);
+};
 
 window.currentDebtInvoiceId = null;
 
@@ -764,11 +836,11 @@ window.calculateDebtChange = function() {
 window.processDebtPayment = function() {
     if(!window.currentDebtInvoiceId) return; const inv = invoices.find(i => i.id === window.currentDebtInvoiceId); if(!inv) return;
     let rate = inv.rate || window.cartRate || 4000; let payUsd = parseFloat(document.getElementById('debtPayUsd').value) || 0; let payRiel = parseFloat(document.getElementById('debtPayRiel').value) || 0;
-    let paymentInUsd = payUsd + (payRiel / rate); if (paymentInUsd <= 0) return window.ksMsg('សូមបញ្ចូលចំនួនប្រាក់ដែលត្រូវសង!');
+    let paymentInUsd = payUsd + (payRiel / rate); if (paymentInUsd <= 0) return window.ksMsg('សូមបញ្ចូលចំនួនប្រាក់ដែលត្រូវទូទាត់!');
     inv.paidUsd = (inv.paidUsd || 0) + paymentInUsd;
     if (inv.paidUsd >= inv.totalAmount - 0.01) { inv.status = 'paid'; inv.paidUsd = inv.totalAmount; window.logAction('update', inv.customer, 0, `បានទូទាត់ប្រាក់គ្រប់ចំនួន ${window.fMoney(paymentInUsd)} សម្រាប់វិក្កយបត្រ ${inv.id}`); } 
-    else { window.logAction('update', inv.customer, 0, `បានសងប្រាក់ជំពាក់ ${window.fMoney(paymentInUsd)} (នៅខ្វះ ${window.fMoney(inv.totalAmount - inv.paidUsd)}) សម្រាប់វិក្កយបត្រ ${inv.id}`); }
-    document.getElementById('debtPaymentModal').style.display = 'none'; window.saveData(); window.ksMsg('ប្រាក់សងត្រូវបានកត់ត្រាចូលបញ្ជីជោគជ័យ!', 'ជោគជ័យ');
+    else { window.logAction('update', inv.customer, 0, `បានទូទាត់ប្រាក់ ${window.fMoney(paymentInUsd)} (នៅខ្វះ ${window.fMoney(inv.totalAmount - inv.paidUsd)}) សម្រាប់វិក្កយបត្រ ${inv.id}`); }
+    document.getElementById('debtPaymentModal').style.display = 'none'; window.saveData(); window.ksMsg('ការទូទាត់ត្រូវបានកត់ត្រាចូលបញ្ជីជោគជ័យ!', 'ជោគជ័យ');
 };
 
 window.openExpenseModal = function() { if(currentRole !== 'admin') return window.ksMsg('មានតែ Admin ប៉ុណ្ណោះដែលអាចកត់ត្រាចំណាយបាន!'); document.getElementById('expAmount').value = ''; document.getElementById('expNote').value = ''; document.getElementById('expenseModal').style.display = 'flex'; setTimeout(() => document.getElementById('expAmount').focus(), 100); };
@@ -798,6 +870,7 @@ window.renderUnpaid = function() {
     let filteredList = invoices.filter(inv => String(inv.customer).toLowerCase().includes(search) || (inv.phone && String(inv.phone).includes(search)) || String(inv.id).toLowerCase().includes(search)); 
     if (statusFilter !== 'all') filteredList = filteredList.filter(inv => inv.status === statusFilter);
     filteredList = filteredList.filter(inv => { let invTime = inv.timestamp || 0; return invTime >= fromTime && invTime <= toTime; });
+    filteredList.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
     if (currentRole !== 'admin' && activeUser) { let sellerNameToCheck = activeUser.fullName ? activeUser.fullName : activeUser.username; filteredList = filteredList.filter(inv => inv.seller === sellerNameToCheck); }
     const isAdmin = currentRole === 'admin'; let sumPaid = 0; let sumUnpaid = 0; let finalHtml = '';
     
@@ -807,8 +880,9 @@ window.renderUnpaid = function() {
         let itemsSummary = inv.items.map(i => `${i.name} (x${i.cartQty})`).join(', '); if(itemsSummary.length > 35) itemsSummary = itemsSummary.substring(0, 35) + '...';
         let statusBadge = inv.status === 'paid' ? '<span class="badge badge-paid">ទូទាត់រួច</span>' : '<span class="badge badge-unpaid">រង់ចាំទូទាត់</span>';
         let actionBtns = `<button class="btn btn-outline" style="padding: 6px; font-size: var(--fs-12); color: var(--primary); border-color: var(--primary);" onclick="window.viewInvoice('${inv.id}')" title="មើលលម្អិត និងព្រីន">👁️ មើល</button>`;
-        if (inv.status === 'unpaid') actionBtns += `${isAdmin ? `<button class="btn btn-outline" style="padding: 6px; font-size: var(--fs-12); color: var(--warning); border-color: var(--warning);" onclick="window.openInvoiceEdit('${inv.id}')">✏️ កែប្រែ</button>` : ''}<button class="btn btn-success" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.settlePayment('${inv.id}')">💸 សងប្រាក់</button>`; 
-        let totalDisplay = inv.status === 'unpaid' ? `<div style="font-size:var(--fs-12); color:var(--text-muted);">សរុប: ${window.fMoney(inv.totalAmount)}</div>${invPaid > 0 ? `<div style="font-size:var(--fs-12); color:var(--success);">បានសង: ${window.fMoney(invPaid)}</div>` : ''}<div style="font-size:var(--fs-14); font-weight:bold; color:var(--danger); margin-top:2px;">ខ្វះ: ${window.fMoney(remaining)}</div>` : `<div style="font-weight:bold; color:var(--success);">${window.fMoney(inv.totalAmount)}</div>${inv.totalRiel > 0 ? `<div style="font-size: var(--fs-11); color: var(--text-muted);">${inv.totalRiel.toLocaleString()} ៛</div>` : ''}`;
+        if (inv.status === 'unpaid') actionBtns += `${isAdmin ? `<button class="btn btn-outline" style="padding: 6px; font-size: var(--fs-12); color: var(--warning); border-color: var(--warning);" onclick="window.openInvoiceEdit('${inv.id}')">✏️ កែប្រែ</button>` : ''}<button class="btn btn-success" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.settlePayment('${inv.id}')">💸 ទូទាត់ប្រាក់</button>`;
+        if (isAdmin) actionBtns += `<button class="btn-danger" style="border:none; padding: 6px 8px; font-size: var(--fs-12); border-radius: 4px; cursor:pointer;" onclick="window.deleteInvoice('${inv.id}')" title="លុបវិក្កយបត្រនេះចោល">🗑️ លុប</button>`; 
+        let totalDisplay = inv.status === 'unpaid' ? `<div style="font-size:var(--fs-12); color:var(--text-muted);">សរុប: ${window.fMoney(inv.totalAmount)}</div>${invPaid > 0 ? `<div style="font-size:var(--fs-12); color:var(--success);">បានទូទាត់: ${window.fMoney(invPaid)}</div>` : ''}<div style="font-size:var(--fs-14); font-weight:bold; color:var(--danger); margin-top:2px;">ខ្វះ: ${window.fMoney(remaining)}</div>` : `<div style="font-weight:bold; color:var(--success);">${window.fMoney(inv.totalAmount)}</div>${inv.totalRiel > 0 ? `<div style="font-size: var(--fs-11); color: var(--text-muted);">${inv.totalRiel.toLocaleString()} ៛</div>` : ''}`;
         finalHtml += `<tr><td data-sort="${inv.id}" style="font-size:var(--fs-12); font-family:monospace; color:var(--text-muted);">${inv.id}</td><td data-sort="${inv.timestamp||0}" style="font-size:var(--fs-12);">${inv.date}</td><td data-sort="${inv.customer}" style="font-weight:bold; color:var(--text-main);">${inv.customer}<br><span style="font-size:var(--fs-11); font-weight:normal; color:var(--text-muted);">${inv.phone||''}</span></td><td data-sort="${itemsSummary}" style="font-size:var(--fs-12);" title="${inv.items.map(i => i.name).join(', ')}">${itemsSummary}</td><td data-sort="${inv.totalAmount}">${totalDisplay}</td><td data-sort="${inv.status}">${statusBadge}</td>${isAdmin ? `<td data-sort="${inv.seller||''}" style="color:var(--primary); font-size:var(--fs-12); font-weight:bold;">${inv.seller||'N/A'}</td>` : ''}<td style="text-align: center;"><div style="display: inline-flex; gap: 5px; justify-content: center;">${actionBtns}</div></td></tr>`;
     });
     
@@ -820,7 +894,7 @@ window.renderUnpaid = function() {
 window.exportInvoicesCSV = function() {
     if(invoices.length === 0) return window.ksMsg('គ្មានទិន្នន័យដើម្បីទាញយកទេ!');
     const isAdmin = currentRole === 'admin'; 
-    let csv = '\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ទំនិញ(សង្ខេប),ថ្លៃដើមសរុប($),ប្រាក់ចំណូលសរុប($),ប្រាក់ចំណេញ($),ស្ថានភាព'; 
+    let csv = '﻿លេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ទំនិញ(សង្ខេប),ថ្លៃដើមសរុប($),ប្រាក់ចំណូលសរុប($),ប្រាក់ចំណេញ($),ស្ថានភាព'; 
     if(isAdmin) csv += ',អ្នកលក់'; csv += '\n';
 
     invoices.forEach(inv => {
@@ -861,7 +935,7 @@ window.openCustomerModal = function() { document.getElementById('cId').value = '
 window.closeCustomerModal = function() { document.getElementById('customerModal').style.display = 'none'; };
 window.viewCustomerHistory = function(customerName) {
     document.getElementById('chCustName').innerText = customerName; const custInvoices = invoices.filter(inv => String(inv.customer).toLowerCase() === String(customerName).toLowerCase()); 
-    let fHtml = ''; custInvoices.forEach(inv => { let itemsSummary = inv.items.map(i => `${i.name} (x${i.cartQty})`).join(', '); if(itemsSummary.length > 40) itemsSummary = itemsSummary.substring(0, 40) + '...'; let statusBadge = inv.status === 'paid' ? '<span class="badge badge-paid">ទូទាត់រួច</span>' : '<span class="badge badge-unpaid">ជំពាក់</span>'; fHtml += `<tr><td style="font-size:var(--fs-12); color:var(--text-muted);">${inv.date}</td><td style="font-size:var(--fs-12);" title="${inv.items.map(i => i.name).join(', ')}">${itemsSummary}</td><td style="font-weight:bold; color:var(--success);">${window.fMoney(inv.totalAmount)}</td><td>${statusBadge}</td><td><button class="btn btn-outline" style="padding: 4px 8px; font-size: var(--fs-12);" onclick="window.viewInvoice('${inv.id}')">👁️ វិក្កយបត្រ</button></td></tr>`; });
+    let fHtml = ''; custInvoices.forEach(inv => { let itemsSummary = inv.items.map(i => `${i.name} (x${i.cartQty})`).join(', '); if(itemsSummary.length > 40) itemsSummary = itemsSummary.substring(0, 40) + '...'; let statusBadge = inv.status === 'paid' ? '<span class="badge badge-paid">ទូទាត់រួច</span>' : '<span class="badge badge-unpaid">រង់ចាំទូទាត់</span>'; fHtml += `<tr><td style="font-size:var(--fs-12); color:var(--text-muted);">${inv.date}</td><td style="font-size:var(--fs-12);" title="${inv.items.map(i => i.name).join(', ')}">${itemsSummary}</td><td style="font-weight:bold; color:var(--success);">${window.fMoney(inv.totalAmount)}</td><td>${statusBadge}</td><td><button class="btn btn-outline" style="padding: 4px 8px; font-size: var(--fs-12);" onclick="window.viewInvoice('${inv.id}')">👁️ វិក្កយបត្រ</button></td></tr>`; });
     document.getElementById('customerHistoryTableBody').innerHTML = fHtml || '<tr><td colspan="5" style="text-align:center;">អតិថិជននេះមិនទាន់មានប្រវត្តិទិញទេ</td></tr>'; document.getElementById('customerHistoryModal').style.display = 'flex';
 };
 window.closeCustomerHistoryModal = function() { document.getElementById('customerHistoryModal').style.display = 'none'; };
@@ -899,7 +973,7 @@ window.viewInvoice = function(id) {
         content += `<tr><td style="font-size:var(--fs-12);">ប្រាក់អាប់:</td><td style="text-align:right; font-size:var(--fs-12);">${cStr.join(' | ')}</td></tr>`; 
     }
     content += `</table>`;
-    if (shopQR) content += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold; color:#000;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${shopQR}" style="width: 120px; height: 120px; object-fit: contain; filter: grayscale(100%);"></div>`;
+    if (shopQR) content += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold; color:#000;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${shopQR}" style="width: 180px; height: 180px; object-fit: contain; filter: grayscale(100%);"></div>`;
     content += `<div style="text-align: center; font-size: var(--fs-11); color:#555; margin-top: 10px;">(Rate: 1$ = ${inv.rate||4000}៛)</div></div><div style="text-align:center; font-size:var(--fs-12); color:#000; margin-top: 15px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</div>`;
     document.getElementById('invoiceViewContent').innerHTML = content; document.getElementById('invoiceViewModal').style.display = 'flex';
 };
@@ -909,7 +983,7 @@ window.closeInvoiceViewModal = function() { document.getElementById('invoiceView
 window.reprintInvoice = function() {
     if(!viewingInvoiceId) return; const inv = invoices.find(i => i.id === viewingInvoiceId); 
     let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
-    if(shopLogo) receiptHTML += `<img src="${shopLogo}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
+    if(shopLogo) receiptHTML += `<img src="${shopLogo}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
     receiptHTML += `<h2 style="margin:0; font-size:16px;">${shopName}</h2>`; 
     if(shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${shopPhone}</p>`; 
     if(shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${shopAddress}</p>`; 
@@ -933,7 +1007,7 @@ window.reprintInvoice = function() {
         receiptHTML += `<tr><td style="font-size:11px;">ប្រាក់អាប់:</td><td style="text-align:right; font-size:11px;">${cStr.join(' | ')}</td></tr>`; 
     } 
     receiptHTML += `</table>`;
-    if (shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${shopQR}" style="width: 120px; height: 120px; object-fit: contain; filter: grayscale(100%);"></div>`;
+    if (shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${shopQR}" style="width: 180px; height: 180px; object-fit: contain; filter: grayscale(100%);"></div>`;
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${inv.rate||4000}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`; 
     window.executePrint(receiptHTML);
 };
@@ -959,7 +1033,7 @@ window.addItemToEditingInvoice = function() { const select = document.getElement
 window.saveInvoiceChanges = function() { 
     const newName = document.getElementById('editInvName').value.trim(); const newPhone = document.getElementById('editInvPhone').value.trim(); if(!newName) return window.ksMsg("សូមបញ្ចូលឈ្មោះអតិថិជន!"); if(editingInvoice.items.length === 0) return window.ksMsg("វិក្កយបត្រត្រូវតែមានទំនិញយ៉ាងហោចណាស់១!"); 
     const origMap = {}; originalInvoiceState.items.forEach(i => origMap[i.id] = i.cartQty); const newMap = {}; editingInvoice.items.forEach(i => newMap[i.id] = i.cartQty); 
-    new Set([...Object.keys(origMap), ...Object.keys(newMap)]).forEach(itemId => { const diff = (newMap[itemId]||0) - (origMap[itemId]||0); if(diff !== 0) { const invItem = inventory.find(p => p.id === itemId); if(invItem) { invItem.qty -= diff; window.logAction('update', invItem.name, Math.abs(diff), diff > 0 ? `បន្ថែមទៅវិក្កយបត្រជំពាក់ ${newName}` : `ដកចេញពីវិក្កយបត្រជំពាក់ ${newName}`); } } }); 
+    new Set([...Object.keys(origMap), ...Object.keys(newMap)]).forEach(itemId => { const diff = (newMap[itemId]||0) - (origMap[itemId]||0); if(diff !== 0) { const invItem = inventory.find(p => p.id === itemId); if(invItem) { invItem.qty -= diff; window.logAction('update', invItem.name, Math.abs(diff), diff > 0 ? `បន្ថែមទៅវិក្កយបត្ររង់ចាំទូទាត់ ${newName}` : `ដកចេញពីវិក្កយបត្ររង់ចាំទូទាត់ ${newName}`); } } }); 
     const targetInvoice = invoices.find(i => i.id === editingInvoice.id); if(targetInvoice) { targetInvoice.customer = newName; targetInvoice.phone = newPhone; targetInvoice.items = [...editingInvoice.items]; targetInvoice.totalAmount = editingInvoice.totalAmount; targetInvoice.totalRiel = editingInvoice.totalRiel; window.logAction('update', newName, 'កែប្រែទិន្នន័យវិក្កយបត្រ'); } 
     window.autoRegisterCustomer(newName, newPhone); window.saveData(); window.closeInvoiceEditModal(); window.ksMsg("វិក្កយបត្រត្រូវបានកែប្រែជោគជ័យ!", "ជោគជ័យ"); window.renderUnpaid(); 
 };
@@ -1043,4 +1117,33 @@ window.toggleLowStockSection = function() {
     } else {
         container.style.display = 'none';
     }
+};
+
+window.deleteInvoice = function(id) {
+    if (currentRole !== 'admin') return window.ksMsg('មានតែ Admin ប៉ុណ្ណោះដែលអាចលុបវិក្កយបត្របាន!', 'គ្មានសិទ្ធិ');
+    const invIndex = invoices.findIndex(i => i && i.id === id);
+    if (invIndex === -1) return;
+    const inv = invoices[invIndex];
+
+    window.ksMsg(`តើអ្នកពិតជាចង់លុបវិក្កយបត្រ ${inv.id} និងបង្វិលទំនិញចូលស្តុកវិញមែនទេ?`, 'បញ្ជាក់ការលុប', true, () => {
+        // 1. បង្វិលស្តុកចូលវិញ
+        if (inv.items && Array.isArray(inv.items)) {
+            inv.items.forEach(item => {
+                const realItem = inventory.find(p => p && p.id === item.id);
+                if (realItem) {
+                    realItem.qty += (item.cartQty || 0);
+                    window.logAction('update', realItem.name, item.cartQty, `បង្វិលស្តុកពីការលុបវិក្កយបត្រ ${inv.id}`);
+                }
+            });
+        }
+        
+        // 2. លុបវិក្កយបត្រពីប្រព័ន្ធ
+        invoices.splice(invIndex, 1);
+        window.logAction('update', inv.customer || 'អតិថិជន', 0, `បានលុបវិក្កយបត្រ ${inv.id} ចោល`);
+        
+        // 3. Save & Render
+        window.saveData();
+        window.renderUnpaid();
+        window.ksMsg('វិក្កយបត្រត្រូវបានលុប និងបង្វិលស្តុកចូលឃ្លាំងវិញជោគជ័យ!', 'ជោគជ័យ');
+    });
 };

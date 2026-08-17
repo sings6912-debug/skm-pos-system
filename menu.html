@@ -1,165 +1,54 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
+    <link rel="stylesheet" href="print.css" media="print">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Menu - Self Ordering</title>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
-    
-    <!-- បណ្ណាល័យ Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
         :root {
-            --primary: #10b981;
-            --primary-hover: #059669;
-            --bg-dark: #0f172a;
-            --bg-card: rgba(30, 41, 59, 0.75);
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-            --border: rgba(255, 255, 255, 0.12);
-            --danger: #e11d48;
-            --success: #10b981;
+            --primary: #10b981; --primary-hover: #059669; --bg-dark: #0f172a;
+            --bg-card: rgba(30, 41, 59, 0.75); --text-main: #f8fafc; --text-muted: #94a3b8;
+            --border: rgba(255, 255, 255, 0.12); --danger: #e11d48; --success: #10b981;
             --glow-color: rgba(16, 185, 129, 0.4);
         }
-
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Battambang', 'Nunito', sans-serif; }
-        
-        body {
-            background: var(--bg-dark);
-            background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            color: var(--text-main);
-            padding-bottom: 100px;
-            min-height: 100vh;
-        }
-
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95));
-            z-index: -1;
-        }
-
-        /* Header Style */
-        .header {
-            background: rgba(15, 23, 42, 0.85);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 20px;
-            text-align: center;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        }
-        .header img {
-            width: 70px; height: 70px; border-radius: 50%; object-fit: cover;
-            margin-bottom: 8px; border: 2px solid var(--primary);
-            box-shadow: 0 0 15px var(--glow-color);
-        }
+        body { background: var(--bg-dark); background-image: url('https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop'); background-size: cover; background-position: center; background-attachment: fixed; color: var(--text-main); padding-bottom: 100px; min-height: 100vh; }
+        body::before { content: ""; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)); z-index: -1; }
+        .header { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); padding: 20px; text-align: center; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+        .header img { width: 70px; height: 70px; border-radius: 50%; object-fit: cover; margin-bottom: 8px; border: 2px solid var(--primary); box-shadow: 0 0 15px var(--glow-color); }
         .header h1 { font-size: 20px; color: #fff; font-weight: 900; text-shadow: 0 0 10px var(--glow-color); }
         .header p { font-size: 13px; color: var(--primary); font-weight: bold; margin-top: 2px; }
-
-        /* Container & Categories */
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
-
-        .category-tabs {
-            display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px;
-            scrollbar-width: none;
-        }
+        .category-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
         .category-tabs::-webkit-scrollbar { display: none; }
-        .cat-tab {
-            background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted);
-            padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap;
-            transition: 0.2s;
-        }
+        .cat-tab { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; transition: 0.2s; }
         .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: bold; box-shadow: 0 0 10px var(--glow-color); }
-
-        /* Product Grid Style */
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
-        .product-card {
-            background: var(--bg-card);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            cursor: pointer;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-            box-shadow: 0 10px 20px rgba(0,0,0,0.2);
-        }
+        .product-card { background: var(--bg-card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .product-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
         .product-card:active { transform: scale(0.96); }
-
         .product-img-wrapper { width: 100%; aspect-ratio: 1; background: rgba(0,0,0,0.2); position: relative; overflow: hidden; }
         .product-img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.3s ease; }
         .product-card:hover .product-img { transform: scale(1.05); }
-
         .product-info { padding: 12px; display: flex; flex-direction: column; flex-grow: 1; justify-content: space-between; }
         .p-name { font-size: 14px; font-weight: bold; margin-bottom: 6px; line-height: 1.3; color: #fff; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .p-price { color: var(--success); font-weight: 900; font-size: 15px; display: flex; align-items: center; justify-content: space-between; }
-        
-        .add-icon-btn {
-            background: rgba(16, 185, 129, 0.2); color: var(--primary); width: 28px; height: 28px;
-            border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold;
-            border: 1px solid var(--primary); transition: 0.2s;
-        }
+        .add-icon-btn { background: rgba(16, 185, 129, 0.2); color: var(--primary); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid var(--primary); transition: 0.2s; }
         .product-card:hover .add-icon-btn { background: var(--primary); color: #fff; }
-
-        /* Bottom Cart Bar */
-        .cart-bar {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: rgba(15, 23, 42, 0.95);
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border-top: 1px solid var(--border);
-            padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;
-            box-shadow: 0 -10px 30px rgba(0,0,0,0.5); z-index: 1000;
-            animation: slideUp 0.3s ease;
-        }
+        .cart-bar { position: fixed; bottom: 0; left: 0; width: 100%; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: 1px solid var(--border); padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 -10px 30px rgba(0,0,0,0.5); z-index: 1000; animation: slideUp 0.3s ease; }
         @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        .btn-order {
-            background: var(--primary); color: white; border: none; padding: 12px 24px;
-            border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer;
-            box-shadow: 0 5px 15px var(--glow-color); transition: 0.2s;
-        }
+        .btn-order { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; font-size: 15px; cursor: pointer; box-shadow: 0 5px 15px var(--glow-color); transition: 0.2s; }
         .btn-order:hover { background: var(--primary-hover); transform: translateY(-2px); }
-
-        /* Modal Overlay & Checkout Redesign */
-        .modal-overlay {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);
-            display: none; justify-content: center; align-items: flex-end; z-index: 2000;
-        }
-        .modal {
-            background: #111827; width: 100%; max-width: 600px;
-            border-radius: 28px 28px 0 0; padding: 25px; max-height: 90vh; overflow-y: auto;
-            border-top: 1px solid rgba(255,255,255,0.15); box-shadow: 0 -20px 50px rgba(0,0,0,0.7);
-            animation: modalUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: flex-end; z-index: 2000; }
+        .modal { background: #111827; width: 100%; max-width: 600px; border-radius: 28px 28px 0 0; padding: 25px; max-height: 90vh; overflow-y: auto; border-top: 1px solid rgba(255,255,255,0.15); box-shadow: 0 -20px 50px rgba(0,0,0,0.7); animation: modalUp 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         @keyframes modalUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
-
-        .form-control {
-            width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--border);
-            background: #1f2937; color: var(--text-main); margin-bottom: 15px; font-size: 14px; outline: none;
-            transition: 0.2s;
-        }
+        .form-control { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--border); background: #1f2937; color: var(--text-main); margin-bottom: 15px; font-size: 14px; outline: none; transition: 0.2s; }
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--glow-color); background: #111827; }
-
-        .cart-item-row {
-            display: flex; justify-content: space-between; align-items: center;
-            margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--border);
-            font-size: 14px;
-        }
+        .cart-item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--border); font-size: 14px; }
     </style>
 </head>
 <body>
@@ -171,17 +60,14 @@
     </div>
 
     <div class="container">
-        <!-- ផ្ទាំងប្រភេទរង (Category Filter Tabs) -->
+        <!-- ផ្ទាំងប្រភេទរង -->
         <div id="categoryTabsContainer" class="category-tabs">
             <div class="cat-tab active" onclick="filterCategory('all', this)">ទាំងអស់</div>
         </div>
 
-        <div id="menuProductGrid" class="product-grid">
-            <!-- ទំនិញនឹងត្រូវទាញយកមកបង្ហាញទីនេះ -->
-        </div>
+        <div id="menuProductGrid" class="product-grid"></div>
     </div>
 
-    <!-- Bottom Cart Floating Bar -->
     <div class="cart-bar" id="cartBar" style="display: none;">
         <div>
             <div style="font-size: 12px; color: var(--text-muted);">ទំនិញក្នុងកន្ត្រក: <span id="cartCount" style="font-weight: bold; color: #fff;">0</span> មុខ</div>
@@ -190,7 +76,6 @@
         <button class="btn-order" onclick="openCheckoutModal()">មើលកន្ត្រក & កុម្មង់ ➔</button>
     </div>
 
-    <!-- Modal ពិនិត្យកន្ត្រក និងបញ្ជូន Order (មានបញ្ចូល QR ទូទាត់ប្រាក់របស់ហាង) -->
     <div class="modal-overlay" id="checkoutModal">
         <div class="modal">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
@@ -208,13 +93,20 @@
                 <input type="text" id="custPhone" class="form-control" placeholder="ឧ. 012 345 678">
 
                 <label style="font-size: 13px; display: block; margin-bottom: 5px; color: var(--text-muted);">សរសេរបន្ថែម / ចំណាំ (Note)</label>
-                <textarea id="custNote" class="form-control" placeholder="ឧ. មិនដាក់ស្ករ, ហឹរតិចតួច, ឬការបញ្ជាក់ផ្សេងៗ..." style="height: 65px; resize: none;"></textarea>
+                <textarea id="custNote" class="form-control" placeholder="សំណូមពរពិសេស ឬព័ត៌មានបញ្ជាក់បន្ថែម..." style="height: 65px; resize: none;"></textarea>
             </div>
 
-            <!-- ➕ កន្លែងបង្ហាញ QR ទូទាត់ប្រាក់របស់ហាង (ទាញយកស្វ័យប្រវត្តពី Supabase) -->
-            <div id="qrContainer" style="display: none; text-align: center; background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 14px; padding: 12px; margin-bottom: 15px;">
-                <div style="font-size: 13px; font-weight: bold; color: var(--success); margin-bottom: 8px;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</div>
-                <img id="shopQRDisplay" src="" alt="Shop QR Code" style="width: 130px; height: 130px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px;">
+            <!-- ➕ កន្លែងបង្ហាញ QR និង Telegram របស់ហាង -->
+            <div style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 14px; padding: 15px; margin-bottom: 15px; text-align: center;">
+                <div id="qrImageSection" style="display: none; margin-bottom: 15px;">
+                    <div style="font-size: 13px; font-weight: bold; color: var(--success); margin-bottom: 8px;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</div>
+                    <img id="shopQRDisplay" src="" alt="Shop Info" style="width: 130px; height: 130px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px;">
+                </div>
+                
+                <div id="telegramPromptText" style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: none;">មានចម្ងល់? ឬចង់ផ្ញើទីតាំងផ្ទាល់?</div>
+                <a id="telegramLinkBtn" href="#" target="_blank" style="display: none; background: #0088cc; color: #fff; padding: 12px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s;">
+                    💬 ឆាតមកកាន់ Telegram
+                </a>
             </div>
 
             <div style="display: flex; gap: 12px; margin-top: 5px;">
@@ -236,7 +128,9 @@
         let inventory = [];
         let cart = [];
         let currentCategory = 'all';
-        let storeShopQR = ''; // រក្សាទុក QR Code របស់ហាង
+        let storeShopQR = ''; 
+        let shopBotToken = '';
+        let shopChatId = '';
 
         async function loadMenuData() {
             try {
@@ -257,10 +151,16 @@
                         logo.style.display = 'inline-block';
                     }
 
-                    // ទាញយក QR Code របស់ហាងមកទុកប្រើប្រាស់
-                    if (d.shopQR) {
-                        storeShopQR = d.shopQR;
-                    }
+                    if (d.shopQR) storeShopQR = d.shopQR;
+
+                    // យកទិន្នន័យ Telegram ពី Supabase (បើតអត់មាន ដាក់ default Jheng6912 សិនក៏បាន)
+                    let currentTelegram = d.shopTelegram || 'Jheng6912'; 
+                    document.getElementById('telegramLinkBtn').href = 'https://t.me/' + currentTelegram;
+                    document.getElementById('telegramLinkBtn').style.display = 'block';
+                    document.getElementById('telegramPromptText').style.display = 'block';
+
+                    if (d.telegramBotToken) shopBotToken = d.telegramBotToken;
+                    if (d.telegramChatId) shopChatId = d.telegramChatId;
 
                     buildCategories();
                 } else {
@@ -270,6 +170,38 @@
                 document.getElementById('shopName').innerText = 'មានបញ្ហាក្នុងការតភ្ជាប់';
             }
             renderMenuProducts();
+        }
+
+        async function sendTelegramNotification(order) {
+            // បើមិនទាន់កំណត់ Bot ទេ មិនបាច់បាញ់សារទេ
+            if (!shopBotToken || !shopChatId) return;
+            
+            let itemsText = order.items.map((i, index) => `${index + 1}. ${i.name} (x${i.cartQty}) = $${(i.price * i.cartQty).toFixed(2)}`).join('\n');
+            
+            let message = `🛒 <b>មានការកុម្ម៉ង់ថ្មីចូល! (New Order)</b>\n`;
+            message += `======================\n`;
+            message += `👤 <b>ឈ្មោះ:</b> ${order.customer}\n`;
+            message += `📞 <b>ទូរស័ព្ទ:</b> ${order.phone || 'មិនមាន'}\n`;
+            message += `📝 <b>ចំណាំ/ទីតាំង:</b> ${order.note || 'មិនមាន'}\n`;
+            message += `======================\n`;
+            message += `🛍️ <b>ទំនិញដែលបានកុម្ម៉ង់:</b>\n${itemsText}\n`;
+            message += `======================\n`;
+            message += `💰 <b>សរុបទឹកប្រាក់: $${order.totalAmount.toFixed(2)}</b>`;
+
+            const url = `https://api.telegram.org/bot${shopBotToken}/sendMessage`;
+            try {
+                await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: shopChatId,
+                        text: message,
+                        parse_mode: 'HTML'
+                    })
+                });
+            } catch (error) {
+                console.error('Error sending Telegram notification:', error);
+            }
         }
 
         function buildCategories() {
@@ -353,14 +285,13 @@
                 </div>
             `).join('');
 
-            // បង្ហាញ QR Code របស់ហាងក្នុង Modal បើមាន
-            const qrContainer = document.getElementById('qrContainer');
+            const qrImageSection = document.getElementById('qrImageSection');
             const shopQRDisplay = document.getElementById('shopQRDisplay');
             if (storeShopQR && storeShopQR.trim() !== '') {
                 shopQRDisplay.src = storeShopQR;
-                qrContainer.style.display = 'block';
+                qrImageSection.style.display = 'block';
             } else {
-                qrContainer.style.display = 'none';
+                qrImageSection.style.display = 'none';
             }
 
             document.getElementById('checkoutModal').style.display = 'flex';
@@ -419,6 +350,9 @@
                         .from('branch_store')
                         .update({ data_json: d, updated_at: new Date() })
                         .eq('branch_id', SHOP_BRANCH_ID);
+
+                    // បាញ់សារចូល Telegram (ផ្អែកលើការកំណត់របស់ហាង)
+                    sendTelegramNotification(newOrder);
 
                     alert('🎉 ការកុម្មង់របស់អ្នកបានជោគជ័យ! សូមរង់ចាំបុគ្គលិករៀបចំទំនិញជូន។');
                     cart = [];

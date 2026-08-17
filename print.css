@@ -1,0 +1,72 @@
+/* ឯកសារ print.css */
+@media print {
+    /* លាក់រាល់ធាតុទាំងអស់នៅលើវេបសាយពេលព្រីន */
+    body * {
+        visibility: hidden;
+    }
+    
+    /* បង្ហាញតែទម្រង់វិក្កយបត្រប៉ុណ្ណោះ */
+    #receipt-container, #receipt-container * {
+        visibility: visible;
+    }
+    
+    /* កំណត់ទីតាំងនិងទំហំក្រដាស 80mm (Thermal Printer) */
+    #receipt-container {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 80mm;
+        margin: 0;
+        padding: 5mm;
+        font-family: 'Khmer OS Battambang', sans-serif;
+        font-size: 12px;
+        color: #000;
+        background: #fff;
+    }
+
+    /* លុបគែមក្រដាស (Margins) របស់ Browser ចោល */
+    @page {
+        margin: 0;
+    }
+
+    /* រចនាប័ទ្មខាងក្នុងវិក្កយបត្រ */
+    .receipt-header {
+        text-align: center;
+        margin-bottom: 10px;
+    }
+    .receipt-header h2 {
+        font-size: 16px;
+        margin: 0;
+        font-weight: bold;
+    }
+    .receipt-header p {
+        margin: 2px 0;
+        font-size: 12px;
+    }
+    .receipt-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 10px;
+    }
+    .receipt-table th, .receipt-table td {
+        text-align: left;
+        padding: 4px 0;
+        border-bottom: 1px dashed #000;
+    }
+    .receipt-table th:last-child, .receipt-table td:last-child {
+        text-align: right;
+    }
+    .receipt-total {
+        text-align: right;
+        font-weight: bold;
+        font-size: 14px;
+        margin-top: 10px;
+        border-top: 2px solid #000;
+        padding-top: 5px;
+    }
+    .receipt-footer {
+        text-align: center;
+        margin-top: 15px;
+        font-size: 11px;
+    }
+}
