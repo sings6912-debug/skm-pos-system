@@ -23,10 +23,17 @@
         .header h1 { font-size: 20px; color: #fff; font-weight: 900; text-shadow: 0 0 10px var(--glow-color); }
         .header p { font-size: 13px; color: var(--primary); font-weight: bold; margin-top: 2px; }
         .container { max-width: 600px; margin: 0 auto; padding: 15px; }
+        
+        /* Search Bar Style */
+        .search-container { margin-bottom: 15px; }
+        .search-input { width: 100%; padding: 12px 15px; border-radius: 20px; border: 1px solid var(--border); background: var(--bg-card); color: var(--text-main); font-size: 14px; outline: none; transition: 0.2s; backdrop-filter: blur(10px); }
+        .search-input:focus { border-color: var(--primary); box-shadow: 0 0 10px var(--glow-color); }
+
         .category-tabs { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 10px; margin-bottom: 15px; scrollbar-width: none; }
         .category-tabs::-webkit-scrollbar { display: none; }
         .cat-tab { background: var(--bg-card); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 16px; border-radius: 20px; font-size: 13px; cursor: pointer; white-space: nowrap; transition: 0.2s; }
         .cat-tab.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: bold; box-shadow: 0 0 10px var(--glow-color); }
+        
         .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
         .product-card { background: var(--bg-card); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; cursor: pointer; transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1); position: relative; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
         .product-card:hover { transform: translateY(-3px); border-color: var(--primary); box-shadow: 0 15px 30px rgba(0,0,0,0.4); }
@@ -49,6 +56,8 @@
         .form-control { width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--border); background: #1f2937; color: var(--text-main); margin-bottom: 15px; font-size: 14px; outline: none; transition: 0.2s; }
         .form-control:focus { border-color: var(--primary); box-shadow: 0 0 12px var(--glow-color); background: #111827; }
         .cart-item-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px dashed var(--border); font-size: 14px; }
+        
+        .badge-condition { position: absolute; top: 8px; right: 8px; background: #38bdf8; color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: bold; box-shadow: 0 2px 4px rgba(0,0,0,0.3); z-index: 10; }
     </style>
 </head>
 <body>
@@ -60,14 +69,22 @@
     </div>
 
     <div class="container">
-        <!-- ផ្ទាំងប្រភេទរង -->
+        <!-- 🔍 ប្រអប់ស្វែងរក (Search Bar) -->
+        <div class="search-container">
+            <input type="text" id="searchInput" class="search-input" placeholder="🔍 ស្វែងរកឈ្មោះទំនិញ ឬតួអង្គ..." oninput="handleSearch()">
+        </div>
+
+        <!-- ផ្ទាំងប្រភេទរង (Category Filter Tabs) -->
         <div id="categoryTabsContainer" class="category-tabs">
             <div class="cat-tab active" onclick="filterCategory('all', this)">ទាំងអស់</div>
         </div>
 
-        <div id="menuProductGrid" class="product-grid"></div>
+        <div id="menuProductGrid" class="product-grid">
+            <!-- ទំនិញនឹងត្រូវទាញយកមកបង្ហាញទីនេះ -->
+        </div>
     </div>
 
+    <!-- Bottom Cart Floating Bar -->
     <div class="cart-bar" id="cartBar" style="display: none;">
         <div>
             <div style="font-size: 12px; color: var(--text-muted);">ទំនិញក្នុងកន្ត្រក: <span id="cartCount" style="font-weight: bold; color: #fff;">0</span> មុខ</div>
@@ -76,6 +93,7 @@
         <button class="btn-order" onclick="openCheckoutModal()">មើលកន្ត្រក & កុម្មង់ ➔</button>
     </div>
 
+    <!-- Modal ពិនិត្យកន្ត្រក និងបញ្ជូន Order -->
     <div class="modal-overlay" id="checkoutModal">
         <div class="modal">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 12px;">
@@ -92,18 +110,41 @@
                 <label style="font-size: 13px; display: block; margin-bottom: 5px; color: var(--text-muted);">លេខទូរស័ព្ទ (ជាជម្រើស)</label>
                 <input type="text" id="custPhone" class="form-control" placeholder="ឧ. 012 345 678">
 
-                <label style="font-size: 13px; display: block; margin-bottom: 5px; color: var(--text-muted);">សរសេរបន្ថែម / ចំណាំ (Note)</label>
-                <textarea id="custNote" class="form-control" placeholder="សំណូមពរពិសេស ឬព័ត៌មានបញ្ជាក់បន្ថែម..." style="height: 65px; resize: none;"></textarea>
+                <!-- 🚚 ជម្រើសដឹកជញ្ជូន (Delivery Option) -->
+                <label style="font-size: 13px; display: block; margin-bottom: 5px; color: var(--text-muted);">ជម្រើសទទួលទំនិញ (Delivery Option) *</label>
+                <select id="deliveryOption" class="form-control" onchange="updateCheckoutTotal()">
+                    <option value="pickup">🏪 មកយកនៅហាង (ឥតគិតថ្លៃ)</option>
+                    <option value="delivery">🚚 សេវាដឹកជញ្ជូន (គិតថ្លៃសេវា)</option>
+                </select>
+
+                <label style="font-size: 13px; display: block; margin-bottom: 5px; color: var(--text-muted);">ទីតាំង / ចំណាំ (Note)</label>
+                <textarea id="custNote" class="form-control" placeholder="ឧ. ទីតាំងដឹកជញ្ជូន ឬការបញ្ជាក់ផ្សេងៗ..." style="height: 65px; resize: none;"></textarea>
+            </div>
+
+            <!-- សរុបទឹកប្រាក់ចុងក្រោយក្នុង Modal -->
+            <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 15px; border: 1px solid var(--border);">
+                <div style="display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 5px; color: var(--text-muted);">
+                    <span>តម្លៃទំនិញសរុប:</span>
+                    <span id="checkoutSubtotal">$0.00</span>
+                </div>
+                <div id="checkoutDeliveryFeeRow" style="display: none; justify-content: space-between; font-size: 14px; margin-bottom: 5px; color: var(--text-muted);">
+                    <span>ថ្លៃដឹកជញ្ជូន:</span>
+                    <span id="checkoutDeliveryFeeAmount">+$0.00</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; font-size: 16px; font-weight: bold; border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 5px; color: #fff;">
+                    <span>សរុបត្រូវទូទាត់:</span>
+                    <span id="checkoutFinalTotal" style="color: var(--success);">$0.00</span>
+                </div>
             </div>
 
             <!-- ➕ កន្លែងបង្ហាញ QR និង Telegram របស់ហាង -->
             <div style="background: rgba(255,255,255,0.03); border: 1px dashed var(--border); border-radius: 14px; padding: 15px; margin-bottom: 15px; text-align: center;">
                 <div id="qrImageSection" style="display: none; margin-bottom: 15px;">
                     <div style="font-size: 13px; font-weight: bold; color: var(--success); margin-bottom: 8px;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</div>
-                    <img id="shopQRDisplay" src="" alt="Shop Info" style="width: 130px; height: 130px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px;">
+                    <img id="shopQRDisplay" src="" alt="Shop Info" style="width: 250px; height: 250px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px;">
                 </div>
                 
-                <div id="telegramPromptText" style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: none;">មានចម្ងល់? ឬចង់ផ្ញើទីតាំងផ្ទាល់?</div>
+                <div id="telegramPromptText" style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px; display: none;">មានចម្ងល់? ឬចង់ផ្ញើទីតាំងបញ្ជាក់ការទូទាត់?</div>
                 <a id="telegramLinkBtn" href="#" target="_blank" style="display: none; background: #0088cc; color: #fff; padding: 12px; border-radius: 12px; text-decoration: none; font-size: 14px; font-weight: bold; transition: 0.2s;">
                     💬 ឆាតមកកាន់ Telegram
                 </a>
@@ -131,6 +172,8 @@
         let storeShopQR = ''; 
         let shopBotToken = '';
         let shopChatId = '';
+        let shopSysSettings = {}; // ដើម្បីយកតម្លៃ deliveryFee
+        let defaultDeliveryFee = 1.5;
 
         async function loadMenuData() {
             try {
@@ -145,6 +188,11 @@
                     inventory = (d.inventory || []).filter(p => p && parseFloat(p.qty) > 0);
                     document.getElementById('shopName').innerText = d.shopName || 'SKM INTEGRATE';
                     
+                    if (d.sysSettings) {
+                        shopSysSettings = d.sysSettings;
+                        defaultDeliveryFee = shopSysSettings.deliveryFee !== undefined ? parseFloat(shopSysSettings.deliveryFee) : 1.5;
+                    }
+
                     if (d.shopLogo) {
                         const logo = document.getElementById('shopLogo');
                         logo.src = d.shopLogo;
@@ -153,7 +201,6 @@
 
                     if (d.shopQR) storeShopQR = d.shopQR;
 
-                    // យកទិន្នន័យ Telegram ពី Supabase (បើតអត់មាន ដាក់ default Jheng6912 សិនក៏បាន)
                     let currentTelegram = d.shopTelegram || 'Jheng6912'; 
                     document.getElementById('telegramLinkBtn').href = 'https://t.me/' + currentTelegram;
                     document.getElementById('telegramLinkBtn').style.display = 'block';
@@ -173,7 +220,6 @@
         }
 
         async function sendTelegramNotification(order) {
-            // បើមិនទាន់កំណត់ Bot ទេ មិនបាច់បាញ់សារទេ
             if (!shopBotToken || !shopChatId) return;
             
             let itemsText = order.items.map((i, index) => `${index + 1}. ${i.name} (x${i.cartQty}) = $${(i.price * i.cartQty).toFixed(2)}`).join('\n');
@@ -182,6 +228,7 @@
             message += `======================\n`;
             message += `👤 <b>ឈ្មោះ:</b> ${order.customer}\n`;
             message += `📞 <b>ទូរស័ព្ទ:</b> ${order.phone || 'មិនមាន'}\n`;
+            message += `🚚 <b>សេវាដឹកជញ្ជូន:</b> ${order.deliveryFee > 0 ? `បាទ/ចាស ($${order.deliveryFee.toFixed(2)})` : 'មកយកនៅហាង (Pickup)'}\n`;
             message += `📝 <b>ចំណាំ/ទីតាំង:</b> ${order.note || 'មិនមាន'}\n`;
             message += `======================\n`;
             message += `🛍️ <b>ទំនិញដែលបានកុម្ម៉ង់:</b>\n${itemsText}\n`;
@@ -221,21 +268,47 @@
             renderMenuProducts();
         }
 
+        // មុខងារ Search ថ្មី
+        function handleSearch() {
+            renderMenuProducts();
+        }
+
         function renderMenuProducts() {
             const grid = document.getElementById('menuProductGrid');
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            
             let filtered = inventory;
+            
+            // Filter តាម Category សិន
             if (currentCategory !== 'all') {
-                filtered = inventory.filter(p => p.category === currentCategory);
+                filtered = filtered.filter(p => p.category === currentCategory);
+            }
+            
+            // Filter តាម Search Bar
+            if (searchTerm) {
+                filtered = filtered.filter(p => {
+                    return (p.name && p.name.toLowerCase().includes(searchTerm)) || 
+                           (p.customId && String(p.customId).toLowerCase().includes(searchTerm)) ||
+                           (p.desc && p.desc.toLowerCase().includes(searchTerm));
+                });
             }
 
             if (filtered.length === 0) {
-                grid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 40px;">គ្មានទំនិញក្នុងប្រភេទនេះទេ</div>';
+                grid.innerHTML = '<div style="grid-column: span 2; text-align: center; color: var(--text-muted); padding: 40px;">គ្មានទំនិញដែលអ្នកស្វែងរកទេ</div>';
                 return;
             }
 
-            grid.innerHTML = filtered.map(p => `
+            grid.innerHTML = filtered.map(p => {
+                // បង្ហាញ Badge ស្ថានភាពទំនិញបើហាងមានកំណត់
+                let conditionBadge = '';
+                if (shopSysSettings && shopSysSettings.condition && p.condition) {
+                    conditionBadge = `<div class="badge-condition">${p.condition}</div>`;
+                }
+
+                return `
                 <div class="product-card" onclick="addToCart('${p.id}')">
                     <div class="product-img-wrapper">
+                        ${conditionBadge}
                         <img src="${p.image || 'https://placehold.co/200?text=No+Img'}" class="product-img" alt="Product">
                     </div>
                     <div class="product-info">
@@ -246,7 +319,7 @@
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function addToCart(id) {
@@ -293,6 +366,10 @@
             } else {
                 qrImageSection.style.display = 'none';
             }
+            
+            // កំណត់ជម្រើសដឹកជញ្ជូនត្រលប់ទៅ Pickup វិញរាល់ពេលបើក
+            document.getElementById('deliveryOption').value = 'pickup';
+            updateCheckoutTotal();
 
             document.getElementById('checkoutModal').style.display = 'flex';
         }
@@ -301,17 +378,41 @@
             document.getElementById('checkoutModal').style.display = 'none';
         }
 
+        // មុខងារអាប់ដេតសរុបប្រាក់ពេលរើសជម្រើសដឹកជញ្ជូន
+        function updateCheckoutTotal() {
+            const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.cartQty), 0);
+            const deliveryOption = document.getElementById('deliveryOption').value;
+            let currentDeliveryFee = 0;
+            
+            if (deliveryOption === 'delivery') {
+                currentDeliveryFee = defaultDeliveryFee;
+                document.getElementById('checkoutDeliveryFeeRow').style.display = 'flex';
+                document.getElementById('checkoutDeliveryFeeAmount').innerText = `+$${currentDeliveryFee.toFixed(2)}`;
+            } else {
+                document.getElementById('checkoutDeliveryFeeRow').style.display = 'none';
+            }
+
+            const finalTotal = subtotal + currentDeliveryFee;
+
+            document.getElementById('checkoutSubtotal').innerText = `$${subtotal.toFixed(2)}`;
+            document.getElementById('checkoutFinalTotal').innerText = `$${finalTotal.toFixed(2)}`;
+        }
+
         async function submitCustomerOrder() {
             const name = document.getElementById('custName').value.trim();
             const phone = document.getElementById('custPhone').value.trim();
             const note = document.getElementById('custNote').value.trim();
+            const deliveryOption = document.getElementById('deliveryOption').value;
             
             if (!name) {
                 alert('សូមបញ្ចូលឈ្មោះរបស់អ្នកសិន!');
                 return;
             }
 
-            const totalAmount = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.cartQty), 0);
+            const subtotalAmount = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.cartQty), 0);
+            const appliedDeliveryFee = deliveryOption === 'delivery' ? defaultDeliveryFee : 0;
+            const finalTotalAmount = subtotalAmount + appliedDeliveryFee;
+            
             const newInvId = 'ORD-' + Date.now().toString().slice(-6);
 
             let newOrder = {
@@ -320,11 +421,12 @@
                 date: new Date().toLocaleString('km-KH'),
                 customer: name,
                 phone: phone,
-                note: note,
+                note: note + (deliveryOption === 'delivery' ? ` [ត្រូវការដឹកជញ្ជូន]` : ` [មកយកនៅហាង]`), // បញ្ជាក់ក្នុង Note ឱ្យ Admin ឃើញ
+                deliveryFee: appliedDeliveryFee,
                 items: [...cart],
                 rate: 4000,
-                totalAmount: totalAmount,
-                totalRiel: totalAmount * 4000,
+                totalAmount: finalTotalAmount,
+                totalRiel: finalTotalAmount * 4000,
                 status: 'unpaid',
                 seller: 'Customer (Scan QR)'
             };
@@ -359,6 +461,8 @@
                     document.getElementById('custName').value = '';
                     document.getElementById('custPhone').value = '';
                     document.getElementById('custNote').value = '';
+                    document.getElementById('deliveryOption').value = 'pickup';
+                    document.getElementById('searchInput').value = ''; // Clear search
                     closeCheckoutModal();
                     updateCartBar();
                     loadMenuData();

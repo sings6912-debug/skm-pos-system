@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-        <link rel="stylesheet" href="print.css" media="print">
+    <link rel="stylesheet" href="print.css" media="print">
     <link rel="manifest" href="manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes">
@@ -249,6 +249,7 @@
                                 <datalist id="customerDatalist"></datalist>
                             </div>
                             <div style="display: flex; gap: 10px; flex-shrink: 0;">
+                                <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.openPreorderModal()">📝 កក់ប្រាក់</button>
                                 <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.checkout('unpaid')">📝 រង់ចាំទូទាត់</button>
                                 <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.openCheckoutModal()">💰 ទូទាត់រួច</button>
                             </div>
@@ -257,7 +258,7 @@
                 </div>
             </div>
 
-            <!-- ផ្ទាំងវិក្កយបត្រជំពាក់ (Unpaid/Invoices) -->
+            <!-- ផ្ទាំងវិក្កយបត្ររង់ចាំទូទាត់ (Unpaid/Invoices) -->
             <div id="tab-unpaid" class="tab-content">
                 <div class="toolbar">
                     <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderUnpaid()" style="width: 200px;">
@@ -440,6 +441,29 @@
                                     <input type="color" id="customColorPicker" style="width: 40px; height: 40px; padding: 0; border: none; cursor: pointer; outline: none; background: transparent; border-radius: 8px;" onchange="window.handleCustomColor(this.value)" title="ចុចដើម្បីរើសពណ៌តាមចិត្ត">
                                 </div>
                             </div>
+                        </div>
+                    </div>
+
+                    <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #8b5cf6;">
+                        <h2 style="font-size: var(--fs-20); margin-bottom: 20px; color: #8b5cf6; border-bottom: 1px solid var(--border); padding-bottom: 10px;">📦 មុខងារទំនិញ និងការលក់ពិសេស</h2>
+                        
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:15px; cursor:pointer; font-size: var(--fs-16);">
+                            <input type="checkbox" id="setCondition" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;">
+                            <span><strong style="color:var(--text-main);">ស្ថានភាពទំនិញ (Item Condition):</strong> សម្រាប់បញ្ជាក់ពីគុណភាព Figure (ឧ. MISB, Loose)។</span>
+                        </label>
+                        <div id="conditionListContainer" style="display:none; margin-left: 34px; margin-bottom: 20px;">
+                            <input type="text" id="setConditionList" class="form-control" placeholder="ឧ. MISB, Loose, New, Used" onchange="window.saveSysSettings()" style="width: 100%; max-width: 400px; font-size: var(--fs-13);">
+                            <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">(សរសេរស្ថានភាពដោយខណ្ឌដោយសញ្ញាក្បៀស ",")</div>
+                        </div>
+
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);">
+                            <input type="checkbox" id="setPreorder" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;">
+                            <span><strong style="color:var(--text-main);">ប្រព័ន្ធកក់ប្រាក់ (Pre-order):</strong> អនុញ្ញាតឲ្យកត់ត្រាការកក់ប្រាក់សម្រាប់ទំនិញដែលមិនទាន់ចូលស្តុក។</span>
+                        </label>
+
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; font-size: var(--fs-16);">
+                            <span><strong style="color:var(--text-main);">ថ្លៃសេវាដឹកជញ្ជូនទូទៅ (Default Delivery Fee):</strong></span>
+                            <input type="number" id="setDeliveryFee" class="form-control" style="width: 80px; padding: 5px; height: 35px; text-align: center;" value="1.5" onchange="window.saveSysSettings()"> $
                         </div>
                     </div>
 
@@ -676,6 +700,40 @@
             </div>
         </div>
     </div>
+    
+    <!-- Modal: កក់ប្រាក់ (Pre-order) -->
+    <div class="modal-overlay" id="preorderModal" style="z-index: 1005;">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2 style="font-size: var(--fs-20);">📝 កក់ប្រាក់ទំនិញ (Pre-order)</h2>
+                <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="document.getElementById('preorderModal').style.display='none'">✕</button>
+            </div>
+            <div class="modal-body" style="text-align: center; padding: 25px 20px;">
+                <div style="font-size: var(--fs-15); margin-bottom: 5px; color: var(--text-muted);">សរុបប្រាក់ត្រូវបង់ (Grand Total):</div>
+                <div id="preorderTotalDisplay" style="font-size: 28px; font-weight: bold; color: var(--success); margin-bottom: 15px; line-height: 1.3;"></div>
+
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; margin-top: 15px;">
+                    <div style="flex: 1; text-align: left;">
+                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់កក់មុន ($):</label>
+                        <input type="number" id="preorderDepositUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: #8b5cf6; width: 100%;" placeholder="0.00" oninput="window.calculatePreorderRemaining()" autocomplete="off">
+                    </div>
+                    <div style="flex: 1; text-align: left;">
+                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់កក់មុន (៛):</label>
+                        <input type="number" id="preorderDepositRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: #8b5cf6; width: 100%;" placeholder="0" oninput="window.calculatePreorderRemaining()" autocomplete="off">
+                    </div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
+                    <div style="font-size: var(--fs-14); color: var(--text-muted); margin-bottom: 5px;">ប្រាក់នៅខ្វះ (Remaining):</div>
+                    <div id="preorderRemainingDisplay" style="font-size: 24px; font-weight: bold; color: var(--danger);">$0.00 | 0 ៛</div>
+                </div>
+            </div>
+            <div class="modal-footer" style="justify-content: space-between; gap: 15px;">
+                <button class="btn btn-outline" style="flex:1; padding: 12px;" onclick="document.getElementById('preorderModal').style.display='none'">បោះបង់</button>
+                <button class="btn" style="flex:2; font-size: var(--fs-16); padding: 12px; background: #8b5cf6; color: white;" onclick="window.processPreorder()">✅ បញ្ជាក់ការកក់ប្រាក់</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Modal: កត់ត្រាចំណាយ (Expense Modal) -->
     <div class="modal-overlay" id="expenseModal">
@@ -782,8 +840,19 @@
                         </div>
                         <input type="text" id="pCustomId" class="form-control" placeholder="ស្កេន ឬ ដាក់លេខកូដ..." style="width: 100%;">
                     </div>
-                    <div><label>ខ្នាត/ឯកតា (Unit)</label><input type="text" id="pUnit" class="form-control" placeholder="ឧ. កេះ, បេ" style="width: 100%;"></div>
+                    <div><label>ខ្នាត/ឯកតា (Unit)</label><input type="text" id="pUnit" class="form-control" list="unitList" placeholder="ឧ. កេះ, បេ" style="width: 100%;"><datalist id="unitList"></datalist></div>
                 </div>
+                
+                <!-- ➕ បន្ថែមជម្រើសស្ថានភាពទំនិញ (Condition) -->
+                <div class="form-row" id="pConditionContainer" style="display: none; margin-top: 15px;">
+                    <div>
+                        <label>ស្ថានភាពទំនិញ (Condition)</label>
+                        <select id="pCondition" class="form-control" style="width: 100%;">
+                            <option value="">-- ជ្រើសរើស --</option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="form-row" style="margin-top: 15px;">
                     <div><label>ចំនួនស្តុក (Qty)</label><input type="number" id="pQty" class="form-control" value="0" style="width: 100%;"></div>
                 </div>
@@ -929,19 +998,9 @@
             let totalPaid = 0;
             let totalUnpaid = 0;
             rows.forEach(row => {
-                if (row.style.display !== 'none') {
-                    let cells = row.querySelectorAll('td');
-                    if(cells.length > 4) {
-                        let amount = parseFloat(cells[3].textContent.replace(/[^0-9.-]+/g,"")) || 0;
-                        let status = cells[4].textContent.trim();
-                        
-                        // Need to adjust this based on actual status text used in script.js
-                        if (status.includes('បានទូទាត់') || status.includes('សងរួច')) {
-                            totalPaid += amount;
-                        } else {
-                            totalUnpaid += amount;
-                        }
-                    }
+                if (row.style.display !== 'none' && row.hasAttribute('data-paid')) {
+                    totalPaid += parseFloat(row.getAttribute('data-paid')) || 0;
+                    totalUnpaid += parseFloat(row.getAttribute('data-unpaid')) || 0;
                 }
             });
             const paidEl = document.getElementById('summaryInvoicePaid');
@@ -954,7 +1013,7 @@
                 if (row.style.display !== 'none') {
                     let cells = row.querySelectorAll('td');
                     if(cells.length > 2) {
-                        totalExp += parseFloat(cells[2].textContent.replace(/[^0-9.-]+/g,"")) || 0;
+                        totalExp += parseFloat(cells[2].getAttribute('data-sort') || cells[2].textContent.replace(/[^0-9.-]+/g,"")) || 0;
                     }
                 }
             });
