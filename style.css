@@ -91,7 +91,6 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
     top: 0; 
     height: 60px;
     box-sizing: border-box;
-    /* ប្រើប្រាស់ transform សម្រាប់លាក់ឡើងលើដោយរលូន មិនញ័រ និងមិនបន្សល់ចន្លោះទទេ */
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
 }
@@ -145,11 +144,9 @@ tr:hover { background: rgba(128,128,128,0.1); }
 th[onclick] { cursor: pointer; user-select: none; transition: 0.2s; white-space: nowrap; }
 th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); }
 
-/* --- បន្ថែម CSS សម្រាប់ Excel Filter Row --- */
 .filter-row th { padding: 5px; background: rgba(0,0,0,0.1); border-bottom: 2px solid var(--border); }
 .col-filter { width: 100%; padding: 6px; font-size: var(--fs-12); border-radius: 4px; border: 1px solid var(--border); background: var(--bg-dark); color: var(--text-main); outline: none; transition: 0.2s;}
 .col-filter:focus { border-color: var(--primary); box-shadow: 0 0 5px rgba(16, 185, 129, 0.3); }
-/* ------------------------------------------- */
 
 .badge { padding: 4px 8px; border-radius: 4px; font-size: var(--fs-11); font-weight: bold; display: inline-block; white-space: nowrap; text-align: center; }
 .badge-sale { background: rgba(16, 185, 129, 0.2); color: var(--success); }
@@ -256,8 +253,15 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
 .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: var(--fs-14); }
 .summary-total { font-size: var(--fs-20); font-weight: bold; color: var(--success); border-top: 1px solid var(--border); padding-top: 10px; margin-top: 10px; margin-bottom: 15px; }
 
-.cart-qty-input::-webkit-outer-spin-button, .cart-qty-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-.cart-qty-input[type=number] { -moz-appearance: textfield; }
+.cart-qty-input::-webkit-outer-spin-button, 
+.cart-qty-input::-webkit-inner-spin-button { 
+    -webkit-appearance: none; 
+    margin: 0; 
+}
+.cart-qty-input[type=number] { 
+    appearance: textfield; 
+    -moz-appearance: textfield; 
+}
 
 /* ==========================================================================
    8. MODALS & POPUPS
@@ -331,11 +335,7 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
     #inventoryActionButtonsGroup > * { margin-bottom: 0 !important; }
     
     .view-toggle-group { width: auto; flex-shrink: 0; } .modal { max-width: 100%; max-height: 98vh; } .modal-body { padding: 15px; }
-    
-    /* --- អនុញ្ញាតអោយបង្ហាញ Filter Row លើទូរស័ព្ទ --- */
-    /* .filter-row { display: none; } <-- លុបបន្ទាត់នេះចេញ ឬ Comment វាចោល ដើម្បីឲ្យឃើញ Filter Row */
 
-    /* New rules added for mobile fix */
     .table-responsive { -webkit-overflow-scrolling: touch; }
     th, td { padding: 8px 5px; font-size: var(--fs-12); white-space: nowrap; }
     #posProductGridContainer { padding-bottom: 70px; }

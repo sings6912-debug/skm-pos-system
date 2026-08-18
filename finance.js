@@ -233,12 +233,12 @@ window.viewInvoice = function(id) {
     if(inv.customer && inv.customer !== 'អតិថិជនទូទៅ') content += `<p style="margin:2px 0; font-size: var(--fs-12); color:#000; text-align:left;">អតិថិជន: <b>${inv.customer}</b> ${inv.phone?`(${inv.phone})`:''}</p>`;
     content += `</div><table style="width: 100%; text-align: left; border-collapse: collapse; font-size: var(--fs-13); color:#000; table-layout: fixed;"><thead><tr><th style="padding-bottom: 4px; color:#000; width: 50%; border-bottom: 1px solid #000;">ទំនិញ</th><th style="padding-bottom: 4px; text-align:center; color:#000; width: 20%; border-bottom: 1px solid #000;">ចំនួន</th><th style="padding-bottom: 4px; text-align:right; color:#000; width: 30%; border-bottom: 1px solid #000;">សរុប</th></tr></thead><tbody>`;
     
-    inv.items.forEach(item => { 
+    inv.items.forEach((item, index) => { 
         let lineStr = '', uPriceStr = ''; 
         if(item.price > 0) { lineStr = window.fMoney(item.price * item.cartQty); uPriceStr = window.fMoney(item.price); } 
         else if(item.riel > 0) { lineStr = ((item.riel||0) * item.cartQty).toLocaleString() + ' ៛'; uPriceStr = item.riel.toLocaleString() + ' ៛'; } 
         else { lineStr = '$0.00'; uPriceStr = '$0.00'; } 
-        content += `<tr><td colspan="3" style="padding-top: 6px; color:#000; font-weight:bold; font-size: var(--fs-13);">${item.name}</td></tr><tr><td style="padding-bottom: 6px; color:#000; font-size: var(--fs-12);">${uPriceStr}</td><td style="text-align:center; padding-bottom: 6px; color:#000; font-size: var(--fs-12);">${item.cartQty} ${item.unit||''}</td><td style="text-align:right; color:#000; font-weight:bold; padding-bottom: 6px;">${lineStr}</td></tr>`; 
+        content += `<tr><td colspan="3" style="padding-top: 6px; color:#000; font-weight:bold; font-size: var(--fs-13);">${index + 1}. ${item.name}</td></tr><tr><td style="padding-bottom: 6px; color:#000; font-size: var(--fs-12);">${uPriceStr}</td><td style="text-align:center; padding-bottom: 6px; color:#000; font-size: var(--fs-12);">${item.cartQty} ${item.unit||''}</td><td style="text-align:right; color:#000; font-weight:bold; padding-bottom: 6px;">${lineStr}</td></tr>`; 
     });
     
     content += `</tbody></table><div style="border-top: 1px dashed #000; margin-top: 5px; padding-top: 5px;"><table style="width:100%; font-size: var(--fs-13); color:#000; margin-top: 5px;">`;
@@ -289,12 +289,12 @@ window.reprintInvoice = function() {
     if(inv.customer && inv.customer !== 'អតិថិជនទូទៅ') receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${inv.customer}</b> ${inv.phone?`(${inv.phone})`:''}</p>`;
     receiptHTML += `<div class="print-dashed-line"></div></div><table style="width:100%; text-align:left; font-size: 12px; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
     
-    inv.items.forEach(c => { 
+    inv.items.forEach((c, index) => { 
         let lineStr = '', uPriceStr = ''; 
         if(c.price > 0) { lineStr = window.fMoney(c.price * c.cartQty); uPriceStr = window.fMoney(c.price); } 
         else if(c.riel > 0) { lineStr = ((c.riel||0) * c.cartQty).toLocaleString() + ' ៛'; uPriceStr = c.riel.toLocaleString() + ' ៛'; } 
         else { lineStr = '$0.00'; uPriceStr = '$0.00'; } 
-        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${c.name}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`; 
+        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${c.name}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`; 
     });
     
     receiptHTML += `</tbody></table><div class="print-dashed-line"></div><table style="width:100%; font-size: 12px; margin-top: 5px;">`;
@@ -478,3 +478,4 @@ window.deleteInvoice = function(id) {
         window.ksMsg('វិក្កយបត្រត្រូវបានលុប និងបង្វិលស្តុកចូលឃ្លាំងវិញជោគជ័យ!', 'ជោគជ័យ');
     });
 };
+```[cite: 5]

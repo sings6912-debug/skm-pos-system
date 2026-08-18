@@ -304,19 +304,6 @@
         </div>
     </div>
 
-    <!-- POS Receipt Print Template -->
-    <div id="posPrintReceipt" style="display:none;">
-        <h2 style="text-align:center;">=== POS RECEIPT ===</h2>
-        <p id="printStoreName" style="text-align:center; font-weight:bold;"></p>
-        <p id="printDate"></p>
-        <p id="printCustomer"></p>
-        <hr>
-        <div id="printItemsList"></div>
-        <hr>
-        <p id="printTotalAmount" style="font-weight:bold; text-align:right;"></p>
-        <p style="text-align:center; margin-top:10px;">Thank You!</p>
-    </div>
-
     <script>
         const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
@@ -362,12 +349,11 @@
         function toggleGiftFields() {
             const isGift = document.getElementById('isGiftOrder').checked;
             document.getElementById('giftFields').style.display = isGift ? 'block' : 'none';
-            updateCheckoutTotal(); // Update price immediately when toggled
+            updateCheckoutTotal();
         }
 
         document.getElementById('loyaltyPointsDisplay').innerText = `⭐ ពិន្ទុសមាជិក: ${customerLoyaltyPoints} ពិន្ទុ`;
 
-        // 🌟 Scroll Effect for Floating Logo
         window.addEventListener('scroll', function() {
             const header = document.getElementById('mainHeader');
             const floatingLogo = document.getElementById('floatingLogo');
@@ -378,7 +364,6 @@
             }
         });
 
-        // 🕒 Auto Store Open/Closed Check
         function checkStoreSchedule() {
             const now = new Date();
             const hour = now.getHours();
@@ -420,7 +405,6 @@
             } catch (e) {}
         }
 
-        // Request Push Notification Permission
         function initPushNotifications() {
             if ("Notification" in window) {
                 if (Notification.permission !== "granted" && Notification.permission !== "denied") {
@@ -498,7 +482,6 @@
             toggleGiftFields();
         }
 
-        // 🌐 Translations
         const translations = {
             km: { search: "🔍 ស្វែងរកទំនិញ...", all: "ទាំងអស់", cartLabel: "កន្ត្រក:", items: "មុខ", viewCart: "មើលកន្ត្រក & កុម្មង់ ➔", out: "ស្តុកមានកំណត់!" },
             en: { search: "🔍 Search items...", all: "All", cartLabel: "Cart:", items: "items", viewCart: "View Cart & Order ➔", out: "Out of stock limit!" },
@@ -615,7 +598,6 @@
             if(!product) return;
             currentDetailItem = product;
             
-            // Generate dummy variants if none exist (for demo purposes)
             let variantsHTML = '';
             let variantsList = product.variants || ['ស្តង់ដារ (Standard)'];
             selectedVariant = variantsList[0];
@@ -624,7 +606,6 @@
                 <button class="variant-btn ${v===selectedVariant ? 'active':''}" onclick="selectVariant(this, '${v}')">${v}</button>
             `).join('');
 
-            // Render Detail Content
             const content = `
                 <img src="${product.image || 'https://placehold.co/200?text=No+Img'}" class="detail-img" onclick="openLightbox(this.src)">
                 <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">${product.name}</div>
@@ -638,10 +619,8 @@
             `;
             document.getElementById('detailContent').innerHTML = content;
 
-            // Render Mock Q&A
             renderQA();
 
-            // Render Related Products
             let related = inventory.filter(p => p.category === product.category && p.id !== product.id).slice(0, 4);
             document.getElementById('relatedProducts').innerHTML = related.map(p => `
                 <div style="min-width: 120px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 8px; cursor: pointer; text-align: center;" onclick="openProductDetail('${p.id}')">
@@ -665,7 +644,6 @@
         }
 
         function renderQA() {
-            // Mock local Q&A storage
             let qaStore = JSON.parse(localStorage.getItem(`skm_qa_${currentDetailItem.id}`) || '[]');
             if(qaStore.length === 0) {
                 document.getElementById('qaList').innerHTML = '<div style="font-size:11px; color:var(--text-muted);">មិនទាន់មានសំណួរទេ</div>';
@@ -688,7 +666,6 @@
 
         function addToCartFromDetail() {
             if(!currentDetailItem) return;
-            // Create unique cart ID based on product ID + variant
             const cartId = currentDetailItem.id + '_' + selectedVariant;
             const existing = cart.find(c => c.cartId === cartId);
             
@@ -867,7 +844,6 @@
 
             const finalTotalAmount = (subtotal - discountAmount) + deliveryFee + giftFee;
             
-            // ⭐ ចំណុចសមាជិក (Loyalty Points)
             let earnedPoints = Math.floor(finalTotalAmount);
             customerLoyaltyPoints += earnedPoints;
             localStorage.setItem('skm_points', customerLoyaltyPoints);
@@ -900,7 +876,7 @@
                     let d = data.data_json;
                     if (!d.invoices) d.invoices = [];
                     d.invoices.unshift(newOrder);
-                    // កាត់ស្តុក
+                    
                     cart.forEach(c => {
                         let invItem = (d.inventory || []).find(i => i.id === c.id);
                         if (invItem) invItem.qty = Math.max(0, invItem.qty - c.cartQty);
@@ -911,7 +887,6 @@
                     playNotificationSound();
                     triggerPushNotification("មានការកុម្ម៉ង់ថ្មី (New Order)!", `អតិថិជន: ${name}\nសរុប: $${finalTotalAmount.toFixed(2)}`);
 
-                    // ផ្ញើសារ Telegram
                     if (shopBotToken && shopChatId) {
                         let itemsText = newOrder.items.map((i, idx) => `${idx + 1}. ${i.name} [${i.cartVariant}] (x${i.cartQty}) = $${(parseFloat(i.price||0) * i.cartQty).toFixed(2)}`).join('\n');
                         let msg = `🛒 <b>មានការកុម្ម៉ង់ថ្មី (New Order)!</b>\n👤 <b>ឈ្មោះ:</b> ${name}\n📞 <b>ទូរស័ព្ទ:</b> ${newOrder.phone || 'មិនមាន'}\n📝 <b>ចំណាំ:</b> ${newOrder.note}`;
@@ -944,21 +919,52 @@
             }
         }
 
-        // 🖨️ POS Print
+        // 🖨️ POS Print Receipt with numbering and proper format
         function printPOSReceipt(order) {
-            document.getElementById('printStoreName').innerText = document.getElementById('shopName').innerText;
-            document.getElementById('printDate').innerText = `Date: ${order.date}`;
-            document.getElementById('printCustomer').innerText = `Customer: ${order.customer}`;
-            
-            let printContent = order.items.map(i => `${i.name} [${i.cartVariant}] (x${i.cartQty}) - $${(parseFloat(i.price||0) * i.cartQty).toFixed(2)}`).join('<br>');
-            if(order.isGift && order.giftDetails) {
-                printContent += `<br><br><b>*** 🎁 GIFT ORDER (+ $2.00) ***</b><br>To: ${order.giftDetails.recipient}<br>Tel: ${order.giftDetails.phone}<br>Msg: ${order.giftDetails.message}`;
+            let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
+            if(document.getElementById('shopLogo').src) {
+                receiptHTML += `<img src="${document.getElementById('shopLogo').src}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
             }
-            
-            document.getElementById('printItemsList').innerHTML = printContent;
-            document.getElementById('printTotalAmount').innerText = `Total: $${order.totalAmount.toFixed(2)}`;
-            
-            window.print();
+            receiptHTML += `<h2 style="margin:0; font-size:16px;">${document.getElementById('shopName').innerText}</h2>`; 
+            receiptHTML += `<p style="margin:2px 0; font-size:12px;">${document.getElementById('branchTitle').innerText}</p>`; 
+            receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
+            receiptHTML += `<p style="margin:4px 0; font-size:14px; font-weight:bold;">បង្កាន់ដៃកុម្មង់ទំនិញ / Receipt</p>`;
+            receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${order.date}</p>`;
+            receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">លេខកុម្មង់: ${order.id}</p>`;
+            receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${order.customer}</b> ${order.phone ? '('+order.phone+')':''}</p>`;
+            receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div></div>`;
+
+            receiptHTML += `<table style="width:100%; text-align:left; font-size: 12px; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
+
+            order.items.forEach((item, index) => {
+                let lineTotal = (parseFloat(item.price || 0) * item.cartQty);
+                receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${item.name} <span style="font-size:10px; font-weight:normal;">[${item.cartVariant}]</span></td></tr>`;
+                receiptHTML += `<tr><td style="padding-bottom: 4px; font-size: 11px;">$${parseFloat(item.price||0).toFixed(2)}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${item.cartQty}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">$${lineTotal.toFixed(2)}</td></tr>`;
+            });
+
+            if(order.isGift && order.giftDetails) {
+                receiptHTML += `<tr><td colspan="3" style="border-top:1px dashed #000; padding-top:5px; font-size:11px;">🎁 <b>Gift Order (+ $2.00):</b><br>អ្នកទទួល: ${order.giftDetails.recipient}<br>ទូរស័ព្ទ: ${order.giftDetails.phone}<br>សារ: ${order.giftDetails.message}</td></tr>`;
+            }
+
+            receiptHTML += `</tbody></table><div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
+            receiptHTML += `<table style="width:100%; font-size: 12px; margin-top: 5px;">`;
+            receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">$${order.totalAmount.toFixed(2)}</td></tr>`;
+            receiptHTML += `</table>`;
+            receiptHTML += `<p style="text-align:center; font-size:12px; margin-top: 15px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`;
+
+            const printWindow = window.open('', '', 'width=300,height=600');
+            if(!printWindow) return;
+            printWindow.document.write('<html><head><title>Print Receipt</title>');
+            printWindow.document.write('<style>@media print { body { width: 80mm; font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } }</style>');
+            printWindow.document.write('</head><body>');
+            printWindow.document.write(receiptHTML);
+            printWindow.document.write('</body></html>');
+            printWindow.document.close();
+            printWindow.focus();
+            setTimeout(() => {
+                printWindow.print();
+                printWindow.close();
+            }, 500);
         }
 
         window.onload = loadMenuData;

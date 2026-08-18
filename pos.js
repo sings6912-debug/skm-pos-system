@@ -407,7 +407,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(custNameInput) receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${custNameInput}</b> ${custPhoneInput?`(${custPhoneInput})`:''}</p>`;
     receiptHTML += `<div class="print-dashed-line"></div></div><table style="width:100%; text-align:left; font-size: 12px; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
 
-    window.cart.forEach(c => {
+    window.cart.forEach((c, index) => {
         if(!c) return; 
         const idx = window.inventory.findIndex(p => p && p.id === c.id);
         if(idx !== -1) {
@@ -419,7 +419,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
             if(c.price > 0) { lineStr = window.fMoney(c.price * c.cartQty); uPriceStr = window.fMoney(c.price); } 
             else if(c.riel > 0) { lineStr = ((c.riel||0) * c.cartQty).toLocaleString() + '៛'; uPriceStr = c.riel.toLocaleString() + '៛'; } 
             else { lineStr = '$0.00'; uPriceStr = '$0.00'; } 
-            receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${c.name}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
+            receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${c.name}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
         }
     });
     receiptHTML += `</tbody></table><div class="print-dashed-line"></div>`;
@@ -452,7 +452,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     } else if (status === 'preorder') {
         let rStr = []; if(rUsd > 0) rStr.push(window.fMoney(rUsd)); if(rRiel > 0) rStr.push(rRiel.toLocaleString() + '៛');
         if (rStr.length > 0) {
-            receiptHTML += `<tr><td style="padding-top:4px; font-size:11px;">ប្រាក់កក់មុន:</td><td style="text-align:right; padding-top:4px; font-size:11px;">${rStr.join(' | ')}</td></tr>`;
+            receiptHTML += `<tr><td style="padding-top:4px; font-size:11px;">ប្រាក់កក់មុន:</td><td style="text-align:right; font-size:11px; font-size:11px;">${rStr.join(' | ')}</td></tr>`;
             let remainingUsd = window.cartFinalUsd - (rUsd + (rRiel/window.cartRate));
             if (remainingUsd < 0) remainingUsd = 0;
             receiptHTML += `<tr><td style="font-size:11px; font-weight:bold;">ប្រាក់នៅខ្វះ:</td><td style="text-align:right; font-size:11px; font-weight:bold;">${window.fMoney(remainingUsd)}</td></tr>`;
