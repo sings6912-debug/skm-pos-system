@@ -113,6 +113,8 @@ window.updateQty = function(id, change) {
         if(diff !== 0) { 
             window.logAction(diff > 0 ? 'add' : 'update', item.name, Math.abs(diff), diff > 0 ? 'បន្ថែមស្តុក' : 'ដកស្តុកចេញ'); 
             window.saveData(window.userAccounts); 
+            // Render ឡើងវិញភ្លាមៗពេលបូក/ដក ដើម្បីលោតលេខថ្មីលើអេក្រង់
+            window.renderInventory();
         } 
     } 
 };
@@ -233,6 +235,8 @@ window.saveProduct = function() {
     } 
     window.closeModal(); 
     window.saveData(window.userAccounts); 
+    // Render ឡើងវិញពេល Save ជោគជ័យ
+    window.renderInventory();
 };
 
 window.editProduct = function(id) { 
