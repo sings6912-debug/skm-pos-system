@@ -246,7 +246,7 @@
         .pin-modal.show { display: flex; opacity: 1; }
         
         .pin-pad {
-            background: rgba(30, 41, 59, 0.9);
+            background: rgba(30, 41, 59, 0.95);
             border: 1px solid rgba(255,255,255,0.2);
             padding: 25px;
             border-radius: 20px;
@@ -254,6 +254,8 @@
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
             transform: scale(0.9);
             transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            max-width: 320px;
+            width: 90%;
         }
         .pin-modal.show .pin-pad { transform: scale(1); }
         
@@ -267,11 +269,26 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            transition: all 0.3s;
         }
+        
+        /* ❌ Shake Animation for Wrong PIN */
+        .pin-pad.shake {
+            animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
+            border-color: #ef4444;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-2px, 0, 0); }
+            20%, 80% { transform: translate3d(4px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-6px, 0, 0); }
+            40%, 60% { transform: translate3d(6px, 0, 0); }
+        }
+
         .pin-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
             gap: 15px;
+            justify-items: center;
         }
         .pin-btn {
             background: rgba(255,255,255,0.05);
@@ -336,8 +353,8 @@
 
     <!-- 🌟 PIN Modal -->
     <div class="pin-modal" id="pinModal">
-        <div class="pin-pad">
-            <h3 style="color:#fff; margin-bottom:10px; font-family:'Battambang';">បញ្ចូលលេខសម្ងាត់</h3>
+        <div class="pin-pad" id="pinPadBox">
+            <h3 id="pinModalTitle" style="color:#fff; margin-bottom:10px; font-family:'Battambang'; font-size:16px;">បញ្ចូលលេខសម្ងាត់ PIN (៤ ខ្ទង់)</h3>
             <div class="pin-display" id="pinDisplay">_ _ _ _</div>
             <div class="pin-grid">
                 <button class="pin-btn" onclick="enterPin(1)">1</button>
@@ -373,7 +390,12 @@
         const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
         let currentLang = 'km';
         
-        // 🔊 Sci-Fi Sound Effect function
+        // គណនីសម្រាប់ផ្ទៀងផ្ទាត់លេខ PIN
+        let localUserAccounts = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_auth_users_pro`)) || [
+            { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' }
+        ];
+
+        // 🔊 Sound Effect
         function playClickSound() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -381,13 +403,13 @@
                 const ctx = new AudioContext();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, ctx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(1500, ctx.currentTime + 0.05);
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
                 osc.start();
                 osc.stop(ctx.currentTime + 0.1);
             } catch(e) {}
@@ -411,36 +433,44 @@
         });
         card.addEventListener('mouseenter', () => card.style.transition = 'none');
 
-        // 🔐 PIN Logic
+        // 🔐 PIN Logic (ផ្ទៀងផ្ទាត់ម៉ត់ចត់ និងលុប PIN ចេញពី URL)
         let pinCode = '';
+        let isProcessing = false;
+
         function openPinModal() {
             playClickSound();
             document.getElementById('pinModal').classList.add('show');
             pinCode = '';
+            isProcessing = false;
+            resetPinDisplayNormal();
             updatePinDisplay();
         }
+
         function closePinModal() {
             playClickSound();
             document.getElementById('pinModal').classList.remove('show');
         }
+
         function enterPin(num) {
+            if (isProcessing) return;
             playClickSound();
             if(pinCode.length < 4) {
                 pinCode += num;
                 updatePinDisplay();
                 if(pinCode.length === 4) {
-                    setTimeout(() => {
-                        // ចូលទៅកាន់ Index ជាមួយ PIN ជាប់ Parameter
-                        window.location.href = `index.html?branch=${encodeURIComponent(SHOP_BRANCH_ID)}&pin=${pinCode}`;
-                    }, 300);
+                    isProcessing = true;
+                    setTimeout(verifyPinAndEnter, 250);
                 }
             }
         }
+
         function clearPin() {
+            if (isProcessing) return;
             playClickSound();
             pinCode = pinCode.slice(0, -1);
             updatePinDisplay();
         }
+
         function updatePinDisplay() {
             const display = document.getElementById('pinDisplay');
             let text = '';
@@ -448,6 +478,49 @@
                 text += i < pinCode.length ? '● ' : '_ ';
             }
             display.innerText = text.trim();
+        }
+
+        function resetPinDisplayNormal() {
+            const display = document.getElementById('pinDisplay');
+            const box = document.getElementById('pinPadBox');
+            display.style.color = '#10b981';
+            display.style.letterSpacing = '10px';
+            box.classList.remove('shake');
+        }
+
+        function verifyPinAndEnter() {
+            // ស្វែងរកគណនីណាដែលមានលេខ PIN ត្រូវគ្នា
+            const matchedUser = localUserAccounts.find(u => String(u.pin).trim() === pinCode.trim());
+
+            if (matchedUser) {
+                // ✅ បើត្រូវ៖ កត់ត្រាចូល LocalStorage ជា Session User សកម្ម
+                localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_active_user_obj`, JSON.stringify(matchedUser));
+                
+                const display = document.getElementById('pinDisplay');
+                display.style.color = '#38bdf8';
+                display.style.letterSpacing = '2px';
+                display.innerText = '✅ ជោគជ័យ';
+
+                // បញ្ជូនទៅកាន់ index.html ដោយគ្មានលេខ PIN ក្នុង URL ឡើយ
+                setTimeout(() => {
+                    window.location.href = `index.html?branch=${encodeURIComponent(SHOP_BRANCH_ID)}`;
+                }, 300);
+            } else {
+                // ❌ បើខុស៖ ញ័រប្រអប់ និងប្រាប់ថាខុសលេខ PIN
+                const box = document.getElementById('pinPadBox');
+                const display = document.getElementById('pinDisplay');
+                box.classList.add('shake');
+                display.style.color = '#ef4444';
+                display.style.letterSpacing = '2px';
+                display.innerText = '❌ PIN មិនត្រូវ!';
+
+                setTimeout(() => {
+                    pinCode = '';
+                    isProcessing = false;
+                    resetPinDisplayNormal();
+                    updatePinDisplay();
+                }, 900);
+            }
         }
 
         function goToMenu() {
@@ -463,8 +536,10 @@
             netEl.style.display = navigator.onLine ? 'none' : 'block';
         }
 
-        // 🔄 Fetch Data with Timeout
+        // 🔄 Fetch Data with Timeout & Load Users from Supabase
         async function loadShopProfile() {
+            document.getElementById('displayBranchTag').innerText = `សាខា៖ ${SHOP_BRANCH_ID}`;
+            
             let shopName = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_shop_name`) || 'SKM INTEGRATE';
             let shopLogo = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_shop_logo`) || '';
             const savedBg = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`);
@@ -481,6 +556,13 @@
                     if (data && data.data_json) {
                         shopName = data.data_json.shopName || shopName;
                         shopLogo = data.data_json.shopLogo || '';
+                        
+                        // ទាញយកបញ្ជី Users ពី Supabase ទុកផ្ទៀងផ្ទាត់ PIN
+                        if (data.data_json.userAccounts && Array.isArray(data.data_json.userAccounts)) {
+                            localUserAccounts = data.data_json.userAccounts;
+                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_auth_users_pro`, JSON.stringify(localUserAccounts));
+                        }
+
                         localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_shop_name`, shopName);
                         localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_shop_logo`, shopLogo);
                         applyShopUI(shopName, shopLogo);
@@ -532,7 +614,7 @@
             localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, backgrounds[bgIndex]);
         }
 
-        // Language Switch (Basic setup for UI)
+        // Language Switch
         function changeLanguage(lang) {
             playClickSound();
             currentLang = lang;
