@@ -1,5 +1,7 @@
 // auth.js
-window.userAccounts = JSON.parse(localStorage.getItem(window.getBranchKey('auth_users_pro'))) || [ { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' } ];
+window.userAccounts = JSON.parse(localStorage.getItem(window.getBranchKey('auth_users_pro'))) || [ 
+    { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' } 
+];
 window.activeUser = JSON.parse(localStorage.getItem(window.getBranchKey('active_user_obj'))) || null; 
 window.currentRole = window.activeUser ? window.activeUser.role : 'admin';
 
@@ -8,16 +10,27 @@ window.checkAuthentication = function(applyPermissionsCallback) {
         document.getElementById('authScreen').style.display = 'flex'; 
         document.getElementById('loginForm').style.display = 'block'; 
         document.getElementById('forgotPassForm').style.display = 'none'; 
+        window.currentRole = 'guest';
     } else { 
         document.getElementById('authScreen').style.display = 'none'; 
         let sName = window.activeUser.fullName ? window.activeUser.fullName : window.activeUser.username; 
-        document.getElementById('currentUserDisplay').innerHTML = `<span>👤</span> ${sName}`; 
+        if(document.getElementById('currentUserDisplay')) {
+            document.getElementById('currentUserDisplay').innerHTML = `<span>👤</span> ${sName}`; 
+        }
         const posSeller = document.getElementById('posCurrentSellerDisplay'); 
         if(posSeller) posSeller.innerText = sName; 
+        
         let roleIcon = window.activeUser.role === 'admin' ? '👑 Admin' : (window.activeUser.role === 'sales' ? '🛒 Sales' : '📦 Warehouse'); 
-        document.getElementById('sidebarUserRoleDisplay').innerText = roleIcon; 
+        if(document.getElementById('sidebarUserRoleDisplay')) {
+            document.getElementById('sidebarUserRoleDisplay').innerText = roleIcon; 
+        }
         window.currentRole = window.activeUser.role; 
-        if(typeof applyPermissionsCallback === 'function') applyPermissionsCallback(); 
+    }
+
+    // អនុវត្តសិទ្ធិ Menu ភ្លាមៗ
+    const callback = applyPermissionsCallback || window.applyPermissions;
+    if(typeof callback === 'function') {
+        callback();
     }
 };
 
@@ -25,14 +38,38 @@ window.handleLogin = function(checkAuthCallback, switchTabCallback) {
     const u = document.getElementById('loginUsername').value.trim(); 
     const p = document.getElementById('loginPassword').value.trim(); 
     const foundUser = window.userAccounts.find(x => String(x.username).toLowerCase() === u.toLowerCase() && String(x.password) === p);
+    
     if (foundUser) { 
         window.activeUser = foundUser; 
         window.currentRole = foundUser.role; 
         localStorage.setItem(window.getBranchKey('active_user_obj'), JSON.stringify(window.activeUser)); 
+        
         document.getElementById('loginUsername').value = ''; 
         document.getElementById('loginPassword').value = ''; 
-        if(checkAuthCallback) checkAuthCallback(); 
-        if(switchTabCallback) switchTabCallback('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos')); 
+        
+        // ១. ពិនិត្យការ Login និងអនុវត្តសិទ្ធិភ្លាមៗ
+        window.checkAuthentication(window.applyPermissions); 
+        if(typeof window.applyPermissions === 'function') {
+            window.applyPermissions();
+        }
+
+        // ២. បញ្ជូនទៅកាន់ Tab តាម Role ភ្លាមៗដោយមិនបាច់ Reload
+        const tabFn = switchTabCallback || window.switchTab;
+        if (typeof tabFn === 'function') {
+            if (foundUser.role === 'sales') {
+                tabFn('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos'));
+            } else if (foundUser.role === 'warehouse') {
+                tabFn('inventory', '📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory'));
+            } else {
+                tabFn('dashboard', '📊 ផ្ទាំងគ្រប់គ្រង (Dashboard)', document.getElementById('nav-dashboard'));
+            }
+        }
+
+        // ៣. Render UI ឡើងវិញទាំងអស់ភ្លាមៗ
+        if(typeof window.renderAll === 'function') {
+            window.renderAll();
+        }
+
         window.ksMsg(`សូមស្វាគមន៍មកកាន់ប្រព័ន្ធ, ${foundUser.fullName ? foundUser.fullName : foundUser.username}!`, "ចូលប្រព័ន្ធជោគជ័យ"); 
     } else {
         window.ksMsg("ឈ្មោះ ឬ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!", "បរាជ័យ");
@@ -42,8 +79,16 @@ window.handleLogin = function(checkAuthCallback, switchTabCallback) {
 window.handleLogout = function(checkAuthCallback) { 
     window.ksMsg("តើអ្នកពិតជាចង់ចាកចេញពីប្រព័ន្ធមែនទេ?", "បញ្ជាក់ការចាកចេញ", true, () => { 
         window.activeUser = null; 
+        window.currentRole = 'guest';
         localStorage.removeItem(window.getBranchKey('active_user_obj')); 
-        if(checkAuthCallback) checkAuthCallback(); 
+        
+        window.checkAuthentication(window.applyPermissions); 
+        if(typeof window.applyPermissions === 'function') {
+            window.applyPermissions();
+        }
+        if(typeof window.renderAll === 'function') {
+            window.renderAll();
+        }
     }); 
 };
 
@@ -52,7 +97,7 @@ window.toggleForgotPass = function(show) {
     document.getElementById('forgotPassForm').style.display = show ? 'block' : 'none'; 
 };
 
-window.handleResetPassword = function() { 
+window.handleResetPassword = async function() { 
     const u = document.getElementById('resetUsername').value.trim(); 
     const pin = document.getElementById('resetPin').value.trim(); 
     const newP = document.getElementById('newResetPassword').value.trim(); 
@@ -61,6 +106,12 @@ window.handleResetPassword = function() {
         if (!newP) return window.ksMsg("សូមបញ្ចូលលេខកូដថ្មី!"); 
         window.userAccounts[userIndex].password = newP; 
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
+        
+        // Sync ទៅ Supabase ភ្លាមៗ
+        if(typeof window.saveData === 'function') {
+            await window.saveData(window.userAccounts);
+        }
+
         window.ksMsg("លេខកូដសម្ងាត់ត្រូវបានប្តូរជោគជ័យ! សូមចូលប្រព័ន្ធម្តងទៀត។", "ជោគជ័យ"); 
         window.toggleForgotPass(false); 
     } else {
@@ -68,7 +119,7 @@ window.handleResetPassword = function() {
     }
 };
 
-window.handleChangePassword = function() { 
+window.handleChangePassword = async function() { 
     const oldP = document.getElementById('chgOldPassword').value; 
     const newP = document.getElementById('chgNewPassword').value; 
     if (!oldP || !newP) return window.ksMsg("សូមបំពេញចន្លោះអោយបានត្រឹមត្រូវ!"); 
@@ -76,6 +127,12 @@ window.handleChangePassword = function() {
     if (userIndex !== -1 && String(window.userAccounts[userIndex].password) === oldP) { 
         window.userAccounts[userIndex].password = newP; 
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
+        
+        // Sync ទៅ Supabase ភ្លាមៗ
+        if(typeof window.saveData === 'function') {
+            await window.saveData(window.userAccounts);
+        }
+
         document.getElementById('chgOldPassword').value = ''; 
         document.getElementById('chgNewPassword').value = ''; 
         window.ksMsg("លេខកូដសម្ងាត់របស់អ្នកត្រូវបានផ្លាស់ប្តូរជោគជ័យ!", "ជោគជ័យ"); 
@@ -130,7 +187,7 @@ window.closeUserModal = function() {
     document.getElementById('userManageModal').style.display = 'none'; 
 };
 
-window.saveNewUser = function() {
+window.saveNewUser = async function() {
     const editId = document.getElementById('editUserId').value; 
     const fname = document.getElementById('nuFullName').value.trim(); 
     const uname = document.getElementById('nuUsername').value.trim(); 
@@ -163,6 +220,12 @@ window.saveNewUser = function() {
         window.ksMsg(`គណនី ${uname} ត្រូវបានបង្កើតដោយជោគជ័យ!`, 'ជោគជ័យ'); 
     }
     localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
+    
+    // Sync ទៅកាន់ Supabase ភ្លាមៗ
+    if(typeof window.saveData === 'function') {
+        await window.saveData(window.userAccounts);
+    }
+
     window.closeUserModal(); 
     window.renderUsersList();
 };
@@ -170,11 +233,17 @@ window.saveNewUser = function() {
 window.deleteUserAccount = function(id) { 
     const u = window.userAccounts.find(x => x.id === id); 
     if (!u) return; 
-    if (u.username === 'admin') return window.ksMsg("មិនអាចលុបគណនី Admin ដើមได้ទេ!"); 
+    if (u.username === 'admin') return window.ksMsg("មិនអាចលុបគណនី Admin ដើមបានទេ!"); 
     if (u.id === window.activeUser.id) return window.ksMsg("មិនអាចលុបគណនីកំពុងប្រើប្រាស់បានទេ!"); 
-    window.ksMsg(`តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិកឈ្មោះ "${u.fullName||u.username}" មែនទេ?`, "បញ្ជាក់การលុបគណនី", true, () => { 
+    window.ksMsg(`តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិកឈ្មោះ "${u.fullName||u.username}" មែនទេ?`, "បញ្ជាក់ការលុបគណនី", true, async () => { 
         window.userAccounts = window.userAccounts.filter(x => x.id !== id); 
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
+        
+        // Sync ទៅកាន់ Supabase ភ្លាមៗ
+        if(typeof window.saveData === 'function') {
+            await window.saveData(window.userAccounts);
+        }
+
         window.renderUsersList(); 
         window.ksMsg("គណនីត្រូវបានលុបដោយជោគជ័យ!"); 
     }); 
