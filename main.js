@@ -9,10 +9,23 @@ window.playOrderSound = window.playOrderSound;
 window.ksMsg = window.ksMsg;
 
 // ==========================================
-// 2. BIND AUTH TO WINDOW
+// 2. BIND AUTH TO WINDOW (ជួសជុលបញ្ហា LOGOUT/LOGIN BUG)
 // ==========================================
-window.handleLogin = () => window.handleLogin(window.checkAuthentication, window.switchTab);
-window.handleLogout = () => window.handleLogout(window.checkAuthentication);
+const _origLogin = window.handleLogin;
+const _origLogout = window.handleLogout;
+
+window.handleLogin = () => {
+    if (typeof _origLogin === 'function') {
+        _origLogin(window.checkAuthentication, window.switchTab);
+    }
+};
+
+window.handleLogout = () => {
+    if (typeof _origLogout === 'function') {
+        _origLogout(window.checkAuthentication);
+    }
+};
+
 window.toggleForgotPass = window.toggleForgotPass;
 window.handleResetPassword = window.handleResetPassword;
 window.handleChangePassword = window.handleChangePassword;
@@ -236,7 +249,7 @@ window.toggleDesktopSidebar = function() {
 };
 
 // ==========================================
-// 9. ADVANCED DATABASE LICENSE SYSTEM
+// 9. DATABASE LICENSE VERIFICATION SYSTEM
 // ==========================================
 window.checkLicense = async function() { 
     const lockScreen = document.getElementById('licenseLockScreen'); 
@@ -768,7 +781,7 @@ window.onload = async () => {
     // ១. ផ្ទៀងផ្ទាត់ License ជាមួយ Supabase ជាមុនសិន
     const isLicenseValid = await window.checkLicense();
 
-    // ២. ប្រសិនបើ License មិនត្រឹមត្រូវ ឬផុតកំណត់ ត្រូវបញ្ឈប់ត្រឹមនេះ (មិនទាញទិន្នន័យទេ)
+    // ២. ប្រសិនបើ License មិនត្រឹមត្រូវ ឬផុតកំណត់ ត្រូវបញ្ឈប់ត្រឹមនេះ (មិនទាញទិន្នន័យស្តុកទេ)
     if (!isLicenseValid) {
         return; 
     }
