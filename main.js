@@ -9,10 +9,14 @@ window.playOrderSound = window.playOrderSound;
 window.ksMsg = window.ksMsg;
 
 // ==========================================
-// 2. BIND AUTH & USER MANAGEMENT (ជួសជុលបញ្ហា SAVE គណនី & LOGOUT)
+// 2. BIND AUTH & USER MANAGEMENT (SYNC TO SUPABASE)
 // ==========================================
 const _origLogin = window.handleLogin;
 const _origLogout = window.handleLogout;
+const _origChangePassword = window.handleChangePassword;
+const _origResetPassword = window.handleResetPassword;
+const _origSaveNewUser = window.saveNewUser;
+const _origDeleteUser = window.deleteUserAccount;
 
 window.handleLogin = () => {
     if (typeof _origLogin === 'function') {
@@ -26,15 +30,25 @@ window.handleLogout = () => {
     }
 };
 
-window.toggleForgotPass = window.toggleForgotPass;
-window.handleResetPassword = window.handleResetPassword;
-window.handleChangePassword = window.handleChangePassword;
-window.openUserModal = window.openUserModal;
-window.editUserAccount = window.editUserAccount;
-window.closeUserModal = window.closeUserModal;
+// រាល់ពេលប្តូរលេខសម្ងាត់ Admin ឬ User -> បញ្ជូនទៅ Supabase ភ្លាមៗ
+window.handleChangePassword = function() {
+    if (typeof _origChangePassword === 'function') {
+        _origChangePassword();
+        if (typeof window.saveData === 'function') {
+            window.saveData(window.userAccounts);
+        }
+    }
+};
 
-// កត់ត្រាគណនីបុគ្គលិកចូល Supabase ភ្លាមៗ
-const _origSaveNewUser = window.saveNewUser;
+window.handleResetPassword = function() {
+    if (typeof _origResetPassword === 'function') {
+        _origResetPassword();
+        if (typeof window.saveData === 'function') {
+            window.saveData(window.userAccounts);
+        }
+    }
+};
+
 window.saveNewUser = function() {
     if (typeof _origSaveNewUser === 'function') {
         _origSaveNewUser();
@@ -44,7 +58,6 @@ window.saveNewUser = function() {
     }
 };
 
-const _origDeleteUser = window.deleteUserAccount;
 window.deleteUserAccount = function(index) {
     if (typeof _origDeleteUser === 'function') {
         _origDeleteUser(index);
@@ -53,6 +66,11 @@ window.deleteUserAccount = function(index) {
         }
     }
 };
+
+window.toggleForgotPass = window.toggleForgotPass;
+window.openUserModal = window.openUserModal;
+window.editUserAccount = window.editUserAccount;
+window.closeUserModal = window.closeUserModal;
 
 // ==========================================
 // 3. BIND THEME TO WINDOW
@@ -153,6 +171,11 @@ window.switchTab = function(tabId, title, elem) {
         document.getElementById('appSidebar').classList.remove('active-mobile'); 
         document.querySelector('.sidebar-overlay').classList.remove('active'); 
     } 
+    
+    if (tabId === 'about') {
+        window.displayLicenseInfo();
+    }
+    
     window.renderAll();
 };
 
@@ -268,7 +291,7 @@ window.toggleDesktopSidebar = function() {
 };
 
 // ==========================================
-// 9. DATABASE LICENSE SYSTEM (VERIFICATION & SECURE DISPLAY)
+// 9. DATABASE LICENSE VERIFICATION & SECURE DISPLAY
 // ==========================================
 window.checkLicense = async function() { 
     const lockScreen = document.getElementById('licenseLockScreen'); 
@@ -349,7 +372,7 @@ window.verifyAndSaveLicense = async function() {
 };
 
 window.verifyAndSaveLicenseFromAbout = async function() { 
-    const inputEl = document.querySelector('#tab-about input') || document.getElementById('aboutLicenseInput');
+    const inputEl = document.querySelector('#tab-about input');
     const inputKey = inputEl ? inputEl.value.trim() : ''; 
     if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); 
 
@@ -372,6 +395,7 @@ window.verifyAndSaveLicenseFromAbout = async function() {
         }
 
         localStorage.setItem(window.getBranchKey('license_key'), inputKey); 
+        if (inputEl) inputEl.value = '';
         window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!', 'ជោគជ័យ', false, () => { 
             location.reload(); 
         }); 
@@ -381,26 +405,29 @@ window.verifyAndSaveLicenseFromAbout = async function() {
     } 
 };
 
-// បង្ហាញតែថ្ងៃផុតកំណត់ និងចំនួនថ្ងៃដែលនៅសល់ (លាក់លេខកូដ License Key ចោលទាំងស្រុង)
+// បង្ហាញតែថ្ងៃផុតកំណត់ និងលុបលេខកូដចេញពីប្រអប់ Input ជានិច្ច
 window.displayLicenseInfo = async function() { 
-    let infoDisplay = document.getElementById('licenseInfoDisplay'); 
-    
-    // ប្រសិនបើក្នុង HTML មិនទាន់មាន id="licenseInfoDisplay" វានឹងស្វែងរក Container ក្នុង Tab About ដោយស្វ័យប្រវត្ត
-    if (!infoDisplay) {
-        const aboutCard = document.querySelector('#tab-about .card');
-        if (aboutCard) {
-            infoDisplay = document.createElement('div');
-            infoDisplay.id = 'licenseInfoDisplay';
-            const firstGroup = aboutCard.querySelector('.form-group') || aboutCard.querySelector('div[style*="background"]');
-            if (firstGroup) {
-                aboutCard.insertBefore(infoDisplay, firstGroup);
-            } else {
-                aboutCard.appendChild(infoDisplay);
-            }
-        }
+    // ១. លុបលេខកូដចេញពីប្រអប់ និងបិទ Autofill របស់ Browser
+    const aboutInputs = document.querySelectorAll('#tab-about input');
+    aboutInputs.forEach(inp => {
+        inp.value = '';
+        inp.setAttribute('autocomplete', 'new-password');
+        inp.setAttribute('placeholder', 'វាយលេខកូដ License Key ថ្មីនៅទីនេះ...');
+    });
+
+    // ២. ស្វែងរកទីតាំងក្នុងផ្ទាំង About ដើម្បីចាក់ទិន្នន័យ
+    const aboutTab = document.getElementById('tab-about');
+    if (!aboutTab) return;
+
+    let targetCard = Array.from(aboutTab.querySelectorAll('div')).find(el => el.innerText && el.innerText.includes('License Status'));
+    if (!targetCard) targetCard = aboutTab.querySelector('.card') || aboutTab;
+
+    let infoBox = document.getElementById('customLicenseStatusBox');
+    if (!infoBox) {
+        infoBox = document.createElement('div');
+        infoBox.id = 'customLicenseStatusBox';
+        targetCard.prepend(infoBox);
     }
-    
-    if(!infoDisplay) return; 
 
     try {
         let license = window.activeLicenseData;
@@ -430,8 +457,8 @@ window.displayLicenseInfo = async function() {
                 statusBadge = `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 12px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; 
             }
 
-            infoDisplay.innerHTML = `
-                <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; line-height: 1.9;">
+            infoBox.innerHTML = `
+                <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; line-height: 2;">
                     <div><strong>🏢 សាខា (Branch)៖</strong> <span style="color: #38bdf8; font-weight: bold;">${license.branch_id || window.SHOP_BRANCH_ID}</span></div>
                     <div><strong>📊 ស្ថានភាពសិទ្ធិប្រើប្រាស់៖</strong> ${statusBadge}</div>
                     <div><strong>⏳ ផុតកំណត់នៅថ្ងៃ៖</strong> <span style="color: #f8fafc; font-weight: bold;">${expireDate.toLocaleDateString('km-KH', { year: 'numeric', month: 'long', day: 'numeric' })} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>
@@ -440,9 +467,9 @@ window.displayLicenseInfo = async function() {
         }
     } catch(e) {}
 
-    infoDisplay.innerHTML = `
+    infoBox.innerHTML = `
         <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #f59e0b; font-size: 13px;">
-            ⚠️ មិនទាន់មានទិន្នន័យ License សម្រាប់សាខានេះនៅឡើយទេ។ សូមបញ្ចូលលេខកូដខាងក្រោមដើម្បីបើកដំណើរការ។
+            ⚠️ មិនទាន់មានទិន្នន័យ License សម្រាប់សាខានេះនៅឡើយទេ។
         </div>`;
 };
 
