@@ -9,7 +9,7 @@ window.playOrderSound = window.playOrderSound;
 window.ksMsg = window.ksMsg;
 
 // ==========================================
-// 2. BIND AUTH & USER MANAGEMENT (ជួសជុលបញ្ហា SAVE គណនី)
+// 2. BIND AUTH & USER MANAGEMENT (ជួសជុលបញ្ហា SAVE គណនី & LOGOUT)
 // ==========================================
 const _origLogin = window.handleLogin;
 const _origLogout = window.handleLogout;
@@ -33,7 +33,7 @@ window.openUserModal = window.openUserModal;
 window.editUserAccount = window.editUserAccount;
 window.closeUserModal = window.closeUserModal;
 
-// កែសម្រួលការរក្សាទុកគណនីបុគ្គលិកឱ្យ Sync ចូល Supabase ភ្លាមៗ
+// កត់ត្រាគណនីបុគ្គលិកចូល Supabase ភ្លាមៗ
 const _origSaveNewUser = window.saveNewUser;
 window.saveNewUser = function() {
     if (typeof _origSaveNewUser === 'function') {
@@ -268,7 +268,7 @@ window.toggleDesktopSidebar = function() {
 };
 
 // ==========================================
-// 9. DATABASE LICENSE SYSTEM (VERIFICATION & DISPLAY)
+// 9. DATABASE LICENSE SYSTEM (VERIFICATION & SECURE DISPLAY)
 // ==========================================
 window.checkLicense = async function() { 
     const lockScreen = document.getElementById('licenseLockScreen'); 
@@ -349,7 +349,8 @@ window.verifyAndSaveLicense = async function() {
 };
 
 window.verifyAndSaveLicenseFromAbout = async function() { 
-    const inputKey = document.getElementById('aboutLicenseInput') ? document.getElementById('aboutLicenseInput').value.trim() : ''; 
+    const inputEl = document.querySelector('#tab-about input') || document.getElementById('aboutLicenseInput');
+    const inputKey = inputEl ? inputEl.value.trim() : ''; 
     if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); 
 
     try { 
@@ -380,52 +381,68 @@ window.verifyAndSaveLicenseFromAbout = async function() {
     } 
 };
 
+// បង្ហាញតែថ្ងៃផុតកំណត់ និងចំនួនថ្ងៃដែលនៅសល់ (លាក់លេខកូដ License Key ចោលទាំងស្រុង)
 window.displayLicenseInfo = async function() { 
-    const infoDisplay = document.getElementById('licenseInfoDisplay'); 
+    let infoDisplay = document.getElementById('licenseInfoDisplay'); 
+    
+    // ប្រសិនបើក្នុង HTML មិនទាន់មាន id="licenseInfoDisplay" វានឹងស្វែងរក Container ក្នុង Tab About ដោយស្វ័យប្រវត្ត
+    if (!infoDisplay) {
+        const aboutCard = document.querySelector('#tab-about .card');
+        if (aboutCard) {
+            infoDisplay = document.createElement('div');
+            infoDisplay.id = 'licenseInfoDisplay';
+            const firstGroup = aboutCard.querySelector('.form-group') || aboutCard.querySelector('div[style*="background"]');
+            if (firstGroup) {
+                aboutCard.insertBefore(infoDisplay, firstGroup);
+            } else {
+                aboutCard.appendChild(infoDisplay);
+            }
+        }
+    }
+    
     if(!infoDisplay) return; 
 
-    // បង្ហាញ Loading ជាបណ្ដោះអាសន្ន
-    infoDisplay.innerHTML = `<div style="padding: 10px; color: var(--text-muted); font-size: 13px;">⏳ កំពុងពិនិត្យមើលព័ត៌មាន License ពី Server...</div>`;
-
-    const savedKey = localStorage.getItem(window.getBranchKey('license_key')); 
-    
-    // ព្យាយាមទាញយកទិន្នន័យ License ពី Supabase តាមរយៈ Branch ID
     try {
-        let { data, error } = await window.supabaseClient
-            .from('branch_licenses')
-            .select('*')
-            .eq('branch_id', window.SHOP_BRANCH_ID)
-            .single();
+        let license = window.activeLicenseData;
+        if (!license || !license.expires_at) {
+            let { data } = await window.supabaseClient
+                .from('branch_licenses')
+                .select('*')
+                .eq('branch_id', window.SHOP_BRANCH_ID)
+                .single();
+            if (data) {
+                license = data;
+                window.activeLicenseData = data;
+            }
+        }
 
-        if (data && data.expires_at) {
-            window.activeLicenseData = data;
-            const expiry = new Date(data.expires_at).getTime(); 
+        if (license && license.expires_at) {
+            const expiry = new Date(license.expires_at).getTime(); 
             const expireDate = new Date(expiry); 
             const diffDays = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24)); 
-            let statusHtml = ''; 
+            let statusBadge = ''; 
 
             if(diffDays > 10) {
-                statusHtml = `<span style="color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.15); padding: 4px 10px; border-radius: 6px;">✅ ដំណើរការធម្មតា (សល់ ${diffDays} ថ្ងៃ)</span>`; 
+                statusBadge = `<span style="color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 6px;">✅ កំពុងដំណើរការ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
             } else if (diffDays > 0) {
-                statusHtml = `<span style="color: #f59e0b; font-weight: bold; background: rgba(245, 158, 11, 0.15); padding: 4px 10px; border-radius: 6px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
+                statusBadge = `<span style="color: #f59e0b; font-weight: bold; background: rgba(245, 158, 11, 0.15); padding: 4px 12px; border-radius: 6px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
             } else {
-                statusHtml = `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 10px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; 
+                statusBadge = `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 12px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; 
             }
 
             infoDisplay.innerHTML = `
-                <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); padding: 14px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; line-height: 1.8;">
-                    <div><strong>សាខា (Branch)៖</strong> <span style="color: #38bdf8; font-weight: bold;">${data.branch_id}</span></div>
-                    <div><strong>ស្ថានភាព៖</strong> ${statusHtml}</div>
-                    <div><strong>ថ្ងៃផុតកំណត់៖</strong> <span style="color: #f8fafc; font-weight: bold;">${expireDate.toLocaleDateString('km-KH', { year: 'numeric', month: 'long', day: 'numeric' })} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>
-                    <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;"><strong>លេខកូដបច្ចុប្បន្ន៖</strong> <code style="color: #f59e0b;">${savedKey || data.license_key}</code></div>
+                <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; line-height: 1.9;">
+                    <div><strong>🏢 សាខា (Branch)៖</strong> <span style="color: #38bdf8; font-weight: bold;">${license.branch_id || window.SHOP_BRANCH_ID}</span></div>
+                    <div><strong>📊 ស្ថានភាពសិទ្ធិប្រើប្រាស់៖</strong> ${statusBadge}</div>
+                    <div><strong>⏳ ផុតកំណត់នៅថ្ងៃ៖</strong> <span style="color: #f8fafc; font-weight: bold;">${expireDate.toLocaleDateString('km-KH', { year: 'numeric', month: 'long', day: 'numeric' })} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>
                 </div>`;
             return;
         }
     } catch(e) {}
 
     infoDisplay.innerHTML = `
-        <div style="background: rgba(225, 29, 72, 0.1); border: 1px solid var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: var(--danger);">
-            ❌ មិនទាន់មានទិន្នន័យ License សម្រាប់សាខា ${window.SHOP_BRANCH_ID} លើ Server ឡើយ!
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #f59e0b; font-size: 13px;">
+            ⚠️ មិនទាន់មានទិន្នន័យ License សម្រាប់សាខានេះនៅឡើយទេ។ សូមបញ្ចូលលេខកូដខាងក្រោមដើម្បីបើកដំណើរការ។
         </div>`;
 };
 
