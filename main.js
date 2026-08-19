@@ -1,6 +1,6 @@
-// main.js
-
-// --- Bind Utils & Configs to Window ---
+// ==========================================
+// 1. BIND UTILS & CONFIGS TO WINDOW
+// ==========================================
 window.fDate = window.fDate;
 window.fMoney = window.fMoney;
 window.showToast = window.showToast;
@@ -8,7 +8,9 @@ window.playBeep = window.playBeep;
 window.playOrderSound = window.playOrderSound;
 window.ksMsg = window.ksMsg;
 
-// --- Bind Auth to Window ---
+// ==========================================
+// 2. BIND AUTH TO WINDOW
+// ==========================================
 window.handleLogin = () => window.handleLogin(window.checkAuthentication, window.switchTab);
 window.handleLogout = () => window.handleLogout(window.checkAuthentication);
 window.toggleForgotPass = window.toggleForgotPass;
@@ -20,11 +22,15 @@ window.closeUserModal = window.closeUserModal;
 window.saveNewUser = window.saveNewUser;
 window.deleteUserAccount = window.deleteUserAccount;
 
-// --- Bind Theme to Window ---
+// ==========================================
+// 3. BIND THEME TO WINDOW
+// ==========================================
 window.toggleTheme = window.toggleTheme;
 window.handleCustomColor = window.handleCustomColor;
 
-// --- Bind Inventory to Window ---
+// ==========================================
+// 4. BIND INVENTORY TO WINDOW
+// ==========================================
 window.renderInventory = window.renderInventory;
 window.updateQty = window.updateQty;
 window.generateProductBarcode = window.generateProductBarcode;
@@ -37,7 +43,9 @@ window.editProduct = window.editProduct;
 window.deleteProduct = window.deleteProduct;
 window.setInventoryView = window.setInventoryView;
 
-// --- Bind POS to Window ---
+// ==========================================
+// 5. BIND POS TO WINDOW
+// ==========================================
 window.setPosCategory = window.setPosCategory;
 window.setPOSView = window.setPOSView;
 window.renderPOSProducts = window.renderPOSProducts;
@@ -54,7 +62,9 @@ window.openPreorderModal = window.openPreorderModal;
 window.calculatePreorderRemaining = window.calculatePreorderRemaining;
 window.processPreorder = window.processPreorder;
 
-// --- Bind Finance to Window ---
+// ==========================================
+// 6. BIND FINANCE TO WINDOW
+// ==========================================
 window.renderUnpaid = window.renderUnpaid;
 window.exportInvoicesCSV = window.exportInvoicesCSV;
 window.settlePayment = window.settlePayment;
@@ -77,7 +87,9 @@ window.addItemToEditingInvoice = window.addItemToEditingInvoice;
 window.saveInvoiceChanges = window.saveInvoiceChanges;
 window.deleteInvoice = window.deleteInvoice;
 
-// --- Bind Customer to Window ---
+// ==========================================
+// 7. BIND CUSTOMER TO WINDOW
+// ==========================================
 window.updateCustomerDatalist = window.updateCustomerDatalist;
 window.autoFillCustomerPhone = window.autoFillCustomerPhone;
 window.renderCustomers = window.renderCustomers;
@@ -91,7 +103,9 @@ window.deleteCustomer = window.deleteCustomer;
 window.exportCustomers = window.exportCustomers;
 window.importCustomers = window.importCustomers;
 
-// --- Global UI & App Flow Methods ---
+// ==========================================
+// 8. GLOBAL UI & APP FLOW METHODS
+// ==========================================
 window.switchTab = function(tabId, title, elem) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); 
     if(elem) elem.classList.add('active'); 
@@ -221,92 +235,147 @@ window.toggleDesktopSidebar = function() {
     } 
 };
 
-window.checkLicense = function() { 
-    const savedKey = localStorage.getItem(window.getBranchKey('license_key')); 
-    let isValid = false; 
-    if(savedKey) { 
-        try { 
-            const decoded = atob(savedKey); 
-            if(decoded.startsWith(window.SECRET_SALT)) { 
-                const expiry = parseInt(decoded.replace(window.SECRET_SALT, '')); 
-                if(expiry > Date.now()) isValid = true; 
-            } 
-        } catch(e) {} 
-    } 
+// ==========================================
+// 9. ADVANCED DATABASE LICENSE SYSTEM
+// ==========================================
+window.checkLicense = async function() { 
     const lockScreen = document.getElementById('licenseLockScreen'); 
     const sidebar = document.getElementById('appSidebar'); 
-    if(!isValid) { 
+    const savedKey = localStorage.getItem(window.getBranchKey('license_key')); 
+
+    if (!savedKey) { 
         lockScreen.style.display = 'flex'; 
         sidebar.style.pointerEvents = 'none'; 
-    } else { 
+        return false; 
+    } 
+
+    try { 
+        let { data, error } = await window.supabaseClient
+            .from('branch_licenses')
+            .select('*')
+            .eq('branch_id', window.SHOP_BRANCH_ID)
+            .eq('license_key', savedKey)
+            .eq('is_active', true)
+            .single();
+
+        if (error || !data) { 
+            lockScreen.style.display = 'flex'; 
+            sidebar.style.pointerEvents = 'none'; 
+            return false; 
+        } 
+
+        const expiry = new Date(data.expires_at).getTime();
+        if (expiry <= Date.now()) { 
+            lockScreen.style.display = 'flex'; 
+            sidebar.style.pointerEvents = 'none'; 
+            window.ksMsg('❌ សិទ្ធិប្រើប្រាស់ប្រព័ន្ធ (License) របស់សាខានេះបានផុតកំណត់ហើយ!', 'ផុតកំណត់'); 
+            return false; 
+        } 
+
         lockScreen.style.display = 'none'; 
         sidebar.style.pointerEvents = 'auto'; 
+        window.activeLicenseData = data; 
+        return true;
+
+    } catch (e) { 
+        lockScreen.style.display = 'flex'; 
+        sidebar.style.pointerEvents = 'none'; 
+        return false; 
     } 
 };
 
-window.verifyAndSaveLicense = function() { 
+window.verifyAndSaveLicense = async function() { 
     const inputKey = document.getElementById('licenseInputBox').value.trim(); 
     if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); 
+
     try { 
-        const decoded = atob(inputKey); 
-        if(decoded.startsWith(window.SECRET_SALT)) { 
-            const expiry = parseInt(decoded.replace(window.SECRET_SALT, '')); 
-            if(expiry > Date.now()) { 
-                localStorage.setItem(window.getBranchKey('license_key'), inputKey); 
-                window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានបើកដោយជោគជ័យ!', 'ជោគជ័យ', false, () => { location.reload(); }); 
-                return; 
-            } else {
-                return window.ksMsg('❌ លេខកូដនេះបានផុតកំណត់បាត់ទៅហើយ!', 'បរាជ័យ'); 
-            }
-        } 
-    } catch(e) {} 
-    window.ksMsg('❌ លេខកូដមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); 
+        let { data, error } = await window.supabaseClient
+            .from('branch_licenses')
+            .select('*')
+            .eq('branch_id', window.SHOP_BRANCH_ID)
+            .eq('license_key', inputKey)
+            .eq('is_active', true)
+            .single();
+
+        if (error || !data) { 
+            return window.ksMsg('❌ លេខកូដ License មិនត្រឹមត្រូវ ឬមិនទាន់ត្រូវបានបើកសិទ្ធិ!', 'បរាជ័យ'); 
+        }
+
+        const expiry = new Date(data.expires_at).getTime();
+        if (expiry <= Date.now()) { 
+            return window.ksMsg('❌ លេខកូដ License នេះបានផុតកំណត់ហើយ!', 'បរាជ័យ'); 
+        }
+
+        localStorage.setItem(window.getBranchKey('license_key'), inputKey); 
+        window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានបើកដោយជោគជ័យ!', 'ជោគជ័យ', false, () => { 
+            location.reload(); 
+        }); 
+
+    } catch(e) { 
+        window.ksMsg('❌ មិនអាចភ្ជាប់ទៅកាន់ Server ដើម្បីផ្ទៀងផ្ទាត់ License បានទេ!', 'បរាជ័យ'); 
+    } 
 };
 
-window.verifyAndSaveLicenseFromAbout = function() { 
+window.verifyAndSaveLicenseFromAbout = async function() { 
     const inputKey = document.getElementById('aboutLicenseInput').value.trim(); 
     if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); 
+
     try { 
-        const decoded = atob(inputKey); 
-        if(decoded.startsWith(window.SECRET_SALT)) { 
-            const expiry = parseInt(decoded.replace(window.SECRET_SALT, '')); 
-            if(expiry > Date.now()) { 
-                localStorage.setItem(window.getBranchKey('license_key'), inputKey); 
-                window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!', 'ជោគជ័យ', false, () => { location.reload(); }); 
-                return; 
-            } else {
-                return window.ksMsg('❌ លេខកូដនេះបានផុតកំណត់បាត់ទៅហើយ!', 'បរាជ័យ'); 
-            }
-        } 
-    } catch(e) {} 
-    window.ksMsg('❌ លេខកូដមិនត្រឹមត្រូវទេ!', 'បរាជ័យ'); 
+        let { data, error } = await window.supabaseClient
+            .from('branch_licenses')
+            .select('*')
+            .eq('branch_id', window.SHOP_BRANCH_ID)
+            .eq('license_key', inputKey)
+            .eq('is_active', true)
+            .single();
+
+        if (error || !data) { 
+            return window.ksMsg('❌ លេខកូដ License មិនត្រឹមត្រូវ ឬមិនទាន់ត្រូវបានបើកសិទ្ធិ!', 'បរាជ័យ'); 
+        }
+
+        const expiry = new Date(data.expires_at).getTime();
+        if (expiry <= Date.now()) { 
+            return window.ksMsg('❌ លេខកូដ License នេះបានផុតកំណត់ហើយ!', 'បរាជ័យ'); 
+        }
+
+        localStorage.setItem(window.getBranchKey('license_key'), inputKey); 
+        window.ksMsg('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!', 'ជោគជ័យ', false, () => { 
+            location.reload(); 
+        }); 
+
+    } catch(e) { 
+        window.ksMsg('❌ មិនអាចភ្ជាប់ទៅកាន់ Server ដើម្បីផ្ទៀងផ្ទាត់ License បានទេ!', 'បរាជ័យ'); 
+    } 
 };
 
 window.displayLicenseInfo = function() { 
-    const savedKey = localStorage.getItem(window.getBranchKey('license_key')); 
     const infoDisplay = document.getElementById('licenseInfoDisplay'); 
     if(!infoDisplay) return; 
-    if(!savedKey) { 
-        infoDisplay.innerHTML = '<span style="color: var(--danger);">មិនទាន់បានបញ្ចូលកូដទេ</span>'; 
+
+    if(!window.activeLicenseData) { 
+        infoDisplay.innerHTML = '<span style="color: var(--danger);">មិនទាន់បានបញ្ចូលកូដ ឬកូដមិនត្រឹមត្រូវ</span>'; 
         return; 
     } 
+
     try { 
-        const decoded = atob(savedKey); 
-        if(decoded.startsWith(window.SECRET_SALT)) { 
-            const expiry = parseInt(decoded.replace(window.SECRET_SALT, '')); 
-            const expireDate = new Date(expiry); 
-            const diffDays = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24)); 
-            let statusHtml = ''; 
-            if(diffDays > 10) statusHtml = `<span style="color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px;">✅ ដំណើរការធម្មតា (សល់ ${diffDays} ថ្ងៃ)</span>`; 
-            else if (diffDays > 0) statusHtml = `<span style="color: var(--warning); font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 10px; border-radius: 6px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
-            else statusHtml = `<span style="color: var(--danger); font-weight: bold; background: rgba(225, 29, 72, 0.1); padding: 5px 10px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; 
-            infoDisplay.innerHTML = `<div style="margin-bottom: 10px;"><strong>ស្ថានភាព៖</strong> ${statusHtml}</div><div><strong>ថ្ងៃផុតកំណត់៖</strong> <span style="color: var(--text-main); font-weight: bold;">${expireDate.toLocaleDateString('km-KH')} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>`; 
-            return; 
-        } 
-    } catch(e) {} 
-    infoDisplay.innerHTML = '<span style="color: var(--danger);">លេខកូដមិនត្រឹមត្រូវទេ</span>'; 
+        const expiry = new Date(window.activeLicenseData.expires_at).getTime(); 
+        const expireDate = new Date(expiry); 
+        const diffDays = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24)); 
+        let statusHtml = ''; 
+
+        if(diffDays > 10) statusHtml = `<span style="color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 10px; border-radius: 6px;">✅ ដំណើរការធម្មតា (សល់ ${diffDays} ថ្ងៃ)</span>`; 
+        else if (diffDays > 0) statusHtml = `<span style="color: var(--warning); font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 10px; border-radius: 6px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
+        else statusHtml = `<span style="color: var(--danger); font-weight: bold; background: rgba(225, 29, 72, 0.1); padding: 5px 10px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; 
+
+        infoDisplay.innerHTML = `<div style="margin-bottom: 10px;"><strong>ស្ថានភាព៖</strong> ${statusHtml}</div><div><strong>ថ្ងៃផុតកំណត់៖</strong> <span style="color: var(--text-main); font-weight: bold;">${expireDate.toLocaleDateString('km-KH')} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>`; 
+    } catch(e) { 
+        infoDisplay.innerHTML = '<span style="color: var(--danger);">លេខកូដមិនត្រឹមត្រូវទេ</span>'; 
+    } 
 };
 
+// ==========================================
+// 10. SHOP SETTINGS & ASSETS
+// ==========================================
 window.openShopNameModal = function() { 
     if(window.currentRole !== 'admin') return window.ksMsg('មានតែគណនី Admin ប៉ុណ្ណោះដែលអាចប្តូរឈ្មោះ និង Logo បានកំរិតខ្ពស់!', 'គ្មានសិទ្ធិ'); 
     document.getElementById('newShopNameInput').value = window.shopName; 
@@ -423,6 +492,9 @@ window.resetDashboardDate = function() {
     window.renderDashboard(); 
 };
 
+// ==========================================
+// 11. DASHBOARD & REPORTING
+// ==========================================
 window.renderDashboard = function() {
     try {
         let tItems = window.inventory.length; let tQty = 0, estRev = 0, lowItems = []; 
@@ -469,7 +541,7 @@ window.renderDashboard = function() {
         if(netProfitEl) { netProfitEl.innerText = window.fMoney(netProfit); netProfitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)'; }
         
         const tbody = document.getElementById('lowStockTable'); 
-        if(tbody) { tbody.innerHTML = lowItems.length === 0 ? '<tr><td colspan="4" style="text-align:center;">មិនមានទំនិញជិតអស់ទេ</td></tr>' : lowItems.map(p => { let catStr = p.category ? p.category : '-'; let nameStr = p.name ? String(p.name).replace(/'/g, "\'") : ''; return `<tr><td>${p.name}</td><td>${catStr}</td><td style="color:${p.qty<=0?'var(--danger)':'var(--warning)'}; font-weight:bold;">${p.qty}</td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:var(--fs-12);" onclick="window.switchTab('inventory','📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory')); document.getElementById('searchInput').value='${nameStr}'; window.renderInventory();">មើល</button></td></tr>`; }).join(''); }
+        if(tbody) { tbody.innerHTML = lowItems.length === 0 ? '<tr><td colspan="4" style="text-align:center;">មិនមានទំនិញជិតអស់ទេ</td></tr>' : lowItems.map(p => { let catStr = p.category ? p.category : '-'; let nameStr = p.name ? String(p.name).replace(/'/g, "\\'") : ''; return `<tr><td>${p.name}</td><td>${catStr}</td><td style="color:${p.qty<=0?'var(--danger)':'var(--warning)'}; font-weight:bold;">${p.qty}</td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:var(--fs-12);" onclick="window.switchTab('inventory','📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory')); document.getElementById('searchInput').value='${nameStr}'; window.renderInventory();">មើល</button></td></tr>`; }).join(''); }
         
         // Expiry Section Display Logic
         const expirySection = document.getElementById('expiryAlertSection');
@@ -491,7 +563,7 @@ window.renderDashboard = function() {
                         else statusBadge = `<span class="badge" style="background: rgba(245, 158, 11, 0.1); color: var(--warning);">ជិតផុតកំណត់ ⚠️ (សល់ ${diffDays} ថ្ងៃ)</span>`;
                         
                         let catStr = p.category ? p.category : '-';
-                        let safeName = p.name ? String(p.name).replace(/'/g, "\'") : '';
+                        let safeName = p.name ? String(p.name).replace(/'/g, "\\'") : '';
                         
                         expiryHTML += `<tr>
                             <td style="font-weight:bold; color:var(--text-main);">${p.name}</td>
@@ -546,6 +618,9 @@ window.clearHistory = function() {
     }); 
 };
 
+// ==========================================
+// 12. EXPORT & IMPORT UTILITIES
+// ==========================================
 window.importCSV = function(e) {
     const file = e.target.files[0]; if (!file) return; 
     const r = new FileReader();
@@ -683,17 +758,28 @@ window.toggleLowStockSection = function() {
     }
 };
 
+// ==========================================
+// 13. APP ENTRY POINT (INITIALIZATION)
+// ==========================================
 window.onload = async () => {
     window.loadThemeSettings(); 
-    window.checkLicense(); 
     window.checkAuthentication(window.applyPermissions); 
     
+    // ១. ផ្ទៀងផ្ទាត់ License ជាមួយ Supabase ជាមុនសិន
+    const isLicenseValid = await window.checkLicense();
+
+    // ២. ប្រសិនបើ License មិនត្រឹមត្រូវ ឬផុតកំណត់ ត្រូវបញ្ឈប់ត្រឹមនេះ (មិនទាញទិន្នន័យទេ)
+    if (!isLicenseValid) {
+        return; 
+    }
+
+    // ៣. លុះត្រាតែ License ត្រឹមត្រូវ ទើបអនុញ្ញាតឱ្យទាញទិន្នន័យស្តុកមកប្រើ
+    await window.loadDataFromSupabase(window.userAccounts);
+
     setInterval(() => {
         const dateEl = document.getElementById('currentDate');
         if(dateEl) dateEl.innerText = window.fDate();
     }, 1000);
-
-    await window.loadDataFromSupabase(window.userAccounts);
 
     try { 
         window.currentInventoryView = localStorage.getItem(window.getBranchKey('inv_view_mode')) || 'grid'; 
@@ -711,11 +797,11 @@ window.onload = async () => {
     window.updateCategories(); 
     window.setInventoryView(window.currentInventoryView, true); 
     window.setPOSView(window.currentPOSView, true); 
-    window.renderAll();
+    window.renderAll(); 
     
-    const header = document.getElementById('topHeaderBar');
-    if (header) { header.classList.remove('hidden-header'); }
-    window.lastInvoiceCount = window.invoices.length;
+    const header = document.getElementById('topHeaderBar'); 
+    if (header) { header.classList.remove('hidden-header'); } 
+    window.lastInvoiceCount = window.invoices.length; 
     
     // Auto Real-time Update Sync Listener
     setInterval(async () => {
