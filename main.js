@@ -48,13 +48,11 @@ window.setSyncStatus = function(status, text) {
 window.saveData = async function(users) {
     window.setSyncStatus('syncing');
 
-    // ១. រក្សាទុកក្នុង LocalStorage ជាមុនសិន
     if (users) {
         window.userAccounts = users;
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(users));
     }
     
-    // ២. រៀបចំកញ្ចប់ទិន្នន័យពេញលេញ
     const fullPayload = {
         inventory: window.inventory || [],
         historyLog: window.historyLog || [],
@@ -71,7 +69,6 @@ window.saveData = async function(users) {
         invoiceCounter: JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) || 1
     };
 
-    // ៣. បញ្ជូនផ្ទាល់ទៅ Database Supabase (branch_store)
     try {
         const { error } = await window.supabaseClient
             .from('branch_store')
@@ -480,12 +477,14 @@ window.verifyAndSaveLicenseFromAbout = async function() {
     } 
 };
 
-// បង្ហាញព័ត៌មានថ្ងៃផុតកំណត់ និងលុបលេខកូដមិនឱ្យជាប់ក្នុង Input Box
+// ==========================================
+// រចនាស៊ុម License Status ឱ្យស្អាត និងមើលឃើញច្បាស់គ្រប់ Theme (Light & Dark)
+// ==========================================
 window.displayLicenseInfo = async function() { 
     const aboutTab = document.getElementById('tab-about');
     if (!aboutTab) return;
 
-    // លុបកូដដែលជាប់ Autofill ចោល
+    // លុបកូដ Autofill ចេញ
     const aboutInputs = aboutTab.querySelectorAll('input');
     aboutInputs.forEach(inp => {
         inp.value = '';
@@ -525,25 +524,39 @@ window.displayLicenseInfo = async function() {
             let statusBadge = ''; 
 
             if(diffDays > 10) {
-                statusBadge = `<span style="color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.15); padding: 4px 12px; border-radius: 6px;">✅ កំពុងដំណើរការ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
+                statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #059669; font-weight: bold; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 13px;">✅ កំពុងដំណើរការ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
             } else if (diffDays > 0) {
-                statusBadge = `<span style="color: #f59e0b; font-weight: bold; background: rgba(245, 158, 11, 0.15); padding: 4px 12px; border-radius: 6px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
+                statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #d97706; font-weight: bold; background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 13px;">⚠️ ជិតផុតកំណត់ (សល់ ${diffDays} ថ្ងៃ)</span>`; 
             } else {
-                statusBadge = `<span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.15); padding: 4px 12px; border-radius: 6px;">❌ ផុតកំណត់ហើយ!</span>`; 
+                statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #dc2626; font-weight: bold; background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 13px;">❌ ផុតកំណត់ហើយ!</span>`; 
             }
 
             infoBox.innerHTML = `
-                <div style="background: rgba(255, 255, 255, 0.04); border: 1px solid rgba(255,255,255,0.08); padding: 15px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; line-height: 2;">
-                    <div><strong>🏢 សាខា (Branch)៖</strong> <span style="color: #38bdf8; font-weight: bold;">${license.branch_id || window.SHOP_BRANCH_ID}</span></div>
-                    <div><strong>📊 ស្ថានភាពសិទ្ធិប្រើប្រាស់៖</strong> ${statusBadge}</div>
-                    <div><strong>⏳ ផុតកំណត់នៅថ្ងៃ៖</strong> <span style="color: #f8fafc; font-weight: bold;">${expireDate.toLocaleDateString('km-KH', { year: 'numeric', month: 'long', day: 'numeric' })} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>
+                <div style="background: var(--card-bg, #ffffff); border: 1.5px solid var(--border-color, #e2e8f0); padding: 18px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); color: var(--text-main, #1e293b);">
+                    <!-- ជួរទី ១៖ សាខា និង ស្ថានភាព -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-color, #cbd5e1); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <div style="font-size: 15px; font-weight: bold; color: var(--text-main, #0f172a);">
+                            🏢 សាខា (Branch)៖ <span style="color: #0284c7; font-weight: 900; background: rgba(2, 132, 199, 0.1); padding: 3px 8px; border-radius: 6px;">${license.branch_id || window.SHOP_BRANCH_ID}</span>
+                        </div>
+                        <div>${statusBadge}</div>
+                    </div>
+                    
+                    <!-- ជួរទី ២៖ កាលបរិច្ឆេទផុតកំណត់ -->
+                    <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
+                        <div style="font-size: 14px; font-weight: bold; color: var(--text-muted, #64748b);">
+                            ⏳ ផុតកំណត់នៅថ្ងៃ៖
+                        </div>
+                        <div style="font-size: 14px; font-weight: 800; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 6px 14px; border-radius: 8px; box-shadow: 0 2px 5px rgba(245, 158, 11, 0.1);">
+                            📅 ${expireDate.toLocaleDateString('km-KH', { year: 'numeric', month: 'long', day: 'numeric' })} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}
+                        </div>
+                    </div>
                 </div>`;
             return;
         }
     } catch(e) {}
 
     infoBox.innerHTML = `
-        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #f59e0b; font-size: 13px;">
+        <div style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: #d97706; font-size: 13px;">
             ⚠️ មិនទាន់មានទិន្នន័យ License សម្រាប់សាខានេះនៅឡើយទេ។
         </div>`;
 };
