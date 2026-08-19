@@ -27,7 +27,6 @@ window.checkAuthentication = function(applyPermissionsCallback) {
         window.currentRole = window.activeUser.role; 
     }
 
-    // អនុវត្តសិទ្ធិ Menu ភ្លាមៗ
     const callback = applyPermissionsCallback || window.applyPermissions;
     if(typeof callback === 'function') {
         callback();
@@ -47,13 +46,11 @@ window.handleLogin = function(checkAuthCallback, switchTabCallback) {
         document.getElementById('loginUsername').value = ''; 
         document.getElementById('loginPassword').value = ''; 
         
-        // ១. ពិនិត្យការ Login និងអនុវត្តសិទ្ធិភ្លាមៗ
         window.checkAuthentication(window.applyPermissions); 
         if(typeof window.applyPermissions === 'function') {
             window.applyPermissions();
         }
 
-        // ២. បញ្ជូនទៅកាន់ Tab តាម Role ភ្លាមៗដោយមិនបាច់ Reload
         const tabFn = switchTabCallback || window.switchTab;
         if (typeof tabFn === 'function') {
             if (foundUser.role === 'sales') {
@@ -65,7 +62,6 @@ window.handleLogin = function(checkAuthCallback, switchTabCallback) {
             }
         }
 
-        // ៣. Render UI ឡើងវិញទាំងអស់ភ្លាមៗ
         if(typeof window.renderAll === 'function') {
             window.renderAll();
         }
@@ -107,7 +103,6 @@ window.handleResetPassword = async function() {
         window.userAccounts[userIndex].password = newP; 
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
         
-        // Sync ទៅ Supabase ភ្លាមៗ
         if(typeof window.saveData === 'function') {
             await window.saveData(window.userAccounts);
         }
@@ -128,7 +123,6 @@ window.handleChangePassword = async function() {
         window.userAccounts[userIndex].password = newP; 
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
         
-        // Sync ទៅ Supabase ភ្លាមៗ
         if(typeof window.saveData === 'function') {
             await window.saveData(window.userAccounts);
         }
@@ -192,22 +186,40 @@ window.saveNewUser = async function() {
     const fname = document.getElementById('nuFullName').value.trim(); 
     const uname = document.getElementById('nuUsername').value.trim(); 
     const pass = document.getElementById('nuPassword').value.trim(); 
-    const pin = document.getElementById('nuPin').value.trim(); 
+    const pin = document.getElementById('nuPin').value.trim() || '0000'; 
     let role = document.getElementById('nuRole').value; 
     const adminPass = document.getElementById('adminConfirmPassword').value; 
-    if (!uname || !pass || !role || !adminPass) return window.ksMsg('សូមបំពេញព័ត៌មានដែលចាំបាច់ និងបញ្ជាក់លេខកូដ Admin របស់អ្នក!'); 
+
+    if (!uname || !pass || !role || !adminPass) {
+        return window.ksMsg('សូមបំពេញព័ត៌មានដែលចាំបាច់ និងបញ្ជាក់លេខកូដ Admin របស់អ្នក!');
+    }
+
     const myAccount = window.userAccounts.find(x => x.username === window.activeUser.username); 
-    if (myAccount.password !== adminPass) return window.ksMsg('លេខកូដ Admin របស់អ្នកមិនត្រឹមត្រូវទេ! ប្រតិបត្តិការត្រូវបានបដិសេធ។', 'បរាជ័យ');
+    if (!myAccount || myAccount.password !== adminPass) {
+        return window.ksMsg('លេខកូដ Admin របស់អ្នកមិនត្រឹមត្រូវទេ! ប្រតិបត្តិការត្រូវបានបដិសេធ។', 'បរាជ័យ');
+    }
     
+    // 🔒 ១. ឆែកមើលឈ្មោះ Login ស្ទួនគ្នា
+    const usernameConflict = window.userAccounts.find(x => String(x.username).toLowerCase() === uname.toLowerCase() && x.id !== editId);
+    if (usernameConflict) {
+        return window.ksMsg('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមរើសឈ្មោះផ្សេង។', 'បរាជ័យ');
+    }
+
+    // 🔒 ២. ឆែកមើលលេខ PIN ស្ទួនគ្នា
+    const pinConflict = window.userAccounts.find(x => String(x.pin).trim() === pin && x.id !== editId);
+    if (pinConflict) {
+        return window.ksMsg(`លេខ PIN "${pin}" នេះត្រូវបានប្រើដោយគណនី (${pinConflict.fullName || pinConflict.username}) រួចហើយ!`, 'PIN ស្ទួនគ្នា');
+    }
+
     if (editId) { 
         const existingUser = window.userAccounts.find(x => x.id === editId); 
-        if(existingUser.username === 'admin' && role !== 'admin') return window.ksMsg('គណនី admin ដើម មិនអាចដកសិទ្ធិជា admin វិញបានទេ!', 'បម្រាម'); 
-        const conflict = window.userAccounts.find(x => String(x.username).toLowerCase() === uname.toLowerCase() && x.id !== editId); 
-        if(conflict) return window.ksMsg('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមរើសឈ្មោះផ្សេង។', 'បរាជ័យ'); 
+        if(existingUser.username === 'admin' && role !== 'admin') {
+            return window.ksMsg('គណនី admin ដើម មិនអាចដកសិទ្ធិជា admin វិញបានទេ!', 'បម្រាម'); 
+        }
         existingUser.fullName = fname; 
         existingUser.username = uname; 
         existingUser.password = pass; 
-        existingUser.pin = pin||'0000'; 
+        existingUser.pin = pin; 
         existingUser.role = role; 
         if(existingUser.id === window.activeUser.id) { 
             window.activeUser = existingUser; 
@@ -215,13 +227,19 @@ window.saveNewUser = async function() {
         } 
         window.ksMsg('គណនីត្រូវបានកែប្រែដោយជោគជ័យ!', 'ជោគជ័យ'); 
     } else { 
-        if (window.userAccounts.find(x => String(x.username).toLowerCase() === uname.toLowerCase())) return window.ksMsg('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមរើសឈ្មោះផ្សេង។', 'បរាជ័យ'); 
-        window.userAccounts.push({ id: 'U_' + Date.now(), username: uname, password: pass, role: role, pin: pin||'0000', fullName: fname }); 
+        window.userAccounts.push({ 
+            id: 'U_' + Date.now(), 
+            username: uname, 
+            password: pass, 
+            role: role, 
+            pin: pin, 
+            fullName: fname 
+        }); 
         window.ksMsg(`គណនី ${uname} ត្រូវបានបង្កើតដោយជោគជ័យ!`, 'ជោគជ័យ'); 
     }
+
     localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
     
-    // Sync ទៅកាន់ Supabase ភ្លាមៗ
     if(typeof window.saveData === 'function') {
         await window.saveData(window.userAccounts);
     }
@@ -239,7 +257,6 @@ window.deleteUserAccount = function(id) {
         window.userAccounts = window.userAccounts.filter(x => x.id !== id); 
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
         
-        // Sync ទៅកាន់ Supabase ភ្លាមៗ
         if(typeof window.saveData === 'function') {
             await window.saveData(window.userAccounts);
         }

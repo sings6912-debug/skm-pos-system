@@ -21,7 +21,25 @@ window.shopAddress = '';
 window.shopTelegram = ''; 
 window.telegramBotToken = ''; 
 window.telegramChatId = ''; 
-window.sysSettings = { cust: true, unpaid: true, logs: true, cost: true, discount: true, showSeller: true, tax: false, taxRate: 10, condition: false, conditionList: 'MISB, Loose, New, Used', preorder: false, deliveryFee: 1.5, expiry: true };
+
+// បន្ថែម storePin: '1234' ជាតម្លៃលំនាំដើម
+window.sysSettings = { 
+    cust: true, 
+    unpaid: true, 
+    logs: true, 
+    cost: true, 
+    discount: true, 
+    showSeller: true, 
+    tax: false, 
+    taxRate: 10, 
+    condition: false, 
+    conditionList: 'MISB, Loose, New, Used', 
+    preorder: false, 
+    deliveryFee: 1.5, 
+    expiry: true,
+    storePin: '1234' 
+};
+
 window.lastInvoiceCount = 0;
 window.SECRET_SALT = "KOUSUKE_ERP_PRO_V1_";
 
@@ -93,7 +111,7 @@ window.playOrderSound = function() {
                 osc.stop(ctx.currentTime + 0.2);
             }, i * 300);
         }
-    } catch(e) {}
+    } catch(e) {} 
 };
 
 window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = false, onConfirm = null) { 
@@ -111,7 +129,7 @@ window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = fa
     closeBtn.className = 'btn btn-outline'; 
     closeBtn.innerText = isConfirm ? 'បោះបង់' : 'យល់ព្រម'; 
     closeBtn.onclick = () => msgBox.style.display = 'none'; 
-    actionContainer.appendChild(closeBtn);
+    actionContainer.appendChild(closeBtn); 
     
     if(isConfirm) { 
         const okBtn = document.createElement('button'); 
@@ -180,11 +198,21 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     let cleanInventory = window.inventory.filter(item => item !== null && typeof item === 'object');
     
     let packageData = {
-        inventory: cleanInventory, historyLog: window.historyLog, invoices: window.invoices, expenses: window.expenses,
-        shopName: window.shopName, shopLogo: window.shopLogo, shopQR: window.shopQR, customers: window.customers, sysSettings: window.sysSettings, 
+        inventory: cleanInventory, 
+        historyLog: window.historyLog, 
+        invoices: window.invoices, 
+        expenses: window.expenses,
+        shopName: window.shopName, 
+        shopLogo: window.shopLogo, 
+        shopQR: window.shopQR, 
+        customers: window.customers, 
+        sysSettings: window.sysSettings, 
         userAccounts: userAccountsRef,
-        shopPhone: window.shopPhone, shopAddress: window.shopAddress, shopTelegram: window.shopTelegram, 
-        telegramBotToken: window.telegramBotToken, telegramChatId: window.telegramChatId
+        shopPhone: window.shopPhone, 
+        shopAddress: window.shopAddress, 
+        shopTelegram: window.shopTelegram, 
+        telegramBotToken: window.telegramBotToken, 
+        telegramChatId: window.telegramChatId
     };
 
     localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(cleanInventory));
