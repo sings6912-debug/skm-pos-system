@@ -90,7 +90,7 @@ window.saveData = async function(users) {
 };
 
 // ==========================================
-// 4. BIND AUTH & USER MANAGEMENT (ដូរភ្លាមៗពេល LOGIN / LOGOUT)
+// 4. BIND AUTH & USER MANAGEMENT (ដោះស្រាយការប្ដូរ ROLE ភ្លាមៗ)
 // ==========================================
 const _origLogin = window.handleLogin;
 const _origLogout = window.handleLogout;
@@ -104,8 +104,8 @@ window.handleLogin = () => {
         _origLogin(window.checkAuthentication, window.switchTab);
     }
     
-    // បង្ខំឱ្យលាក់ Menu និងអនុវត្តសិទ្ធិភ្លាមៗ ១០០% ដោយមិនបាច់ Reload
-    setTimeout(() => {
+    // បង្ខំឱ្យពិនិត្យ Role និងចាក់សិទ្ធិ Menu ភ្លាមៗ
+    const applyAuthImmediate = () => {
         if (typeof window.checkAuthentication === 'function') {
             window.checkAuthentication(window.applyPermissions);
         }
@@ -118,7 +118,10 @@ window.handleLogin = () => {
             window.switchTab('inventory', '📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory'));
         }
         window.renderAll();
-    }, 50);
+    };
+
+    setTimeout(applyAuthImmediate, 30);
+    setTimeout(applyAuthImmediate, 120);
 };
 
 window.handleLogout = () => {
@@ -276,58 +279,96 @@ window.switchTab = function(tabId, title, elem) {
     window.renderAll();
 };
 
+// អនុវត្តសិទ្ធិ Menu ឱ្យត្រឹមត្រូវ ១០០% ដោយគ្មានភាពយឺតយ៉ាវ
 window.applyPermissions = function() {
-    let sDash=true, sInv=true, sPOS=true, sCust=window.sysSettings.cust, sUnpaid=window.sysSettings.unpaid, sHist=window.sysSettings.logs, sSet=true, sAbout=true, sExp=true;
-    if(window.currentRole === 'sales') { 
-        sInv = false; sHist = false; sSet = false; sAbout = false; sExp = false; 
-    } else if (window.currentRole === 'warehouse') { 
-        sPOS = false; sCust = false; sUnpaid = false; sSet = false; sAbout = false; sHist = false; sExp = false; 
-    }
-    
-    if(document.getElementById('nav-dashboard')) document.getElementById('nav-dashboard').style.display = sDash ? 'flex' : 'none'; 
-    if(document.getElementById('nav-inventory')) document.getElementById('nav-inventory').style.display = sInv ? 'flex' : 'none'; 
-    if(document.getElementById('nav-pos')) document.getElementById('nav-pos').style.display = sPOS ? 'flex' : 'none'; 
-    if(document.getElementById('nav-customers')) document.getElementById('nav-customers').style.display = sCust ? 'flex' : 'none'; 
-    if(document.getElementById('nav-unpaid')) document.getElementById('nav-unpaid').style.display = sUnpaid ? 'flex' : 'none'; 
-    if(document.getElementById('nav-expenses')) document.getElementById('nav-expenses').style.display = sExp ? 'flex' : 'none'; 
-    if(document.getElementById('nav-history')) document.getElementById('nav-history').style.display = sHist ? 'flex' : 'none'; 
-    if(document.getElementById('nav-settings')) document.getElementById('nav-settings').style.display = sSet ? 'flex' : 'none'; 
-    if(document.getElementById('nav-about')) document.getElementById('nav-about').style.display = sAbout ? 'flex' : 'none';
-    
-    if(document.getElementById('grid-btn-pos')) document.getElementById('grid-btn-pos').style.display = sPOS ? 'flex' : 'none'; 
-    if(document.getElementById('grid-btn-inv')) document.getElementById('grid-btn-inv').style.display = sInv ? 'flex' : 'none'; 
-    if(document.getElementById('grid-btn-unpaid')) document.getElementById('grid-btn-unpaid').style.display = sUnpaid ? 'flex' : 'none'; 
-    if(document.getElementById('grid-btn-exp')) document.getElementById('grid-btn-exp').style.display = sExp ? 'flex' : 'none'; 
-    if(document.getElementById('grid-btn-cust')) document.getElementById('grid-btn-cust').style.display = sCust ? 'flex' : 'none'; 
-    if(document.getElementById('grid-btn-hist')) document.getElementById('grid-btn-hist').style.display = sHist ? 'flex' : 'none';
-    
-    const editIcon = document.getElementById('editShopIcon'); 
-    if(editIcon) editIcon.style.display = window.currentRole === 'admin' ? 'inline' : 'none';
-    
-    const showCost = window.sysSettings.cost && window.currentRole === 'admin'; 
-    if(document.getElementById('costPriceContainer')) document.getElementById('costPriceContainer').style.display = showCost ? 'block' : 'none'; 
-    document.querySelectorAll('.p-cost').forEach(el => el.style.display = showCost ? 'inline' : 'none');
-    
-    if(document.getElementById('posDiscountContainer')) document.getElementById('posDiscountContainer').style.display = window.sysSettings.discount ? 'flex' : 'none';
-    if(document.getElementById('posTaxContainer')) { 
-        document.getElementById('posTaxContainer').style.display = window.sysSettings.tax ? 'flex' : 'none'; 
-        if(document.getElementById('cartTaxRateDisplay')) document.getElementById('cartTaxRateDisplay').innerText = window.sysSettings.taxRate ? window.sysSettings.taxRate : 0; 
-    }
-    
-    if(document.getElementById('posSellerRowContainer')) document.getElementById('posSellerRowContainer').style.display = window.sysSettings.showSeller !== false ? 'flex' : 'none'; 
-    if(document.getElementById('posCustomerInputContainer')) document.getElementById('posCustomerInputContainer').style.display = window.sysSettings.cust ? 'block' : 'none'; 
-    if(document.getElementById('btnCheckoutUnpaid')) document.getElementById('btnCheckoutUnpaid').style.display = window.sysSettings.unpaid ? 'block' : 'none'; 
-    if(document.getElementById('btnCheckoutPreorder')) document.getElementById('btnCheckoutPreorder').style.display = window.sysSettings.preorder ? 'block' : 'none'; 
-    if(document.getElementById('btnAddNewProduct')) document.getElementById('btnAddNewProduct').style.display = window.currentRole === 'admin' ? 'block' : 'none'; 
-    if(document.getElementById('inventoryExcelAction')) document.getElementById('inventoryExcelAction').style.display = window.currentRole === 'admin' ? 'flex' : 'none'; 
-    if(document.getElementById('adminUserManagementBlock')) document.getElementById('adminUserManagementBlock').style.display = window.currentRole === 'admin' ? 'block' : 'none';
-    
-    if(document.getElementById('pExpiryContainer')) document.getElementById('pExpiryContainer').style.display = window.sysSettings.expiry ? 'block' : 'none';
+    // ១. ទាញយក Role ចុងក្រោយចេញពី LocalStorage ដោយផ្ទាល់
+    try {
+        const rawSession = localStorage.getItem(window.getBranchKey('auth_session_user')) || localStorage.getItem('auth_session_user');
+        if (rawSession) {
+            const sess = JSON.parse(rawSession);
+            if (sess && sess.role) {
+                window.currentRole = String(sess.role).toLowerCase().trim();
+            }
+        }
+    } catch(e) {}
 
-    if (window.currentRole === 'admin') {
-        if(window.renderUsersList) window.renderUsersList();
-        if(window.renderUnpaid) window.renderUnpaid();
-        if(window.renderExpenses) window.renderExpenses();
+    if (!window.currentRole) window.currentRole = 'admin';
+
+    const isAdmin = (window.currentRole === 'admin');
+    const isSales = (window.currentRole === 'sales');
+    const isWarehouse = (window.currentRole === 'warehouse');
+
+    // ២. កំណត់សិទ្ធិបើក/បិទ Menu
+    let sDash = true;
+    let sInv = isAdmin || isWarehouse;
+    let sPOS = isAdmin || isSales;
+    let sCust = isAdmin || (isSales && (window.sysSettings?.cust !== false));
+    let sUnpaid = isAdmin || (isSales && (window.sysSettings?.unpaid !== false));
+    let sExp = isAdmin;
+    let sHist = isAdmin;
+    let sSet = isAdmin;
+    let sAbout = isAdmin;
+
+    const setFlex = (id, show) => {
+        const el = document.getElementById(id);
+        if (el) el.style.setProperty('display', show ? 'flex' : 'none', 'important');
+    };
+    const setBlock = (id, show) => {
+        const el = document.getElementById(id);
+        if (el) el.style.setProperty('display', show ? 'block' : 'none', 'important');
+    };
+
+    // បើក/បិទ Menu លើ Sidebar
+    setFlex('nav-dashboard', sDash);
+    setFlex('nav-inventory', sInv);
+    setFlex('nav-pos', sPOS);
+    setFlex('nav-customers', sCust);
+    setFlex('nav-unpaid', sUnpaid);
+    setFlex('nav-expenses', sExp);
+    setFlex('nav-history', sHist);
+    setFlex('nav-settings', sSet);
+    setFlex('nav-about', sAbout);
+
+    // បើក/បិទ ប៊ូតុងលើផ្ទាំង Dashboard
+    setFlex('grid-btn-pos', sPOS);
+    setFlex('grid-btn-inv', sInv);
+    setFlex('grid-btn-unpaid', sUnpaid);
+    setFlex('grid-btn-exp', sExp);
+    setFlex('grid-btn-cust', sCust);
+    setFlex('grid-btn-hist', sHist);
+
+    // សិទ្ធិផ្ដាច់មុខរបស់ Admin
+    const editIcon = document.getElementById('editShopIcon');
+    if (editIcon) editIcon.style.display = isAdmin ? 'inline' : 'none';
+
+    const showCost = (window.sysSettings?.cost !== false) && isAdmin;
+    setBlock('costPriceContainer', showCost);
+    document.querySelectorAll('.p-cost').forEach(el => el.style.display = showCost ? 'inline' : 'none');
+
+    setBlock('btnAddNewProduct', isAdmin);
+    setFlex('inventoryExcelAction', isAdmin);
+    setBlock('adminUserManagementBlock', isAdmin);
+
+    // ការកំណត់ POS
+    setFlex('posDiscountContainer', window.sysSettings?.discount !== false);
+    if (document.getElementById('posTaxContainer')) {
+        const showTax = window.sysSettings?.tax === true;
+        document.getElementById('posTaxContainer').style.display = showTax ? 'flex' : 'none';
+        if (document.getElementById('cartTaxRateDisplay')) {
+            document.getElementById('cartTaxRateDisplay').innerText = window.sysSettings?.taxRate || 0;
+        }
+    }
+
+    setFlex('posSellerRowContainer', window.sysSettings?.showSeller !== false);
+    setBlock('posCustomerInputContainer', window.sysSettings?.cust !== false);
+    setBlock('btnCheckoutUnpaid', window.sysSettings?.unpaid !== false);
+    setBlock('btnCheckoutPreorder', window.sysSettings?.preorder === true);
+    setBlock('pExpiryContainer', window.sysSettings?.expiry !== false);
+
+    if (isAdmin) {
+        if (window.renderUsersList) window.renderUsersList();
+        if (window.renderUnpaid) window.renderUnpaid();
+        if (window.renderExpenses) window.renderExpenses();
     }
 };
 
@@ -395,7 +436,6 @@ window.checkLicense = async function() {
     const sidebar = document.getElementById('appSidebar'); 
 
     try { 
-        // ឆែកផ្ទាល់ទៅកាន់ Database Supabase តាម Branch ID
         let { data, error } = await window.supabaseClient
             .from('branch_licenses')
             .select('*')
@@ -417,7 +457,6 @@ window.checkLicense = async function() {
             return false; 
         } 
 
-        // License ត្រឹមត្រូវ -> Auto-Unlock & រក្សាទុក Key ក្នុង Browser ស្វ័យប្រវត្ត
         localStorage.setItem(window.getBranchKey('license_key'), data.license_key);
         if (lockScreen) lockScreen.style.display = 'none'; 
         if (sidebar) sidebar.style.pointerEvents = 'auto'; 
@@ -425,7 +464,6 @@ window.checkLicense = async function() {
         return true;
 
     } catch (e) { 
-        // បើមានបញ្ហា Offline ព្យាយាមឆែក Key ចាស់ក្នុង LocalStorage
         const savedKey = localStorage.getItem(window.getBranchKey('license_key'));
         if (savedKey) {
             if (lockScreen) lockScreen.style.display = 'none'; 
@@ -512,7 +550,6 @@ window.displayLicenseInfo = async function() {
     const aboutTab = document.getElementById('tab-about');
     if (!aboutTab) return;
 
-    // លុបកូដ Autofill ចេញ
     const aboutInputs = aboutTab.querySelectorAll('input');
     aboutInputs.forEach(inp => {
         inp.value = '';
@@ -561,7 +598,6 @@ window.displayLicenseInfo = async function() {
 
             infoBox.innerHTML = `
                 <div style="background: var(--card-bg, #ffffff); border: 1.5px solid var(--border-color, #e2e8f0); padding: 18px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); color: var(--text-main, #1e293b);">
-                    <!-- ជួរទី ១៖ សាខា និង ស្ថានភាព -->
                     <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-color, #cbd5e1); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
                         <div style="font-size: 15px; font-weight: bold; color: var(--text-main, #0f172a);">
                             🏢 សាខា (Branch)៖ <span style="color: #0284c7; font-weight: 900; background: rgba(2, 132, 199, 0.1); padding: 3px 8px; border-radius: 6px;">${license.branch_id || window.SHOP_BRANCH_ID}</span>
@@ -569,7 +605,6 @@ window.displayLicenseInfo = async function() {
                         <div>${statusBadge}</div>
                     </div>
                     
-                    <!-- ជួរទី ២៖ កាលបរិច្ឆេទផុតកំណត់ -->
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
                         <div style="font-size: 14px; font-weight: bold; color: var(--text-muted, #64748b);">
                             ⏳ ផុតកំណត់នៅថ្ងៃ៖
