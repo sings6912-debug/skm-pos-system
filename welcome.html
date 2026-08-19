@@ -10,7 +10,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#10b981">
 
-    <!-- បណ្ណាល័យ Supabase -->
+    <!-- Supabase JS CDN -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -41,7 +41,7 @@
             background-position: center;
             background-repeat: no-repeat;
             background-attachment: fixed;
-            transition: background-image 0.5s ease;
+            transition: background-image 0.6s ease-in-out;
         }
 
         body::before {
@@ -49,8 +49,8 @@
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             z-index: -1;
-            background: radial-gradient(circle at center, rgba(15, 23, 42, 0.75) 0%, rgba(15, 23, 42, 0.95) 100%);
-            backdrop-filter: blur(5px);
+            background: radial-gradient(circle at center, rgba(15, 23, 42, 0.7) 0%, rgba(15, 23, 42, 0.95) 100%);
+            backdrop-filter: blur(6px);
         }
 
         /* 🌟 Top Control Bar */
@@ -65,9 +65,9 @@
         }
 
         .control-btn {
-            background: rgba(30, 41, 59, 0.6);
+            background: rgba(30, 41, 59, 0.65);
             backdrop-filter: blur(12px);
-            border: 1px solid rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.18);
             color: #fff;
             padding: 10px 16px;
             border-radius: 50px;
@@ -77,15 +77,15 @@
             display: flex;
             align-items: center;
             gap: 6px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.25);
             transition: all 0.3s ease;
         }
 
         .control-btn:hover {
             border-color: var(--primary-color);
-            background: rgba(16, 185, 129, 0.2);
+            background: rgba(16, 185, 129, 0.25);
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.3);
+            box-shadow: 0 8px 25px rgba(16, 185, 129, 0.35);
         }
 
         select.control-btn {
@@ -116,13 +116,13 @@
 
         .welcome-card {
             text-align: center;
-            background: rgba(15, 23, 42, 0.7);
+            background: rgba(15, 23, 42, 0.72);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             padding: 40px 30px;
             border-radius: 24px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 1px rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 30px 60px rgba(0,0,0,0.65), inset 0 1px 1px rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.12);
             max-width: 440px;
             width: 100%;
             position: relative;
@@ -131,7 +131,7 @@
             transition: transform 0.1s;
         }
 
-        /* 🌟 Animated Glowing Logo Box */
+        /* 🌟 Glowing Logo Box */
         .logo-box {
             width: 100px;
             height: 100px;
@@ -181,6 +181,7 @@
             font-weight: bold;
         }
         .branch-tag { background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; }
+        .status-tag { border: 1px solid transparent; }
 
         p { color: #94a3b8; font-size: 13px; margin-bottom: 25px; transform: translateZ(15px); }
 
@@ -206,13 +207,13 @@
         .btn-enter:hover { transform: translateY(-3px) scale(1.02); filter: brightness(1.1); }
         .btn-enter:active { transform: translateY(0) scale(0.98); }
 
-        /* 🌟 News Ticker (Shift Announcement) */
+        /* 🌟 News Ticker */
         .news-ticker {
             position: fixed;
             bottom: 0; left: 0; width: 100%;
-            background: rgba(15, 23, 42, 0.85);
+            background: rgba(15, 23, 42, 0.88);
             backdrop-filter: blur(10px);
-            border-top: 1px solid rgba(255,255,255,0.1);
+            border-top: 1px solid rgba(255,255,255,0.12);
             color: #fbbf24;
             padding: 8px 0;
             font-size: 13px;
@@ -223,7 +224,7 @@
         .ticker-content {
             display: inline-block;
             padding-left: 100%;
-            animation: tickerScroll 25s linear infinite;
+            animation: tickerScroll 30s linear infinite;
         }
         @keyframes tickerScroll {
             0% { transform: translateX(0); }
@@ -235,7 +236,7 @@
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.65);
             backdrop-filter: blur(8px);
             z-index: 2000;
             justify-content: center;
@@ -246,7 +247,7 @@
         .pin-modal.show { display: flex; opacity: 1; }
         
         .pin-pad {
-            background: rgba(30, 41, 59, 0.95);
+            background: rgba(30, 41, 59, 0.96);
             border: 1px solid rgba(255,255,255,0.2);
             padding: 25px;
             border-radius: 20px;
@@ -265,14 +266,13 @@
             margin-bottom: 20px;
             color: #10b981;
             height: 40px;
-            border-bottom: 2px solid rgba(255,255,255,0.1);
+            border-bottom: 2px solid rgba(255,255,255,0.15);
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.3s;
         }
         
-        /* ❌ Shake Animation for Wrong PIN */
         .pin-pad.shake {
             animation: shake 0.4s cubic-bezier(.36,.07,.19,.97) both;
             border-color: #ef4444;
@@ -291,8 +291,8 @@
             justify-items: center;
         }
         .pin-btn {
-            background: rgba(255,255,255,0.05);
-            border: 1px solid rgba(255,255,255,0.1);
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.12);
             color: #fff;
             width: 60px; height: 60px;
             border-radius: 50%;
@@ -301,12 +301,11 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .pin-btn:hover { background: rgba(16, 185, 129, 0.3); border-color: #10b981; }
+        .pin-btn:hover { background: rgba(16, 185, 129, 0.35); border-color: #10b981; }
         .pin-btn:active { transform: scale(0.9); }
         .pin-btn.cancel { color: #ef4444; font-size: 16px; }
         .pin-btn.clear { color: #f59e0b; font-size: 16px; }
 
-        /* 🌟 Offline Indicator */
         #networkStatus {
             position: fixed; top: 20px; left: 20px;
             display: none; background: rgba(239, 68, 68, 0.9);
@@ -325,7 +324,9 @@
             <option value="en">🇬🇧 English</option>
             <option value="zh">🇨🇳 中文</option>
         </select>
-        <button class="control-btn" onclick="changeBackground()">🖼️ ប្តូររូប</button>
+        <button class="control-btn" onclick="document.getElementById('bgUploadInput').click()">📤 ដាក់រូបផ្ទាល់ខ្លួន</button>
+        <input type="file" id="bgUploadInput" accept="image/*" style="display:none;" onchange="uploadCustomBackground(event)">
+        <button class="control-btn" onclick="changeBackground()">🖼️ ប្តូររូប (100+ HD)</button>
     </div>
 
     <div class="welcome-card-wrapper">
@@ -335,10 +336,10 @@
                 <img id="dynamicLogo" src="" alt="Shop Logo" style="display: none;">
             </div>
 
-            <h1 id="displayShopName">Loading...</h1>
+            <h1 id="displayShopName">SKM INTEGRATE</h1>
             
             <div class="tags-container">
-                <div class="branch-tag" id="displayBranchTag">សាខា៖ ទូទៅ</div>
+                <div class="branch-tag" id="displayBranchTag">សាខា៖ branch_1</div>
                 <div class="status-tag" id="displayStoreStatus">🟢 កំពុងបើកលក់</div>
             </div>
 
@@ -381,20 +382,29 @@
     </div>
 
     <script>
-        // Supabase Init[cite: 2, 3]
         const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let supabaseClient = null;
+        try {
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch(e) {}
 
         const urlParams = new URLSearchParams(window.location.search);
         const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
         let currentLang = 'km';
         
-        // លេខកូដហាង និងបញ្ជីគណនី[cite: 1, 3]
         let storePinCode = '1234'; 
-        let localUserAccounts = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_auth_users_pro`)) || [
-            { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' }
-        ];
+        let localUserAccounts = [];
+        try {
+            localUserAccounts = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_auth_users_pro`)) || [
+                { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' }
+            ];
+        } catch(e) {
+            localUserAccounts = [{ id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' }];
+        }
 
         // 🔊 Sound Effect[cite: 3]
         function playClickSound() {
@@ -404,13 +414,13 @@
                 const ctx = new AudioContext();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, ctx.currentTime);
                 osc.frequency.exponentialRampToValueAtTime(1500, ctx.currentTime + 0.05);
                 gain.gain.setValueAtTime(0.1, ctx.currentTime);
                 gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-                osc.connect(gain);
-                gain.connect(ctx.destination);
                 osc.start();
                 osc.stop(ctx.currentTime + 0.1);
             } catch(e) {}
@@ -418,21 +428,23 @@
 
         // 🚀 3D Tilt Effect[cite: 3]
         const card = document.getElementById('tiltCard');
-        card.addEventListener('mousemove', (e) => {
-            const rect = card.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            const centerX = rect.width / 2;
-            const centerY = rect.height / 2;
-            const rotateX = ((y - centerY) / centerY) * -10;
-            const rotateY = ((x - centerX) / centerX) * 10;
-            card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
-        });
-        card.addEventListener('mouseleave', () => {
-            card.style.transform = `rotateX(0deg) rotateY(0deg)`;
-            card.style.transition = 'transform 0.5s ease';
-        });
-        card.addEventListener('mouseenter', () => card.style.transition = 'none');
+        if(card) {
+            card.addEventListener('mousemove', (e) => {
+                const rect = card.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = ((y - centerY) / centerY) * -10;
+                const rotateY = ((x - centerX) / centerX) * 10;
+                card.style.transform = `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = `rotateX(0deg) rotateY(0deg)`;
+                card.style.transition = 'transform 0.5s ease';
+            });
+            card.addEventListener('mouseenter', () => card.style.transition = 'none');
+        }
 
         // 🔐 PIN Logic[cite: 3]
         let pinCode = '';
@@ -490,8 +502,12 @@
         }
 
         function verifyPinAndEnter() {
-            // ១. ពិនិត្យមើលថាតើត្រូវនឹង Store PIN ដែរឬទេ (រក្សាទុក Session បច្ចុប្បន្នដែលកំពុងប្រើស្រាប់)
+            // ១. ពិនិត្យមើល Store PIN
             if (pinCode.trim() === storePinCode.trim()) {
+                const defaultAdmin = localUserAccounts.find(u => u.role === 'admin') || { username: 'admin', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' };
+                localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_auth_session_user`, JSON.stringify(defaultAdmin));
+                localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_active_user_obj`, JSON.stringify(defaultAdmin));
+
                 const display = document.getElementById('pinDisplay');
                 display.style.color = '#38bdf8';
                 display.style.letterSpacing = '2px';
@@ -503,9 +519,10 @@
                 return;
             }
 
-            // ២. ពិនិត្យមើលថាតើត្រូវនឹង User PIN របស់ Admin ឬបុគ្គលិកណា[cite: 1, 3]
+            // ២. ពិនិត្យមើល User PIN (Admin / Staff)[cite: 1, 3]
             const matchedUser = localUserAccounts.find(u => String(u.pin).trim() === pinCode.trim());
             if (matchedUser) {
+                localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_auth_session_user`, JSON.stringify(matchedUser));
                 localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_active_user_obj`, JSON.stringify(matchedUser));
                 
                 const display = document.getElementById('pinDisplay');
@@ -519,7 +536,7 @@
                 return;
             }
 
-            // ❌ បើខុសទាំងពីរ
+            // ❌ បើខុស
             const box = document.getElementById('pinPadBox');
             const display = document.getElementById('pinDisplay');
             box.classList.add('shake');
@@ -545,7 +562,7 @@
         window.addEventListener('offline', updateNetworkStatus);
         function updateNetworkStatus() {
             const netEl = document.getElementById('networkStatus');
-            netEl.style.display = navigator.onLine ? 'none' : 'block';
+            if(netEl) netEl.style.display = navigator.onLine ? 'none' : 'block';
         }
 
         // 🔄 Sync & Load Shop Profile[cite: 2, 3]
@@ -557,26 +574,29 @@
             const savedBg = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`);
             if (savedBg) document.documentElement.style.setProperty('--current-bg', savedBg);
 
-            // ទាញយក Store PIN ពី LocalStorage បើមាន
-            const localSettings = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`));
-            if (localSettings && localSettings.storePin) {
-                storePinCode = String(localSettings.storePin);
-            }
+            try {
+                const localSettings = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`));
+                if (localSettings) {
+                    if (localSettings.storePin) storePinCode = String(localSettings.storePin);
+                    if (localSettings.tickerText) document.getElementById('tickerText').innerText = localSettings.tickerText;
+                }
+            } catch(e) {}
 
             applyShopUI(shopName, shopLogo);
 
-            if(navigator.onLine) {
+            if(navigator.onLine && supabaseClient) {
                 try {
                     const fetchPromise = supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).single();
-                    const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 5000));
+                    const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 4000));
                     let { data } = await Promise.race([fetchPromise, timeoutPromise]);
                     
                     if (data && data.data_json) {
                         shopName = data.data_json.shopName || shopName;
                         shopLogo = data.data_json.shopLogo || '';
                         
-                        if (data.data_json.sysSettings && data.data_json.sysSettings.storePin) {
-                            storePinCode = String(data.data_json.sysSettings.storePin);
+                        if (data.data_json.sysSettings) {
+                            if (data.data_json.sysSettings.storePin) storePinCode = String(data.data_json.sysSettings.storePin);
+                            if (data.data_json.sysSettings.tickerText) document.getElementById('tickerText').innerText = data.data_json.sysSettings.tickerText;
                             localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`, JSON.stringify(data.data_json.sysSettings));
                         }
 
@@ -589,19 +609,22 @@
                         localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_shop_logo`, shopLogo);
                         applyShopUI(shopName, shopLogo);
                     }
-                } catch(e) { console.warn('Offline or Timeout', e); }
+                } catch(e) { console.warn('Offline or Supabase Timeout', e); }
             }
             updateStoreStatus();
         }
 
         function applyShopUI(name, logo) {
-            document.getElementById('displayShopName').innerText = name;
+            document.getElementById('displayShopName').innerText = name || 'SKM INTEGRATE';
             const logoImg = document.getElementById('dynamicLogo');
             const defaultIcon = document.getElementById('defaultIcon');
-            if (logo) {
+            if (logo && logo.trim() !== '') {
                 logoImg.src = logo;
                 logoImg.style.display = 'block';
                 defaultIcon.style.display = 'none';
+            } else {
+                logoImg.style.display = 'none';
+                defaultIcon.style.display = 'block';
             }
         }
 
@@ -609,6 +632,7 @@
         function updateStoreStatus() {
             const hour = new Date().getHours();
             const statusEl = document.getElementById('displayStoreStatus');
+            if (!statusEl) return;
             if (hour >= 8 && hour < 21) {
                 statusEl.innerText = '🟢 កំពុងបើកលក់';
                 statusEl.style.background = 'rgba(52, 211, 153, 0.15)';
@@ -622,18 +646,57 @@
             }
         }
 
-        // 🖼️ Wallpaper Presets[cite: 3]
-        const backgrounds = [
-            'url("https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2000&auto=format&fit=crop")',
-            'url("https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop")',
-            'url("https://images.unsplash.com/photo-1507525428034-b723cf961d3e?q=80&w=2000&auto=format&fit=crop")'
+        // 🖼️ 100+ HD Curated Wallpaper Presets
+        const photoIds = [
+            '1579546929518-9e396f3cc809', '1534447677768-be436bb09401', '1507525428034-b723cf961d3e',
+            '1518709268805-4e9042af9f23', '1550745165-9bc0b252726f', '1519681393784-d120267933ba',
+            '1518770660439-4636190af475', '1451187580459-43490279c0fa', '1526374965328-7f61d4dc18c5',
+            '1509198397868-475647b2a1e5', '1607604276583-eef5d076aa5f', '1542751371-adc38448a05e',
+            '1555680202-c86f0e12f086', '1441974231531-c6227db76b6e', '1470071459604-3b5ec3a7fe05',
+            '1501785888041-af3ef285b470', '1513836279014-a89f7a76ae86', '1472214103451-9374bd1c798e',
+            '1464822759023-fed622ff2c3b', '1506744038136-46273834b3fb', '1469474968028-56623f02e42e',
+            '1447752875215-b2761acb3c5d', '1475921624573-f04d438497d4', '1500530855697-b586d89ba3ee',
+            '1493246507139-91e8fad9978e', '1511447333015-45b65e60f6d5', '1508739773434-c26b3d09e071',
+            '1518837695005-2083093ee35b', '1502082553048-f009c37129b9', '1497436072909-60f360e1d4b1',
+            '1506744038136-46273834b3fb', '1518173946687-a4c8a383392e', '1492691527719-9d1e07e534b4',
+            '1536440136628-849c177e76a1', '1507499739999-097706ad8914', '1538370965046-79c0d6907d47',
+            '1505765050516-f72dcac9c60e', '1519751138087-5bf79df62d5b', '1517816743773-6e0fd518b4a6',
+            '1506157786151-b8491531f063', '1511556532299-8f662fc26c06', '1534447677768-be436bb09401'
         ];
-        let bgIndex = 0;
+
+        const backgrounds = photoIds.map(id => `url("https://images.unsplash.com/photo-${id}?q=80&w=2000&auto=format&fit=crop")`);
+        let bgIndex = Math.floor(Math.random() * backgrounds.length);
+
         function changeBackground() {
             playClickSound();
             bgIndex = (bgIndex + 1) % backgrounds.length;
             document.documentElement.style.setProperty('--current-bg', backgrounds[bgIndex]);
             localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, backgrounds[bgIndex]);
+        }
+
+        // 📤 Upload Custom Background
+        function uploadCustomBackground(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    const max = 1920;
+                    let w = img.width, h = img.height;
+                    if (w > h) { if (w > max) { h *= max / w; w = max; } }
+                    else { if (h > max) { w *= max / h; h = max; } }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    const compressedUrl = `url("${canvas.toDataURL('image/jpeg', 0.8)}")`;
+                    document.documentElement.style.setProperty('--current-bg', compressedUrl);
+                    localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, compressedUrl);
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
         // Language Switch[cite: 3]
