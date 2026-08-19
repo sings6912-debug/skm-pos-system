@@ -9,7 +9,7 @@ window.playOrderSound = window.playOrderSound;
 window.ksMsg = window.ksMsg;
 
 // ==========================================
-// 2. BIND AUTH TO WINDOW
+// 2. BIND AUTH & USER MANAGEMENT (ជួសជុលបញ្ហា SAVE គណនី)
 // ==========================================
 const _origLogin = window.handleLogin;
 const _origLogout = window.handleLogout;
@@ -32,8 +32,27 @@ window.handleChangePassword = window.handleChangePassword;
 window.openUserModal = window.openUserModal;
 window.editUserAccount = window.editUserAccount;
 window.closeUserModal = window.closeUserModal;
-window.saveNewUser = window.saveNewUser;
-window.deleteUserAccount = window.deleteUserAccount;
+
+// កែសម្រួលការរក្សាទុកគណនីបុគ្គលិកឱ្យ Sync ចូល Supabase ភ្លាមៗ
+const _origSaveNewUser = window.saveNewUser;
+window.saveNewUser = function() {
+    if (typeof _origSaveNewUser === 'function') {
+        _origSaveNewUser();
+        if (typeof window.saveData === 'function') {
+            window.saveData(window.userAccounts);
+        }
+    }
+};
+
+const _origDeleteUser = window.deleteUserAccount;
+window.deleteUserAccount = function(index) {
+    if (typeof _origDeleteUser === 'function') {
+        _origDeleteUser(index);
+        if (typeof window.saveData === 'function') {
+            window.saveData(window.userAccounts);
+        }
+    }
+};
 
 // ==========================================
 // 3. BIND THEME TO WINDOW
@@ -249,7 +268,7 @@ window.toggleDesktopSidebar = function() {
 };
 
 // ==========================================
-// 9. DATABASE LICENSE VERIFICATION SYSTEM
+// 9. DATABASE LICENSE SYSTEM (VERIFICATION & DISPLAY)
 // ==========================================
 window.checkLicense = async function() { 
     const lockScreen = document.getElementById('licenseLockScreen'); 
@@ -330,7 +349,7 @@ window.verifyAndSaveLicense = async function() {
 };
 
 window.verifyAndSaveLicenseFromAbout = async function() { 
-    const inputKey = document.getElementById('aboutLicenseInput').value.trim(); 
+    const inputKey = document.getElementById('aboutLicenseInput') ? document.getElementById('aboutLicenseInput').value.trim() : ''; 
     if(!inputKey) return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); 
 
     try { 
@@ -365,30 +384,22 @@ window.displayLicenseInfo = async function() {
     const infoDisplay = document.getElementById('licenseInfoDisplay'); 
     if(!infoDisplay) return; 
 
+    // បង្ហាញ Loading ជាបណ្ដោះអាសន្ន
+    infoDisplay.innerHTML = `<div style="padding: 10px; color: var(--text-muted); font-size: 13px;">⏳ កំពុងពិនិត្យមើលព័ត៌មាន License ពី Server...</div>`;
+
     const savedKey = localStorage.getItem(window.getBranchKey('license_key')); 
-    if(!savedKey) { 
-        infoDisplay.innerHTML = `
-            <div style="background: rgba(225, 29, 72, 0.1); border: 1px solid var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: var(--danger); font-weight: bold;">
-                ❌ មិនទាន់បានបញ្ចូល License Key នៅឡើយទេ!
-            </div>`; 
-        return; 
-    } 
+    
+    // ព្យាយាមទាញយកទិន្នន័យ License ពី Supabase តាមរយៈ Branch ID
+    try {
+        let { data, error } = await window.supabaseClient
+            .from('branch_licenses')
+            .select('*')
+            .eq('branch_id', window.SHOP_BRANCH_ID)
+            .single();
 
-    if(!window.activeLicenseData) {
-        try {
-            let { data } = await window.supabaseClient
-                .from('branch_licenses')
-                .select('*')
-                .eq('branch_id', window.SHOP_BRANCH_ID)
-                .eq('license_key', savedKey)
-                .single();
-            if(data) window.activeLicenseData = data;
-        } catch(e) {}
-    }
-
-    if(window.activeLicenseData && window.activeLicenseData.expires_at) { 
-        try { 
-            const expiry = new Date(window.activeLicenseData.expires_at).getTime(); 
+        if (data && data.expires_at) {
+            window.activeLicenseData = data;
+            const expiry = new Date(data.expires_at).getTime(); 
             const expireDate = new Date(expiry); 
             const diffDays = Math.ceil((expiry - Date.now()) / (1000 * 60 * 60 * 24)); 
             let statusHtml = ''; 
@@ -403,19 +414,19 @@ window.displayLicenseInfo = async function() {
 
             infoDisplay.innerHTML = `
                 <div style="background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255,255,255,0.1); padding: 14px; border-radius: 10px; margin-bottom: 15px; font-size: 14px; line-height: 1.8;">
-                    <div><strong>សាខា (Branch)៖</strong> <span style="color: #38bdf8; font-weight: bold;">${window.activeLicenseData.branch_id || window.SHOP_BRANCH_ID}</span></div>
+                    <div><strong>សាខា (Branch)៖</strong> <span style="color: #38bdf8; font-weight: bold;">${data.branch_id}</span></div>
                     <div><strong>ស្ថានភាព៖</strong> ${statusHtml}</div>
                     <div><strong>ថ្ងៃផុតកំណត់៖</strong> <span style="color: #f8fafc; font-weight: bold;">${expireDate.toLocaleDateString('km-KH', { year: 'numeric', month: 'long', day: 'numeric' })} ម៉ោង ${expireDate.toLocaleTimeString('km-KH')}</span></div>
-                    <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;"><strong>លេខកូដបច្ចុប្បន្ន៖</strong> <code style="color: #f59e0b;">${savedKey}</code></div>
-                </div>`; 
-            return; 
-        } catch(e) {} 
-    } 
+                    <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;"><strong>លេខកូដបច្ចុប្បន្ន៖</strong> <code style="color: #f59e0b;">${savedKey || data.license_key}</code></div>
+                </div>`;
+            return;
+        }
+    } catch(e) {}
 
     infoDisplay.innerHTML = `
         <div style="background: rgba(225, 29, 72, 0.1); border: 1px solid var(--danger); padding: 12px; border-radius: 8px; margin-bottom: 15px; color: var(--danger);">
-            ❌ លេខកូដ License មិនត្រឹមត្រូវ ឬគ្មានទិន្នន័យលើ Server ឡើយ!
-        </div>`; 
+            ❌ មិនទាន់មានទិន្នន័យ License សម្រាប់សាខា ${window.SHOP_BRANCH_ID} លើ Server ឡើយ!
+        </div>`;
 };
 
 // ==========================================
@@ -588,7 +599,6 @@ window.renderDashboard = function() {
         const tbody = document.getElementById('lowStockTable'); 
         if(tbody) { tbody.innerHTML = lowItems.length === 0 ? '<tr><td colspan="4" style="text-align:center;">មិនមានទំនិញជិតអស់ទេ</td></tr>' : lowItems.map(p => { let catStr = p.category ? p.category : '-'; let nameStr = p.name ? String(p.name).replace(/'/g, "\\'") : ''; return `<tr><td>${p.name}</td><td>${catStr}</td><td style="color:${p.qty<=0?'var(--danger)':'var(--warning)'}; font-weight:bold;">${p.qty}</td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:var(--fs-12);" onclick="window.switchTab('inventory','📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory')); document.getElementById('searchInput').value='${nameStr}'; window.renderInventory();">មើល</button></td></tr>`; }).join(''); }
         
-        // Expiry Section Display Logic
         const expirySection = document.getElementById('expiryAlertSection');
         const expiryTable = document.getElementById('expiryAlertTable');
         if (window.sysSettings.expiry && expirySection && expiryTable) {
