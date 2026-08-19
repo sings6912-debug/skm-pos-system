@@ -347,7 +347,7 @@
             
             <div class="buttons-group">
                 <button onclick="goToMenu()" class="btn-enter btn-menu">🛒 ចូលមើលម៉ឺនុយ (Digital Menu)</button>
-                <button onclick="openPinModal()" class="btn-enter btn-admin">🔐 ចូលប្រព័ន្ធគ្រប់គ្រង (POS / Admin)</button>
+                <button onclick="openPinModal()" class="btn-enter btn-admin">🔐 បើកចូលហាងលក់ (Store PIN)</button>
             </div>
         </div>
     </div>
@@ -355,7 +355,7 @@
     <!-- 🌟 PIN Modal -->
     <div class="pin-modal" id="pinModal">
         <div class="pin-pad" id="pinPadBox">
-            <h3 id="pinModalTitle" style="color:#fff; margin-bottom:10px; font-family:'Battambang'; font-size:16px;">បញ្ចូលលេខសម្ងាត់ PIN</h3>
+            <h3 id="pinModalTitle" style="color:#fff; margin-bottom:10px; font-family:'Battambang'; font-size:16px;">បញ្ចូលលេខសម្ងាត់ហាង (Store PIN)</h3>
             <div class="pin-display" id="pinDisplay">_ _ _ _</div>
             <div class="pin-grid">
                 <button class="pin-btn" onclick="enterPin(1)">1</button>
@@ -396,17 +396,10 @@
         const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
         let currentLang = 'km';
         
+        // លេខកូដសម្ងាត់ហាងតែ ១ គត់ (Store PIN) ដែលកំណត់ដោយ Admin
         let storePinCode = '1234'; 
-        let localUserAccounts = [];
-        try {
-            localUserAccounts = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_auth_users_pro`)) || [
-                { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' }
-            ];
-        } catch(e) {
-            localUserAccounts = [{ id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' }];
-        }
 
-        // 🔊 Sound Effect[cite: 3]
+        // 🔊 Sound Effect
         function playClickSound() {
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
@@ -426,7 +419,7 @@
             } catch(e) {}
         }
 
-        // 🚀 3D Tilt Effect[cite: 3]
+        // 🚀 3D Tilt Effect
         const card = document.getElementById('tiltCard');
         if(card) {
             card.addEventListener('mousemove', (e) => {
@@ -446,7 +439,7 @@
             card.addEventListener('mouseenter', () => card.style.transition = 'none');
         }
 
-        // 🔐 PIN Logic[cite: 3]
+        // 🔐 PIN Logic
         let pinCode = '';
         let isProcessing = false;
 
@@ -502,47 +495,27 @@
         }
 
         function verifyPinAndEnter() {
-            // ១. ពិនិត្យមើល Store PIN
+            // ផ្ទៀងផ្ទាត់តែលេខកូដហាង (Store PIN) មួយគត់ដែល Admin បានកំណត់
             if (pinCode.trim() === storePinCode.trim()) {
-                const defaultAdmin = localUserAccounts.find(u => u.role === 'admin') || { username: 'admin', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' };
-                localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_auth_session_user`, JSON.stringify(defaultAdmin));
-                localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_active_user_obj`, JSON.stringify(defaultAdmin));
-
                 const display = document.getElementById('pinDisplay');
                 display.style.color = '#38bdf8';
                 display.style.letterSpacing = '2px';
-                display.innerText = '✅ ស្វាគមន៍';
+                display.innerText = '✅ បើកហាង';
 
+                // មិនបង្កើត ឬប្តូរគណនីជា Admin ឡើយ (រក្សាទុក Session ចាស់ដែលបើកចោលដដែល)
                 setTimeout(() => {
                     window.location.href = `index.html?branch=${encodeURIComponent(SHOP_BRANCH_ID)}`;
                 }, 300);
                 return;
             }
 
-            // ២. ពិនិត្យមើល User PIN (Admin / Staff)[cite: 1, 3]
-            const matchedUser = localUserAccounts.find(u => String(u.pin).trim() === pinCode.trim());
-            if (matchedUser) {
-                localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_auth_session_user`, JSON.stringify(matchedUser));
-                localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_active_user_obj`, JSON.stringify(matchedUser));
-                
-                const display = document.getElementById('pinDisplay');
-                display.style.color = '#10b981';
-                display.style.letterSpacing = '2px';
-                display.innerText = `✅ ${matchedUser.fullName || matchedUser.username}`;
-
-                setTimeout(() => {
-                    window.location.href = `index.html?branch=${encodeURIComponent(SHOP_BRANCH_ID)}`;
-                }, 300);
-                return;
-            }
-
-            // ❌ បើខុស
+            // ❌ បើខុសលេខកូដហាង
             const box = document.getElementById('pinPadBox');
             const display = document.getElementById('pinDisplay');
             box.classList.add('shake');
             display.style.color = '#ef4444';
             display.style.letterSpacing = '2px';
-            display.innerText = '❌ PIN មិនត្រូវ!';
+            display.innerText = '❌ PIN ហាងមិនត្រូវ!';
 
             setTimeout(() => {
                 pinCode = '';
@@ -557,7 +530,7 @@
             window.location.href = `menu.html?branch=${encodeURIComponent(SHOP_BRANCH_ID)}`;
         }
 
-        // 🌐 Network Status[cite: 3]
+        // 🌐 Network Status
         window.addEventListener('online', updateNetworkStatus);
         window.addEventListener('offline', updateNetworkStatus);
         function updateNetworkStatus() {
@@ -565,7 +538,7 @@
             if(netEl) netEl.style.display = navigator.onLine ? 'none' : 'block';
         }
 
-        // 🔄 Sync & Load Shop Profile[cite: 2, 3]
+        // 🔄 Sync & Load Shop Profile
         async function loadShopProfile() {
             document.getElementById('displayBranchTag').innerText = `សាខា៖ ${SHOP_BRANCH_ID}`;
             
@@ -600,11 +573,6 @@
                             localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`, JSON.stringify(data.data_json.sysSettings));
                         }
 
-                        if (data.data_json.userAccounts && Array.isArray(data.data_json.userAccounts)) {
-                            localUserAccounts = data.data_json.userAccounts;
-                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_auth_users_pro`, JSON.stringify(localUserAccounts));
-                        }
-
                         localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_shop_name`, shopName);
                         localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_shop_logo`, shopLogo);
                         applyShopUI(shopName, shopLogo);
@@ -628,7 +596,7 @@
             }
         }
 
-        // 🕒 Status Check[cite: 3]
+        // 🕒 Status Check
         function updateStoreStatus() {
             const hour = new Date().getHours();
             const statusEl = document.getElementById('displayStoreStatus');
@@ -646,7 +614,7 @@
             }
         }
 
-        // 🖼️ 100+ HD Curated Wallpaper Presets
+        // 🖼️ 100+ HD Wallpaper Presets
         const photoIds = [
             '1579546929518-9e396f3cc809', '1534447677768-be436bb09401', '1507525428034-b723cf961d3e',
             '1518709268805-4e9042af9f23', '1550745165-9bc0b252726f', '1519681393784-d120267933ba',
@@ -699,7 +667,7 @@
             reader.readAsDataURL(file);
         }
 
-        // Language Switch[cite: 3]
+        // Language Switch
         function changeLanguage(lang) {
             playClickSound();
             currentLang = lang;

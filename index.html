@@ -88,21 +88,22 @@
                 <button class="sidebar-toggle-btn" onclick="window.toggleDesktopSidebar()">☰</button>
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="font-size: 20px;"></span>
-                    <h2 id="pageTitle" style="font-size: var(--fs-18); color: #fff;">ប្រព័ន្ធលក់ (Point of Sale)</h2>
+                    <h2 id="pageTitle" style="font-size: var(--fs-18); color: #fff;">📊 ផ្ទាំងព័ត៌មានទូទៅ (Dashboard)</h2>
                 </div>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
                 <div style="font-size: var(--fs-13); color: #fff; font-weight: bold; padding: 5px 12px; background: rgba(0,0,0,0.25); border-radius: 20px; display: flex; align-items: center; gap: 6px;" id="currentUserDisplay">
                     <span>👤</span> អ្នកគ្រប់គ្រងប្រព័ន្ធ
                 </div>
                 <div style="font-size: var(--fs-13); color: #fff;" id="currentDate"></div>
+                <div id="globalSyncBadge" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid rgba(255,255,255,0.4);">🟢 ទិន្នន័យទាន់សម័យ</div>
             </div>
         </div>
 
         <div class="content-body" id="mainScroller">
             
-            <div id="tab-dashboard" class="tab-content">
+            <div id="tab-dashboard" class="tab-content active">
                 <div class="dashboard-grid-menu" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <button id="grid-btn-pos" class="btn btn-primary" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos'))"><i style="font-size: 30px; margin-bottom: 5px;">🛒</i>លក់ (POS)</button>
                     <button id="grid-btn-inv" class="btn btn-success" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('inventory', '📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory'))"><i style="font-size: 30px; margin-bottom: 5px;">📦</i>ស្តុកទំនិញ</button>
@@ -178,6 +179,7 @@
                     <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap;">
                         <select id="filterCategory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ប្រភេទ</option></select>
                         <select id="filterStatus" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ស្ថានភាពស្តុក</option><option value="in_stock">✅ នៅមានស្តុក (>0)</option><option value="out_stock">❌ អស់ស្តុក (0)</option></select>
+                        <select id="sortInventory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="newest">ថ្មីបំផុត</option><option value="qty_asc">ស្តុកតិចទៅច្រើន</option><option value="qty_desc">ស្តុកច្រើនទៅតិច</option></select>
                     </div>
 
                     <div style="display: flex; gap: 8px; width: 100%; align-items: center; justify-content: flex-end; flex-wrap: wrap;" id="inventoryActionButtonsGroup">
@@ -192,7 +194,7 @@
                 <div id="productGridContainer"></div>
             </div>
 
-            <div id="tab-pos" class="tab-content active">
+            <div id="tab-pos" class="tab-content">
                 <div class="pos-container">
                     <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%;">
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: nowrap; flex-shrink: 0; align-items: center;">
@@ -466,6 +468,16 @@
                             <span><strong style="color:var(--text-main);">ថ្លៃសេវាដឹកជញ្ជូនទូទៅ (Default Delivery Fee):</strong></span>
                             <input type="number" id="setDeliveryFee" class="form-control" style="width: 80px; padding: 5px; height: 35px; text-align: center;" value="1.5" onchange="window.saveSysSettings()"> $
                         </div>
+
+                        <div style="display:flex; align-items:center; gap:12px; margin-top: 15px; font-size: var(--fs-16);">
+                            <span><strong style="color:var(--text-main);">🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖</strong></span>
+                            <input type="password" id="setStorePin" class="form-control" maxlength="4" placeholder="1234" style="width: 100px; padding: 5px; height: 35px; text-align: center;" onchange="window.saveSysSettings()">
+                        </div>
+
+                        <div style="margin-top: 15px;">
+                            <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖</strong></label>
+                            <textarea id="setTickerText" class="form-control" rows="2" placeholder="សរសេរសេចក្តីជូនដំណឹងអក្សររត់នៅទីនេះ..." onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
+                        </div>
                     </div>
 
                     <div id="adminUserManagementBlock" style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--success);">
@@ -533,6 +545,7 @@
                 </div>
             </div>
 
+            <!-- TAB 9: ABOUT & BACKUP RESTORE -->
             <div id="tab-about" class="tab-content">
                 <div style="display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: auto;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center;">
@@ -557,13 +570,15 @@
                         </div>
                     </div>
 
+                    <!-- 🌟 ផ្នែក Backup & Restore (Fixed Button Handler) -->
                     <div style="background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
                         <h2 style="font-size: var(--fs-18); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">💾 គ្រប់គ្រងទិន្នន័យ (Backup & Restore All)</h2>
                         <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 15px;">ទាញយកទិន្នន័យទាំងអស់ក្នុង App នេះ (ស្តុក, ប្រវត្តិ, វិក្កយបត្រ, អតិថិជន) រក្សាទុក ដើម្បីការពារការបាត់បង់ ឬផ្ទេរទៅឧបករណ៍ផ្សេង។</p>
-                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                            <button class="btn btn-primary" onclick="window.exportData()">💾 Backup ទិន្នន័យទាំងអស់</button>
-                            <button class="btn btn-warning" onclick="document.getElementById('importBackupFile2').click()">📂 Restore បញ្ចូលទិន្នន័យវិញ</button>
-                            <input type="file" id="importBackupFile2" accept=".json" style="display: none;" onchange="window.importData(event)">
+                        
+                        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
+                            <button type="button" class="btn btn-primary" style="padding: 10px 18px; font-weight: bold; border-radius: 8px;" onclick="window.triggerAppBackup()">💾 Backup ទិន្នន័យទាំងអស់</button>
+                            
+                            <button type="button" class="btn btn-warning" style="padding: 10px 18px; font-weight: bold; border-radius: 8px;" onclick="window.triggerAppRestore()">📂 Restore បញ្ចូលទិន្នន័យវិញ</button>
                         </div>
                     </div>
                 </div>
@@ -920,7 +935,7 @@
 
     <div id="printReceiptArea" style="display: none;"></div>
 
-<!-- កូដថ្មីដែលត្រូវដាក់ជំនួស -->
+    <!-- 🌟 JavaScript Modules Sequence[cite: 1] -->
     <script src="config.js"></script>
     <script src="theme.js"></script>
     <script src="auth.js"></script>
@@ -930,7 +945,7 @@
     <script src="customer.js"></script>
     <script src="main.js"></script>
 
-    <!-- កូដសម្រាប់ Filter និង Sort តារាង (ដាក់ក្នុងនេះដើម្បីងាយស្រួល HTML ហៅប្រើ) -->
+    <!-- 🌟 Inline Logic & Direct Backup/Restore Triggers[cite: 1] -->
     <script>
         if (navigator.serviceWorker) {
             navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' });
@@ -939,6 +954,95 @@
         window.toggleSection = function(id) {
             const el = document.getElementById(id);
             if(el) el.style.display = (el.style.display === 'none') ? 'block' : 'none';
+        };
+
+        // 💾 Backup Trigger (Export JSON)
+        window.triggerAppBackup = function() {
+            try {
+                const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                const backupData = {};
+                
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key.includes(branchId) || key.startsWith('ks2_')) {
+                        backupData[key] = localStorage.getItem(key);
+                    }
+                }
+
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                const dateStr = new Date().toISOString().slice(0, 10);
+                downloadAnchor.setAttribute("download", `backup_${branchId}_${dateStr}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+
+                if (typeof window.showToast === 'function') {
+                    window.showToast("✅ Backup ទិន្នន័យបានជោគជ័យ!");
+                } else {
+                    alert("✅ Backup ទិន្នន័យបានជោគជ័យ!");
+                }
+            } catch (e) {
+                alert("❌ មានបញ្ហាក្នុងការ Backup: " + e.message);
+            }
+        };
+
+        // 📂 Restore Trigger (Dynamic Native Input Injection)
+        window.triggerAppRestore = function() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = function(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!confirm("⚠️ តើអ្នកពិតជាចង់ Restore ទិន្នន័យនេះមែនទេ? ទិន្នន័យចាស់ទាំងអស់នឹងត្រូវជំនួសដោយទិន្នន័យពី File នេះ!")) {
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = async function(event) {
+                    try {
+                        const backupData = JSON.parse(event.target.result);
+                        if (typeof backupData !== 'object' || backupData === null) {
+                            throw new Error("ទ្រង់ទ្រាយឯកសារមិនត្រឹមត្រូវ");
+                        }
+
+                        // Write to LocalStorage
+                        Object.keys(backupData).forEach(key => {
+                            localStorage.setItem(key, backupData[key]);
+                        });
+
+                        // Sync to Supabase if Online
+                        const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                        if (window.supabaseClient && navigator.onLine) {
+                            try {
+                                const payload = {};
+                                Object.keys(backupData).forEach(k => {
+                                    try { payload[k] = JSON.parse(backupData[k]); } catch(err) { payload[k] = backupData[k]; }
+                                });
+                                await window.supabaseClient.from('branch_store').upsert({
+                                    branch_id: branchId,
+                                    data_json: payload,
+                                    updated_at: new Date().toISOString()
+                                });
+                            } catch(err) {
+                                console.warn("Supabase Sync Warning:", err);
+                            }
+                        }
+
+                        alert("✅ Restore ទិន្នន័យបានជោគជ័យ! ប្រព័ន្ធនឹងដំណើរការឡើងវិញ។");
+                        window.location.reload();
+                    } catch (err) {
+                        alert("❌ ឯកសារ Backup មិនត្រឹមត្រូវ (Invalid JSON): " + err.message);
+                    }
+                };
+                reader.readAsText(file);
+            };
+
+            input.click();
         };
 
         window.filterTable = function(tableId) {
