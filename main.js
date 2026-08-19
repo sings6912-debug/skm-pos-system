@@ -1,3 +1,5 @@
+// main.js
+
 // ==========================================
 // 1. BIND UTILS & CONFIGS TO WINDOW
 // ==========================================
@@ -9,7 +11,7 @@ window.playOrderSound = window.playOrderSound;
 window.ksMsg = window.ksMsg;
 
 // ==========================================
-// 2. LIVE SYNC STATUS INDICATOR (ផ្លាកសញ្ញា SYNC)
+// 2. LIVE SYNC STATUS INDICATOR (ផ្លាកសញ្ញា SYNC មើលឃើញច្បាស់ ១០០%)
 // ==========================================
 window.setSyncStatus = function(status, text) {
     let badge = document.getElementById('globalSyncBadge');
@@ -18,26 +20,26 @@ window.setSyncStatus = function(status, text) {
         if (header) {
             badge = document.createElement('div');
             badge.id = 'globalSyncBadge';
-            badge.style.cssText = 'display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 10px; transition: all 0.3s ease;';
+            badge.style.cssText = 'display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; margin-left: 10px; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.15); backdrop-filter: blur(4px);';
             header.appendChild(badge);
         }
     }
     if (!badge) return;
 
     if (status === 'syncing') {
-        badge.style.background = 'rgba(245, 158, 11, 0.15)';
-        badge.style.color = '#f59e0b';
-        badge.style.border = '1px solid #f59e0b';
+        badge.style.background = 'rgba(0, 0, 0, 0.35)';
+        badge.style.color = '#fde047';
+        badge.style.border = '1px solid #eab308';
         badge.innerHTML = '🟡 កំពុង Sync...';
     } else if (status === 'synced') {
-        badge.style.background = 'rgba(16, 185, 129, 0.15)';
-        badge.style.color = '#10b981';
-        badge.style.border = '1px solid #10b981';
-        badge.innerHTML = `🟢 ${text || 'Synced រួចរាល់'}`;
+        badge.style.background = 'rgba(0, 0, 0, 0.3)';
+        badge.style.color = '#ffffff';
+        badge.style.border = '1px solid rgba(255, 255, 255, 0.4)';
+        badge.innerHTML = `🟢 ${text || 'ទិន្នន័យទាន់សម័យ'}`;
     } else if (status === 'error') {
-        badge.style.background = 'rgba(239, 68, 68, 0.15)';
-        badge.style.color = '#ef4444';
-        badge.style.border = '1px solid #ef4444';
+        badge.style.background = 'rgba(220, 38, 38, 0.85)';
+        badge.style.color = '#ffffff';
+        badge.style.border = '1px solid #f87171';
         badge.innerHTML = `🔴 ${text || 'Sync បរាជ័យ'}`;
     }
 };
@@ -52,9 +54,19 @@ window.saveData = async function(users) {
         window.userAccounts = users;
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(users));
     }
+
+    const cleanInventory = (window.inventory || []).filter(item => item !== null && typeof item === 'object');
     
+    // ១. រក្សាទុកក្នុង LocalStorage ភ្លាមៗ (ធានាថា Refresh ក៏មិនបាត់)
+    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(cleanInventory));
+    localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog || []));
+    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices || []));
+    localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses || []));
+    localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers || []));
+    localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings || {}));
+
     const fullPayload = {
-        inventory: window.inventory || [],
+        inventory: cleanInventory,
         historyLog: window.historyLog || [],
         invoices: window.invoices || [],
         expenses: window.expenses || [],
@@ -69,6 +81,7 @@ window.saveData = async function(users) {
         invoiceCounter: JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) || 1
     };
 
+    // ២. ផ្ញើទៅកាន់ Supabase Cloud
     try {
         const { error } = await window.supabaseClient
             .from('branch_store')
@@ -85,12 +98,12 @@ window.saveData = async function(users) {
         window.setSyncStatus('synced', `Synced: ${timeStr}`);
     } catch (err) {
         console.error("❌ Supabase Sync Error:", err);
-        window.setSyncStatus('error', 'Sync បរាជ័យ');
+        window.setSyncStatus('error', 'Sync បរាជ័យ (រក្សាទុកក្នុងម៉ាស៊ីនរួចរាល់)');
     }
 };
 
 // ==========================================
-// 4. BIND AUTH & USER MANAGEMENT (ដោះស្រាយការប្ដូរ ROLE ភ្លាមៗ)
+// 4. BIND AUTH & USER MANAGEMENT
 // ==========================================
 const _origLogin = window.handleLogin;
 const _origLogout = window.handleLogout;
@@ -104,7 +117,6 @@ window.handleLogin = () => {
         _origLogin(window.checkAuthentication, window.switchTab);
     }
     
-    // បង្ខំឱ្យពិនិត្យ Role និងចាក់សិទ្ធិ Menu ភ្លាមៗ
     const applyAuthImmediate = () => {
         if (typeof window.checkAuthentication === 'function') {
             window.checkAuthentication(window.applyPermissions);
@@ -192,6 +204,7 @@ window.saveProduct = window.saveProduct;
 window.editProduct = window.editProduct;
 window.deleteProduct = window.deleteProduct;
 window.setInventoryView = window.setInventoryView;
+window.exportCSV = window.exportCSV;
 
 // ==========================================
 // 7. BIND POS TO WINDOW
@@ -211,6 +224,7 @@ window.processCheckoutPaid = window.processCheckoutPaid;
 window.openPreorderModal = window.openPreorderModal;
 window.calculatePreorderRemaining = window.calculatePreorderRemaining;
 window.processPreorder = window.processPreorder;
+window.handleBarcodeScan = window.handleBarcodeScan;
 
 // ==========================================
 // 8. BIND FINANCE TO WINDOW
@@ -262,14 +276,18 @@ window.switchTab = function(tabId, title, elem) {
     document.getElementById('pageTitle').innerText = title;
     
     document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); 
-    document.getElementById('tab-' + tabId).classList.add('active');
+    if(document.getElementById('tab-' + tabId)) {
+        document.getElementById('tab-' + tabId).classList.add('active');
+    }
     
     const header = document.getElementById('topHeaderBar');
     if(header) header.classList.remove('hidden-header');
 
     if(window.innerWidth <= 768) { 
-        document.getElementById('appSidebar').classList.remove('active-mobile'); 
-        document.querySelector('.sidebar-overlay').classList.remove('active'); 
+        const sidebar = document.getElementById('appSidebar');
+        if(sidebar) sidebar.classList.remove('active-mobile'); 
+        const overlay = document.querySelector('.sidebar-overlay');
+        if(overlay) overlay.classList.remove('active'); 
     } 
     
     if (tabId === 'about') {
@@ -279,9 +297,7 @@ window.switchTab = function(tabId, title, elem) {
     window.renderAll();
 };
 
-// អនុវត្តសិទ្ធិ Menu ឱ្យត្រឹមត្រូវ ១០០% ដោយគ្មានភាពយឺតយ៉ាវ
 window.applyPermissions = function() {
-    // ១. ទាញយក Role ចុងក្រោយចេញពី LocalStorage ដោយផ្ទាល់
     try {
         const rawSession = localStorage.getItem(window.getBranchKey('auth_session_user')) || localStorage.getItem('auth_session_user');
         if (rawSession) {
@@ -297,17 +313,17 @@ window.applyPermissions = function() {
     const isAdmin = (window.currentRole === 'admin');
     const isSales = (window.currentRole === 'sales');
     const isWarehouse = (window.currentRole === 'warehouse');
+    const isGuest = (window.currentRole === 'guest');
 
-    // ២. កំណត់សិទ្ធិបើក/បិទ Menu
-    let sDash = true;
-    let sInv = isAdmin || isWarehouse;
-    let sPOS = isAdmin || isSales;
-    let sCust = isAdmin || (isSales && (window.sysSettings?.cust !== false));
-    let sUnpaid = isAdmin || (isSales && (window.sysSettings?.unpaid !== false));
-    let sExp = isAdmin;
-    let sHist = isAdmin;
-    let sSet = isAdmin;
-    let sAbout = isAdmin;
+    let sDash = !isGuest && true;
+    let sInv = !isGuest && (isAdmin || isWarehouse);
+    let sPOS = !isGuest && (isAdmin || isSales);
+    let sCust = !isGuest && (isAdmin || (isSales && (window.sysSettings?.cust !== false)));
+    let sUnpaid = !isGuest && (isAdmin || (isSales && (window.sysSettings?.unpaid !== false)));
+    let sExp = !isGuest && isAdmin;
+    let sHist = !isGuest && isAdmin;
+    let sSet = !isGuest && isAdmin;
+    let sAbout = !isGuest && isAdmin;
 
     const setFlex = (id, show) => {
         const el = document.getElementById(id);
@@ -318,7 +334,6 @@ window.applyPermissions = function() {
         if (el) el.style.setProperty('display', show ? 'block' : 'none', 'important');
     };
 
-    // បើក/បិទ Menu លើ Sidebar
     setFlex('nav-dashboard', sDash);
     setFlex('nav-inventory', sInv);
     setFlex('nav-pos', sPOS);
@@ -329,7 +344,6 @@ window.applyPermissions = function() {
     setFlex('nav-settings', sSet);
     setFlex('nav-about', sAbout);
 
-    // បើក/បិទ ប៊ូតុងលើផ្ទាំង Dashboard
     setFlex('grid-btn-pos', sPOS);
     setFlex('grid-btn-inv', sInv);
     setFlex('grid-btn-unpaid', sUnpaid);
@@ -337,7 +351,6 @@ window.applyPermissions = function() {
     setFlex('grid-btn-cust', sCust);
     setFlex('grid-btn-hist', sHist);
 
-    // សិទ្ធិផ្ដាច់មុខរបស់ Admin
     const editIcon = document.getElementById('editShopIcon');
     if (editIcon) editIcon.style.display = isAdmin ? 'inline' : 'none';
 
@@ -349,7 +362,6 @@ window.applyPermissions = function() {
     setFlex('inventoryExcelAction', isAdmin);
     setBlock('adminUserManagementBlock', isAdmin);
 
-    // ការកំណត់ POS
     setFlex('posDiscountContainer', window.sysSettings?.discount !== false);
     if (document.getElementById('posTaxContainer')) {
         const showTax = window.sysSettings?.tax === true;
@@ -366,27 +378,28 @@ window.applyPermissions = function() {
     setBlock('pExpiryContainer', window.sysSettings?.expiry !== false);
 
     if (isAdmin) {
-        if (window.renderUsersList) window.renderUsersList();
-        if (window.renderUnpaid) window.renderUnpaid();
-        if (window.renderExpenses) window.renderExpenses();
+        if (typeof window.renderUsersList === 'function') window.renderUsersList();
+        if (typeof window.renderUnpaid === 'function') window.renderUnpaid();
+        if (typeof window.renderExpenses === 'function') window.renderExpenses();
     }
 };
 
 window.loadSettingsToUI = function() { 
-    document.getElementById('setCust').checked = window.sysSettings.cust; 
-    document.getElementById('setUnpaid').checked = window.sysSettings.unpaid; 
-    document.getElementById('setLogs').checked = window.sysSettings.logs; 
-    document.getElementById('setCost').checked = window.sysSettings.cost; 
-    document.getElementById('setDiscount').checked = window.sysSettings.discount; 
+    if(!window.sysSettings) return;
+    if(document.getElementById('setCust')) document.getElementById('setCust').checked = window.sysSettings.cust; 
+    if(document.getElementById('setUnpaid')) document.getElementById('setUnpaid').checked = window.sysSettings.unpaid; 
+    if(document.getElementById('setLogs')) document.getElementById('setLogs').checked = window.sysSettings.logs; 
+    if(document.getElementById('setCost')) document.getElementById('setCost').checked = window.sysSettings.cost; 
+    if(document.getElementById('setDiscount')) document.getElementById('setDiscount').checked = window.sysSettings.discount; 
     if(document.getElementById('setShowSeller')) document.getElementById('setShowSeller').checked = window.sysSettings.showSeller !== false; 
     if(document.getElementById('setTax')) document.getElementById('setTax').checked = window.sysSettings.tax; 
     if(document.getElementById('setTaxRate')) document.getElementById('setTaxRate').value = window.sysSettings.taxRate ? window.sysSettings.taxRate : 10; 
     
-    document.getElementById('setCondition').checked = window.sysSettings.condition || false;
-    document.getElementById('conditionListContainer').style.display = window.sysSettings.condition ? 'block' : 'none';
-    document.getElementById('setConditionList').value = window.sysSettings.conditionList || 'MISB, Loose, New, Used';
-    document.getElementById('setPreorder').checked = window.sysSettings.preorder || false;
-    document.getElementById('setDeliveryFee').value = window.sysSettings.deliveryFee !== undefined ? window.sysSettings.deliveryFee : 1.5;
+    if(document.getElementById('setCondition')) document.getElementById('setCondition').checked = window.sysSettings.condition || false;
+    if(document.getElementById('conditionListContainer')) document.getElementById('conditionListContainer').style.display = window.sysSettings.condition ? 'block' : 'none';
+    if(document.getElementById('setConditionList')) document.getElementById('setConditionList').value = window.sysSettings.conditionList || 'MISB, Loose, New, Used';
+    if(document.getElementById('setPreorder')) document.getElementById('setPreorder').checked = window.sysSettings.preorder || false;
+    if(document.getElementById('setDeliveryFee')) document.getElementById('setDeliveryFee').value = window.sysSettings.deliveryFee !== undefined ? window.sysSettings.deliveryFee : 1.5;
 
     if(document.getElementById('setExpiry')) document.getElementById('setExpiry').checked = window.sysSettings.expiry !== false;
 };
@@ -394,42 +407,47 @@ window.loadSettingsToUI = function() {
 window.saveSysSettings = async function() { 
     if(window.currentRole !== 'admin') return window.ksMsg("គ្មានសិទ្ធិកែប្រែការកំណត់ទេ!", "សិទ្ធិមិនគ្រប់គ្រាន់"); 
     
-    window.sysSettings.cust = document.getElementById('setCust').checked; 
-    window.sysSettings.unpaid = document.getElementById('setUnpaid').checked; 
-    window.sysSettings.logs = document.getElementById('setLogs').checked; 
-    window.sysSettings.cost = document.getElementById('setCost').checked; 
-    window.sysSettings.discount = document.getElementById('setDiscount').checked; 
+    if(!window.sysSettings) window.sysSettings = {};
+    if(document.getElementById('setCust')) window.sysSettings.cust = document.getElementById('setCust').checked; 
+    if(document.getElementById('setUnpaid')) window.sysSettings.unpaid = document.getElementById('setUnpaid').checked; 
+    if(document.getElementById('setLogs')) window.sysSettings.logs = document.getElementById('setLogs').checked; 
+    if(document.getElementById('setCost')) window.sysSettings.cost = document.getElementById('setCost').checked; 
+    if(document.getElementById('setDiscount')) window.sysSettings.discount = document.getElementById('setDiscount').checked; 
     if(document.getElementById('setShowSeller')) window.sysSettings.showSeller = document.getElementById('setShowSeller').checked; 
     if(document.getElementById('setTax')) window.sysSettings.tax = document.getElementById('setTax').checked; 
     if(document.getElementById('setTaxRate')) window.sysSettings.taxRate = parseFloat(document.getElementById('setTaxRate').value) || 0; 
     
-    window.sysSettings.condition = document.getElementById('setCondition').checked;
-    window.sysSettings.conditionList = document.getElementById('setConditionList').value || 'MISB, Loose, New, Used';
-    window.sysSettings.preorder = document.getElementById('setPreorder').checked;
-    window.sysSettings.deliveryFee = parseFloat(document.getElementById('setDeliveryFee').value) || 0;
+    if(document.getElementById('setCondition')) window.sysSettings.condition = document.getElementById('setCondition').checked;
+    if(document.getElementById('setConditionList')) window.sysSettings.conditionList = document.getElementById('setConditionList').value || 'MISB, Loose, New, Used';
+    if(document.getElementById('setPreorder')) window.sysSettings.preorder = document.getElementById('setPreorder').checked;
+    if(document.getElementById('setDeliveryFee')) window.sysSettings.deliveryFee = parseFloat(document.getElementById('setDeliveryFee').value) || 0;
 
     if(document.getElementById('setExpiry')) window.sysSettings.expiry = document.getElementById('setExpiry').checked;
 
-    document.getElementById('conditionListContainer').style.display = window.sysSettings.condition ? 'block' : 'none';
+    if(document.getElementById('conditionListContainer')) {
+        document.getElementById('conditionListContainer').style.display = window.sysSettings.condition ? 'block' : 'none';
+    }
     
-    if(window.updateCategories) window.updateCategories(); 
-    window.applyPermissions(); 
-    await window.saveData(window.userAccounts); 
-    window.ksMsg("ការកំណត់ត្រូវបានរក្សាទុក!", "ជោគជ័យ"); 
+    if(typeof window.updateCategories === 'function') window.updateCategories(); 
+    if(typeof window.applyPermissions === 'function') window.applyPermissions(); 
+    if(typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+    if(typeof window.ksMsg === 'function') window.ksMsg("ការកំណត់ត្រូវបានរក្សាទុក!", "ជោគជ័យ"); 
 };
 
 window.toggleDesktopSidebar = function() { 
     const sidebar = document.getElementById('appSidebar'); 
+    if(!sidebar) return;
     if(window.innerWidth > 768) { 
         sidebar.classList.toggle('collapsed'); 
     } else { 
         sidebar.classList.toggle('active-mobile'); 
-        document.querySelector('.sidebar-overlay').classList.toggle('active'); 
+        const overlay = document.querySelector('.sidebar-overlay');
+        if(overlay) overlay.classList.toggle('active'); 
     } 
 };
 
 // ==========================================
-// 11. DATABASE LICENSE SYSTEM (SMART CLOUD CHECK & AUTO-UNLOCK)
+// 11. DATABASE LICENSE SYSTEM
 // ==========================================
 window.checkLicense = async function() { 
     const lockScreen = document.getElementById('licenseLockScreen'); 
@@ -453,7 +471,7 @@ window.checkLicense = async function() {
         if (expiry <= Date.now()) { 
             if (lockScreen) lockScreen.style.display = 'flex'; 
             if (sidebar) sidebar.style.pointerEvents = 'none'; 
-            window.ksMsg('❌ សិទ្ធិប្រើប្រាស់ប្រព័ន្ធ (License) របស់សាខានេះបានផុតកំណត់ហើយ!', 'ផុតកំណត់'); 
+            if(typeof window.ksMsg === 'function') window.ksMsg('❌ សិទ្ធិប្រើប្រាស់ប្រព័ន្ធ (License) របស់សាខានេះបានផុតកំណត់ហើយ!', 'ផុតកំណត់'); 
             return false; 
         } 
 
@@ -543,9 +561,6 @@ window.verifyAndSaveLicenseFromAbout = async function() {
     } 
 };
 
-// ==========================================
-// រចនាស៊ុម License Status ឱ្យស្អាត និងមើលឃើញច្បាស់គ្រប់ Theme (Light & Dark)
-// ==========================================
 window.displayLicenseInfo = async function() { 
     const aboutTab = document.getElementById('tab-about');
     if (!aboutTab) return;
@@ -711,36 +726,40 @@ window.saveShopName = async function() {
             newChatId
         );
         
-        document.getElementById('displayShopName').innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
-        if(window.shopLogo) { 
-            document.getElementById('sidebarLogo').src = window.shopLogo; 
-            document.getElementById('sidebarLogo').style.display = 'block'; 
+        const dispName = document.getElementById('displayShopName');
+        if(dispName) dispName.innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
+        const sideLogo = document.getElementById('sidebarLogo');
+        if(window.shopLogo && sideLogo) { 
+            sideLogo.src = window.shopLogo; 
+            sideLogo.style.display = 'block'; 
         } 
-        await window.saveData(window.userAccounts); 
+        if(typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
         window.closeShopNameModal(); 
-        window.ksMsg("ព័ត៌មានហាងត្រូវបានរក្សាទុកដោយជោគជ័យ! សូម Refresh ទំព័រ (F5) ដើម្បីឱ្យវាដំណើរការពេញលេញ។", "ជោគជ័យ"); 
+        if(typeof window.ksMsg === 'function') window.ksMsg("ព័ត៌មានហាងត្រូវបានរក្សាទុកដោយជោគជ័យ! សូម Refresh ទំព័រ (F5) ដើម្បីឱ្យវាដំណើរការពេញលេញ។", "ជោគជ័យ"); 
     } else {
-        window.ksMsg("សូមបញ្ចូលឈ្មោះហាងសិន!"); 
+        if(typeof window.ksMsg === 'function') window.ksMsg("សូមបញ្ចូលឈ្មោះហាងសិន!"); 
     }
 };
 
 window.renderAll = function() { 
-    window.renderDashboard(); 
-    window.renderInventory(); 
-    window.renderPOSProducts(); 
-    window.renderUnpaid(); 
-    window.renderExpenses(); 
-    window.renderHistory(); 
-    window.renderCustomers(); 
-    window.updateCustomerDatalist(); 
-    window.populateEditInvoiceSelect(); 
-    window.displayLicenseInfo(); 
+    if(typeof window.renderDashboard === 'function') window.renderDashboard(); 
+    if(typeof window.renderInventory === 'function') window.renderInventory(); 
+    if(typeof window.renderPOSProducts === 'function') window.renderPOSProducts(); 
+    if(typeof window.renderUnpaid === 'function') window.renderUnpaid(); 
+    if(typeof window.renderExpenses === 'function') window.renderExpenses(); 
+    if(typeof window.renderHistory === 'function') window.renderHistory(); 
+    if(typeof window.renderCustomers === 'function') window.renderCustomers(); 
+    if(typeof window.updateCustomerDatalist === 'function') window.updateCustomerDatalist(); 
+    if(typeof window.populateEditInvoiceSelect === 'function') window.populateEditInvoiceSelect(); 
+    if(typeof window.displayLicenseInfo === 'function') window.displayLicenseInfo(); 
 };
 
 window.resetDashboardDate = function() { 
-    document.getElementById('dashDateFrom').value = ''; 
-    document.getElementById('dashDateTo').value = ''; 
-    window.renderDashboard(); 
+    const dateFrom = document.getElementById('dashDateFrom');
+    const dateTo = document.getElementById('dashDateTo');
+    if(dateFrom) dateFrom.value = ''; 
+    if(dateTo) dateTo.value = ''; 
+    if(typeof window.renderDashboard === 'function') window.renderDashboard(); 
 };
 
 // ==========================================
@@ -748,8 +767,9 @@ window.resetDashboardDate = function() {
 // ==========================================
 window.renderDashboard = function() {
     try {
-        let tItems = window.inventory.length; let tQty = 0, estRev = 0, lowItems = []; 
-        window.inventory.forEach(p => { 
+        let tItems = (window.inventory || []).length; 
+        let tQty = 0, estRev = 0, lowItems = []; 
+        (window.inventory || []).forEach(p => { 
             if(!p) return; 
             let q = parseInt(p.qty) || 0; tQty += q; let priceVal = parseFloat(p.price) || 0; estRev += (priceVal * q); 
             if(q <= 5) lowItems.push(p); 
@@ -760,9 +780,10 @@ window.renderDashboard = function() {
         const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity;
         let totalSalesRevenue = 0, totalUnpaid = 0, totalExpenses = 0, totalCOGS = 0, salesMap = {};
         
-        window.invoices.forEach(inv => { 
-            let invTime = inv.timestamp || parseInt(String(inv.id).split('_')[1]) || 0; 
-            if (invTime >= fromTime && invTime <= toTime) { 
+        (window.invoices || []).forEach(inv => { 
+            if(!inv) return;
+            let invTime = inv.timestamp || (inv.date ? new Date(inv.date).getTime() : 0) || 0; 
+            if (fromTime === 0 && toTime === Infinity || (invTime >= fromTime && invTime <= toTime)) { 
                 if(inv.status === 'paid') totalSalesRevenue += (parseFloat(inv.totalAmount) || 0); 
                 if(inv.status === 'unpaid' || inv.status === 'preorder') { 
                     let invPaid = parseFloat(inv.paidUsd) || 0; 
@@ -778,7 +799,13 @@ window.renderDashboard = function() {
                 }); 
             } 
         });
-        window.expenses.forEach(exp => { let expTime = exp.timestamp || 0; if(expTime >= fromTime && expTime <= toTime) totalExpenses += (parseFloat(exp.amount) || 0); });
+        (window.expenses || []).forEach(exp => { 
+            if(!exp) return;
+            let expTime = exp.timestamp || 0; 
+            if(fromTime === 0 && toTime === Infinity || (expTime >= fromTime && expTime <= toTime)) {
+                totalExpenses += (parseFloat(exp.amount) || 0); 
+            }
+        });
 
         let netProfit = totalSalesRevenue - totalCOGS - totalExpenses;
         
@@ -792,15 +819,15 @@ window.renderDashboard = function() {
         if(netProfitEl) { netProfitEl.innerText = window.fMoney(netProfit); netProfitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)'; }
         
         const tbody = document.getElementById('lowStockTable'); 
-        if(tbody) { tbody.innerHTML = lowItems.length === 0 ? '<tr><td colspan="4" style="text-align:center;">មិនមានទំនិញជិតអស់ទេ</td></tr>' : lowItems.map(p => { let catStr = p.category ? p.category : '-'; let nameStr = p.name ? String(p.name).replace(/'/g, "\\'") : ''; return `<tr><td>${p.name}</td><td>${catStr}</td><td style="color:${p.qty<=0?'var(--danger)':'var(--warning)'}; font-weight:bold;">${p.qty}</td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:var(--fs-12);" onclick="window.switchTab('inventory','📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory')); document.getElementById('searchInput').value='${nameStr}'; window.renderInventory();">មើល</button></td></tr>`; }).join(''); }
+        if(tbody) { tbody.innerHTML = lowItems.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:15px;">មិនមានទំនិញជិតអស់ទេ</td></tr>' : lowItems.map(p => { let catStr = p.category ? p.category : '-'; let nameStr = p.name ? String(p.name).replace(/'/g, "\\'") : ''; return `<tr><td>${p.name}</td><td>${catStr}</td><td style="color:${p.qty<=0?'var(--danger)':'var(--warning)'}; font-weight:bold;">${p.qty}</td><td><button class="btn btn-outline" style="padding:4px 8px; font-size:var(--fs-12);" onclick="window.switchTab('inventory','📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory')); document.getElementById('searchInput').value='${nameStr}'; window.renderInventory();">មើល</button></td></tr>`; }).join(''); }
         
         const expirySection = document.getElementById('expiryAlertSection');
         const expiryTable = document.getElementById('expiryAlertTable');
-        if (window.sysSettings.expiry && expirySection && expiryTable) {
+        if (window.sysSettings && window.sysSettings.expiry && expirySection && expiryTable) {
             let expiryHTML = '';
             const today = new Date();
             today.setHours(0,0,0,0);
-            window.inventory.forEach(p => {
+            (window.inventory || []).forEach(p => {
                 if(!p) return;
                 if (p.expiry) {
                     const expDate = new Date(p.expiry);
@@ -825,7 +852,7 @@ window.renderDashboard = function() {
                     }
                 }
             });
-            expiryTable.innerHTML = expiryHTML || '<tr><td colspan="5" style="text-align:center;">✅ គ្មានថ្នាំពេទ្យណាជិតផុតកំណត់ ឬហួសដឺឡេទេ។</td></tr>';
+            expiryTable.innerHTML = expiryHTML || '<tr><td colspan="5" style="text-align:center; padding:15px;">✅ គ្មានថ្នាំពេទ្យណាជិតផុតកំណត់ ឬហួសដឺឡេទេ។</td></tr>';
             expirySection.style.display = 'block';
         } else if (expirySection) {
             expirySection.style.display = 'none';
@@ -833,7 +860,7 @@ window.renderDashboard = function() {
 
         let topSellers = Object.values(salesMap).sort((a, b) => b.qty - a.qty).slice(0, 5); 
         const topBody = document.getElementById('topSellingTable');
-        if (topBody) { topBody.innerHTML = topSellers.length === 0 ? '<tr><td colspan="4" style="text-align:center;">មិនទាន់មានទិន្នន័យលក់ទេ</td></tr>' : topSellers.map((item, index) => `<tr><td style="font-weight:bold; color:var(--primary);">${index === 0 ? '🥇 លេខ ១' : index === 1 ? '🥈 លេខ ២' : index === 2 ? '🥉 លេខ ៣' : 'លេខ ' + (index + 1)}</td><td>${item.name}</td><td style="font-weight:bold;">${item.qty}</td><td style="color:var(--success); font-weight:bold;">${window.fMoney(item.revenue)}</td></tr>`).join(''); }
+        if (topBody) { topBody.innerHTML = topSellers.length === 0 ? '<tr><td colspan="4" style="text-align:center; padding:15px;">មិនទាន់មានទិន្នន័យលក់ទេ</td></tr>' : topSellers.map((item, index) => `<tr><td style="font-weight:bold; color:var(--primary);">${index === 0 ? '🥇 លេខ ១' : index === 1 ? '🥈 លេខ ២' : index === 2 ? '🥉 លេខ ៣' : 'លេខ ' + (index + 1)}</td><td>${item.name}</td><td style="font-weight:bold;">${item.qty}</td><td style="color:var(--success); font-weight:bold;">${window.fMoney(item.revenue)}</td></tr>`).join(''); }
     } catch(e) { console.error("Dashboard Error:", e); }
 };
 
@@ -845,24 +872,24 @@ window.renderHistory = function() {
     const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity; 
     let fHtml = '';
     
-    window.historyLog.filter(h => (String(h.itemName).toLowerCase().includes(searchVal) || (h.note && String(h.note).toLowerCase().includes(searchVal))) && (h.id >= fromTime && h.id <= toTime)).forEach(h => { 
+    (window.historyLog || []).filter(h => h && (String(h.itemName).toLowerCase().includes(searchVal) || (h.note && String(h.note).toLowerCase().includes(searchVal))) && (fromTime === 0 && toTime === Infinity || (h.id >= fromTime && h.id <= toTime))).forEach(h => { 
         let tName = h.type === 'sale' ? 'លក់ចេញ' : (h.type === 'add' ? 'នាំចូលថ្មី/បន្ថែម' : 'កែប្រែទិន្នន័យ'); 
         let bClass = h.type === 'sale' ? 'badge-sale' : (h.type === 'add' ? 'badge-add' : 'badge-update'); 
         let catStr = '-', unitStr = ''; 
-        const pItem = window.inventory.find(i => i.name === h.itemName); 
+        const pItem = (window.inventory || []).find(i => i && i.name === h.itemName); 
         if(pItem) { catStr = pItem.category||'-'; unitStr = pItem.unit ? ' '+pItem.unit : ''; }
         
         let qtyDisplay = h.qty === 0 ? '0' : `${h.qty > 0 ? '+' : (h.type === 'sale'?'-':'')}${Math.abs(h.qty)}${unitStr}`; 
         fHtml += `<tr><td data-sort="${h.id}" style="font-size:var(--fs-12); color:var(--text-muted);">${h.date}</td><td data-sort="${tName}"><span class="badge ${bClass}">${tName}</span></td><td data-sort="${h.itemName}" style="font-weight:bold; color:var(--text-main);">${h.itemName}</td><td data-sort="${catStr}" style="font-size:var(--fs-12); color:var(--text-muted);">${catStr}</td><td data-sort="${h.qty}" style="font-weight:bold; color:${h.type === 'sale' ? 'var(--warning)' : (h.qty > 0 ? 'var(--success)' : 'var(--text-main)')};">${qtyDisplay}</td><td data-sort="${h.note||''}" style="font-size:var(--fs-12);">${h.note||''}</td></tr>`; 
     });
     
-    document.getElementById('historyTable').innerHTML = fHtml || '<tr><td colspan="6" style="text-align:center;">មិនមានប្រវត្តិទិន្នន័យតាមការស្វែងរកទេ</td></tr>'; 
-    if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainHistoryTable'), 50);
+    const hTable = document.getElementById('historyTable');
+    if(hTable) hTable.innerHTML = fHtml || '<tr><td colspan="6" style="text-align:center; padding:20px;">មិនមានប្រវត្តិទិន្នន័យតាមការស្វែងរកទេ</td></tr>'; 
 };
 
 window.clearHistory = function() { 
     window.ksMsg('តើអ្នកពិតជាចង់លុបប្រវត្តិប្រតិបត្តិការទាំងអស់មែនទេ?', 'បញ្ជាក់ការលុប', true, async () => { 
-        window.historyLog.length = 0; 
+        window.historyLog = []; 
         await window.saveData(window.userAccounts); 
         window.renderHistory();
     }); 
@@ -883,7 +910,7 @@ window.importCSV = function(e) {
                 const name = row[1].replace(/(^"|"$)/g, '').trim(); 
                 if(!name) continue; 
                 
-                const existing = window.inventory.find(p => p.id === id || p.name === name);
+                const existing = (window.inventory || []).find(p => p && (p.id === id || p.name === name));
                 
                 let conditionVal = '';
                 let expiryVal = '';
@@ -907,7 +934,7 @@ window.importCSV = function(e) {
                     riel: parseFloat(row[5])||0, 
                     unit: row[6]?row[6].replace(/(^"|"$)/g, '').trim():'', 
                     qty: parseInt(row[7])||0, 
-                    condition: conditionVal,
+                    condition: conditionVal, 
                     expiry: expiryVal,
                     desc: descVal
                 };
@@ -932,16 +959,16 @@ window.importCSV = function(e) {
 
 window.exportData = function() { 
     const dataToBackup = { 
-        inventory: window.inventory, 
-        historyLog: window.historyLog, 
-        invoices: window.invoices, 
-        expenses: window.expenses, 
+        inventory: window.inventory || [], 
+        historyLog: window.historyLog || [], 
+        invoices: window.invoices || [], 
+        expenses: window.expenses || [], 
         shopName: window.shopName, 
         shopLogo: window.shopLogo, 
         shopQR: window.shopQR, 
         shopPhone: window.shopPhone, 
         shopAddress: window.shopAddress, 
-        customers: window.customers, 
+        customers: window.customers || [], 
         sysSettings: window.sysSettings, 
         userAccounts: window.userAccounts, 
         invoiceCounter: JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) 
@@ -963,13 +990,13 @@ window.importData = function(e) {
                 window.historyLog.splice(0, window.historyLog.length, ...(data.historyLog||[])); 
                 window.invoices.splice(0, window.invoices.length, ...(data.invoices||[])); 
                 window.customers.splice(0, window.customers.length, ...(data.customers||[])); 
-                window.expenses.splice(0, window.expenses.length, ...(data.expenses||[]));
+                window.expenses.splice(0, window.expenses.length, ...(data.expenses||[])); 
                 
                 if(data.shopName) globalThis.shopName = data.shopName; 
                 if(data.shopLogo) globalThis.shopLogo = data.shopLogo; 
                 if(data.shopQR) globalThis.shopQR = data.shopQR; 
                 if(data.shopPhone) globalThis.shopPhone = data.shopPhone; 
-                if(data.shopAddress) globalThis.shopAddress = data.shopAddress;
+                if(data.shopAddress) globalThis.shopAddress = data.shopAddress; 
                 
                 if(data.sysSettings) Object.assign(window.sysSettings, data.sysSettings); 
                 if(data.userAccounts) window.userAccounts.splice(0, window.userAccounts.length, ...data.userAccounts); 
@@ -982,20 +1009,25 @@ window.importData = function(e) {
             await window.saveData(window.userAccounts); 
             localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
             
-            document.getElementById('displayShopName').innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
+            const dShopName = document.getElementById('displayShopName');
+            if(dShopName) dShopName.innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
             if(window.shopLogo) { 
-                document.getElementById('sidebarLogo').src = window.shopLogo; 
-                document.getElementById('sidebarLogo').style.display = 'block'; 
-            }
+                const sLogo = document.getElementById('sidebarLogo');
+                if(sLogo) {
+                    sLogo.src = window.shopLogo; 
+                    sLogo.style.display = 'block'; 
+                }
+            } 
             window.loadSettingsToUI(); 
             window.applyPermissions(); 
+            window.renderAll();
             window.ksMsg('ទិន្នន័យទាំងអស់ត្រូវបាន Restore ជោគជ័យ!', 'ជោគជ័យ');
         } catch(err) { 
             window.ksMsg('ឯកសារមិនត្រឹមត្រូវតាមទម្រង់ទេ!', 'បរាជ័យ'); 
         } 
-        e.target.value = '';
+        e.target.value = ''; 
     }; 
-    r.readAsText(file);
+    r.readAsText(file); 
 };
 
 window.toggleLowStockSection = function() {
@@ -1015,42 +1047,40 @@ window.onload = async () => {
     window.loadThemeSettings(); 
     window.checkAuthentication(window.applyPermissions); 
     
-    // ១. ផ្ទៀងផ្ទាត់ License ជាមួយ Supabase (Smart Cloud Check)
-    const isLicenseValid = await window.checkLicense();
-    if (!isLicenseValid) return; 
-
-    // ២. ទាញទិន្នន័យពី Supabase
-    await window.loadDataFromSupabase(window.userAccounts);
-    window.setSyncStatus('synced', 'ទិន្នន័យទាន់សម័យ');
-
-    setInterval(() => {
-        const dateEl = document.getElementById('currentDate');
-        if(dateEl) dateEl.innerText = window.fDate();
-    }, 1000);
-
-    try { 
-        window.currentInventoryView = localStorage.getItem(window.getBranchKey('inv_view_mode')) || 'grid'; 
-        window.currentPOSView = localStorage.getItem(window.getBranchKey('pos_view_mode')) || 'grid'; 
-    } catch(e) {}
-    
-    document.getElementById('displayShopName').innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
-    if(window.shopLogo) { 
-        document.getElementById('sidebarLogo').src = window.shopLogo; 
-        document.getElementById('sidebarLogo').style.display = 'block'; 
-    } 
-    
+    // បង្ហាញទិន្នន័យចេញពី LocalStorage ភ្លាមៗ (UI នឹងមិនទទេពេលទាញ Cloud យឺត)
     window.loadSettingsToUI(); 
     window.applyPermissions(); 
     window.updateCategories(); 
     window.setInventoryView(window.currentInventoryView, true); 
     window.setPOSView(window.currentPOSView, true); 
     window.renderAll(); 
+
+    // ផ្ទៀងផ្ទាត់ License និងទាញយកទិន្នន័យពី Supabase
+    window.checkLicense();
+    await window.loadDataFromSupabase(window.userAccounts);
+    window.setSyncStatus('synced', 'ទិន្នន័យទាន់សម័យ');
+    window.renderAll(); 
+
+    setInterval(() => {
+        const dateEl = document.getElementById('currentDate');
+        if(dateEl) dateEl.innerText = window.fDate();
+    }, 1000);
+
+    const dispName = document.getElementById('displayShopName');
+    if(dispName) dispName.innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
+    if(window.shopLogo) { 
+        const sideLogo = document.getElementById('sidebarLogo');
+        if(sideLogo) {
+            sideLogo.src = window.shopLogo; 
+            sideLogo.style.display = 'block'; 
+        }
+    } 
     
     const header = document.getElementById('topHeaderBar'); 
     if (header) { header.classList.remove('hidden-header'); } 
-    window.lastInvoiceCount = window.invoices.length; 
+    window.lastInvoiceCount = window.invoices ? window.invoices.length : 0; 
     
-    // Auto Real-time Update Sync Listener
+    // Real-time Update Listener
     setInterval(async () => {
         try {
             let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).single();
@@ -1064,6 +1094,7 @@ window.onload = async () => {
                     window.lastInvoiceCount = newCount;
                     window.renderUnpaid();
                     window.renderInventory();
+                    window.renderCustomers();
                 }
             }
         } catch(e) {}

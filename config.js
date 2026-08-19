@@ -7,23 +7,32 @@ window.urlParams = new URLSearchParams(window.location.search);
 window.SHOP_BRANCH_ID = window.urlParams.get('branch') || 'branch_1';
 window.getBranchKey = (key) => `ks2_${window.SHOP_BRANCH_ID}_${key}`;
 
-window.inventory = []; 
-window.historyLog = []; 
-window.invoices = []; 
-window.cart = []; 
-window.customers = []; 
-window.expenses = [];
-window.shopName = 'SKM INTEGRATE'; 
-window.shopLogo = ''; 
-window.shopQR = ''; 
-window.shopPhone = ''; 
-window.shopAddress = ''; 
-window.shopTelegram = ''; 
-window.telegramBotToken = ''; 
-window.telegramChatId = ''; 
+// ១. ទាញយកទិន្នន័យពី LocalStorage ភ្លាមៗតាំងពីដើមទី (Synchronous Load)
+const getLocalData = (key, defaultVal) => {
+    try {
+        const val = localStorage.getItem(window.getBranchKey(key));
+        return val ? JSON.parse(val) : defaultVal;
+    } catch(e) {
+        return defaultVal;
+    }
+};
 
-// បន្ថែម storePin: '1234' ជាតម្លៃលំនាំដើម
-window.sysSettings = { 
+window.inventory = getLocalData('inv_pro', []); 
+window.historyLog = getLocalData('hist_pro', []); 
+window.invoices = getLocalData('invoices_pro', []); 
+window.cart = []; 
+window.customers = getLocalData('customers_pro', []); 
+window.expenses = getLocalData('expenses_pro', []);
+window.shopName = localStorage.getItem(window.getBranchKey('shop_name')) || 'SKM INTEGRATE'; 
+window.shopLogo = localStorage.getItem(window.getBranchKey('shop_logo')) || ''; 
+window.shopQR = localStorage.getItem(window.getBranchKey('shop_qr')) || ''; 
+window.shopPhone = localStorage.getItem(window.getBranchKey('shop_phone')) || ''; 
+window.shopAddress = localStorage.getItem(window.getBranchKey('shop_address')) || ''; 
+window.shopTelegram = localStorage.getItem(window.getBranchKey('shop_telegram')) || ''; 
+window.telegramBotToken = localStorage.getItem(window.getBranchKey('telegram_bot_token')) || ''; 
+window.telegramChatId = localStorage.getItem(window.getBranchKey('telegram_chat_id')) || ''; 
+
+window.sysSettings = getLocalData('sys_settings', { 
     cust: true, 
     unpaid: true, 
     logs: true, 
@@ -38,9 +47,9 @@ window.sysSettings = {
     deliveryFee: 1.5, 
     expiry: true,
     storePin: '1234' 
-};
+});
 
-window.lastInvoiceCount = 0;
+window.lastInvoiceCount = window.invoices.length;
 window.SECRET_SALT = "KOUSUKE_ERP_PRO_V1_";
 
 window.updateShopInfo = function(name, logo, qr, phone, address, telegram, botToken, chatId) {
@@ -154,12 +163,13 @@ window.generateInvoiceId = function() {
 };
 
 window.logAction = function(type, itemName, qty, note, activeUserRef) { 
-    if(!window.sysSettings.logs) return; 
+    if(!window.sysSettings || !window.sysSettings.logs) return; 
     let executor = activeUserRef ? (activeUserRef.fullName ? activeUserRef.fullName : activeUserRef.username) : 'system'; 
     window.historyLog.unshift({ id: Date.now(), date: window.fDate(), type, itemName, qty, note: `${note} (${executor})` }); 
     if(window.historyLog.length > 500) window.historyLog.pop(); 
 };
 
+// ២. ទាញទិន្នន័យពី Supabase ដោយបញ្ចូលគ្នា (Merge) មិនឱ្យបាត់បង់ទិន្នន័យក្នុងម៉ាស៊ីន
 window.loadDataFromSupabase = async function(userAccountsRef) {
     try {
         let { data, error } = await window.supabaseClient
@@ -170,75 +180,65 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
 
         if (data && data.data_json) {
             let d = data.data_json;
-            window.inventory.splice(0, window.inventory.length, ...(d.inventory || []));
-            window.historyLog.splice(0, window.historyLog.length, ...(d.historyLog || []));
-            window.invoices.splice(0, window.invoices.length, ...(d.invoices || []));
-            window.expenses.splice(0, window.expenses.length, ...(d.expenses || []));
-            window.customers.splice(0, window.customers.length, ...(d.customers || []));
-            
-            window.shopName = d.shopName || 'SKM INTEGRATE';
-            window.shopLogo = d.shopLogo || '';
-            window.shopQR = d.shopQR || '';
-            window.shopPhone = d.shopPhone || '';
-            window.shopAddress = d.shopAddress || '';
-            window.shopTelegram = d.shopTelegram || '';
-            window.telegramBotToken = d.telegramBotToken || '';
-            window.telegramChatId = d.telegramChatId || '';
+
+            // Merge Customers (បញ្ចូលអតិថិជនពី Cloud និង Local)
+            if (Array.isArray(d.customers)) {
+                d.customers.forEach(cCloud => {
+                    if (cCloud && cCloud.name && !window.customers.some(cLoc => cLoc.name.toLowerCase() === cCloud.name.toLowerCase())) {
+                        window.customers.push(cCloud);
+                    }
+                });
+            }
+
+            // Merge Invoices (បញ្ចូលវិក្កយបត្រពី Cloud និង Local)
+            if (Array.isArray(d.invoices)) {
+                d.invoices.forEach(invCloud => {
+                    if (invCloud && invCloud.id && !window.invoices.some(invLoc => invLoc.id === invCloud.id)) {
+                        window.invoices.push(invCloud);
+                    }
+                });
+                window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            }
+
+            // Merge Inventory
+            if (Array.isArray(d.inventory)) {
+                d.inventory.forEach(pCloud => {
+                    if (pCloud && pCloud.id && !window.inventory.some(pLoc => pLoc.id === pCloud.id)) {
+                        window.inventory.push(pCloud);
+                    }
+                });
+            }
+
+            // Merge Expenses
+            if (Array.isArray(d.expenses)) {
+                d.expenses.forEach(eCloud => {
+                    if (eCloud && eCloud.id && !window.expenses.some(eLoc => eLoc.id === eCloud.id)) {
+                        window.expenses.push(eCloud);
+                    }
+                });
+            }
+
+            if(d.shopName) window.shopName = d.shopName;
+            if(d.shopLogo) window.shopLogo = d.shopLogo;
+            if(d.shopQR) window.shopQR = d.shopQR;
+            if(d.shopPhone) window.shopPhone = d.shopPhone;
+            if(d.shopAddress) window.shopAddress = d.shopAddress;
+            if(d.shopTelegram) window.shopTelegram = d.shopTelegram;
+            if(d.telegramBotToken) window.telegramBotToken = d.telegramBotToken;
+            if(d.telegramChatId) window.telegramChatId = d.telegramChatId;
             
             if(d.sysSettings) Object.assign(window.sysSettings, d.sysSettings);
             if(d.userAccounts && userAccountsRef) {
                 userAccountsRef.splice(0, userAccountsRef.length, ...d.userAccounts);
             }
+
+            // រក្សាទុកទិន្នន័យដែលបាន Merge ចូល LocalStorage ភ្លាម
+            localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
+            localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+            localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
         }
-    } catch(e) {}
-};
-
-window.saveData = async function(userAccountsRef, renderAllCallback) {
-    window.lastInvoiceCount = window.invoices.length;
-    let cleanInventory = window.inventory.filter(item => item !== null && typeof item === 'object');
-    
-    let packageData = {
-        inventory: cleanInventory, 
-        historyLog: window.historyLog, 
-        invoices: window.invoices, 
-        expenses: window.expenses,
-        shopName: window.shopName, 
-        shopLogo: window.shopLogo, 
-        shopQR: window.shopQR, 
-        customers: window.customers, 
-        sysSettings: window.sysSettings, 
-        userAccounts: userAccountsRef,
-        shopPhone: window.shopPhone, 
-        shopAddress: window.shopAddress, 
-        shopTelegram: window.shopTelegram, 
-        telegramBotToken: window.telegramBotToken, 
-        telegramChatId: window.telegramChatId
-    };
-
-    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(cleanInventory));
-    localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog));
-    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
-    localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
-    localStorage.setItem(window.getBranchKey('shop_name'), window.shopName);
-    localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo);
-    localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR);
-    localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
-    localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings));
-    localStorage.setItem(window.getBranchKey('shop_phone'), window.shopPhone);
-    localStorage.setItem(window.getBranchKey('shop_address'), window.shopAddress);
-    localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram);
-    localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken);
-    localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId);
-
-    try {
-        await window.supabaseClient
-            .from('branch_store')
-            .upsert({ 
-                branch_id: window.SHOP_BRANCH_ID, 
-                data_json: packageData,
-                updated_at: new Date()
-            }, { onConflict: 'branch_id' });
-    } catch(e) {}
-
-    if(typeof renderAllCallback === 'function') renderAllCallback();
+    } catch(e) {
+        console.warn("⚠️ ប្រើប្រាស់ទិន្នន័យក្នុងម៉ាស៊ីន (Offline / Local)");
+    }
 };

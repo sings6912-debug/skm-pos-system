@@ -295,4 +295,33 @@ window.deleteProduct = function(id) {
         window.renderInventory();
         window.ksMsg('លុបជោគជ័យ!');
     });
+};window.exportCSV = function() {
+    if(!window.inventory || window.inventory.length === 0) {
+        return window.ksMsg('គ្មានទិន្នន័យទំនិញដើម្បី Export ទេ!');
+    }
+    const showCost = window.sysSettings && window.sysSettings.cost && window.currentRole === 'admin';
+    let csv = '\uFEFF"លេខកូដ","ឈ្មោះទំនិញ","ប្រភេទ","តម្លៃដើម($)","តម្លៃលក់($)","តម្លៃរៀល(៛)","ខ្នាត","ស្តុក","ស្ថានភាព","ផុតកំណត់","ការពណ៌នា"\n';
+    
+    window.inventory.forEach(p => {
+        if(!p) return;
+        let id = `"${p.customId || p.id || ''}"`;
+        let name = `"${(p.name || '').replace(/"/g, '""')}"`;
+        let cat = `"${(p.category || '').replace(/"/g, '""')}"`;
+        let cost = showCost ? (parseFloat(p.cost) || 0) : 0;
+        let price = parseFloat(p.price) || 0;
+        let riel = parseFloat(p.riel) || 0;
+        let unit = `"${(p.unit || '').replace(/"/g, '""')}"`;
+        let qty = parseInt(p.qty) || 0;
+        let condition = `"${(p.condition || '').replace(/"/g, '""')}"`;
+        let expiry = `"${p.expiry || ''}"`;
+        let desc = `"${(p.desc || '').replace(/"/g, '""')}"`;
+        
+        csv += `${id},${name},${cat},${cost},${price},${riel},${unit},${qty},${condition},${expiry},${desc}\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Inventory_Report_${Date.now()}.csv`;
+    link.click();
 };
