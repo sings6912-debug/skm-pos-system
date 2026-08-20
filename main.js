@@ -82,6 +82,11 @@ window.saveData = async function(users) {
     };
 
     // ២. ផ្ញើទៅកាន់ Supabase Cloud
+    if (!window.supabaseClient || !navigator.onLine) {
+        window.setSyncStatus('error', 'រក្សាទុកតែក្នុងម៉ាស៊ីន (Offline)');
+        return;
+    }
+
     try {
         const { error } = await window.supabaseClient
             .from('branch_store')
@@ -98,7 +103,7 @@ window.saveData = async function(users) {
         window.setSyncStatus('synced', `Synced: ${timeStr}`);
     } catch (err) {
         console.error("❌ Supabase Sync Error:", err);
-        window.setSyncStatus('error', 'Sync បរាជ័យ (រក្សាទុកក្នុងម៉ាស៊ីនរួចរាល់)');
+        window.setSyncStatus('error', 'Sync បរាជ័យ');
     }
 };
 
@@ -239,17 +244,17 @@ window.closeExpenseModal = window.closeExpenseModal;
 window.saveExpense = window.saveExpense;
 window.renderExpenses = window.renderExpenses;
 window.deleteExpense = window.deleteExpense;
-window.viewInvoice = window.viewInvoice;
+window.viewInvoice = window.viewInvoiceDetails || window.viewInvoice;
 window.closeInvoiceViewModal = window.closeInvoiceViewModal;
 window.reprintInvoice = window.reprintInvoice;
 window.downloadInvoicePNG = window.downloadInvoicePNG;
-window.openInvoiceEdit = window.openInvoiceEdit;
+window.openInvoiceEdit = window.openInvoiceEditModal || window.openInvoiceEdit;
 window.closeInvoiceEditModal = window.closeInvoiceEditModal;
-window.updateEditInvQty = window.updateEditInvQty;
-window.removeEditInvItem = window.removeEditInvItem;
+window.updateEditInvQty = window.updateEditInvoiceItemQty || window.updateEditInvQty;
+window.removeEditInvItem = window.removeEditInvoiceItem || window.removeEditInvItem;
 window.addItemToEditingInvoice = window.addItemToEditingInvoice;
 window.saveInvoiceChanges = window.saveInvoiceChanges;
-window.deleteInvoice = window.deleteInvoice;
+window.deleteInvoice = window.deleteInvoiceRecord || window.deleteInvoice;
 
 // ==========================================
 // 9. BIND CUSTOMER TO WINDOW
@@ -290,7 +295,7 @@ window.switchTab = function(tabId, title, elem) {
         if(overlay) overlay.classList.remove('active'); 
     } 
     
-    if (tabId === 'about') {
+    if (tabId === 'about' && typeof window.displayLicenseInfo === 'function') {
         window.displayLicenseInfo();
     }
     
@@ -782,19 +787,19 @@ window.renderDashboard = function() {
         
         (window.invoices || []).forEach(inv => { 
             if(!inv) return;
-            let invTime = inv.timestamp || (inv.date ? new Date(inv.date).getTime() : 0) || 0; 
+            let invTime = inv.timestamp || (inv.date ? new Date(inv.date.split(' ')[0]).getTime() : 0) || 0; 
             if (fromTime === 0 && toTime === Infinity || (invTime >= fromTime && invTime <= toTime)) { 
-                if(inv.status === 'paid') totalSalesRevenue += (parseFloat(inv.totalAmount) || 0); 
+                if(inv.status === 'paid') totalSalesRevenue += (parseFloat(inv.totalAmount) || parseFloat(inv.total) || 0); 
                 if(inv.status === 'unpaid' || inv.status === 'preorder') { 
-                    let invPaid = parseFloat(inv.paidUsd) || 0; 
-                    let remaining = (parseFloat(inv.totalAmount) || 0) - invPaid; 
+                    let invPaid = parseFloat(inv.paidUsd || inv.paidAmount || 0); 
+                    let remaining = (parseFloat(inv.totalAmount || inv.total || 0)) - invPaid; 
                     if(remaining > 0) totalUnpaid += remaining; 
                     totalSalesRevenue += invPaid; 
                 }
                 if(inv.items) inv.items.forEach(item => { 
                     if(!item) return; let pId = item.id ? String(item.id) : 'unknown';
-                    if(!salesMap[pId]) salesMap[pId] = { name: item.name, qty: 0, revenue: 0 }; 
-                    let qty = parseInt(item.cartQty) || 0; let price = parseFloat(item.price) || 0; let cost = parseFloat(item.cost) || 0;
+                    if(!salesMap[pId]) salesMap[pId] = { name: item.name || item.title, qty: 0, revenue: 0 }; 
+                    let qty = parseInt(item.cartQty || item.qty || item.quantity) || 0; let price = parseFloat(item.price) || 0; let cost = parseFloat(item.cost) || 0;
                     salesMap[pId].qty += qty; salesMap[pId].revenue += (price * qty); totalCOGS += (cost * qty);
                 }); 
             } 
@@ -896,151 +901,6 @@ window.clearHistory = function() {
 };
 
 // ==========================================
-// 14. EXPORT & IMPORT UTILITIES
-// ==========================================
-window.importCSV = function(e) {
-    const file = e.target.files[0]; if (!file) return; 
-    const r = new FileReader();
-    r.onload = async (ev) => {
-        const lines = ev.target.result.split('\n'); let count = 0;
-        for(let i=1; i<lines.length; i++) {
-            const row = lines[i].trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
-            if(row.length >= 8) {
-                const id = row[0].replace(/(^"|"$)/g, '').trim(); 
-                const name = row[1].replace(/(^"|"$)/g, '').trim(); 
-                if(!name) continue; 
-                
-                const existing = (window.inventory || []).find(p => p && (p.id === id || p.name === name));
-                
-                let conditionVal = '';
-                let expiryVal = '';
-                let descVal = '';
-                if (row.length > 10) {
-                    conditionVal = row[8].replace(/(^"|"$)/g, '').trim();
-                    expiryVal = row[9].replace(/(^"|"$)/g, '').trim();
-                    descVal = row[10] ? row[10].replace(/(^"|"$)/g, '').trim() : '';
-                } else if (row.length > 9) {
-                    conditionVal = row[8].replace(/(^"|"$)/g, '').trim();
-                    descVal = row[9] ? row[9].replace(/(^"|"$)/g, '').trim() : '';
-                } else if (row.length === 9) {
-                    descVal = row[8] ? row[8].replace(/(^"|"$)/g, '').trim() : '';
-                }
-
-                let d = { 
-                    name: name, 
-                    category: row[2].replace(/(^"|"$)/g, '').trim(), 
-                    cost: parseFloat(row[3])||0, 
-                    price: parseFloat(row[4])||0, 
-                    riel: parseFloat(row[5])||0, 
-                    unit: row[6]?row[6].replace(/(^"|"$)/g, '').trim():'', 
-                    qty: parseInt(row[7])||0, 
-                    condition: conditionVal, 
-                    expiry: expiryVal,
-                    desc: descVal
-                };
-                if(existing) { 
-                    Object.assign(existing, d); 
-                } else { 
-                    d.id = id || 'P_'+Date.now()+count; 
-                    d.customId = d.id; 
-                    d.image = ''; 
-                    window.inventory.push(d); 
-                } 
-                count++;
-            }
-        } 
-        await window.saveData(window.userAccounts); 
-        window.ksMsg(`បាននាំចូលទិន្នន័យពី Excel ចំនួន ${count} មុខ!`, 'ជោគជ័យ');
-        window.renderInventory();
-    }; 
-    r.readAsText(file); 
-    e.target.value = '';
-};
-
-window.exportData = function() { 
-    const dataToBackup = { 
-        inventory: window.inventory || [], 
-        historyLog: window.historyLog || [], 
-        invoices: window.invoices || [], 
-        expenses: window.expenses || [], 
-        shopName: window.shopName, 
-        shopLogo: window.shopLogo, 
-        shopQR: window.shopQR, 
-        shopPhone: window.shopPhone, 
-        shopAddress: window.shopAddress, 
-        customers: window.customers || [], 
-        sysSettings: window.sysSettings, 
-        userAccounts: window.userAccounts, 
-        invoiceCounter: JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) 
-    }; 
-    const a = document.createElement("a"); 
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(dataToBackup)], { type: "application/json" })); 
-    a.download = `SKM_INTEGRATE_${window.SHOP_BRANCH_ID}_Backup.json`; 
-    a.click(); 
-};
-
-window.importData = function(e) {
-    const file = e.target.files[0]; if (!file) return; 
-    const r = new FileReader();
-    r.onload = async (ev) => {
-        try {
-            const data = JSON.parse(ev.target.result);
-            if(data.inventory) { 
-                window.inventory.splice(0, window.inventory.length, ...(data.inventory||[])); 
-                window.historyLog.splice(0, window.historyLog.length, ...(data.historyLog||[])); 
-                window.invoices.splice(0, window.invoices.length, ...(data.invoices||[])); 
-                window.customers.splice(0, window.customers.length, ...(data.customers||[])); 
-                window.expenses.splice(0, window.expenses.length, ...(data.expenses||[])); 
-                
-                if(data.shopName) globalThis.shopName = data.shopName; 
-                if(data.shopLogo) globalThis.shopLogo = data.shopLogo; 
-                if(data.shopQR) globalThis.shopQR = data.shopQR; 
-                if(data.shopPhone) globalThis.shopPhone = data.shopPhone; 
-                if(data.shopAddress) globalThis.shopAddress = data.shopAddress; 
-                
-                if(data.sysSettings) Object.assign(window.sysSettings, data.sysSettings); 
-                if(data.userAccounts) window.userAccounts.splice(0, window.userAccounts.length, ...data.userAccounts); 
-                
-                if(data.invoiceCounter) localStorage.setItem(window.getBranchKey('invoice_counter'), JSON.stringify(data.invoiceCounter));
-            } else if(Array.isArray(data)) {
-                window.inventory.splice(0, window.inventory.length, ...data);
-            }
-            
-            await window.saveData(window.userAccounts); 
-            localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
-            
-            const dShopName = document.getElementById('displayShopName');
-            if(dShopName) dShopName.innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
-            if(window.shopLogo) { 
-                const sLogo = document.getElementById('sidebarLogo');
-                if(sLogo) {
-                    sLogo.src = window.shopLogo; 
-                    sLogo.style.display = 'block'; 
-                }
-            } 
-            window.loadSettingsToUI(); 
-            window.applyPermissions(); 
-            window.renderAll();
-            window.ksMsg('ទិន្នន័យទាំងអស់ត្រូវបាន Restore ជោគជ័យ!', 'ជោគជ័យ');
-        } catch(err) { 
-            window.ksMsg('ឯកសារមិនត្រឹមត្រូវតាមទម្រង់ទេ!', 'បរាជ័យ'); 
-        } 
-        e.target.value = ''; 
-    }; 
-    r.readAsText(file); 
-};
-
-window.toggleLowStockSection = function() {
-    const container = document.getElementById('lowStockCardContainer');
-    if (!container) return;
-    if (container.style.display === 'none') {
-        container.style.display = 'block';
-    } else {
-        container.style.display = 'none';
-    }
-};
-
-// ==========================================
 // 15. APP ENTRY POINT
 // ==========================================
 window.onload = async () => {
@@ -1078,23 +938,45 @@ window.onload = async () => {
     
     const header = document.getElementById('topHeaderBar'); 
     if (header) { header.classList.remove('hidden-header'); } 
-    window.lastInvoiceCount = window.invoices ? window.invoices.length : 0; 
     
-    // Real-time Update Listener
+    // Real-time Update Listener (SMART ALERT)
     setInterval(async () => {
+        if (!window.supabaseClient || !navigator.onLine) return;
         try {
             let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).single();
             if (data && data.data_json && data.data_json.invoices) {
-                let newCount = data.data_json.invoices.length;
-                if (newCount > window.lastInvoiceCount) {
-                    window.playOrderSound();
-                    window.ksMsg('មានការកុម្ម៉ង់ថ្មីចូលពីអតិថិជន! សូមពិនិត្យមើលវិក្កយបត្រ។', '🔔 កុម្ម៉ង់ថ្មី');
-                    window.invoices.splice(0, window.invoices.length, ...data.data_json.invoices);
-                    if(data.data_json.inventory) window.inventory.splice(0, window.inventory.length, ...data.data_json.inventory);
-                    window.lastInvoiceCount = newCount;
-                    window.renderUnpaid();
-                    window.renderInventory();
-                    window.renderCustomers();
+                let cloudInvoices = data.data_json.invoices;
+                let localInvoices = window.invoices || [];
+                
+                // ឆែកមើលថាតើមានការកុម្ម៉ង់ពីក្រៅ (Digital Menu) ចូលមកឬអត់
+                let isExternalOrder = false;
+                if (cloudInvoices.length > 0) {
+                    let newestCloudInv = cloudInvoices[0];
+                    // បើវិក្កយបត្រថ្មីបំផុតពី Cloud មិនមានក្នុងម៉ាស៊ីន Local ទេ មានន័យថាវាជាការកុម្ម៉ង់ពី Menu ភ្ញៀវ
+                    if (!localInvoices.find(inv => String(inv.id) === String(newestCloudInv.id))) {
+                        isExternalOrder = true;
+                    }
+                }
+
+                if (isExternalOrder) {
+                    if (typeof window.playOrderSound === 'function') window.playOrderSound();
+                    if (typeof window.ksMsg === 'function') {
+                        window.ksMsg('មានការកុម្ម៉ង់ថ្មីចូលពីអតិថិជន (Menu)! សូមពិនិត្យមើលវិក្កយបត្រ។', '🔔 កម្ម៉ង់ថ្មី');
+                    }
+                    
+                    // ទាញទិន្នន័យថ្មីៗពី Cloud បញ្ចូលក្នុងម៉ាស៊ីន
+                    window.invoices.splice(0, window.invoices.length, ...cloudInvoices);
+                    if (data.data_json.inventory) window.inventory.splice(0, window.inventory.length, ...data.data_json.inventory);
+                    if (data.data_json.customers) window.customers.splice(0, window.customers.length, ...data.data_json.customers);
+                    
+                    // រក្សាទុកចូល LocalStorage
+                    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+                    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+                    
+                    // Render ផ្ទាំងឡើងវិញ
+                    if(typeof window.renderUnpaid === 'function') window.renderUnpaid();
+                    if(typeof window.renderInventory === 'function') window.renderInventory();
+                    if(typeof window.renderCustomers === 'function') window.renderCustomers();
                 }
             }
         } catch(e) {}

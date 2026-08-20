@@ -127,14 +127,14 @@ window.addToCart = function(id) {
     const cItem = window.cart.find(c => c && c.id === id); 
     let stockQty = parseInt(p.qty) || 0;
     
-    if (stockQty <= 0 && window.sysSettings.preorder) {
+    if (stockQty <= 0 && window.sysSettings && window.sysSettings.preorder) {
         if (!confirm(`ទំនិញ "${p.name}" អស់ពីស្តុកហើយ! តើអ្នកចង់កត់ត្រាវាជាការកុម្ម៉ង់ទុកមុន (Pre-order) មែនទេ?`)) return;
     } else if (stockQty <= 0) {
         return window.ksMsg('ទំនិញនេះអស់ពីស្តុកហើយ!');
     }
 
     if(cItem) { 
-        if(cItem.cartQty < stockQty || window.sysSettings.preorder) { 
+        if(cItem.cartQty < stockQty || (window.sysSettings && window.sysSettings.preorder)) { 
             cItem.cartQty++; 
         } else { 
             window.ksMsg(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
@@ -154,7 +154,7 @@ window.updateCartQty = function(id, change) {
     let stockQty = parseInt(p.qty) || 0; 
     cItem.cartQty += change; 
     
-    if(cItem.cartQty > stockQty && !window.sysSettings.preorder) { 
+    if(cItem.cartQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
         cItem.cartQty = stockQty; 
         window.ksMsg(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
     } 
@@ -177,7 +177,7 @@ window.setCartQtyManually = function(id, val) {
         if(!p || !cItem) return;
         let stockQty = parseInt(p.qty) || 0;
         
-        if(newQty > stockQty && !window.sysSettings.preorder) { 
+        if(newQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
             cItem.cartQty = stockQty; 
             window.ksMsg(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
         } else {
@@ -394,7 +394,8 @@ window.executePrint = function(htmlContent) {
     }, 500);
 };
 
-window.checkout = async function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
+// ⚡ កែប្រែ Checkout ដើម្បីដំណើរការលឿនជាងមុន និង Clear Filter ម៉ោងចោលស្វ័យប្រវត្តិ
+window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(!window.cart || window.cart.length === 0) return window.ksMsg('គ្មានទំនិញក្នុងកន្ត្រកទេ!');
     const custNameInput = document.getElementById('posCustomerName').value.trim(); 
     const custPhoneInput = document.getElementById('posCustomerPhone').value.trim();
@@ -425,7 +426,7 @@ window.checkout = async function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 
             if (status !== 'preorder') {
                 window.inventory[idx].qty -= c.cartQty; 
             }
-            window.logAction('sale', c.name, c.cartQty, status === 'paid' ? 'លក់ចេញ (ទូទាត់រួច)' : (status === 'preorder' ? `កក់ប្រាក់ (Pre-order ដោយ ${custNameInput})` : `លក់ចេញ (រង់ចាំទូទាត់ ដោយ ${custNameInput})`), window.activeUser);
+            if (typeof window.logAction === 'function') window.logAction('sale', c.name, c.cartQty, status === 'paid' ? 'លក់ចេញ (ទូទាត់រួច)' : (status === 'preorder' ? `កក់ប្រាក់ (Pre-order ដោយ ${custNameInput})` : `លក់ចេញ (រង់ចាំទូទាត់ ដោយ ${custNameInput})`), window.activeUser);
             let lineStr = '', uPriceStr = '';
             if(c.price > 0) { lineStr = window.fMoney(c.price * c.cartQty); uPriceStr = window.fMoney(c.price); } 
             else if(c.riel > 0) { lineStr = ((c.riel||0) * c.cartQty).toLocaleString() + '៛'; uPriceStr = c.riel.toLocaleString() + '៛'; } 
@@ -476,13 +477,13 @@ window.checkout = async function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 
     
     if(status === 'paid' && (rUsd > 0 || rRiel > 0)) { 
         let rStr = []; if(rUsd > 0) rStr.push(window.fMoney(rUsd)); if(rRiel > 0) rStr.push(rRiel.toLocaleString() + '៛'); 
-        content += `<tr><td style="padding-top:6px; font-size:12px;">ប្រាក់ទទួល:</td><td style="text-align:right; padding-top:6px; font-size:12px;">${rStr.join(' | ')}</td></tr>`; 
-        let cStr = []; if(inv.changeUsd > 0 || inv.changeRiel > 0) { cStr.push(window.fMoney(inv.changeUsd)); cStr.push(Math.round(inv.changeRiel).toLocaleString() + ' ៛'); } else cStr.push('$0.00'); 
-        content += `<tr><td style="font-size:12px;">ប្រាក់អាប់:</td><td style="text-align:right; font-size:12px;">${cStr.join(' | ')}</td></tr>`; 
+        receiptHTML += `<tr><td style="padding-top:6px; font-size:12px;">ប្រាក់ទទួល:</td><td style="text-align:right; padding-top:6px; font-size:12px;">${rStr.join(' | ')}</td></tr>`; 
+        let cStr = []; if(cUsd > 0 || cRiel > 0) { cStr.push(window.fMoney(cUsd)); cStr.push(Math.round(cRiel).toLocaleString() + ' ៛'); } else cStr.push('$0.00'); 
+        receiptHTML += `<tr><td style="font-size:12px;">ប្រាក់អាប់:</td><td style="text-align:right; font-size:12px;">${cStr.join(' | ')}</td></tr>`; 
     } else if (status === 'preorder') {
         let rStr = []; if(rUsd > 0) rStr.push(window.fMoney(rUsd)); if(rRiel > 0) rStr.push(rRiel.toLocaleString() + '៛');
         if (rStr.length > 0) {
-            receiptHTML += `<tr><td style="padding-top:4px; font-size:11px;">ប្រាក់កក់មុន:</td><td style="text-align:right; font-size:11px; font-size:11px;">${rStr.join(' | ')}</td></tr>`;
+            receiptHTML += `<tr><td style="padding-top:4px; font-size:11px;">ប្រាក់កក់មុន:</td><td style="text-align:right; font-size:11px;">${rStr.join(' | ')}</td></tr>`;
             let remainingUsd = window.cartFinalUsd - (rUsd + (rRiel/window.cartRate));
             if (remainingUsd < 0) remainingUsd = 0;
             receiptHTML += `<tr><td style="font-size:11px; font-weight:bold;">ប្រាក់នៅខ្វះ:</td><td style="text-align:right; font-size:11px; font-weight:bold;">${window.fMoney(remainingUsd)}</td></tr>`;
@@ -493,7 +494,7 @@ window.checkout = async function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 
     if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${window.shopQR}" style="width: 180px; height: 180px; object-fit: contain; filter: grayscale(100%);"></div>`;
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`; 
     
-    if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+    // Clear the cart immediately
     window.cart = []; 
     
     const cNameInputEl = document.getElementById('posCustomerName'); if(cNameInputEl) cNameInputEl.value = ''; 
@@ -501,11 +502,31 @@ window.checkout = async function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 
     const posDiscEl = document.getElementById('posDiscount'); if (posDiscEl) posDiscEl.value = ''; 
     const mobileContainer = document.getElementById('mobileCartContainer'); if(mobileContainer) mobileContainer.classList.remove('open'); 
     
+    // ⚡ 1. រក្សាទុក LocalStorage ជាមុនដើម្បីអោយលឿន
+    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+    if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+    
+    // ⚡ 2. Clear Date Range Inputs before rendering Unpaid table
+    const dateFromInput = document.getElementById('invoiceDateFrom');
+    const dateToInput = document.getElementById('invoiceDateTo');
+    if (dateFromInput) dateFromInput.value = '';
+    if (dateToInput) dateToInput.value = '';
+
+    // Render ភ្លាមៗ (Instant Feedback)
     window.renderCart(); 
     window.renderPOSProducts(); 
-    window.renderUnpaid();
-    window.renderCustomers();
+    if(typeof window.renderUnpaid === 'function') window.renderUnpaid();
+    if(typeof window.renderCustomers === 'function') window.renderCustomers();
+    
+    // Execute Print ភ្លាមៗ
     window.executePrint(receiptHTML);
+
+    // ⚡ 3. បោះទិន្នន័យទៅ Cloud ស្ងាត់ៗ (Background Sync) ដើម្បីកុំអោយគាំង
+    setTimeout(() => {
+        if (typeof window.saveData === 'function') {
+            window.saveData(window.userAccounts); 
+        }
+    }, 100);
 };
 
 window.handleBarcodeScan = function(e) {
