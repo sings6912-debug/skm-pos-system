@@ -1211,6 +1211,21 @@
                 }
             });
         };
+
+        // មុខងារបើក/បិទផ្ទាំងកត់ត្រាចំណាយ (Fallback JS ដើម្បីធានាថាវាដើរ)
+        window.openExpenseModal = function() {
+            const modal = document.getElementById('expenseModal');
+            if (modal) modal.style.display = 'flex';
+        };
+
+        window.closeExpenseModal = function() {
+            const modal = document.getElementById('expenseModal');
+            if (modal) {
+                modal.style.display = 'none';
+                document.getElementById('expAmount').value = '';
+                document.getElementById('expNote').value = '';
+            }
+        };
     </script>
 </body>
 </html>
