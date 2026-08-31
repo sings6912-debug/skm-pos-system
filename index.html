@@ -938,6 +938,45 @@
     <script src="script.js"></script>
 <!-- ដាក់កូដចុះឈ្មោះ Service Worker នៅចុងបញ្ចប់នៃ Body -->
   <script>
+// ១. ស្ដាប់ព្រឹត្តិការណ៍ពេលទំព័រ Load រួច ដើម្បីឆែក Session ដោយស្វ័យប្រវត្តិ
+window.addEventListener('DOMContentLoaded', async () => {
+  // ទាញយក Session ពី Supabase
+  const { data: { session } } = await supabase.auth.getSession();
+  
+  if (session) {
+    // បើមាន Session -> បង្ហាញ Dashboard លាក់ Login
+    showDashboardView();
+  } else {
+    // បើគ្មាន Session -> បង្ហាញ Login View
+    showLoginView();
+  }
+});
+
+// ២. Listen រាល់ពេលមានការផ្លាស់ប្តូរ Auth State (Login / Logout)
+supabase.auth.onAuthStateChange((event, session) => {
+  if (session) {
+    showDashboardView();
+  } else {
+    showLoginView();
+  }
+});
+
+// Helper Functions សម្រាប់ប្តូរអេក្រង់
+function showDashboardView() {
+  const loginView = document.getElementById('login-view');
+  const dashboardView = document.getElementById('dashboard-view');
+  
+  if (loginView) loginView.style.display = 'none';
+  if (dashboardView) dashboardView.style.display = 'block';
+}
+
+function showLoginView() {
+  const loginView = document.getElementById('login-view');
+  const dashboardView = document.getElementById('dashboard-view');
+  
+  if (loginView) loginView.style.display = 'flex';
+  if (dashboardView) dashboardView.style.display = 'none';
+}
     if (navigator.serviceWorker) {
       navigator.serviceWorker.register('pwabuilder-sw.js', {
         scope: './'
