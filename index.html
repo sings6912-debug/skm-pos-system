@@ -10,14 +10,22 @@
     <title>SKM INTEGRATE POS - ERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <!-- ភ្ជាប់ឯកសារ CSS មកពីខាងក្រៅ -->
     <link rel="stylesheet" href="style.css">
+    
+    <!-- ➕ បន្ថែមបណ្ណាល័យ Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Library សម្រាប់ទាញយក Excel (SheetJS) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
+    <!-- ផ្ទាំងសារលោតជូនដំណឹង (Toast) -->
     <div id="toastNotification" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: bold; font-size: 16px; text-align: center; border: 1px solid rgba(255,255,255,0.2);"></div>
 
+    <!-- ផ្ទាំងចូលប្រព័ន្ធ (Login) -->
     <div id="authScreen">
         <div id="loginForm" class="auth-card">
             <h2 style="color: var(--primary); margin-bottom: 10px; font-size: 24px;">🔐 ចូលប្រព័ន្ធ</h2>
@@ -45,6 +53,7 @@
         </div>
     </div>
 
+    <!-- ផ្ទាំងចាក់សោ License -->
     <div id="licenseLockScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: var(--bg-dark); z-index: 100001; display: none; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 20px;">
         <h1 style="color: var(--danger); font-size: 32px; margin-bottom: 10px;">🔒 ប្រព័ន្ធត្រូវបានចាក់សោរ</h1>
         <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 16px;">សិទ្ធិប្រើប្រាស់របស់អ្នកបានផុតកំណត់ ឬមិនទាន់បានបញ្ចូលកូដ។ សូមទាក់ទងអ្នកអភិវឌ្ឍន៍។</p>
@@ -56,6 +65,7 @@
 
     <div class="sidebar-overlay" onclick="window.toggleDesktopSidebar()"></div>
 
+    <!-- របារបញ្ជីចំហៀង (Sidebar) -->
     <div class="sidebar" id="appSidebar">
         <div class="brand" onclick="window.openShopNameModal()" title="ចុចដើម្បីប្តូរឈ្មោះហាង ឬ Logo (Admin ប៉ុណ្ណោះ)">
             <img id="sidebarLogo" src="" style="display:none; width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; border: 2px solid var(--primary);">
@@ -82,28 +92,29 @@
         <div class="nav-item" style="color: var(--danger); border-top: 1px solid var(--border); margin-top: 10px;" onclick="window.handleLogout()"><i>🚪</i> ចាកចេញ (Logout)</div>
     </div>
 
+    <!-- ផ្នែកបង្ហាញខាងស្តាំ (Main Content) -->
     <div class="main-content">
         <div class="header" id="topHeaderBar" style="background: var(--primary);">
             <div style="display: flex; align-items: center; gap: 10px;">
                 <button class="sidebar-toggle-btn" onclick="window.toggleDesktopSidebar()">☰</button>
                 <div style="display: flex; align-items: center; gap: 6px;">
                     <span style="font-size: 20px;"></span>
-                    <h2 id="pageTitle" style="font-size: var(--fs-18); color: #fff;">📊 ផ្ទាំងព័ត៌មានទូទៅ (Dashboard)</h2>
+                    <h2 id="pageTitle" style="font-size: var(--fs-18); color: #fff;">ប្រព័ន្ធលក់ (Point of Sale)</h2>
                 </div>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
                 <div style="font-size: var(--fs-13); color: #fff; font-weight: bold; padding: 5px 12px; background: rgba(0,0,0,0.25); border-radius: 20px; display: flex; align-items: center; gap: 6px;" id="currentUserDisplay">
                     <span>👤</span> អ្នកគ្រប់គ្រងប្រព័ន្ធ
                 </div>
                 <div style="font-size: var(--fs-13); color: #fff;" id="currentDate"></div>
-                <div id="globalSyncBadge" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid rgba(255,255,255,0.4);">🟢 ទិន្នន័យទាន់សម័យ</div>
             </div>
         </div>
 
         <div class="content-body" id="mainScroller">
             
-            <div id="tab-dashboard" class="tab-content active">
+            <!-- ផ្ទាំងធំ (Dashboard) -->
+            <div id="tab-dashboard" class="tab-content">
                 <div class="dashboard-grid-menu" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; margin-bottom: 25px;">
                     <button id="grid-btn-pos" class="btn btn-primary" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos'))"><i style="font-size: 30px; margin-bottom: 5px;">🛒</i>លក់ (POS)</button>
                     <button id="grid-btn-inv" class="btn btn-success" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('inventory', '📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory'))"><i style="font-size: 30px; margin-bottom: 5px;">📦</i>ស្តុកទំនិញ</button>
@@ -129,26 +140,9 @@
                     <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><span>ប្រាក់ចំណេញសុទ្ធ (Net Profit)</span><h3 id="dashNetProfit" style="font-weight: 900; color: #a78bfa;">$0.00</h3></div>
                 </div>
                 
-                <div id="expiryAlertSection" style="margin-bottom: 25px; display: none;">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                        <h3 style="margin-bottom: 0; color: var(--danger); font-size: var(--fs-18);">🚨 ថ្នាំជិតផុតកំណត់ (Expired / Near Expiry Alert)</h3>
-                        <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="window.toggleSection('expiryAlertTableContainer')">🔽 បិទ/បើក</button>
-                    </div>
-                    <div id="expiryAlertTableContainer" style="transition: all 0.3s ease; overflow: hidden;">
-                        <div class="table-responsive">
-                            <table>
-                                <thead>
-                                    <tr><th>ឈ្មោះទំនិញ/ថ្នាំ</th><th>ប្រភេទ</th><th>ថ្ងៃផុតកំណត់</th><th>ស្ថានភាព</th><th>សកម្មភាព</th></tr>
-                                </thead>
-                                <tbody id="expiryAlertTable"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h3 style="margin-bottom: 0; color: var(--primary); font-size: var(--fs-18);">ជិតអស់ពីស្តុក (Low Stock Alert)</h3>
-                    <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="window.toggleSection('lowStockCardContainer')">🔽 បិទ/បើក</button>
+                    <button class="btn btn-outline" style="padding: 4px 10px; font-size: 12px;" onclick="window.toggleLowStockSection()">🔽 បិទ/បើក</button>
                 </div>
                 <div id="lowStockCardContainer" style="transition: all 0.3s ease; overflow: hidden;">
                     <div class="table-responsive">
@@ -165,6 +159,7 @@
                 <div class="table-responsive"><table><thead><tr><th>ចំណាត់ថ្នាក់</th><th>ឈ្មោះទំនិញ</th><th>ចំនួនលក់បាន</th><th>ចំណូលសរុប</th></tr></thead><tbody id="topSellingTable"></tbody></table></div>
             </div>
 
+            <!-- ផ្ទាំងស្តុក (Inventory) -->
             <div id="tab-inventory" class="tab-content">
                 <div class="toolbar" style="display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: nowrap;">
@@ -179,7 +174,6 @@
                     <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap;">
                         <select id="filterCategory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ប្រភេទ</option></select>
                         <select id="filterStatus" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ស្ថានភាពស្តុក</option><option value="in_stock">✅ នៅមានស្តុក (>0)</option><option value="out_stock">❌ អស់ស្តុក (0)</option></select>
-                        <select id="sortInventory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="newest">ថ្មីបំផុត</option><option value="qty_asc">ស្តុកតិចទៅច្រើន</option><option value="qty_desc">ស្តុកច្រើនទៅតិច</option></select>
                     </div>
 
                     <div style="display: flex; gap: 8px; width: 100%; align-items: center; justify-content: flex-end; flex-wrap: wrap;" id="inventoryActionButtonsGroup">
@@ -194,7 +188,8 @@
                 <div id="productGridContainer"></div>
             </div>
 
-            <div id="tab-pos" class="tab-content">
+            <!-- ផ្ទាំងលក់ (POS) -->
+            <div id="tab-pos" class="tab-content active">
                 <div class="pos-container">
                     <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%;">
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: nowrap; flex-shrink: 0; align-items: center;">
@@ -263,6 +258,7 @@
                 </div>
             </div>
 
+            <!-- ផ្ទាំងវិក្កយបត្ររង់ចាំទូទាត់ (Unpaid/Invoices) -->
             <div id="tab-unpaid" class="tab-content">
                 <div class="toolbar">
                     <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderUnpaid()" style="width: 200px;">
@@ -283,11 +279,12 @@
                                 <th onclick="window.sortTable('mainUnpaidTable', 1)">កាលបរិច្ឆេទ <span>⬍</span></th>
                                 <th onclick="window.sortTable('mainUnpaidTable', 2)">ឈ្មោះអតិថិជន <span>⬍</span></th>
                                 <th onclick="window.sortTable('mainUnpaidTable', 3)">ទំនិញ <span>⬍</span></th>
-                                <th onclick="window.sortTable('mainUnpaidTable', 4, 'number')">សរុប <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainUnpaidTable', 4)">សរុប <span>⬍</span></th>
                                 <th onclick="window.sortTable('mainUnpaidTable', 5)">ស្ថានភាព <span>⬍</span></th>
                                 <th onclick="window.sortTable('mainUnpaidTable', 6)">អ្នកលក់ <span>⬍</span></th>
                                 <th style="text-align:center;">សកម្មភាព</th>
                             </tr>
+                            <!-- ជួរឈរសម្រាប់វាយបញ្ចូលពាក្យស្វែងរក (Per-Column Filter) -->
                             <tr class="filter-row">
                                 <th><input type="text" class="col-filter" id="unpaidFilterCol0" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="លេខ..."></th>
                                 <th><input type="text" class="col-filter" id="unpaidFilterCol1" onkeyup="window.filterTable('mainUnpaidTable')" placeholder="កាលបរិច្ឆេទ..."></th>
@@ -309,6 +306,7 @@
                 </div>
             </div>
 
+            <!-- ផ្ទាំងការចំណាយ (Expenses) -->
             <div id="tab-expenses" class="tab-content">
                 <div class="toolbar">
                     <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.renderExpenses()" style="width: 250px;">
@@ -322,10 +320,11 @@
                             <tr class="header-row">
                                 <th onclick="window.sortTable('mainExpenseTable', 0)">កាលបរិច្ឆេទ <span>⬍</span></th>
                                 <th onclick="window.sortTable('mainExpenseTable', 1)">ចំណាត់ថ្នាក់ (Category) <span>⬍</span></th>
-                                <th onclick="window.sortTable('mainExpenseTable', 2, 'number')">ទឹកប្រាក់ចំណាយ <span>⬍</span></th>
+                                <th onclick="window.sortTable('mainExpenseTable', 2)">ទឹកប្រាក់ចំណាយ <span>⬍</span></th>
                                 <th onclick="window.sortTable('mainExpenseTable', 3)">បរិយាយ / ចំណាំ <span>⬍</span></th>
                                 <th style="text-align: center;">សកម្មភាព</th>
                             </tr>
+                             <!-- ជួរឈរសម្រាប់វាយបញ្ចូលពាក្យស្វែងរក (Per-Column Filter) -->
                              <tr class="filter-row">
                                 <th><input type="text" class="col-filter" id="expenseFilterCol0" onkeyup="window.filterTable('mainExpenseTable')" placeholder="កាលបរិច្ឆេទ..."></th>
                                 <th><input type="text" class="col-filter" id="expenseFilterCol1" onkeyup="window.filterTable('mainExpenseTable')" placeholder="ចំណាត់ថ្នាក់..."></th>
@@ -343,6 +342,7 @@
                 </div>
             </div>
 
+            <!-- ផ្ទាំងអតិថិជន (Customers) -->
             <div id="tab-customers" class="tab-content">
                 <div class="toolbar">
                     <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderCustomers()" style="width: 300px;">
@@ -375,6 +375,7 @@
                 </div>
             </div>
 
+            <!-- ផ្ទាំងប្រវត្តិប្រតិបត្តិការ (History Log) -->
             <div id="tab-history" class="tab-content">
                 <div class="toolbar">
                     <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderHistory()" style="width: 250px;">
@@ -411,6 +412,7 @@
                 </div>
             </div>
 
+            <!-- ផ្ទាំងការកំណត់ (Settings) -->
             <div id="tab-settings" class="tab-content">
                 <div style="max-width: 900px; margin: auto; display: flex; flex-direction: column; gap: 25px;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
@@ -454,11 +456,6 @@
                             <div style="font-size: 12px; color: var(--text-muted); margin-top: 5px;">(សរសេរស្ថានភាពដោយខណ្ឌដោយសញ្ញាក្បៀស ",")</div>
                         </div>
 
-                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:15px; cursor:pointer; font-size: var(--fs-16);">
-                            <input type="checkbox" id="setExpiry" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;">
-                            <span><strong style="color:var(--text-main);">កាលបរិច្ឆេទផុតកំណត់ (Expiry Date):</strong> បើកមុខងារកត់ត្រាថ្ងៃផុតកំណត់ និងប្រព័ន្ធផ្ដល់ដំណឹង (Alert) ទំនិញជិត ឬហួសកាលកំណត់។</span>
-                        </label>
-
                         <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);">
                             <input type="checkbox" id="setPreorder" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;">
                             <span><strong style="color:var(--text-main);">ប្រព័ន្ធកក់ប្រាក់ (Pre-order):</strong> អនុញ្ញាតឲ្យកត់ត្រាការកក់ប្រាក់សម្រាប់ទំនិញដែលមិនទាន់ចូលស្តុក។</span>
@@ -467,16 +464,6 @@
                         <div style="display:flex; align-items:center; gap:12px; margin-bottom:10px; font-size: var(--fs-16);">
                             <span><strong style="color:var(--text-main);">ថ្លៃសេវាដឹកជញ្ជូនទូទៅ (Default Delivery Fee):</strong></span>
                             <input type="number" id="setDeliveryFee" class="form-control" style="width: 80px; padding: 5px; height: 35px; text-align: center;" value="1.5" onchange="window.saveSysSettings()"> $
-                        </div>
-
-                        <div style="display:flex; align-items:center; gap:12px; margin-top: 15px; font-size: var(--fs-16);">
-                            <span><strong style="color:var(--text-main);">🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖</strong></span>
-                            <input type="password" id="setStorePin" class="form-control" maxlength="4" placeholder="1234" style="width: 100px; padding: 5px; height: 35px; text-align: center;" onchange="window.saveSysSettings()">
-                        </div>
-
-                        <div style="margin-top: 15px;">
-                            <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖</strong></label>
-                            <textarea id="setTickerText" class="form-control" rows="2" placeholder="សរសេរសេចក្តីជូនដំណឹងអក្សររត់នៅទីនេះ..." onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
                         </div>
                     </div>
 
@@ -502,7 +489,7 @@
                                     <tr class="filter-row">
                                         <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
                                         <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
-                                        <th><select class="col-filter" onchange="window.filterTable('mainUserTable')"><option value="">ទាំងអស់</option><option value="admin">Admin</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select></th>
+                                        <th><select class="col-filter" onchange="window.filterTable('mainUserTable')"><option value="">ទាំងអស់</option><option value="Admin">Admin</option><option value="Sales">Sales</option><option value="Warehouse">Warehouse</option></select></th>
                                         <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
                                         <th></th>
                                     </tr>
@@ -545,12 +532,12 @@
                 </div>
             </div>
 
-            <!-- TAB 9: ABOUT & BACKUP RESTORE -->
+            <!-- ផ្ទាំងអំពីប្រព័ន្ធ (About) -->
             <div id="tab-about" class="tab-content">
                 <div style="display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: auto;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center;">
                         <h1 style="color: var(--primary); font-size: var(--fs-28); margin-bottom: 5px;">SKM <span style="color: var(--warning);">INTEGRATE</span></h1>
-                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 7.5 (Pharma & Expiry Date Ready)</p>
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 7.0 (Smart Counter & Excel Features)</p>
                         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
                             <span class="badge" style="background: rgba(56, 189, 248, 0.1); color: var(--primary); padding: 6px 12px; font-size: var(--fs-13);">ERP System</span>
                             <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 6px 12px; font-size: var(--fs-13);">POS Ready</span>
@@ -570,15 +557,13 @@
                         </div>
                     </div>
 
-                    <!-- 🌟 ផ្នែក Backup & Restore (Fixed Button Handler) -->
                     <div style="background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
                         <h2 style="font-size: var(--fs-18); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">💾 គ្រប់គ្រងទិន្នន័យ (Backup & Restore All)</h2>
                         <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 15px;">ទាញយកទិន្នន័យទាំងអស់ក្នុង App នេះ (ស្តុក, ប្រវត្តិ, វិក្កយបត្រ, អតិថិជន) រក្សាទុក ដើម្បីការពារការបាត់បង់ ឬផ្ទេរទៅឧបករណ៍ផ្សេង។</p>
-                        
-                        <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
-                            <button type="button" class="btn btn-primary" style="padding: 10px 18px; font-weight: bold; border-radius: 8px;" onclick="window.triggerAppBackup()">💾 Backup ទិន្នន័យទាំងអស់</button>
-                            
-                            <button type="button" class="btn btn-warning" style="padding: 10px 18px; font-weight: bold; border-radius: 8px;" onclick="window.triggerAppRestore()">📂 Restore បញ្ចូលទិន្នន័យវិញ</button>
+                        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                            <button class="btn btn-primary" onclick="window.exportData()">💾 Backup ទិន្នន័យទាំងអស់</button>
+                            <button class="btn btn-warning" onclick="document.getElementById('importBackupFile2').click()">📂 Restore បញ្ចូលទិន្នន័យវិញ</button>
+                            <input type="file" id="importBackupFile2" accept=".json" style="display: none;" onchange="window.importData(event)">
                         </div>
                     </div>
                 </div>
@@ -587,6 +572,11 @@
         </div>
     </div>
 
+    <!-- ========================================================
+         MODALS (ផ្ទាំងលោតផ្សេងៗ)
+         ======================================================== -->
+
+    <!-- Modal: បង្កើត/កែប្រែ គណនី -->
     <div class="modal-overlay" id="userManageModal" style="z-index: 1005;">
         <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
@@ -632,6 +622,7 @@
         </div>
     </div>
 
+    <!-- Modal: ទូទាត់ប្រាក់ (Checkout) -->
     <div class="modal-overlay" id="checkoutModal" style="z-index: 1005;">
         <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
@@ -665,6 +656,7 @@
         </div>
     </div>
     
+    <!-- Modal: បញ្ជាក់ការទូទាត់ប្រាក់ (Debt Payment) -->
     <div class="modal-overlay" id="debtPaymentModal" style="z-index: 1006;">
         <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
@@ -709,6 +701,7 @@
         </div>
     </div>
     
+    <!-- Modal: កក់ប្រាក់ (Pre-order) -->
     <div class="modal-overlay" id="preorderModal" style="z-index: 1005;">
         <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
@@ -742,6 +735,7 @@
         </div>
     </div>
 
+    <!-- Modal: កត់ត្រាចំណាយ (Expense Modal) -->
     <div class="modal-overlay" id="expenseModal">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">📉 កត់ត្រាចំណាយថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeExpenseModal()">✕</button></div>
@@ -769,6 +763,7 @@
         </div>
     </div>
 
+    <!-- Modal: ប្រអប់សារ (Message Box) -->
     <div class="modal-overlay" id="ksMsgBox" style="z-index: 999999;">
         <div class="modal" style="max-width: 400px; text-align: center; margin: auto;">
             <div class="modal-body">
@@ -779,6 +774,7 @@
         </div>
     </div>
 
+    <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile) -->
     <div class="modal-overlay" id="shopNameModal" style="z-index: 9000;">
         <div class="modal" style="max-width: 350px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-18);">✏️ ប្តូរឈ្មោះហាង និង Logo</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeShopNameModal()">✕</button></div>
@@ -821,6 +817,7 @@
         </div>
     </div>
 
+    <!-- Modal: បង្កើត/កែប្រែ ទំនិញ (Product) -->
     <div class="modal-overlay" id="productModal">
         <div class="modal">
             <div class="modal-header"><h2 id="modalTitle" style="font-size: var(--fs-20);">ទំនិញថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeModal()">✕</button></div>
@@ -846,16 +843,13 @@
                     <div><label>ខ្នាត/ឯកតា (Unit)</label><input type="text" id="pUnit" class="form-control" list="unitList" placeholder="ឧ. កេះ, បេ" style="width: 100%;"><datalist id="unitList"></datalist></div>
                 </div>
                 
-                <div class="form-row" style="margin-top: 15px;">
-                    <div id="pConditionContainer" style="display: none;">
+                <!-- ➕ បន្ថែមជម្រើសស្ថានភាពទំនិញ (Condition) -->
+                <div class="form-row" id="pConditionContainer" style="display: none; margin-top: 15px;">
+                    <div>
                         <label>ស្ថានភាពទំនិញ (Condition)</label>
                         <select id="pCondition" class="form-control" style="width: 100%;">
                             <option value="">-- ជ្រើសរើស --</option>
                         </select>
-                    </div>
-                    <div id="pExpiryContainer" style="display: none;">
-                        <label>ថ្ងៃផុតកំណត់ (Expiry Date) *</label>
-                        <input type="date" id="pExpiry" class="form-control" style="width: 100%;">
                     </div>
                 </div>
 
@@ -877,6 +871,7 @@
         </div>
     </div>
 
+    <!-- Modal: បង្កើត/កែប្រែ អតិថិជន (Customer) -->
     <div class="modal-overlay" id="customerModal">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header"><h2 id="customerModalTitle" style="font-size: var(--fs-20);">អតិថិជនថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeCustomerModal()">✕</button></div>
@@ -889,6 +884,7 @@
         </div>
     </div>
 
+    <!-- Modal: ប្រវត្តិអតិថិជន (Customer History) -->
     <div class="modal-overlay" id="customerHistoryModal" style="z-index: 1001;">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">🛍️ ប្រវត្តិទិញរបស់: <span id="chCustName" style="color: var(--primary);"></span></h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeCustomerHistoryModal()">✕</button></div>
@@ -897,6 +893,7 @@
         </div>
     </div>
 
+    <!-- Modal: មើលវិក្កយបត្រ (Invoice View/Print) -->
     <div class="modal-overlay" id="invoiceViewModal" style="z-index: 1002;">
         <div class="modal" style="max-width: 500px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">👁️ លម្អិតវិក្កយបត្រ</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeInvoiceViewModal()">✕</button></div>
@@ -917,6 +914,7 @@
         </div>
     </div>
 
+    <!-- Modal: កែប្រែវិក្កយបត្ររង់ចាំទូទាត់ (Edit Unpaid Invoice) -->
     <div class="modal-overlay" id="invoiceEditModal">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">✏️ កែប្រែវិក្កយបត្ររង់ចាំទូទាត់</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeInvoiceEditModal()">✕</button></div>
@@ -933,232 +931,145 @@
         </div>
     </div>
 
+    <!-- កន្លែងសម្រាប់ព្រីន (Print Area) -->
     <div id="printReceiptArea" style="display: none;"></div>
 
-    <!-- 🌟 JavaScript Modules Sequence[cite: 1] -->
-    <script src="config.js"></script>
-    <script src="theme.js"></script>
-    <script src="auth.js"></script>
-    <script src="inventory.js"></script>
-    <script src="pos.js"></script>
-    <script src="finance.js"></script>
-    <script src="customer.js"></script>
-    <script src="main.js"></script>
-
-    <!-- 🌟 Inline Logic & Direct Backup/Restore Triggers[cite: 1] -->
-    <script>
-        if (navigator.serviceWorker) {
-            navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' });
-        }
+    <!-- ភ្ជាប់ឯកសារ JavaScript -->
+    <script src="script.js"></script>
+<!-- ដាក់កូដចុះឈ្មោះ Service Worker នៅចុងបញ្ចប់នៃ Body -->
+  <script>
+    if (navigator.serviceWorker) {
+      navigator.serviceWorker.register('pwabuilder-sw.js', {
+        scope: './'
+      })
+    }
+    
+    // Global filter function for all tables with per-column filtering
+    window.filterTable = function(tableId) {
+        const table = document.getElementById(tableId);
+        if (!table) return;
         
-        window.toggleSection = function(id) {
-            const el = document.getElementById(id);
-            if(el) el.style.display = (el.style.display === 'none') ? 'block' : 'none';
-        };
-
-        // 💾 Backup Trigger (Export JSON)
-        window.triggerAppBackup = function() {
-            try {
-                const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                const backupData = {};
-                
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key.includes(branchId) || key.startsWith('ks2_')) {
-                        backupData[key] = localStorage.getItem(key);
-                    }
-                }
-
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                const dateStr = new Date().toISOString().slice(0, 10);
-                downloadAnchor.setAttribute("download", `backup_${branchId}_${dateStr}.json`);
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                downloadAnchor.remove();
-
-                if (typeof window.showToast === 'function') {
-                    window.showToast("✅ Backup ទិន្នន័យបានជោគជ័យ!");
-                } else {
-                    alert("✅ Backup ទិន្នន័យបានជោគជ័យ!");
-                }
-            } catch (e) {
-                alert("❌ មានបញ្ហាក្នុងការ Backup: " + e.message);
-            }
-        };
-
-        // 📂 Restore Trigger (Dynamic Native Input Injection)
-        window.triggerAppRestore = function() {
-            const input = document.createElement('input');
-            input.type = 'file';
-            input.accept = '.json';
-            
-            input.onchange = function(e) {
-                const file = e.target.files[0];
-                if (!file) return;
-
-                if (!confirm("⚠️ តើអ្នកពិតជាចង់ Restore ទិន្នន័យនេះមែនទេ? ទិន្នន័យចាស់ទាំងអស់នឹងត្រូវជំនួសដោយទិន្នន័យពី File នេះ!")) {
-                    return;
-                }
-
-                const reader = new FileReader();
-                reader.onload = async function(event) {
-                    try {
-                        const backupData = JSON.parse(event.target.result);
-                        if (typeof backupData !== 'object' || backupData === null) {
-                            throw new Error("ទ្រង់ទ្រាយឯកសារមិនត្រឹមត្រូវ");
-                        }
-
-                        // Write to LocalStorage
-                        Object.keys(backupData).forEach(key => {
-                            localStorage.setItem(key, backupData[key]);
-                        });
-
-                        // Sync to Supabase if Online
-                        const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                        if (window.supabaseClient && navigator.onLine) {
-                            try {
-                                const payload = {};
-                                Object.keys(backupData).forEach(k => {
-                                    try { payload[k] = JSON.parse(backupData[k]); } catch(err) { payload[k] = backupData[k]; }
-                                });
-                                await window.supabaseClient.from('branch_store').upsert({
-                                    branch_id: branchId,
-                                    data_json: payload,
-                                    updated_at: new Date().toISOString()
-                                });
-                            } catch(err) {
-                                console.warn("Supabase Sync Warning:", err);
-                            }
-                        }
-
-                        alert("✅ Restore ទិន្នន័យបានជោគជ័យ! ប្រព័ន្ធនឹងដំណើរការឡើងវិញ។");
-                        window.location.reload();
-                    } catch (err) {
-                        alert("❌ ឯកសារ Backup មិនត្រឹមត្រូវ (Invalid JSON): " + err.message);
-                    }
-                };
-                reader.readAsText(file);
-            };
-
-            input.click();
-        };
-
-        window.filterTable = function(tableId) {
-            const table = document.getElementById(tableId);
-            if (!table) return;
-            
-            const tbody = table.querySelector('tbody');
-            const rows = tbody.querySelectorAll('tr');
-            const thead = table.querySelector('thead');
-            const filterRow = thead.querySelector('.filter-row');
-            
-            if (!filterRow) return;
-            
-            const filterInputs = filterRow.querySelectorAll('.col-filter');
-
-            rows.forEach(row => {
-                let showRow = true;
-                const cells = row.querySelectorAll('td');
-                
-                filterInputs.forEach((input, index) => {
-                    const filterValue = input.value.toLowerCase();
-                    if (filterValue && cells[index]) {
-                        let cellText = cells[index].textContent || cells[index].innerText;
-                        if (input.tagName === 'SELECT') {
-                            if (input.value && cellText.trim() !== input.value) {
-                                showRow = false;
-                            }
-                        } else {
-                            if (cellText.toLowerCase().indexOf(filterValue) === -1) {
-                                showRow = false;
-                            }
-                        }
-                    }
-                });
-
-                row.style.display = showRow ? '' : 'none';
-            });
-            
-            if (typeof window.recalculateTotals === 'function') {
-                window.recalculateTotals(tableId, rows);
-            }
-        };
+        const tbody = table.querySelector('tbody');
+        const rows = tbody.querySelectorAll('tr');
         
-        window.recalculateTotals = function(tableId, rows) {
-            if (tableId === 'mainUnpaidTable') {
-                let totalPaid = 0;
-                let totalUnpaid = 0;
-                rows.forEach(row => {
-                    if (row.style.display !== 'none' && row.hasAttribute('data-paid')) {
-                        totalPaid += parseFloat(row.getAttribute('data-paid')) || 0;
-                        totalUnpaid += parseFloat(row.getAttribute('data-unpaid')) || 0;
-                    }
-                });
-                const paidEl = document.getElementById('summaryInvoicePaid');
-                const unpaidEl = document.getElementById('summaryInvoiceUnpaid');
-                if(paidEl) paidEl.innerText = '$' + totalPaid.toFixed(2);
-                if(unpaidEl) unpaidEl.innerText = '$' + totalUnpaid.toFixed(2);
-            } else if (tableId === 'mainExpenseTable') {
-                let totalExp = 0;
-                rows.forEach(row => {
-                    if (row.style.display !== 'none') {
-                        let cells = row.querySelectorAll('td');
-                        if(cells.length > 2) {
-                            totalExp += parseFloat(cells[2].getAttribute('data-sort') || cells[2].textContent.replace(/[^0-9.-]+/g,"")) || 0;
-                        }
-                    }
-                });
-                const expEl = document.getElementById('summaryTotalExpense');
-                if(expEl) expEl.innerText = '$' + totalExp.toFixed(2);
-            }
-        };
+        // Find the filter row within the thead
+        const thead = table.querySelector('thead');
+        const filterRow = thead.querySelector('.filter-row');
+        
+        if (!filterRow) return;
+        
+        const filterInputs = filterRow.querySelectorAll('.col-filter');
 
-        window.sortDirection = {};
-        window.sortTable = function(tableId, n, type = 'string') {
-            const table = document.getElementById(tableId);
-            if (!table) return;
+        rows.forEach(row => {
+            let showRow = true;
+            const cells = row.querySelectorAll('td');
             
-            const tbody = table.querySelector('tbody');
-            const rows = Array.from(tbody.querySelectorAll('tr'));
-            
-            window.sortDirection[tableId + n] = !window.sortDirection[tableId + n];
-            const dir = window.sortDirection[tableId + n] ? 1 : -1;
-
-            rows.sort((a, b) => {
-                const cellA = a.querySelectorAll('td')[n];
-                const cellB = b.querySelectorAll('td')[n];
-                
-                if (!cellA || !cellB) return 0;
-                
-                const x = cellA.textContent.trim();
-                const y = cellB.textContent.trim();
-
-                if (type === 'number') {
-                    const numX = parseFloat(x.replace(/[^0-9.-]+/g, ""));
-                    const numY = parseFloat(y.replace(/[^0-9.-]+/g, ""));
-                    if (!isNaN(numX) && !isNaN(numY)) {
-                        return (numX - numY) * dir;
-                    }
-                }
-                return x.localeCompare(y) * dir;
-            });
-
-            rows.forEach(row => tbody.appendChild(row));
-            
-            const headers = table.querySelectorAll('.header-row th');
-            headers.forEach((th, index) => {
-                const span = th.querySelector('span');
-                if (span) {
-                    if (index === n) {
-                        span.innerHTML = dir === 1 ? '↑' : '↓';
+            filterInputs.forEach((input, index) => {
+                const filterValue = input.value.toLowerCase();
+                if (filterValue && cells[index]) {
+                    // Handle select vs input
+                    let cellText = cells[index].textContent || cells[index].innerText;
+                    
+                    if (input.tagName === 'SELECT') {
+                         if (input.value && cellText.trim() !== input.value) {
+                             showRow = false;
+                         }
                     } else {
-                        span.innerHTML = '⬍';
+                         if (cellText.toLowerCase().indexOf(filterValue) === -1) {
+                             showRow = false;
+                         }
                     }
                 }
             });
-        };
-    </script>
+
+            if (showRow) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+        
+        // Recalculate totals based on visible rows
+        recalculateTotals(tableId, rows);
+    };
+    
+    function recalculateTotals(tableId, rows) {
+        if (tableId === 'mainUnpaidTable') {
+            let totalPaid = 0;
+            let totalUnpaid = 0;
+            rows.forEach(row => {
+                if (row.style.display !== 'none' && row.hasAttribute('data-paid')) {
+                    totalPaid += parseFloat(row.getAttribute('data-paid')) || 0;
+                    totalUnpaid += parseFloat(row.getAttribute('data-unpaid')) || 0;
+                }
+            });
+            const paidEl = document.getElementById('summaryInvoicePaid');
+            const unpaidEl = document.getElementById('summaryInvoiceUnpaid');
+            if(paidEl) paidEl.innerText = '$' + totalPaid.toFixed(2);
+            if(unpaidEl) unpaidEl.innerText = '$' + totalUnpaid.toFixed(2);
+        } else if (tableId === 'mainExpenseTable') {
+            let totalExp = 0;
+            rows.forEach(row => {
+                if (row.style.display !== 'none') {
+                    let cells = row.querySelectorAll('td');
+                    if(cells.length > 2) {
+                        totalExp += parseFloat(cells[2].getAttribute('data-sort') || cells[2].textContent.replace(/[^0-9.-]+/g,"")) || 0;
+                    }
+                }
+            });
+            const expEl = document.getElementById('summaryTotalExpense');
+            if(expEl) expEl.innerText = '$' + totalExp.toFixed(2);
+        }
+    }
+
+    // Global sort function
+    window.sortDirection = {};
+    window.sortTable = function(tableId, n, type = 'string') {
+        const table = document.getElementById(tableId);
+        if (!table) return;
+        
+        const tbody = table.querySelector('tbody');
+        const rows = Array.from(tbody.querySelectorAll('tr'));
+        
+        window.sortDirection[tableId + n] = !window.sortDirection[tableId + n];
+        const dir = window.sortDirection[tableId + n] ? 1 : -1;
+
+        rows.sort((a, b) => {
+            const cellA = a.querySelectorAll('td')[n];
+            const cellB = b.querySelectorAll('td')[n];
+            
+            if (!cellA || !cellB) return 0;
+            
+            const x = cellA.textContent.trim();
+            const y = cellB.textContent.trim();
+
+            if (type === 'number') {
+                const numX = parseFloat(x.replace(/[^0-9.-]+/g, ""));
+                const numY = parseFloat(y.replace(/[^0-9.-]+/g, ""));
+                
+                if (!isNaN(numX) && !isNaN(numY)) {
+                    return (numX - numY) * dir;
+                }
+            }
+            
+            return x.localeCompare(y) * dir;
+        });
+
+        rows.forEach(row => tbody.appendChild(row));
+        
+        // Update header icons (optional)
+        const headers = table.querySelectorAll('.header-row th');
+        headers.forEach((th, index) => {
+            const span = th.querySelector('span');
+            if (span) {
+                if (index === n) {
+                    span.innerHTML = dir === 1 ? '↑' : '↓';
+                } else {
+                    span.innerHTML = '⬍';
+                }
+            }
+        });
+    };
+  </script>
 </body>
 </html>
