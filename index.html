@@ -875,15 +875,49 @@
             </div>
             <div class="modal-body" style="background: #fff; color: #000; padding: 20px;" id="invoiceCaptureArea">
                 <div style="text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px; margin-bottom: 10px;">
+                    <img id="viewInvoiceLogo" src="" style="display:none; max-width:80px; max-height:80px; border-radius:50%; margin:0 auto 5px;">
                     <h2 id="viewShopName" style="margin-bottom: 2px;">SKM INTEGRATE</h2>
-                    <p style="font-size: 12px; color: #666;">វិក្កយបត្រ / INVOICE</p>
+                    <p id="viewShopSubInfo" style="font-size: 11px; color: #555;"></p>
+                    <p style="font-size: 12px; color: #666; font-weight:bold; margin-top:4px;">វិក្កយបត្រ / INVOICE</p>
                     <p id="viewInvoiceIdDisplay" style="font-size: 12px;"></p>
                 </div>
                 <div id="invoiceViewContent"></div>
             </div>
             <div class="modal-footer">
+                <button class="btn btn-outline" onclick="window.downloadReceiptImage()">🖼️ រក្សាទុកជារូបភាព</button>
                 <button class="btn btn-outline" onclick="window.reprintInvoice()">🖨️ បោះពុម្ព</button>
                 <button class="btn btn-primary" onclick="window.closeInvoiceViewModal()">បិទ</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal រៀបចំព័ត៌មានហាង និង Logo/QR Code -->
+    <div class="modal-overlay" id="shopModal">
+        <div class="modal" style="max-width: 450px;">
+            <div class="modal-header">
+                <h2>🏪 កែប្រែព័ត៌មានហាង & Logo</h2>
+                <button class="btn-outline" style="border:none;" onclick="window.closeShopModal()">✕</button>
+            </div>
+            <div class="modal-body">
+                <div style="margin-bottom: 12px;">
+                    <label>ឈ្មោះហាង (Shop Name)</label>
+                    <input type="text" id="shopNameInput" class="form-control" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label>លេខទូរស័ព្ទ (Phone Number)</label>
+                    <input type="text" id="shopPhoneInput" class="form-control" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label>អាសយដ្ឋាន (Address)</label>
+                    <input type="text" id="shopAddressInput" class="form-control" style="width: 100%;">
+                </div>
+                <div style="margin-bottom: 12px;">
+                    <label>Link រូបភាព Logo (URL)</label>
+                    <input type="text" id="shopLogoInput" class="form-control" placeholder="https://..." style="width: 100%;">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="window.saveShopInfo()">រក្សាទុកព័ត៌មាន</button>
             </div>
         </div>
     </div>
@@ -910,11 +944,124 @@
                 logo: '',
                 qr: ''
             },
+            license: {
+                active: true,
+                key: 'SKM-FREE-8888'
+            },
             settings: {
                 theme: 'dark',
                 accentColor: '#10b981',
                 exchangeRate: 4000
             }
+        };
+
+        let currentUser = null;
+        let cart = [];
+        let inventoryViewMode = 'grid'; // 'grid' | 'list'
+        let posViewMode = 'grid';       // 'grid' | 'list'
+        let selectedCategoryFilter = 'all';
+
+        // Web Audio Synthesizer for beep sounds
+        function playBeepSound() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, ctx.currentTime);
+                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+            } catch (e) { console.log('Audio not supported', e); }
+        }
+
+        // Load data from LocalStorage
+        function loadData() {
+            const saved = localStorage.getItem(STORAGE_KEY);
+            if (saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    appData = { ...appData, ...parsed };
+                } catch (e) {
+                    console.error("Failed to parse data", e);
+                }
+            } else {
+                appData.products = [
+                    { id: 'P001', name: 'Coca Cola 330ml', category: 'Drink', cost: 0.4, price: 0.7, qty: 50, barcode: '8850001' },
+                    { id: 'P002', name: 'Angkor Beer Can', category: 'Drink', cost: 0.6, price: 1.0, qty: 100, barcode: '8850002' },
+                    { id: 'P003', name: 'Vital Mineral Water 500ml', category: 'Drink', cost: 0.15, price: 0.35, qty: 4, barcode: '8850003' }
+                ];
+                saveData();
+            }
+            updateShopDisplayHeader();
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(appData));
+        }
+
+        function checkLicenseStatus() {
+            if (appData.license && appData.license.active === false) {
+                document.getElementById('licenseLockScreen').style.display = 'flex';
+            } else {
+                document.getElementById('licenseLockScreen').style.display = 'none';
+            }
+        }
+
+        window.verifyAndSaveLicense = function() {
+            const key = document.getElementById('licenseInputBox').value.trim();
+            if (key === 'SKM-2026-VIP' || key === 'SKM-FREE-8888' || key.length >= 8) {
+                if (!appData.license) appData.license = {};
+                appData.license.active = true;
+                appData.license.key = key;
+                saveData();
+                document.getElementById('licenseLockScreen').style.display = 'none';
+                showToast('🔓 បើកដំណើរការសិទ្ធិប្រព័ន្ធជោគជ័យ!');
+            } else {
+                showToast('លេខកូដ License មិនត្រឹមត្រូវទេ!', true);
+            }
+        };
+
+        function updateShopDisplayHeader() {
+            if (appData.shopInfo) {
+                document.getElementById('displayShopName').innerHTML = `${appData.shopInfo.name || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size: var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`;
+                const sidebarLogo = document.getElementById('sidebarLogo');
+                if (appData.shopInfo.logo) {
+                    sidebarLogo.src = appData.shopInfo.logo;
+                    sidebarLogo.style.display = 'block';
+                } else {
+                    sidebarLogo.style.display = 'none';
+                }
+            }
+        }
+
+        window.openShopNameModal = function() {
+            if (currentUser && currentUser.role !== 'admin') {
+                return showToast('មានតែ Admin ប៉ុណ្ណោះដែលអាចកែប្រែបាន!', true);
+            }
+            document.getElementById('shopNameInput').value = appData.shopInfo.name || '';
+            document.getElementById('shopPhoneInput').value = appData.shopInfo.phone || '';
+            document.getElementById('shopAddressInput').value = appData.shopInfo.address || '';
+            document.getElementById('shopLogoInput').value = appData.shopInfo.logo || '';
+            document.getElementById('shopModal').style.display = 'flex';
+        };
+
+        window.closeShopModal = function() {
+            document.getElementById('shopModal').style.display = 'none';
+        };
+
+        window.saveShopInfo = function() {
+            appData.shopInfo.name = document.getElementById('shopNameInput').value.trim() || 'SKM INTEGRATE';
+            appData.shopInfo.phone = document.getElementById('shopPhoneInput').value.trim();
+            appData.shopInfo.address = document.getElementById('shopAddressInput').value.trim();
+            appData.shopInfo.logo = document.getElementById('shopLogoInput').value.trim();
+            
+            saveData();
+            updateShopDisplayHeader();
+            closeShopModal();
+            showToast('រក្សាទុកព័ត៌មានហាងជោគជ័យ!');
         };
 
         let currentUser = null;
@@ -1384,6 +1531,7 @@
                 if (match) {
                     addToCart(match.id);
                     e.target.value = '';
+                    playBeepSound();
                     showToast(`បានបន្ថែម ${match.name}`);
                 }
             }
@@ -1399,6 +1547,7 @@
             } else {
                 cart.push({ ...p, cartQty: 1 });
             }
+            playBeepSound();
             renderCart();
         };
 
@@ -1580,7 +1729,17 @@
             if (!inv) return;
 
             document.getElementById('invoiceViewModal').style.display = 'flex';
-            document.getElementById('viewShopName').innerText = appData.shopInfo.name;
+            document.getElementById('viewShopName').innerText = appData.shopInfo.name || 'SKM INTEGRATE';
+            
+            const viewLogo = document.getElementById('viewInvoiceLogo');
+            if (appData.shopInfo.logo) {
+                viewLogo.src = appData.shopInfo.logo;
+                viewLogo.style.display = 'block';
+            } else {
+                viewLogo.style.display = 'none';
+            }
+
+            document.getElementById('viewShopSubInfo').innerText = `ទូរស័ព្ទ: ${appData.shopInfo.phone || '-'} | ${appData.shopInfo.address || ''}`;
             document.getElementById('viewInvoiceIdDisplay').innerText = `លេខ: ${inv.id} | កាលបរិច្ឆេទ: ${new Date(inv.date).toLocaleString('km-KH')}`;
 
             const container = document.getElementById('invoiceViewContent');
@@ -1614,6 +1773,16 @@
                     សរុបចុងក្រោយ: $${inv.total.toFixed(2)}
                 </div>
             `;
+        };
+
+        window.downloadReceiptImage = function() {
+            const target = document.getElementById('invoiceCaptureArea');
+            html2canvas(target).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Invoice_${Date.now()}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
         };
 
         window.closeInvoiceViewModal = function() {
@@ -1784,6 +1953,7 @@
 
         window.onload = function() {
             loadData();
+            checkLicenseStatus();
             document.getElementById('currentDate').innerText = new Date().toLocaleDateString('km-KH');
         };
     </script>
