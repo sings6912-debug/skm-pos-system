@@ -501,7 +501,7 @@
 
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border);">
                         <h2 style="font-size: var(--fs-20); margin-bottom: 20px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px;">⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)</h2>
-                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 25px;">កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។</p>
+                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 25px;">កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់。</p>
 
                         <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setCust" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">អតិថិជន (Customers):</strong> អនុញ្ញាតឲ្យកត់ត្រា និងគ្រប់គ្រងទិន្នន័យអតិថិជន។</span></label>
                         <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setUnpaid" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">រង់ចាំទូទាត់ (Unpaid Invoices):</strong> អនុញ្ញាតឲ្យរក្សាទុកវិក្កយបត្រមិនទាន់ទូទាត់។</span></label>
@@ -920,195 +920,46 @@
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">✏️ កែប្រែវិក្កយបត្ររង់ចាំទូទាត់</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeInvoiceEditModal()">✕</button></div>
             <div class="modal-body">
                 <input type="hidden" id="editInvId">
-                <div class="form-row"><div><label>ឈ្មោះអតិថិជន *</label><input type="text" id="editInvName" class="form-control" list="customerDatalist" onchange="window.autoFillCustomerPhone('edit')" style="width: 100%;"></div><div><label>លេខទូរស័ព្ទ</label><input type="text" id="editInvPhone" class="form-control" style="width: 100%;"></div></div>
-                <hr style="border: none; border-top: 1px dashed var(--border); margin: 20px 0;">
-                <h3 style="margin-bottom: 10px; font-size: var(--fs-16);">ទំនិញក្នុងវិក្កយបត្រ</h3>
-                <div style="display: flex; gap: 10px; margin-bottom: 15px; align-items: flex-end;"><div style="flex: 1;"><select id="editInvAddItemSelect" class="form-control" style="width: 100%;"><option value="">-- ជ្រើសរើសទំនិញបន្ថែម --</option></select></div><button class="btn btn-primary" onclick="window.addItemToEditingInvoice()">➕ បន្ថែម</button></div>
-                <div class="table-responsive"><table style="font-size: var(--fs-13);"><thead><tr><th>ទំនិញ</th><th style="width: 100px; text-align: center;">ចំនួន</th><th style="width: 100px; text-align: right;">តម្លៃលក់</th><th style="width: 100px; text-align: right;">សរុប</th><th style="width: 50px; text-align: center;">លុប</th></tr></thead><tbody id="editInvItemsList"></tbody></table></div>
-                <div style="text-align: right; margin-top: 15px; font-size: var(--fs-18);">សរុបទឹកប្រាក់ថ្មី: <strong id="editInvTotalPreview" style="color: var(--success);">$0.00</strong></div>
+                <div class="form-row">
+                    <div style="flex: 1;"><label style="display:block; margin-bottom:5px;">ឈ្មោះអតិថិជន</label><input type="text" id="editInvCustomerName" class="form-control" style="width: 100%;"></div>
+                    <div style="flex: 1;"><label style="display:block; margin-bottom:5px;">លេខទូរស័ព្ទ</label><input type="text" id="editInvCustomerPhone" class="form-control" style="width: 100%;"></div>
+                </div>
+                <div style="margin-top: 15px;">
+                    <label style="display:block; margin-bottom:10px; font-weight:bold;">បញ្ជីទំនិញក្នុងវិក្កយបត្រ៖</label>
+                    <div class="table-responsive">
+                        <table style="font-size: var(--fs-13);">
+                            <thead>
+                                <tr>
+                                    <th>ឈ្មោះទំនិញ</th>
+                                    <th style="width: 100px;">តម្លៃ ($)</th>
+                                    <th style="width: 90px;">ចំនួន</th>
+                                    <th style="width: 110px;">សរុប ($)</th>
+                                    <th style="width: 50px; text-align:center;">លុប</th>
+                                </tr>
+                            </thead>
+                            <tbody id="editInvItemsTable"></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div style="margin-top: 15px; display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 10px; background: rgba(0,0,0,0.05); padding: 12px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div><label style="display:block; margin-bottom:5px;">បញ្ចុះតម្លៃ ($/%)</label><input type="number" id="editInvDiscount" class="form-control" value="0" oninput="window.recalculateEditInvTotal()" style="width: 100%;"></div>
+                    <div><label style="display:block; margin-bottom:5px;">ថ្លៃដឹកជញ្ជូន ($)</label><input type="number" id="editInvDelivery" class="form-control" value="0" oninput="window.recalculateEditInvTotal()" style="width: 100%;"></div>
+                    <div><label style="display:block; margin-bottom:5px;">ប្រាក់បានបង់/កក់ ($)</label><input type="number" id="editInvPaid" class="form-control" value="0" oninput="window.recalculateEditInvTotal()" style="width: 100%;"></div>
+                </div>
+                <div style="margin-top: 15px; text-align: right; font-size: var(--fs-16); font-weight: bold;">
+                    <span>សរុបចុងក្រោយ៖ <span id="editInvTotalDisplay" style="color: var(--primary);">$0.00</span></span> | 
+                    <span>នៅខ្វះ៖ <span id="editInvRemainingDisplay" style="color: var(--danger);">$0.00</span></span>
+                </div>
             </div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeInvoiceEditModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveInvoiceChanges()">រក្សាទុករាល់ការផ្លាស់ប្តូរ</button></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="window.closeInvoiceEditModal()">បោះបង់</button>
+                <button class="btn btn-primary" onclick="window.saveEditedInvoice()">រក្សាទុកការកែប្រែ</button>
+            </div>
         </div>
     </div>
 
-    <!-- កន្លែងសម្រាប់ព្រីន (Print Area) -->
-    <div id="printReceiptArea" style="display: none;"></div>
+    <!-- ផ្ទាំងបោះពុម្ពវិក្កយបត្រ (Print Container) -->
+    <div id="printArea" class="print-only"></div>
 
-    <!-- ភ្ជាប់ឯកសារ JavaScript -->
-    <script src="script.js"></script>
-<!-- ដាក់កូដចុះឈ្មោះ Service Worker នៅចុងបញ្ចប់នៃ Body -->
-  <script>
-// ១. ស្ដាប់ព្រឹត្តិការណ៍ពេលទំព័រ Load រួច ដើម្បីឆែក Session ដោយស្វ័យប្រវត្តិ
-window.addEventListener('DOMContentLoaded', async () => {
-  // ទាញយក Session ពី Supabase
-  const { data: { session } } = await supabase.auth.getSession();
-  
-  if (session) {
-    // បើមាន Session -> បង្ហាញ Dashboard លាក់ Login
-    showDashboardView();
-  } else {
-    // បើគ្មាន Session -> បង្ហាញ Login View
-    showLoginView();
-  }
-});
-
-// ២. Listen រាល់ពេលមានការផ្លាស់ប្តូរ Auth State (Login / Logout)
-supabase.auth.onAuthStateChange((event, session) => {
-  if (session) {
-    showDashboardView();
-  } else {
-    showLoginView();
-  }
-});
-
-// Helper Functions សម្រាប់ប្តូរអេក្រង់
-function showDashboardView() {
-  const loginView = document.getElementById('login-view');
-  const dashboardView = document.getElementById('dashboard-view');
-  
-  if (loginView) loginView.style.display = 'none';
-  if (dashboardView) dashboardView.style.display = 'block';
-}
-
-function showLoginView() {
-  const loginView = document.getElementById('login-view');
-  const dashboardView = document.getElementById('dashboard-view');
-  
-  if (loginView) loginView.style.display = 'flex';
-  if (dashboardView) dashboardView.style.display = 'none';
-}
-    if (navigator.serviceWorker) {
-      navigator.serviceWorker.register('pwabuilder-sw.js', {
-        scope: './'
-      })
-    }
-    
-    // Global filter function for all tables with per-column filtering
-    window.filterTable = function(tableId) {
-        const table = document.getElementById(tableId);
-        if (!table) return;
-        
-        const tbody = table.querySelector('tbody');
-        const rows = tbody.querySelectorAll('tr');
-        
-        // Find the filter row within the thead
-        const thead = table.querySelector('thead');
-        const filterRow = thead.querySelector('.filter-row');
-        
-        if (!filterRow) return;
-        
-        const filterInputs = filterRow.querySelectorAll('.col-filter');
-
-        rows.forEach(row => {
-            let showRow = true;
-            const cells = row.querySelectorAll('td');
-            
-            filterInputs.forEach((input, index) => {
-                const filterValue = input.value.toLowerCase();
-                if (filterValue && cells[index]) {
-                    // Handle select vs input
-                    let cellText = cells[index].textContent || cells[index].innerText;
-                    
-                    if (input.tagName === 'SELECT') {
-                         if (input.value && cellText.trim() !== input.value) {
-                             showRow = false;
-                         }
-                    } else {
-                         if (cellText.toLowerCase().indexOf(filterValue) === -1) {
-                             showRow = false;
-                         }
-                    }
-                }
-            });
-
-            if (showRow) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        });
-        
-        // Recalculate totals based on visible rows
-        recalculateTotals(tableId, rows);
-    };
-    
-    function recalculateTotals(tableId, rows) {
-        if (tableId === 'mainUnpaidTable') {
-            let totalPaid = 0;
-            let totalUnpaid = 0;
-            rows.forEach(row => {
-                if (row.style.display !== 'none' && row.hasAttribute('data-paid')) {
-                    totalPaid += parseFloat(row.getAttribute('data-paid')) || 0;
-                    totalUnpaid += parseFloat(row.getAttribute('data-unpaid')) || 0;
-                }
-            });
-            const paidEl = document.getElementById('summaryInvoicePaid');
-            const unpaidEl = document.getElementById('summaryInvoiceUnpaid');
-            if(paidEl) paidEl.innerText = '$' + totalPaid.toFixed(2);
-            if(unpaidEl) unpaidEl.innerText = '$' + totalUnpaid.toFixed(2);
-        } else if (tableId === 'mainExpenseTable') {
-            let totalExp = 0;
-            rows.forEach(row => {
-                if (row.style.display !== 'none') {
-                    let cells = row.querySelectorAll('td');
-                    if(cells.length > 2) {
-                        totalExp += parseFloat(cells[2].getAttribute('data-sort') || cells[2].textContent.replace(/[^0-9.-]+/g,"")) || 0;
-                    }
-                }
-            });
-            const expEl = document.getElementById('summaryTotalExpense');
-            if(expEl) expEl.innerText = '$' + totalExp.toFixed(2);
-        }
-    }
-
-    // Global sort function
-    window.sortDirection = {};
-    window.sortTable = function(tableId, n, type = 'string') {
-        const table = document.getElementById(tableId);
-        if (!table) return;
-        
-        const tbody = table.querySelector('tbody');
-        const rows = Array.from(tbody.querySelectorAll('tr'));
-        
-        window.sortDirection[tableId + n] = !window.sortDirection[tableId + n];
-        const dir = window.sortDirection[tableId + n] ? 1 : -1;
-
-        rows.sort((a, b) => {
-            const cellA = a.querySelectorAll('td')[n];
-            const cellB = b.querySelectorAll('td')[n];
-            
-            if (!cellA || !cellB) return 0;
-            
-            const x = cellA.textContent.trim();
-            const y = cellB.textContent.trim();
-
-            if (type === 'number') {
-                const numX = parseFloat(x.replace(/[^0-9.-]+/g, ""));
-                const numY = parseFloat(y.replace(/[^0-9.-]+/g, ""));
-                
-                if (!isNaN(numX) && !isNaN(numY)) {
-                    return (numX - numY) * dir;
-                }
-            }
-            
-            return x.localeCompare(y) * dir;
-        });
-
-        rows.forEach(row => tbody.appendChild(row));
-        
-        // Update header icons (optional)
-        const headers = table.querySelectorAll('.header-row th');
-        headers.forEach((th, index) => {
-            const span = th.querySelector('span');
-            if (span) {
-                if (index === n) {
-                    span.innerHTML = dir === 1 ? '↑' : '↓';
-                } else {
-                    span.innerHTML = '⬍';
-                }
-            }
-        });
-    };
-  </script>
 </body>
 </html>
