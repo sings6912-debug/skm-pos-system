@@ -248,7 +248,7 @@ window.sysI18n = {
         thUserRole: 'សិទ្ធិប្រើប្រាស់',
         thUserPin: 'លេខ PIN',
         allRolesFilter: 'ទាំងអស់',
-        cantDeleteAdmin: 'មិនអាចលុប',
+        cantDeleteAdmin: '不可删除',
         setSysTitle: '⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)',
         setSysSub: 'កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។',
         setStorePinLabel: '🔐 លេខសម្ងាត់ហាង (Store PIN ៤ ខ្ទង់)៖',
@@ -1282,24 +1282,30 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 });
             }
 
-            // 🌟 3. Merge Inventory (ការពារកុំអោយបាត់ទំនិញអ្នកផ្សេងបញ្ចូល)
+            // 🌟 3. Merge Inventory
             if (cloudData.inventory) {
                 cloudData.inventory.forEach(pCloud => {
                     if (!cleanInventory.find(pLoc => pLoc.id === pCloud.id)) cleanInventory.push(pCloud);
                 });
             }
 
-            // 🌟 4. Merge Expenses
+            // ⚡ 4. Merge Expenses & Prevent Zombies (Blacklist ថ្មី)
             if (cloudData.expenses) {
+                let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
                 cloudData.expenses.forEach(eCloud => {
-                    if (!window.expenses.find(eLoc => eLoc.id === eCloud.id)) window.expenses.push(eCloud);
+                    if (!deletedExps.includes(String(eCloud.id)) && !window.expenses.find(eLoc => eLoc.id === eCloud.id)) {
+                        window.expenses.push(eCloud);
+                    }
                 });
             }
 
-            // 🌟 5. Merge History Logs
+            // ⚡ 5. Merge History Logs (ការពារកុំឲ្យលោតមកវិញក្រោយពេលលុប)
             if (cloudData.historyLog) {
+                let clearTime = parseInt(localStorage.getItem('history_cleared_time')) || 0;
                 cloudData.historyLog.forEach(hCloud => {
-                    if (!window.historyLog.find(hLoc => hLoc.id === hCloud.id)) window.historyLog.push(hCloud);
+                    if (hCloud.id > clearTime && !window.historyLog.find(hLoc => hLoc.id === hCloud.id)) {
+                        window.historyLog.push(hCloud);
+                    }
                 });
                 window.historyLog.sort((a, b) => b.id - a.id);
             }
@@ -1343,7 +1349,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         window.setSyncStatus('error', 'Sync បរាជ័យ');
     }
 
-    // រក្សាទុកចូល LocalStorage (ក្រោយពេល Merge រួចទើបមានសុវត្ថិភាព)
+    // រក្សាទុកចូល LocalStorage
     localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(cleanInventory));
     localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog || []));
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices || []));
@@ -1369,14 +1375,14 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
         if (data && data.data_json) {
             let d = data.data_json;
             
-            // 🌟 ប្រើប្រព័ន្ធ Merge ជាជាងលុបោចោល (Splice)
             (d.inventory || []).forEach(pCloud => {
                 if (pCloud && pCloud.id && !window.inventory.some(pLoc => pLoc.id === pCloud.id)) window.inventory.push(pCloud);
             });
             
-            (d.historyLog || []).forEach(hCloud => {
-                if (hCloud && hCloud.id && !window.historyLog.some(hLoc => hLoc.id === hCloud.id)) window.historyLog.push(hCloud);
-            });
+            // ⚡ ត្រង History ចាស់ៗចោល
+            let clearTime = parseInt(localStorage.getItem('history_cleared_time')) || 0;
+            let validHistory = (d.historyLog || []).filter(h => h.id > clearTime);
+            window.historyLog.splice(0, window.historyLog.length, ...validHistory);
             window.historyLog.sort((a,b) => b.id - a.id);
 
             let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
@@ -1388,9 +1394,10 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             });
             window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             
-            (d.expenses || []).forEach(eCloud => {
-                if (eCloud && eCloud.id && !window.expenses.some(eLoc => eLoc.id === eCloud.id)) window.expenses.push(eCloud);
-            });
+            // ⚡ ត្រងចំណាយខ្មោចចោល
+            let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+            let validExpenses = (d.expenses || []).filter(e => !deletedExps.includes(String(e.id)));
+            window.expenses.splice(0, window.expenses.length, ...validExpenses);
             
             (d.customers || []).forEach(cCloud => {
                 if (cCloud && cCloud.name && !window.customers.some(cLoc => String(cLoc.name).toLowerCase() === String(cCloud.name).toLowerCase())) {
@@ -1452,11 +1459,15 @@ window.switchTab = function(tabId, title, elem) {
         if(overlay) overlay.classList.remove('active'); 
     } 
     
-    if (tabId === 'about') {
-        if(typeof window.displayLicenseInfo === 'function') window.displayLicenseInfo();
-    }
-    
-    if(typeof window.renderAll === 'function') window.renderAll();
+    // ⚡ FIX: Render តែផ្ទាំងណាដែលកំពុងបើក ដើម្បីកុំឲ្យស៊ីម៉ាស៊ីន និងដើរលឿន
+    if (tabId === 'dashboard' && typeof window.renderDashboard === 'function') window.renderDashboard();
+    if (tabId === 'inventory' && typeof window.renderInventory === 'function') window.renderInventory();
+    if (tabId === 'pos' && typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+    if (tabId === 'customers' && typeof window.renderCustomers === 'function') window.renderCustomers();
+    if (tabId === 'unpaid' && typeof window.renderUnpaid === 'function') window.renderUnpaid();
+    if (tabId === 'expenses' && typeof window.renderExpenses === 'function') window.renderExpenses();
+    if (tabId === 'history' && typeof window.renderHistory === 'function') window.renderHistory();
+    if (tabId === 'about' && typeof window.displayLicenseInfo === 'function') window.displayLicenseInfo();
 };
 
 window.applyPermissions = function() {
@@ -1972,16 +1983,7 @@ window.saveShopName = async function() {
 };
 
 window.renderAll = function() { 
-    if(typeof window.renderDashboard==='function') window.renderDashboard(); 
-    if(typeof window.renderInventory==='function') window.renderInventory(); 
-    if(typeof window.renderPOSProducts==='function') window.renderPOSProducts(); 
-    if(typeof window.renderUnpaid==='function') window.renderUnpaid(); 
-    if(typeof window.renderExpenses==='function') window.renderExpenses(); 
-    if(typeof window.renderHistory==='function') window.renderHistory(); 
-    if(typeof window.renderCustomers==='function') window.renderCustomers(); 
-    if(typeof window.updateCustomerDatalist==='function') window.updateCustomerDatalist(); 
-    if(typeof window.populateEditInvoiceSelect==='function') window.populateEditInvoiceSelect(); 
-    if(typeof window.displayLicenseInfo==='function') window.displayLicenseInfo(); 
+    // ⚡ FIX: លែងគូរទាំងអស់ហើយ។ យើងពឹងលើ switchTab ឲ្យគូរម្តងមួយៗជំនួសវិញ ដើម្បីកុំឲ្យម៉ាស៊ីនគាំង។
 };
 
 window.resetDashboardDate = function() { 
@@ -2094,7 +2096,12 @@ window.clearHistory = function() {
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
     if(typeof window.ksMsg==='function') {
         window.ksMsg(d.confirmClearHistory || 'តើអ្នកពិតជាចង់លុបប្រវត្តិប្រតិបត្តិការទាំងអស់មែនទេ?', d.confirmDeleteTitle || 'បញ្ជាក់ការលុប', true, async () => { 
+            
             window.historyLog.length = 0; 
+            
+            // ⚡ កត់ត្រាម៉ោងដែលបានលុបប្រវត្តិ ដើម្បីកុំឲ្យ Cloud ទាញប្រវត្តិមុនម៉ោងនេះមកវិញ
+            localStorage.setItem('history_cleared_time', Date.now());
+            
             if(typeof window.saveData==='function') await window.saveData(window.userAccounts); 
             window.renderHistory();
         }); 
@@ -2297,14 +2304,14 @@ window.onload = async () => {
     if(typeof window.setInventoryView==='function') window.setInventoryView(window.currentInventoryView, true); 
     if(typeof window.setPOSView==='function') window.setPOSView(window.currentPOSView, true); 
     
-    // 💡 ហៅមុខងារ render ទាំងអស់
-    if(typeof window.renderAll === 'function') window.renderAll(); 
+    // 💡 Render ផ្ទាំង Dashboard ដំបូងគេ
+    if(typeof window.renderDashboard === 'function') window.renderDashboard(); 
 
     const header = document.getElementById('topHeaderBar'); 
     if (header) { header.classList.remove('hidden-header'); } 
     window.lastInvoiceCount = window.invoices ? window.invoices.length : 0; 
     
-    // Auto Real-time Update Sync Listener
+    // ⚡ FIX: Auto Real-time Update Sync Listener (ដូរទៅ 30 វិនាទី ដើម្បីឈប់ឲ្យម៉ាស៊ីនគាំង)
     setInterval(async () => {
         try {
             if(!window.supabaseClient || !navigator.onLine) return;
@@ -2331,9 +2338,13 @@ window.onload = async () => {
                     const msgTitle = lang === 'en' ? '🔔 New Order' : (lang === 'zh' ? '🔔 新订单' : '🔔 កុម្ម៉ង់ថ្មី');
                     if(typeof window.ksMsg === 'function') window.ksMsg(msgText, msgTitle);
                     
-                    if(typeof window.renderUnpaid === 'function') window.renderUnpaid();
+                    // Render តែពេលមានអតិថិជនកម្ម៉ង់ចូល
+                    const activeTab = document.querySelector('.tab-content.active');
+                    if (activeTab && activeTab.id === 'tab-unpaid' && typeof window.renderUnpaid === 'function') {
+                        window.renderUnpaid();
+                    }
                 }
             }
         } catch(e) {}
-    }, 10000);
+    }, 30000); // ⚡ កំណត់ 30 វិនាទី ដើរម្តង
 };

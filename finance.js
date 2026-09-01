@@ -19,14 +19,14 @@ window.renderUnpaid = function() {
         } catch(e) { invoices = []; }
     }
 
-    // 🌟 ដំណោះស្រាយ Blacklist៖ ត្រងចោលវិក្កយបត្រខ្មោច (Zombies) ដែលលុបរួច តែ Cloud ទាញមកវិញ
+    // 🌟 ដំណោះស្រាយ Blacklist៖ ត្រងចោលវិក្កយបត្រខ្មោច (Zombies)
     const deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
     if (deletedTracker.length > 0) {
         invoices = invoices.filter((inv, idx) => {
             let tempId = String(inv?.id || inv?.invoiceNo || `ORD-${idx}`).trim().toLowerCase();
             return !deletedTracker.includes(tempId);
         });
-        window.invoices = invoices; // អាប់ដេតកាត់វាចោលពី Local Memory ស្ងាត់ៗ
+        window.invoices = invoices;
         if (typeof window.getBranchKey === 'function') {
             localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
         }
@@ -468,7 +468,6 @@ window.deleteInvoiceRecord = function(invId) {
         
         const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-        // ១. បង្វិលស្តុកចូលវិញ (អនុញ្ញាតឲ្យបង្វិលតែម្តងគត់ ការពារ Error ចុចច្រើនដង)
         if (!deletedTracker.includes(targetId)) {
             if (invIndex !== -1) {
                 const inv = invoices[invIndex];
@@ -479,27 +478,22 @@ window.deleteInvoiceRecord = function(invId) {
                             if (realItem) realItem.qty += (parseInt(item.cartQty || item.qty) || 1);
                         }
                     });
-                    // អាប់ដេតស្តុក Local ភ្លាមៗ
                     if (typeof window.getBranchKey === 'function') {
                         localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
                     }
                 }
             }
-            // ដាក់ឈ្មោះវាចូល "បញ្ជីខ្មៅ" ធានាថាវានឹងមិនអាចបូកស្តុកបានម្តងទៀតទេ
             deletedTracker.push(targetId);
             localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedTracker));
         }
 
-        // ២. លុបចេញពីបញ្ជីវិក្កយបត្រ
         invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
         window.invoices = invoices;
         localStorage.setItem(branchKey, JSON.stringify(invoices));
 
-        // ៣. បាត់ពីអេក្រង់ភ្លាមៗ មិនបាច់រង់ចាំ Cloud
         window.renderUnpaid();
         if (typeof window.renderInventory === 'function') window.renderInventory();
 
-        // ៤. លុបពី Cloud និង Save Background ស្ងាត់ៗ
         setTimeout(async () => {
             try {
                 if (window.supabase) {
@@ -543,7 +537,6 @@ window.viewInvoiceDetails = function(invId) {
     const logoImg = document.getElementById('viewInvoiceLogo');
     if (!modal || !captureArea) return alert("❌ រកមិនឃើញផ្ទាំង Modal មើលវិក្កយបត្រ!");
 
-    // 🌟 បង្ហាញ Logo ហាងក្នុងផ្ទាំង Preview
     const currentLogo = window.shopLogo || localStorage.getItem(window.getBranchKey('shop_logo')) || '';
     if (logoImg) {
         if (currentLogo && currentLogo.trim() !== '') {
@@ -648,7 +641,6 @@ window.reprintInvoice = function() {
     }
 };
 
-// 🌟 មុខងារទាញយករូបភាពវិក្កយបត្រ (Download PNG)
 window.downloadInvoicePNG = function() {
     const captureArea = document.getElementById('invoiceCaptureArea');
     if (!captureArea) return alert("❌ រកមិនឃើញតំបន់សម្រាប់ទាញយករូបភាពទេ!");
@@ -800,7 +792,13 @@ window.renderExpenses = function() {
     if (!tbody) return;
 
     let totalExp = 0;
-    let filtered = (window.expenses || []).filter(e => {
+    
+    // 🌟 កាត់ចំណាយខ្មោចចោលចេញពីអេក្រង់
+    let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+    let validExpenses = (window.expenses || []).filter(e => !deletedExps.includes(String(e.id)));
+    window.expenses = validExpenses;
+
+    let filtered = validExpenses.filter(e => {
         let textMatch = (e.category && e.category.toLowerCase().includes(searchVal)) || 
                (e.note && e.note.toLowerCase().includes(searchVal)) ||
                (e.date && e.date.toLowerCase().includes(searchVal));
@@ -854,18 +852,33 @@ window.renderExpenses = function() {
     if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainExpenseTable'), 50);
 };
 
+// 🌟 មុខងារលុបចំណាយ (បំពាក់ Blacklist ការពារកុំឲ្យ Cloud ទាញមកវិញ)
 window.deleteExpense = function(id) {
     if(typeof window.ksMsg === 'function') {
         window.ksMsg('តើអ្នកពិតជាចង់លុបកំណត់ត្រាចំណាយនេះមែនទេ?', 'បញ្ជាក់ការលុប', true, async () => {
-            window.expenses = window.expenses.filter(e => e.id !== id);
+            
+            // ⚡ ១. កត់ត្រា ID ចូលបញ្ជីខ្មៅ (Blacklist)
+            let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+            deletedExps.push(String(id));
+            localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
+
+            // ⚡ ២. លុបចេញពីអេក្រង់
+            window.expenses = window.expenses.filter(e => String(e.id) !== String(id));
+            
+            // ⚡ ៣. Save និង Refresh
             if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
             window.renderExpenses();
             if(typeof window.renderDashboard === 'function') window.renderDashboard();
+            
             window.ksMsg('លុបជោគជ័យ!', 'ជោគជ័យ');
         });
     } else {
         if(confirm('តើអ្នកពិតជាចង់លុបកំណត់ត្រាចំណាយនេះមែនទេ?')) {
-            window.expenses = window.expenses.filter(e => e.id !== id);
+            let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+            deletedExps.push(String(id));
+            localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
+
+            window.expenses = window.expenses.filter(e => String(e.id) !== String(id));
             if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
             window.renderExpenses();
             if(typeof window.renderDashboard === 'function') window.renderDashboard();
