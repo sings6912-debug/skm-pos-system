@@ -2,12 +2,15 @@
  * finance.js - គ្រប់គ្រងវិក្កយបត្រ ការចំណាយ និងការទូទាត់ប្រាក់ (Invoices, Expenses & Settle Debt)
  */
 
+// ========================================================
+// 🌟 ផ្នែកទី ១៖ គ្រប់គ្រងវិក្កយបត្រ (Invoices & Debt)
+// ========================================================
+
 // 🌟 ១. បង្ហាញបញ្ជីវិក្កយបត្រ & ការកុម្ម៉ង់ (Render Invoices Table)
 window.renderUnpaid = function() {
     const tableBody = document.getElementById('unpaidTable') || document.querySelector('#mainUnpaidTable tbody');
     if (!tableBody) return;
 
-    // ទាញទិន្នន័យពី Key ត្រឹមត្រូវ (invoices_pro)
     let invoices = window.invoices || [];
     if (invoices.length === 0) {
         try {
@@ -16,7 +19,6 @@ window.renderUnpaid = function() {
         } catch(e) { invoices = []; }
     }
 
-    // 🔄 តម្រៀបកាលបរិច្ឆេទថ្មីបំផុតឱ្យលោតមកលើគេជានិច្ច (Sort Newest First)
     invoices.sort((a, b) => {
         let timeA = a.timestamp || new Date(a.date || a.createdAt || 0).getTime();
         let timeB = b.timestamp || new Date(b.date || b.createdAt || 0).getTime();
@@ -46,7 +48,6 @@ window.renderUnpaid = function() {
         if (status === 'paid') paidAmount = totalAmount;
         const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
-        // Filter តាម Search និង Date
         if (searchVal) {
             const combinedText = `${invId} ${custName} ${custPhone} ${seller}`.toLowerCase();
             if (!combinedText.includes(searchVal)) return;
@@ -64,7 +65,6 @@ window.renderUnpaid = function() {
             if (!isNaN(dCurrent) && dCurrent > dTo) return;
         }
 
-        // បូកសរុបប្រាក់
         if (status === 'paid') {
             totalPaid += totalAmount;
         } else {
@@ -72,7 +72,6 @@ window.renderUnpaid = function() {
             totalUnpaid += remainingAmount;
         }
 
-        // រៀបចំបញ្ជីទំនិញសង្ខេប
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
             itemsSummary = inv.items.map(it => `${it.name || it.title} (x${it.qty || it.cartQty || 1})`).join(', ');
@@ -80,7 +79,6 @@ window.renderUnpaid = function() {
             itemsSummary = inv.itemsSummary || 'ទំនិញចម្រុះ';
         }
 
-        // ផ្លាកស្ថានភាព (Status Badge)
         let statusBadge = '';
         if (status === 'paid') {
             statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981; padding:4px 8px; border-radius:12px; font-weight:bold;">ទូទាត់រួច</span>';
@@ -92,7 +90,6 @@ window.renderUnpaid = function() {
             statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; padding:4px 8px; border-radius:12px; font-weight:bold;">រង់ចាំទូទាត់</span>';
         }
 
-        // 🌟 ប៊ូតុងសកម្មភាព (Actions)
         let actionButtons = `
             <div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
                 <button class="btn btn-outline" style="padding: 4px 7px; font-size: 11px;" onclick="window.viewInvoiceDetails('${invId}')" title="មើលលម្អិត">👁️ មើល</button>
@@ -404,7 +401,6 @@ window.closeInvoiceEditModal = function() {
     window.currentEditingInvoice = null;
 };
 
-// 🌟 ៥. រក្សាទុកការកែប្រែវិក្កយបត្រ (Save Invoice Changes)
 window.saveInvoiceChanges = async function() {
     if (!window.currentEditingInvoice) return;
     if (window.currentEditingInvoice.items.length === 0) return alert("⚠️ វិក្កយបត្រត្រូវតែមានទំនិញយ៉ាងហោចណាស់១!");
@@ -438,7 +434,6 @@ window.saveInvoiceChanges = async function() {
     window.renderUnpaid();
 };
 
-// 🌟 ៦. លុបវិក្កយបត្រ (Delete Invoice)
 window.deleteInvoiceRecord = async function(invId) {
     if (!confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រ [${invId}] និងបង្វិលទំនិញចូលស្តុកវិញមែនទេ?`)) return;
 
@@ -468,7 +463,6 @@ window.deleteInvoiceRecord = async function(invId) {
     }
 };
 
-// 🌟 ៧. មើលវិក្កយបត្រលម្អិត (View Invoice Details)
 window.viewInvoiceDetails = function(invId) {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     const inv = invoices.find(i => String(i.id || i.invoiceNo) === String(invId));
@@ -517,7 +511,6 @@ window.closeInvoiceViewModal = function() {
     if (modal) modal.style.display = 'none';
 };
 
-// 🌟 ៨. Export វិក្កយបត្រជា CSV
 window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     if (invoices.length === 0) return alert("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!");
@@ -543,3 +536,190 @@ window.exportInvoicesCSV = function() {
     link.click();
     link.remove();
 };
+
+// ========================================================
+// 🌟 ផ្នែកទី ២៖ គ្រប់គ្រងការចំណាយ (Expense Management)
+// ========================================================
+
+window.openExpenseModal = function() {
+    document.getElementById('expId').value = '';
+    document.getElementById('expCategory').value = 'ទិញសម្ភារៈ/ស្តុក';
+    document.getElementById('expAmount').value = '';
+    document.getElementById('expNote').value = '';
+    
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    const dateInput = document.getElementById('expDate');
+    if(dateInput) dateInput.value = now.toISOString().slice(0, 16);
+    
+    document.getElementById('expenseModal').style.display = 'flex';
+};
+
+window.closeExpenseModal = function() {
+    document.getElementById('expenseModal').style.display = 'none';
+};
+
+// 🌟 មុខងារថ្មី៖ បើកផ្ទាំងកែប្រែចំណាយ
+window.editExpense = function(id) {
+    let expenses = window.expenses || JSON.parse(localStorage.getItem(window.getBranchKey('expenses_pro'))) || [];
+    const exp = expenses.find(e => String(e.id) === String(id));
+    
+    if (!exp) return alert("❌ រកមិនឃើញទិន្នន័យចំណាយនេះទេ!");
+
+    document.getElementById('expId').value = exp.id;
+    document.getElementById('expCategory').value = exp.category || 'ទិញសម្ភារៈ/ស្តុក';
+    document.getElementById('expAmount').value = exp.amount || '';
+    document.getElementById('expNote').value = exp.note || '';
+    
+    const dateInput = document.getElementById('expDate');
+    if(dateInput && exp.timestamp) {
+        const d = new Date(exp.timestamp);
+        d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+        dateInput.value = d.toISOString().slice(0, 16);
+    }
+    
+    document.getElementById('expenseModal').style.display = 'flex';
+};
+
+// 🌟 មុខងាររក្សាទុកទិន្នន័យចំណាយ (ទាំងការបង្កើតថ្មី និងកែប្រែចាស់)
+window.saveExpense = async function() {
+    const id = document.getElementById('expId').value;
+    const cat = document.getElementById('expCategory').value;
+    const amount = parseFloat(document.getElementById('expAmount').value);
+    const note = document.getElementById('expNote').value.trim();
+    const dateVal = document.getElementById('expDate') ? document.getElementById('expDate').value : '';
+
+    if (!amount || amount <= 0) {
+        if(typeof window.ksMsg === 'function') window.ksMsg('សូមបញ្ចូលទឹកប្រាក់ចំណាយអោយបានត្រឹមត្រូវ!', 'បរាជ័យ');
+        else alert('សូមបញ្ចូលទឹកប្រាក់ចំណាយអោយបានត្រឹមត្រូវ!');
+        return;
+    }
+
+    let finalDate = '';
+    let timestamp = 0;
+    if (dateVal) {
+        const d = new Date(dateVal);
+        finalDate = d.toLocaleDateString('km-KH') + ' ' + d.toLocaleTimeString('km-KH');
+        timestamp = d.getTime();
+    } else {
+        finalDate = typeof window.fDate === 'function' ? window.fDate() : new Date().toLocaleString('km-KH');
+        timestamp = Date.now();
+    }
+
+    if (!window.expenses) window.expenses = [];
+
+    if (id) {
+        const index = window.expenses.findIndex(e => String(e.id) === String(id));
+        if (index !== -1) {
+            window.expenses[index] = { ...window.expenses[index], category: cat, amount, note, date: finalDate, timestamp };
+        }
+    } else {
+        window.expenses.unshift({
+            id: 'EXP-' + Date.now(),
+            date: finalDate,
+            timestamp: timestamp,
+            category: cat,
+            amount: amount,
+            note: note
+        });
+    }
+
+    if (typeof window.saveData === 'function') {
+        await window.saveData(window.userAccounts);
+    }
+    
+    if (typeof window.ksMsg === 'function') {
+        window.ksMsg(id ? 'បានកែប្រែចំណាយជោគជ័យ!' : 'កត់ត្រាចំណាយបានជោគជ័យ!', 'ជោគជ័យ');
+    }
+    
+    window.closeExpenseModal();
+    window.renderExpenses();
+    if(typeof window.renderDashboard === 'function') window.renderDashboard();
+};
+
+// 🌟 មុខងារបង្ហាញទិន្នន័យចូលតារាង រួមទាំងការ Filter Date
+window.renderExpenses = function() {
+    const searchVal = document.getElementById('searchExpense') ? document.getElementById('searchExpense').value.toLowerCase() : '';
+    const dateFrom = document.getElementById('expenseDateFrom')?.value;
+    const dateTo = document.getElementById('expenseDateTo')?.value;
+    
+    const tbody = document.getElementById('expenseTableBody') || document.querySelector('#mainExpenseTable tbody');
+    if (!tbody) return;
+
+    let totalExp = 0;
+    let filtered = (window.expenses || []).filter(e => {
+        let textMatch = (e.category && e.category.toLowerCase().includes(searchVal)) || 
+               (e.note && e.note.toLowerCase().includes(searchVal)) ||
+               (e.date && e.date.toLowerCase().includes(searchVal));
+               
+        if (!textMatch) return false;
+
+        let eTime = e.timestamp || new Date(e.date || 0).getTime();
+        
+        if (dateFrom) {
+            const dFrom = new Date(dateFrom).getTime();
+            if (eTime < dFrom) return false;
+        }
+        if (dateTo) {
+            const dTo = new Date(dateTo).getTime();
+            if (eTime > dTo) return false;
+        }
+        return true;
+    });
+
+    filtered.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+
+    if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">មិនមានទិន្នន័យចំណាយទេ</td></tr>`;
+        const sumDisplay = document.querySelector('td[style*="color: var(--danger)"] b') || document.getElementById('sumExpenseDisplay') || document.getElementById('summaryTotalExpense');
+        if (sumDisplay) sumDisplay.innerText = '$0.00';
+        return;
+    }
+
+    tbody.innerHTML = filtered.map(e => {
+        let amt = parseFloat(e.amount || 0);
+        totalExp += amt;
+        return `
+        <tr>
+            <td style="font-size: 13px; color: var(--text-muted);" data-sort="${e.timestamp || 0}">${e.date}</td>
+            <td data-sort="${e.category}"><span class="badge" style="background:rgba(239,68,68,0.1); color:var(--danger); border: 1px solid rgba(239,68,68,0.3); padding:4px 8px; border-radius:6px;">${e.category}</span></td>
+            <td data-sort="${amt}" style="color:var(--danger); font-weight:900; font-size:15px;">$${amt.toFixed(2)}</td>
+            <td data-sort="${e.note || ''}" style="font-size: 13px;">${e.note || '-'}</td>
+            <td style="text-align: center;">
+                <div style="display: flex; gap: 5px; justify-content: center;">
+                    <button class="btn-warning" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.editExpense('${e.id}')" title="កែប្រែ">✏️</button>
+                    <button class="btn-danger" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.deleteExpense('${e.id}')" title="លុបចោល">🗑️</button>
+                </div>
+            </td>
+        </tr>
+        `;
+    }).join('');
+
+    const sumDisplay = document.querySelector('td[style*="color: var(--danger)"] b') || document.getElementById('sumExpenseDisplay') || document.getElementById('summaryTotalExpense');
+    if (sumDisplay) sumDisplay.innerText = '$' + totalExp.toFixed(2);
+    
+    if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainExpenseTable'), 50);
+};
+
+window.deleteExpense = function(id) {
+    if(typeof window.ksMsg === 'function') {
+        window.ksMsg('តើអ្នកពិតជាចង់លុបកំណត់ត្រាចំណាយនេះមែនទេ?', 'បញ្ជាក់ការលុប', true, async () => {
+            window.expenses = window.expenses.filter(e => e.id !== id);
+            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
+            window.renderExpenses();
+            if(typeof window.renderDashboard === 'function') window.renderDashboard();
+            window.ksMsg('លុបជោគជ័យ!', 'ជោគជ័យ');
+        });
+    } else {
+        if(confirm('តើអ្នកពិតជាចង់លុបកំណត់ត្រាចំណាយនេះមែនទេ?')) {
+            window.expenses = window.expenses.filter(e => e.id !== id);
+            if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+            window.renderExpenses();
+            if(typeof window.renderDashboard === 'function') window.renderDashboard();
+        }
+    }
+};
+
+if(document.getElementById('searchExpense')) {
+    document.getElementById('searchExpense').addEventListener('input', window.renderExpenses);
+}

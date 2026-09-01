@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="km">
 <head>
-    <link rel="stylesheet" href="print.css" media="print">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digital Menu - Advanced POS & E-commerce</title>
@@ -133,9 +132,6 @@
                     <option value="km">🇰🇭 ខ្មែរ</option>
                     <option value="en">🇬🇧 English</option>
                     <option value="zh">🇨🇳 中文</option>
-                    <option value="ja">🇯🇵 日本語</option>
-                    <option value="ko">🇰🇷 한국어</option>
-                    <option value="vi">🇻🇳 Tiếng Việt</option>
                 </select>
                 <button class="tool-btn" onclick="changeBackground()" title="ប្តូរផ្ទៃខាងក្រោយ">🖼️</button>
                 <button class="tool-btn" onclick="toggleTheme()">☀️/🌙</button>
@@ -322,7 +318,7 @@
         let shopChatId = '';
         let shopSysSettings = {}; 
         let defaultDeliveryFee = 1.5;
-        let currentLang = 'km';
+        let currentLang = localStorage.getItem('app_lang') || 'km'; 
         let currentCurrency = 'USD';
         let exchangeRate = 4000;
         let appliedDiscountRate = 0;
@@ -493,6 +489,7 @@
 
         function changeLanguage(langCode) {
             currentLang = langCode;
+            localStorage.setItem('app_lang', langCode);
             document.getElementById('searchInput').placeholder = translations[currentLang].search;
             document.getElementById('checkoutBtnText').innerText = translations[currentLang].viewCart;
             buildCategories();
@@ -501,6 +498,10 @@
         }
 
         async function loadMenuData() {
+            const langSelect = document.getElementById('langSelect');
+            if (langSelect) langSelect.value = currentLang;
+            changeLanguage(currentLang);
+
             try {
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).single();
                 if (data && data.data_json) {
@@ -803,7 +804,7 @@
                     resultEl.innerHTML = userOrders.map(o => `
                         <div style="background:var(--bg-card); padding:10px; border-radius:10px; margin-bottom:8px; border:1px solid var(--border);">
                             <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; color:var(--primary);">
-                                <span>${o.id}</span> <span>$${(o.totalAmount || 0).toFixed(2)}</span>
+                                <span>${o.id}</span> <span>$${(parseFloat(o.totalAmount) || 0).toFixed(2)}</span>
                             </div>
                             <div style="font-size:11px; color:var(--text-muted); margin:4px 0;">កាលបរិច្ឆេទ: ${o.date}</div>
                             <div style="font-size:12px; color:var(--text-main);">ស្ថានភាព: <b style="color:var(--success);">កំពុងរៀបចំទំនិញ 🚚</b></div>
@@ -867,7 +868,8 @@
                 isGift: isGift,
                 giftDetails: giftDetails,
                 items: [...cart],
-                totalAmount: finalTotalAmount
+                totalAmount: finalTotalAmount,
+                status: 'unpaid' // Mark as unpaid so the shop owner can confirm
             };
 
             try {
@@ -875,6 +877,8 @@
                 if (data && data.data_json) {
                     let d = data.data_json;
                     if (!d.invoices) d.invoices = [];
+                    
+                    // ⚠️ Race Condition Fix: ទាញវិក្កយបត្រថ្មីពី Cloud សិន ហើយ Push ទិន្នន័យនេះទៅលើគេបង្អស់
                     d.invoices.unshift(newOrder);
                     
                     cart.forEach(c => {
@@ -904,67 +908,17 @@
                         });
                     }
 
-                    printPOSReceipt(newOrder);
-
-                    alert(`🎉 កុម្មង់ជោគជ័យ! អ្នកទទួលបាន ${earnedPoints} ពិន្ទុសមាជិកបន្ថែម។`);
+                    alert(`🎉 កុម្មង់ជោគជ័យ! អ្នកទទួលបាន ${earnedPoints} ពិន្ទុសមាជិកបន្ថែម។ ហាងនឹងទាក់ទងទៅអ្នកឆាប់ៗនេះ។`);
                     cart = [];
                     appliedDiscountRate = 0;
                     document.getElementById('promoCodeInput').value = '';
                     closeCheckoutModal();
                     updateCartBar();
-                    loadMenuData();
+                    loadMenuData(); // Reload inventory
                 }
             } catch (err) {
                 alert('Error placing order!');
             }
-        }
-
-        // 🖨️ POS Print Receipt with numbering and proper format
-        function printPOSReceipt(order) {
-            let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
-            if(document.getElementById('shopLogo').src) {
-                receiptHTML += `<img src="${document.getElementById('shopLogo').src}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
-            }
-            receiptHTML += `<h2 style="margin:0; font-size:16px;">${document.getElementById('shopName').innerText}</h2>`; 
-            receiptHTML += `<p style="margin:2px 0; font-size:12px;">${document.getElementById('branchTitle').innerText}</p>`; 
-            receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
-            receiptHTML += `<p style="margin:4px 0; font-size:14px; font-weight:bold;">បង្កាន់ដៃកុម្មង់ទំនិញ / Receipt</p>`;
-            receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${order.date}</p>`;
-            receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">លេខកុម្មង់: ${order.id}</p>`;
-            receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${order.customer}</b> ${order.phone ? '('+order.phone+')':''}</p>`;
-            receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div></div>`;
-
-            receiptHTML += `<table style="width:100%; text-align:left; font-size: 12px; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
-
-            order.items.forEach((item, index) => {
-                let lineTotal = (parseFloat(item.price || 0) * item.cartQty);
-                receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${item.name} <span style="font-size:10px; font-weight:normal;">[${item.cartVariant}]</span></td></tr>`;
-                receiptHTML += `<tr><td style="padding-bottom: 4px; font-size: 11px;">$${parseFloat(item.price||0).toFixed(2)}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${item.cartQty}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">$${lineTotal.toFixed(2)}</td></tr>`;
-            });
-
-            if(order.isGift && order.giftDetails) {
-                receiptHTML += `<tr><td colspan="3" style="border-top:1px dashed #000; padding-top:5px; font-size:11px;">🎁 <b>Gift Order (+ $2.00):</b><br>អ្នកទទួល: ${order.giftDetails.recipient}<br>ទូរស័ព្ទ: ${order.giftDetails.phone}<br>សារ: ${order.giftDetails.message}</td></tr>`;
-            }
-
-            receiptHTML += `</tbody></table><div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
-            receiptHTML += `<table style="width:100%; font-size: 12px; margin-top: 5px;">`;
-            receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">$${order.totalAmount.toFixed(2)}</td></tr>`;
-            receiptHTML += `</table>`;
-            receiptHTML += `<p style="text-align:center; font-size:12px; margin-top: 15px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`;
-
-            const printWindow = window.open('', '', 'width=300,height=600');
-            if(!printWindow) return;
-            printWindow.document.write('<html><head><title>Print Receipt</title>');
-            printWindow.document.write('<style>@media print { body { width: 80mm; font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } }</style>');
-            printWindow.document.write('</head><body>');
-            printWindow.document.write(receiptHTML);
-            printWindow.document.write('</body></html>');
-            printWindow.document.close();
-            printWindow.focus();
-            setTimeout(() => {
-                printWindow.print();
-                printWindow.close();
-            }, 500);
         }
 
         window.onload = loadMenuData;

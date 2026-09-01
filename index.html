@@ -11,13 +11,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     
-    <!-- ភ្ជាប់ឯកសារ CSS មកពីខាងក្រៅ -->
     <link rel="stylesheet" href="style.css">
-    
-    <!-- ➕ បណ្ណាល័យ Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-    <!-- ➕ បណ្ណាល័យសម្រាប់ទាញយក Excel (SheetJS) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
@@ -329,7 +324,14 @@
             <!-- ផ្ទាំងការចំណាយ (Expenses) -->
             <div id="tab-expenses" class="tab-content">
                 <div class="toolbar">
-                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.renderExpenses()" style="width: 250px;">
+                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.renderExpenses()" style="width: 200px;">
+                    
+                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
+                        <input type="datetime-local" step="1" id="expenseDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderExpenses()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
+                        <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
+                        <input type="datetime-local" step="1" id="expenseDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderExpenses()" title="ដល់ថ្ងៃទី និងម៉ោង">
+                    </div>
+
                     <div style="flex-grow: 1;"></div>
                     <button class="btn btn-primary" onclick="window.openExpenseModal()">➕ កត់ត្រាចំណាយថ្មី</button>
                 </div>
@@ -773,8 +775,18 @@
     <!-- Modal: កត់ត្រាចំណាយ (Expense Modal) -->
     <div class="modal-overlay" id="expenseModal">
         <div class="modal" style="max-width: 400px;">
-            <div class="modal-header"><h2 style="font-size: var(--fs-20);">📉 កត់ត្រាចំណាយថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeExpenseModal()">✕</button></div>
+            <div class="modal-header">
+                <h2 style="font-size: var(--fs-20);">📉 កត់ត្រាចំណាយថ្មី</h2>
+                <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeExpenseModal()">✕</button>
+            </div>
             <div class="modal-body">
+                <input type="hidden" id="expId"> <!-- បន្ថែមប្រអប់លាក់សម្រាប់ Edit -->
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">កាលបរិច្ឆេទ (Date & Time) *</label>
+                    <input type="datetime-local" id="expDate" class="form-control" style="width: 100%;">
+                </div>
+
                 <div style="margin-bottom: 15px;">
                     <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ប្រភេទចំណាយ *</label>
                     <select id="expCategory" class="form-control" style="width: 100%;">
@@ -794,7 +806,10 @@
                     <textarea id="expNote" class="form-control" placeholder="សរសេរចំណាំ..." style="height: 60px; resize:none; width: 100%;"></textarea>
                 </div>
             </div>
-            <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeExpenseModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveExpense()">រក្សាទុក</button></div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" onclick="window.closeExpenseModal()">បោះបង់</button>
+                <button class="btn btn-primary" onclick="window.saveExpense()">រក្សាទុក</button>
+            </div>
         </div>
     </div>
 
@@ -1215,15 +1230,25 @@
         // មុខងារបើក/បិទផ្ទាំងកត់ត្រាចំណាយ (Fallback JS ដើម្បីធានាថាវាដើរ)
         window.openExpenseModal = function() {
             const modal = document.getElementById('expenseModal');
-            if (modal) modal.style.display = 'flex';
+            if (modal) {
+                document.getElementById('expId').value = '';
+                document.getElementById('expAmount').value = '';
+                document.getElementById('expNote').value = '';
+                
+                // កំណត់ថ្ងៃខែបច្ចុប្បន្នស្វ័យប្រវត្តិ
+                const now = new Date();
+                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                const dateInput = document.getElementById('expDate');
+                if(dateInput) dateInput.value = now.toISOString().slice(0, 16);
+                
+                modal.style.display = 'flex';
+            }
         };
 
         window.closeExpenseModal = function() {
             const modal = document.getElementById('expenseModal');
             if (modal) {
                 modal.style.display = 'none';
-                document.getElementById('expAmount').value = '';
-                document.getElementById('expNote').value = '';
             }
         };
     </script>
