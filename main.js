@@ -1087,7 +1087,7 @@ window.changeAppLanguage = function(lang) {
         const formGroups = settingsCards[3].querySelectorAll('.form-group label');
         if (formGroups.length >= 2) {
             formGroups[0].innerText = d.setStorePinLabel || '🔐 លេខសម្ងាត់ហាង (Store PIN ៤ ខ្ទង់)៖';
-            formGroups[1].innerText = d.setTickerNewsLabel || '📢 សេចក្តីជូនដំណឹងប្រចាំថ្ងៃ៖';
+            formGroups[1].innerText = d.setTickerNewsLabel || '📢 សេចក្តីជូនដំណឹងរត់ខាងក្រោម (News Ticker)៖';
         }
         const sysLabels = settingsCards[3].querySelectorAll('label span');
         if (sysLabels.length >= 6) {
@@ -1270,11 +1270,9 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
 
     try {
         if(window.supabaseClient && navigator.onLine) {
-            // 🛑 ឆ្លាតវៃ (Smart Merge): ទាញយកពី Cloud មកផ្ទទៀងផ្ទាត់សិនមុននឹង Save ជាន់ពីលើ
             let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).single();
             let cloudData = (data && data.data_json) ? data.data_json : {};
 
-            // បញ្ចូលវិក្កយបត្រថ្មីពី Cloud ដែលអត់ទាន់មានក្នុងម៉ាស៊ីន (ឧ. កុម្ម៉ង់ពី Menu)
             if (cloudData.invoices) {
                 cloudData.invoices.forEach(cInv => {
                     if (!window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
@@ -1284,7 +1282,6 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             }
 
-            // បញ្ចូលអតិថិជនពី Cloud
             if (cloudData.customers) {
                 cloudData.customers.forEach(cC => {
                     if (!window.customers.find(lC => String(lC.name).toLowerCase() === String(cC.name).toLowerCase())) {
@@ -1426,7 +1423,7 @@ window.applyPermissions = function() {
     const isAdmin = (window.currentRole === 'admin');
     const isSales = (window.currentRole === 'sales');
     const isWarehouse = (window.currentRole === 'warehouse');
-    const isGuest = (window.currentRole === 'guest'); // Added logic for guest preventing empty blank page issue
+    const isGuest = (window.currentRole === 'guest'); 
 
     let sDash = !isGuest && true;
     let sInv = !isGuest && (isAdmin || isWarehouse);
@@ -1519,8 +1516,10 @@ window.loadSettingsToUI = function() {
     if(document.getElementById('setStorePin')) {
         document.getElementById('setStorePin').value = window.sysSettings.storePin || '1234';
     }
-    if(document.getElementById('setTickerNews')) {
-        document.getElementById('setTickerNews').value = window.sysSettings.tickerNews || '📢 សេចក្តីជូនដំណឹងប្រចាំថ្ងៃ៖ សូមបុគ្គលិកទាំងអស់ពិនិត្យមើលស្តុកទំនិញឱ្យបានត្រឹមត្រូវមុនពេលប្តូរវេន! ជូនពរឱ្យការលក់ដាច់ច្រើនៗ! 🚀';
+    
+    // 🌟 ជួសជុលបញ្ហា ID ប្រអប់ News Ticker
+    if(document.getElementById('setTickerText')) {
+        document.getElementById('setTickerText').value = window.sysSettings.tickerNews || '';
     }
 };
 
@@ -1544,8 +1543,9 @@ window.saveSysSettings = async function() {
     if(!window.sysSettings) window.sysSettings = {};
     window.sysSettings.storePin = newStorePin || '1234';
 
-    if(document.getElementById('setTickerNews')) {
-        window.sysSettings.tickerNews = document.getElementById('setTickerNews').value.trim();
+    // 🌟 ជួសជុលបញ្ហា ID ប្រអប់ News Ticker
+    if(document.getElementById('setTickerText')) {
+        window.sysSettings.tickerNews = document.getElementById('setTickerText').value.trim();
     }
 
     if(document.getElementById('setCust')) window.sysSettings.cust = document.getElementById('setCust').checked; 
@@ -1781,16 +1781,16 @@ window.displayLicenseInfo = async function() {
             let statusBadge = `<span style="display: inline-flex; align-items: center; gap: 4px; color: #059669; font-weight: bold; background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.3); padding: 4px 12px; border-radius: 20px; font-size: 13px;">${t.active} (${diffDays} ${t.days})</span>`; 
 
             infoBox.innerHTML = `
-                <div style="background: var(--card-bg, #ffffff); border: 1.5px solid var(--border-color, #e2e8f0); padding: 18px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.04); color: var(--text-main, #1e293b);">
-                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border-color, #cbd5e1); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
-                        <div style="font-size: 15px; font-weight: bold; color: var(--text-main, #0f172a);">
-                            ${t.branch} <span style="color: #0284c7; font-weight: 900; background: rgba(2, 132, 199, 0.1); padding: 3px 8px; border-radius: 6px;">${license.branch_id || window.SHOP_BRANCH_ID}</span>
+                <div style="background: rgba(0,0,0,0.15); border: 1px solid var(--border); padding: 18px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); color: var(--text-main);">
+                    <div style="display: flex; align-items: center; justify-content: space-between; border-bottom: 1px dashed var(--border); padding-bottom: 12px; margin-bottom: 14px; flex-wrap: wrap; gap: 10px;">
+                        <div style="font-size: 15px; font-weight: bold; color: var(--text-main);">
+                            ${t.branch} <span style="color: #38bdf8; font-weight: 900; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.3); padding: 3px 8px; border-radius: 6px;">${license.branch_id || window.SHOP_BRANCH_ID}</span>
                         </div>
                         <div>${statusBadge}</div>
                     </div>
                     
                     <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px;">
-                        <div style="font-size: 14px; font-weight: bold; color: var(--text-muted, #64748b);">
+                        <div style="font-size: 14px; font-weight: bold; color: var(--text-muted);">
                             ${t.expire}
                         </div>
                         <div style="font-size: 14px; font-weight: 800; color: #b45309; background: #fef3c7; border: 1px solid #fde68a; padding: 6px 14px; border-radius: 8px; box-shadow: 0 2px 5px rgba(245, 158, 11, 0.1);">
