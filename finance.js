@@ -173,8 +173,8 @@ window.notifyCustomerOrderDone = async function(invId) {
 
     setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
 
-    if (typeof window.showToast === 'function') window.showToast(`✅ ការកុម្ម៉ង់ ${invId} បានរៀបចំរួចរាល់!`);
-    else alert(`✅ ការកុម្ម៉ង់ ${invId} បានរៀបចំរួចរាល់!`);
+    if (typeof window.showToast === 'function') window.showToast(`✅ ការកុម្មង់ ${invId} បានរៀបចំរួចរាល់!`);
+    else alert(`✅ ការកុម្មង់ ${invId} បានរៀបចំរួចរាល់!`);
 
     window.renderUnpaid();
 };
@@ -434,34 +434,80 @@ window.saveInvoiceChanges = async function() {
     window.renderUnpaid();
 };
 
-window.deleteInvoiceRecord = async function(invId) {
+// 🌟 មុខងារលុបវិក្កយបត្រ (UI ដើរភ្លាមៗ លែងគាំង - Background Cloud Sync)
+window.deleteInvoiceRecord = function(invId) {
     if (!confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រ [${invId}] និងបង្វិលទំនិញចូលស្តុកវិញមែនទេ?`)) return;
 
-    let invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
+    let branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('invoices_pro') : 'invoices_pro';
+    let invoices = window.invoices || JSON.parse(localStorage.getItem(branchKey)) || [];
     const invIndex = invoices.findIndex(i => String(i.id || i.invoiceNo) === String(invId));
     
-    if (invIndex !== -1) {
-        const inv = invoices[invIndex];
-        if (inv.items && Array.isArray(inv.items) && window.inventory) {
-            inv.items.forEach(item => {
-                const realItem = window.inventory.find(p => p.id === item.id);
-                if (realItem) realItem.qty += (item.cartQty || item.qty || 1);
-            });
+    if (invIndex === -1) {
+        alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
+        return;
+    }
+
+    const inv = invoices[invIndex];
+    
+    // ១. បង្វិលទំនិញចូលស្តុកវិញ (Inventory)
+    if (inv.items && Array.isArray(inv.items) && window.inventory) {
+        inv.items.forEach(item => {
+            const realItem = window.inventory.find(p => p.id === item.id);
+            if (realItem) realItem.qty += (item.cartQty || item.qty || 1);
+        });
+        if (typeof window.getBranchKey === 'function') {
+            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
         }
-        
-        invoices.splice(invIndex, 1);
-        window.invoices = invoices;
-        localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
+    }
+    
+    // ២. លុបវិក្កយបត្រចេញពី Array និង LocalStorage
+    invoices.splice(invIndex, 1);
+    window.invoices = invoices;
+    localStorage.setItem(branchKey, JSON.stringify(invoices));
 
-        setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
+    // ៣. 🌟 [សំខាន់] បង្ហាញការលុបនៅលើអេក្រង់ភ្លាមៗ (កុំចាំ Cloud ដើម្បីកុំឱ្យគាំង)
+    window.renderUnpaid();
+    if(typeof window.renderInventory === 'function') window.renderInventory();
 
-        if(typeof window.ksMsg === 'function') window.ksMsg("✅ បានលុបវិក្កយបត្ររួចរាល់!", "ជោគជ័យ");
-        else alert("✅ បានលុបវិក្កយបត្ររួចរាល់!");
-        
-        window.renderUnpaid();
-        if(typeof window.renderInventory === 'function') window.renderInventory();
+    // ៤. 🌟 [សំខាន់] Update Object សម្រាប់ត្រៀម Save ទៅ Cloud
+    if (window.userAccounts) {
+        if (Array.isArray(window.userAccounts)) {
+            window.userAccounts.forEach(account => {
+                if (account[branchKey] !== undefined) account[branchKey] = invoices;
+                if (account.invoices !== undefined) account.invoices = invoices;
+            });
+        } else {
+            if (window.userAccounts[branchKey] !== undefined) window.userAccounts[branchKey] = invoices;
+            if (window.userAccounts.invoices !== undefined) window.userAccounts.invoices = invoices;
+        }
+    }
+
+    // ៥. ដំណើរការលុបពី Cloud និង Save Background (លាក់មុខ មិនឱ្យទាក់អេក្រង់)
+    setTimeout(async () => {
+        try {
+            if (window.supabase) {
+                await window.supabase.from('invoices').delete().eq('id', String(invId));
+                await window.supabase.from(branchKey).delete().eq('id', String(invId));
+            }
+        } catch (error) { 
+            console.log("Supabase delete skipped or error:", error); 
+        }
+
+        if (typeof window.saveData === 'function') {
+            window.saveData(window.userAccounts);
+        }
+    }, 100);
+
+    // ៦. បង្ហាញសារជោគជ័យ
+    if(typeof window.ksMsg === 'function') {
+        window.ksMsg("✅ បានលុបវិក្កយបត្ររួចរាល់!", "ជោគជ័យ");
+    } else {
+        alert("✅ បានលុបវិក្កយបត្ររួចរាល់!");
     }
 };
+
+// 🌟 មុខងារបង្ហាញលម្អិតវិក្កយបត្រ (រួមទាំង Logo ហាង និងអ៊ុតស្លាកសញ្ញា)
+window.currentActiveInvoiceId = null;
 
 window.viewInvoiceDetails = function(invId) {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
@@ -469,9 +515,23 @@ window.viewInvoiceDetails = function(invId) {
 
     if (!inv) return alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
 
+    window.currentActiveInvoiceId = invId;
+
     const modal = document.getElementById('invoiceViewModal');
     const captureArea = document.getElementById('invoiceViewContent');
+    const logoImg = document.getElementById('viewInvoiceLogo');
     if (!modal || !captureArea) return alert("❌ រកមិនឃើញផ្ទាំង Modal មើលវិក្កយបត្រ!");
+
+    // 🌟 បង្ហាញ Logo ហាងក្នុងផ្ទាំង Preview
+    const currentLogo = window.shopLogo || localStorage.getItem(window.getBranchKey('shop_logo')) || '';
+    if (logoImg) {
+        if (currentLogo && currentLogo.trim() !== '') {
+            logoImg.src = currentLogo;
+            logoImg.style.display = 'block';
+        } else {
+            logoImg.style.display = 'none';
+        }
+    }
 
     document.getElementById('viewShopName').innerText = window.shopName || localStorage.getItem(window.getBranchKey('shop_name')) || 'SKM INTEGRATE';
     document.getElementById('viewInvoiceDate').innerText = `កាលបរិច្ឆេទ៖ ${inv.date || inv.createdAt || 'N/A'}`;
@@ -509,6 +569,80 @@ window.viewInvoiceDetails = function(invId) {
 window.closeInvoiceViewModal = function() {
     const modal = document.getElementById('invoiceViewModal');
     if (modal) modal.style.display = 'none';
+    window.currentActiveInvoiceId = null;
+};
+
+// 🌟 មុខងារបោះពុម្ពវិក្កយបត្រ (Print Receipt)
+window.reprintInvoice = function() {
+    if (!window.currentActiveInvoiceId) return alert("❌ រកមិនឃើញវិក្កយបត្រសម្រាប់បោះពុម្ពទេ!");
+    const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
+    const inv = invoices.find(i => String(i.id || i.invoiceNo) === String(window.currentActiveInvoiceId));
+    if (!inv) return;
+
+    let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
+    const currentLogo = window.shopLogo || localStorage.getItem(window.getBranchKey('shop_logo')) || '';
+    if(currentLogo) {
+        receiptHTML += `<img src="${currentLogo}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
+    }
+    receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.shopName || 'SKM INTEGRATE'}</h2>`; 
+    if(window.shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${window.shopPhone}</p>`; 
+    if(window.shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${window.shopAddress}</p>`; 
+    receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
+    receiptHTML += `<p style="margin:4px 0; font-size:14px; font-weight:bold;">វិក្កយបត្រ / Invoice</p>`;
+    receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${inv.date || inv.createdAt || 'N/A'}</p>`;
+    receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">លេខវិក្កយបត្រ: ${inv.id || inv.invoiceNo}</p>`;
+    receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${inv.customerName || inv.customer || 'ទូទៅ'}</b> ${inv.phone || inv.customerPhone ? '('+(inv.phone || inv.customerPhone)+')':''}</p>`;
+    receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div></div>`;
+
+    receiptHTML += `<table style="width:100%; text-align:left; font-size: 12px; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
+
+    (inv.items || []).forEach((item, index) => {
+        let p = parseFloat(item.price || 0);
+        let q = parseInt(item.cartQty || item.qty || 1);
+        let lineTotal = p * q;
+        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${item.name || item.title}</td></tr>`;
+        receiptHTML += `<tr><td style="padding-bottom: 4px; font-size: 11px;">$${p.toFixed(2)}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${q}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">$${lineTotal.toFixed(2)}</td></tr>`;
+    });
+
+    receiptHTML += `</tbody></table><div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
+    receiptHTML += `<table style="width:100%; font-size: 12px; margin-top: 5px;">`;
+    receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">$${parseFloat(inv.totalAmount || inv.total || 0).toFixed(2)}</td></tr>`;
+    receiptHTML += `</table>`;
+    receiptHTML += `<p style="text-align:center; font-size:12px; margin-top: 15px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`;
+
+    if (typeof window.executePrint === 'function') {
+        window.executePrint(receiptHTML);
+    } else {
+        const printWindow = window.open('', '', 'width=300,height=600');
+        if(!printWindow) return;
+        printWindow.document.write('<html><head><title>Print Receipt</title>');
+        printWindow.document.write('<style>@media print { body { width: 80mm; font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } }</style>');
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(receiptHTML);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+    }
+};
+
+// 🌟 មុខងារទាញយករូបភាពវិក្កយបត្រ (Download PNG)
+window.downloadInvoicePNG = function() {
+    const captureArea = document.getElementById('invoiceCaptureArea');
+    if (!captureArea) return alert("❌ រកមិនឃើញតំបន់សម្រាប់ទាញយករូបភាពទេ!");
+
+    if (typeof html2canvas === 'undefined') {
+        return alert("❌ បណ្ណាល័យ html2canvas មិនទាន់បានផ្ទុកទេ!");
+    }
+
+    html2canvas(captureArea, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+        const link = document.createElement('a');
+        link.download = `Invoice_${window.currentActiveInvoiceId || 'Receipt'}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+    }).catch(err => {
+        alert("❌ មានបញ្ហាក្នុងការទាញយករូបភាព: " + err.message);
+    });
 };
 
 window.exportInvoicesCSV = function() {
@@ -559,7 +693,6 @@ window.closeExpenseModal = function() {
     document.getElementById('expenseModal').style.display = 'none';
 };
 
-// 🌟 មុខងារថ្មី៖ បើកផ្ទាំងកែប្រែចំណាយ
 window.editExpense = function(id) {
     let expenses = window.expenses || JSON.parse(localStorage.getItem(window.getBranchKey('expenses_pro'))) || [];
     const exp = expenses.find(e => String(e.id) === String(id));
@@ -581,7 +714,6 @@ window.editExpense = function(id) {
     document.getElementById('expenseModal').style.display = 'flex';
 };
 
-// 🌟 មុខងាររក្សាទុកទិន្នន័យចំណាយ (ទាំងការបង្កើតថ្មី និងកែប្រែចាស់)
 window.saveExpense = async function() {
     const id = document.getElementById('expId').value;
     const cat = document.getElementById('expCategory').value;
@@ -637,7 +769,6 @@ window.saveExpense = async function() {
     if(typeof window.renderDashboard === 'function') window.renderDashboard();
 };
 
-// 🌟 មុខងារបង្ហាញទិន្នន័យចូលតារាង រួមទាំងការ Filter Date
 window.renderExpenses = function() {
     const searchVal = document.getElementById('searchExpense') ? document.getElementById('searchExpense').value.toLowerCase() : '';
     const dateFrom = document.getElementById('expenseDateFrom')?.value;
