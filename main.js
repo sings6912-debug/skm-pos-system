@@ -182,6 +182,7 @@ window.sysI18n = {
         btnUnpaid: '📝 រង់ចាំទូទាត់',
         btnPaid: '💰 ទូទាត់រួច',
         cartToggleTxt: 'ផ្ទាំងគិតលុយ (Checkout)',
+        cartTogglePrefix: 'Toggle Checkout Panel',
         itemsCountSuffix: 'មុខ',
 
         searchUnpaidPlh: '🔍 ស្វែងរកទូទៅ...',
@@ -1255,40 +1256,56 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     }
     
     window.lastInvoiceCount = window.invoices ? window.invoices.length : 0;
-
     let cleanInventory = (window.inventory || []).filter(item => item !== null && typeof item === 'object');
-    
-    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(cleanInventory));
-    localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog || []));
-    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices || []));
-    localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses || []));
-    localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
-    localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
-    localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
-    localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers || []));
-    localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings || {}));
 
     try {
         if(window.supabaseClient && navigator.onLine) {
             let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).single();
             let cloudData = (data && data.data_json) ? data.data_json : {};
 
+            // 🌟 1. Merge Invoices & Prevent Zombies
             if (cloudData.invoices) {
+                let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
                 cloudData.invoices.forEach(cInv => {
-                    if (!window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
+                    let cId = String(cInv.id || cInv.invoiceNo).trim().toLowerCase();
+                    if (!deletedTracker.includes(cId) && !window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
                         window.invoices.push(cInv);
                     }
                 });
                 window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             }
 
+            // 🌟 2. Merge Customers
             if (cloudData.customers) {
                 cloudData.customers.forEach(cC => {
-                    if (!window.customers.find(lC => String(lC.name).toLowerCase() === String(cC.name).toLowerCase())) {
-                        window.customers.push(cC);
-                    }
+                    if (!window.customers.find(lC => String(lC.name).toLowerCase() === String(cC.name).toLowerCase())) window.customers.push(cC);
                 });
             }
+
+            // 🌟 3. Merge Inventory (ការពារកុំអោយបាត់ទំនិញអ្នកផ្សេងបញ្ចូល)
+            if (cloudData.inventory) {
+                cloudData.inventory.forEach(pCloud => {
+                    if (!cleanInventory.find(pLoc => pLoc.id === pCloud.id)) cleanInventory.push(pCloud);
+                });
+            }
+
+            // 🌟 4. Merge Expenses
+            if (cloudData.expenses) {
+                cloudData.expenses.forEach(eCloud => {
+                    if (!window.expenses.find(eLoc => eLoc.id === eCloud.id)) window.expenses.push(eCloud);
+                });
+            }
+
+            // 🌟 5. Merge History Logs
+            if (cloudData.historyLog) {
+                cloudData.historyLog.forEach(hCloud => {
+                    if (!window.historyLog.find(hLoc => hLoc.id === hCloud.id)) window.historyLog.push(hCloud);
+                });
+                window.historyLog.sort((a, b) => b.id - a.id);
+            }
+
+            // អាប់ដេត Memory ម៉ាស៊ីនជាមួយនឹងទិន្នន័យដែលបាន Merge រួច
+            window.inventory = cleanInventory;
 
             let packageData = {
                 inventory: cleanInventory, 
@@ -1326,6 +1343,17 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         window.setSyncStatus('error', 'Sync បរាជ័យ');
     }
 
+    // រក្សាទុកចូល LocalStorage (ក្រោយពេល Merge រួចទើបមានសុវត្ថិភាព)
+    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(cleanInventory));
+    localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog || []));
+    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices || []));
+    localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses || []));
+    localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
+    localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
+    localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
+    localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers || []));
+    localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings || {}));
+
     if(typeof renderAllCallback === 'function') renderAllCallback();
 };
 
@@ -1340,20 +1368,44 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
 
         if (data && data.data_json) {
             let d = data.data_json;
-            window.inventory.splice(0, window.inventory.length, ...(d.inventory || []));
-            window.historyLog.splice(0, window.historyLog.length, ...(d.historyLog || []));
-            window.invoices.splice(0, window.invoices.length, ...(d.invoices || []));
-            window.expenses.splice(0, window.expenses.length, ...(d.expenses || []));
-            window.customers.splice(0, window.customers.length, ...(d.customers || []));
             
-            window.shopName = d.shopName || 'SKM INTEGRATE';
-            window.shopLogo = d.shopLogo || '';
-            window.shopQR = d.shopQR || '';
-            window.shopPhone = d.shopPhone || '';
-            window.shopAddress = d.shopAddress || '';
-            window.shopTelegram = d.shopTelegram || '';
-            window.telegramBotToken = d.telegramBotToken || '';
-            window.telegramChatId = d.telegramChatId || '';
+            // 🌟 ប្រើប្រព័ន្ធ Merge ជាជាងលុបោចោល (Splice)
+            (d.inventory || []).forEach(pCloud => {
+                if (pCloud && pCloud.id && !window.inventory.some(pLoc => pLoc.id === pCloud.id)) window.inventory.push(pCloud);
+            });
+            
+            (d.historyLog || []).forEach(hCloud => {
+                if (hCloud && hCloud.id && !window.historyLog.some(hLoc => hLoc.id === hCloud.id)) window.historyLog.push(hCloud);
+            });
+            window.historyLog.sort((a,b) => b.id - a.id);
+
+            let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+            (d.invoices || []).forEach(cInv => {
+                let tempId = String(cInv?.id || cInv?.invoiceNo).trim().toLowerCase();
+                if (!deletedTracker.includes(tempId) && !window.invoices.some(lInv => String(lInv.id) === String(cInv.id))) {
+                    window.invoices.push(cInv);
+                }
+            });
+            window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            
+            (d.expenses || []).forEach(eCloud => {
+                if (eCloud && eCloud.id && !window.expenses.some(eLoc => eLoc.id === eCloud.id)) window.expenses.push(eCloud);
+            });
+            
+            (d.customers || []).forEach(cCloud => {
+                if (cCloud && cCloud.name && !window.customers.some(cLoc => String(cLoc.name).toLowerCase() === String(cCloud.name).toLowerCase())) {
+                    window.customers.push(cCloud);
+                }
+            });
+            
+            window.shopName = d.shopName || window.shopName;
+            window.shopLogo = d.shopLogo || window.shopLogo;
+            window.shopQR = d.shopQR || window.shopQR;
+            window.shopPhone = d.shopPhone || window.shopPhone;
+            window.shopAddress = d.shopAddress || window.shopAddress;
+            window.shopTelegram = d.shopTelegram || window.shopTelegram;
+            window.telegramBotToken = d.telegramBotToken || window.telegramBotToken;
+            window.telegramChatId = d.telegramChatId || window.telegramChatId;
             
             if(d.sysSettings) {
                 if(!window.sysSettings) window.sysSettings = {};
@@ -1517,7 +1569,6 @@ window.loadSettingsToUI = function() {
         document.getElementById('setStorePin').value = window.sysSettings.storePin || '1234';
     }
     
-    // 🌟 ជួសជុលបញ្ហា ID ប្រអប់ News Ticker
     if(document.getElementById('setTickerText')) {
         document.getElementById('setTickerText').value = window.sysSettings.tickerNews || '';
     }
@@ -1543,7 +1594,6 @@ window.saveSysSettings = async function() {
     if(!window.sysSettings) window.sysSettings = {};
     window.sysSettings.storePin = newStorePin || '1234';
 
-    // 🌟 ជួសជុលបញ្ហា ID ប្រអប់ News Ticker
     if(document.getElementById('setTickerText')) {
         window.sysSettings.tickerNews = document.getElementById('setTickerText').value.trim();
     }
@@ -2262,9 +2312,11 @@ window.onload = async () => {
             if (data && data.data_json && data.data_json.invoices) {
                 let cloudInvoices = data.data_json.invoices;
                 let hasNewOrder = false;
+                let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
 
                 cloudInvoices.forEach(cInv => {
-                    if (!window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
+                    let cId = String(cInv.id || cInv.invoiceNo).trim().toLowerCase();
+                    if (!deletedTracker.includes(cId) && !window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
                         window.invoices.push(cInv);
                         hasNewOrder = true;
                     }

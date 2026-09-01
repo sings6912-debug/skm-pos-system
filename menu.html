@@ -327,6 +327,13 @@
         let currentDetailItem = null;
         let selectedVariant = '';
 
+        // ✅ បន្ថែម Function បំលែងរៀលទៅដុល្លារ សម្រាប់គិតលុយក្នុង Menu
+        function getPriceInUsd(item) {
+            let pUsd = parseFloat(item.price) || 0;
+            let pRiel = parseFloat(item.riel) || 0;
+            return pUsd > 0 ? pUsd : (pRiel / exchangeRate);
+        }
+
         const backgrounds = [
             'url("https://images.unsplash.com/photo-1534447677768-be436bb09401?q=80&w=2000&auto=format&fit=crop")',
             'url("https://images.unsplash.com/photo-1579546929518-9e396f3cc809?q=80&w=2000&auto=format&fit=crop")',
@@ -448,7 +455,7 @@
             } else {
                 listEl.innerHTML = wishlist.map(w => `
                     <div class="cart-item-row" style="border-bottom: 1px dashed var(--border); padding-bottom:10px;">
-                        <div style="flex:1;"><b style="color:var(--text-main);">${w.name}</b><br><span style="color:var(--success);">${formatPrice(parseFloat(w.price||0))}</span></div>
+                        <div style="flex:1;"><b style="color:var(--text-main);">${w.name}</b><br><span style="color:var(--success);">${formatPrice(getPriceInUsd(w))}</span></div>
                         <button class="btn-order" style="padding:6px 12px; font-size:12px;" onclick="openProductDetail('${w.id}'); closeWishlistModal();">មើល/បន្ថែម</button>
                     </div>
                 `).join('');
@@ -506,9 +513,12 @@
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).single();
                 if (data && data.data_json) {
                     let d = data.data_json;
-                    inventory = (d.inventory || []).filter(p => p && parseFloat(p.qty) > 0);
-                    document.getElementById('shopName').innerText = d.shopName || 'SKM INTEGRATE';
                     if (d.sysSettings) shopSysSettings = d.sysSettings;
+                    
+                    // ✅ FIX ទី ១: អនុញ្ញាតឲ្យទំនិញអស់ស្តុកបង្ហាញលើ Menu បើមុខងារ Pre-order ត្រូវបានបើក
+                    inventory = (d.inventory || []).filter(p => p && (parseFloat(p.qty) > 0 || (shopSysSettings && shopSysSettings.preorder)));
+                    
+                    document.getElementById('shopName').innerText = d.shopName || 'SKM INTEGRATE';
                     if (d.shopLogo) {
                         document.getElementById('shopLogo').src = d.shopLogo;
                         document.getElementById('shopLogo').style.display = 'inline-block';
@@ -573,7 +583,7 @@
                             <div class="p-name">${p.name}</div>
                             <div class="p-stock-info">${stockText}</div>
                         </div>
-                        <div class="p-price">${formatPrice(parseFloat(p.price || 0))}<div class="add-icon-btn">+</div></div>
+                        <div class="p-price">${formatPrice(getPriceInUsd(p))}<div class="add-icon-btn">+</div></div>
                     </div>
                 </div>`;
             }).join('');
@@ -610,7 +620,7 @@
             const content = `
                 <img src="${product.image || 'https://placehold.co/200?text=No+Img'}" class="detail-img" onclick="openLightbox(this.src)">
                 <div style="font-size: 16px; font-weight: bold; margin-bottom: 5px;">${product.name}</div>
-                <div style="color: var(--success); font-weight: 900; font-size: 18px; margin-bottom: 10px;">${formatPrice(parseFloat(product.price || 0))}</div>
+                <div style="color: var(--success); font-weight: 900; font-size: 18px; margin-bottom: 10px;">${formatPrice(getPriceInUsd(product))}</div>
                 <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">ស្តុកសរុប: ${product.qty}</div>
                 
                 <div style="margin-bottom: 5px; font-size: 12px; font-weight: bold;">ជ្រើសរើសជម្រើស (Variants):</div>
@@ -627,7 +637,7 @@
                 <div style="min-width: 120px; background: rgba(0,0,0,0.2); border: 1px solid var(--border); border-radius: 12px; padding: 8px; cursor: pointer; text-align: center;" onclick="openProductDetail('${p.id}')">
                     <img src="${p.image}" style="width: 100%; height: 80px; object-fit: cover; border-radius: 8px; margin-bottom: 5px;">
                     <div style="font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 3px;">${p.name}</div>
-                    <div style="font-size: 12px; font-weight: bold; color: var(--success);">${formatPrice(parseFloat(p.price||0))}</div>
+                    <div style="font-size: 12px; font-weight: bold; color: var(--success);">${formatPrice(getPriceInUsd(p))}</div>
                 </div>
             `).join('');
 
@@ -671,13 +681,16 @@
             const existing = cart.find(c => c.cartId === cartId);
             
             if (existing) {
-                if (existing.cartQty < currentDetailItem.qty) {
+                if (existing.cartQty < currentDetailItem.qty || (shopSysSettings && shopSysSettings.preorder)) {
                     existing.cartQty++;
                     showToast('បានបញ្ចូលទំនិញបន្ថែម!');
                 } else {
                     alert(translations[currentLang].out);
                 }
             } else {
+                if (currentDetailItem.qty <= 0 && (!shopSysSettings || !shopSysSettings.preorder)) {
+                    return alert('ទំនិញនេះអស់ពីស្តុកហើយ!');
+                }
                 cart.push({ ...currentDetailItem, cartId: cartId, cartVariant: selectedVariant, cartQty: 1 });
                 showToast('បានបញ្ចូលទំនិញចូលកន្ត្រក!');
             }
@@ -690,7 +703,9 @@
             if (index !== -1) {
                 const productInStock = inventory.find(p => p.id === cart[index].id);
                 cart[index].cartQty += change;
-                if (cart[index].cartQty > productInStock.qty) cart[index].cartQty = productInStock.qty;
+                if (cart[index].cartQty > productInStock.qty && !(shopSysSettings && shopSysSettings.preorder)) {
+                    cart[index].cartQty = productInStock.qty;
+                }
                 if (cart[index].cartQty <= 0) cart.splice(index, 1);
             }
             renderCartItemsList();
@@ -708,7 +723,7 @@
         function updateCartBar() {
             const cartBar = document.getElementById('cartBar');
             const totalCount = cart.reduce((sum, item) => sum + item.cartQty, 0);
-            const totalPrice = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.cartQty), 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (getPriceInUsd(item) * item.cartQty), 0);
             if (totalCount > 0) {
                 cartBar.style.display = 'flex';
                 document.getElementById('cartCount').innerText = totalCount;
@@ -729,7 +744,7 @@
                     <div style="flex: 1; padding-right: 10px;">
                         <div style="font-weight: bold; color:var(--text-main); line-height: 1.3;">${c.name}</div>
                         <div style="font-size: 11px; color: var(--text-muted);">ជម្រើស: ${c.cartVariant}</div>
-                        <div style="font-size: 12px; color: var(--success);">${formatPrice(parseFloat(c.price||0))}</div>
+                        <div style="font-size: 12px; color: var(--success);">${formatPrice(getPriceInUsd(c))}</div>
                     </div>
                     <div class="cart-qty-controls">
                         <button class="cart-qty-btn" onclick="updateCartItemQty('${c.cartId}', -1)">-</button>
@@ -758,7 +773,7 @@
         }
 
         function updateCheckoutTotal() {
-            const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.cartQty), 0);
+            const subtotal = cart.reduce((sum, item) => sum + (getPriceInUsd(item) * item.cartQty), 0);
             const discountAmount = subtotal * appliedDiscountRate;
             const deliveryOption = document.getElementById('deliveryOption').value;
             const deliveryFee = deliveryOption === 'delivery' ? defaultDeliveryFee : 0;
@@ -836,7 +851,7 @@
             const name = document.getElementById('custName').value.trim();
             if (!name) { alert('សូមបញ្ចូលឈ្មោះរបស់អ្នកសិន!'); return; }
             
-            const subtotal = cart.reduce((sum, item) => sum + (parseFloat(item.price || 0) * item.cartQty), 0);
+            const subtotal = cart.reduce((sum, item) => sum + (getPriceInUsd(item) * item.cartQty), 0);
             const discountAmount = subtotal * appliedDiscountRate;
             const deliveryFee = document.getElementById('deliveryOption').value === 'delivery' ? defaultDeliveryFee : 0;
             
@@ -892,7 +907,7 @@
                     triggerPushNotification("មានការកុម្ម៉ង់ថ្មី (New Order)!", `អតិថិជន: ${name}\nសរុប: $${finalTotalAmount.toFixed(2)}`);
 
                     if (shopBotToken && shopChatId) {
-                        let itemsText = newOrder.items.map((i, idx) => `${idx + 1}. ${i.name} [${i.cartVariant}] (x${i.cartQty}) = $${(parseFloat(i.price||0) * i.cartQty).toFixed(2)}`).join('\n');
+                        let itemsText = newOrder.items.map((i, idx) => `${idx + 1}. ${i.name} [${i.cartVariant}] (x${i.cartQty}) = $${(getPriceInUsd(i) * i.cartQty).toFixed(2)}`).join('\n');
                         let msg = `🛒 <b>មានការកុម្ម៉ង់ថ្មី (New Order)!</b>\n👤 <b>ឈ្មោះ:</b> ${name}\n📞 <b>ទូរស័ព្ទ:</b> ${newOrder.phone || 'មិនមាន'}\n📝 <b>ចំណាំ:</b> ${newOrder.note}`;
                         
                         if(isGift) {

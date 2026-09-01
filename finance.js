@@ -19,6 +19,19 @@ window.renderUnpaid = function() {
         } catch(e) { invoices = []; }
     }
 
+    // 🌟 ដំណោះស្រាយ Blacklist៖ ត្រងចោលវិក្កយបត្រខ្មោច (Zombies) ដែលលុបរួច តែ Cloud ទាញមកវិញ
+    const deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+    if (deletedTracker.length > 0) {
+        invoices = invoices.filter((inv, idx) => {
+            let tempId = String(inv?.id || inv?.invoiceNo || `ORD-${idx}`).trim().toLowerCase();
+            return !deletedTracker.includes(tempId);
+        });
+        window.invoices = invoices; // អាប់ដេតកាត់វាចោលពី Local Memory ស្ងាត់ៗ
+        if (typeof window.getBranchKey === 'function') {
+            localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
+        }
+    }
+
     invoices.sort((a, b) => {
         let timeA = a.timestamp || new Date(a.date || a.createdAt || 0).getTime();
         let timeB = b.timestamp || new Date(b.date || b.createdAt || 0).getTime();
@@ -140,7 +153,8 @@ window.renderUnpaid = function() {
 // 🌟 ២. មុខងារប្រាប់ភ្ញៀវថាកម្ម៉ង់រួចរាល់
 window.notifyCustomerOrderDone = async function(invId) {
     let invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
-    const invIndex = invoices.findIndex(i => String(i.id || i.invoiceNo) === String(invId));
+    const targetId = String(invId).trim().toLowerCase();
+    const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
     if (invIndex === -1) {
         alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
@@ -184,7 +198,8 @@ window.currentPayingInvoiceId = null;
 
 window.openDebtPaymentModal = function(invId) {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
-    const inv = invoices.find(i => String(i.id || i.invoiceNo) === String(invId));
+    const targetId = String(invId).trim().toLowerCase();
+    const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
     if (!inv) return alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
 
@@ -208,7 +223,8 @@ window.openDebtPaymentModal = function(invId) {
 
 window.calculateDebtChange = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
-    const inv = invoices.find(i => String(i.id || i.invoiceNo) === String(window.currentPayingInvoiceId));
+    const targetId = String(window.currentPayingInvoiceId).trim().toLowerCase();
+    const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
     if (!inv) return;
 
     const total = parseFloat(inv.totalAmount || inv.total || 0);
@@ -238,7 +254,8 @@ window.processDebtPayment = async function() {
     if (!window.currentPayingInvoiceId) return;
 
     let invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
-    const invIndex = invoices.findIndex(i => String(i.id || i.invoiceNo) === String(window.currentPayingInvoiceId));
+    const targetId = String(window.currentPayingInvoiceId).trim().toLowerCase();
+    const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
     if (invIndex === -1) return;
 
@@ -269,7 +286,7 @@ window.processDebtPayment = async function() {
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
 
     if (typeof window.logAction === 'function') {
-        window.logAction('update', inv.customer || inv.customerName, 0, `បានទូទាត់ប្រាក់ ${totalPaidNow.toFixed(2)}$ សម្រាប់វិក្កយបត្រ ${inv.id}`, window.activeUser);
+        window.logAction('update', inv.customer || inv.customerName, 0, `បានទូទាត់ប្រាក់ ${totalPaidNow.toFixed(2)}$ សម្រាប់វិក្កយបត្រ ${inv.id || inv.invoiceNo || 'ចាស់'}`, window.activeUser);
     }
 
     setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
@@ -287,7 +304,8 @@ window.currentEditingInvoice = null;
 
 window.openInvoiceEditModal = function(invId) {
     let invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
-    const inv = invoices.find(i => String(i.id || i.invoiceNo) === String(invId));
+    const targetId = String(invId).trim().toLowerCase();
+    const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
     if (!inv) return alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
 
@@ -407,7 +425,8 @@ window.saveInvoiceChanges = async function() {
 
     let invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     const invId = document.getElementById('editInvId').value;
-    const invIndex = invoices.findIndex(i => String(i.id || i.invoiceNo) === String(invId));
+    const targetId = String(invId).trim().toLowerCase();
+    const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
     if (invIndex === -1) return alert("❌ រកមិនឃើញវិក្កយបត្រដើម!");
 
@@ -434,75 +453,76 @@ window.saveInvoiceChanges = async function() {
     window.renderUnpaid();
 };
 
-// 🌟 មុខងារលុបវិក្កយបត្រ (UI ដើរភ្លាមៗ លែងគាំង - Background Cloud Sync)
+// ========================================================
+// 🌟 មុខងារលុបវិក្កយបត្រ (បំពាក់ Blacklist ការពារស្តុកឡើងទ្វេដង)
+// ========================================================
 window.deleteInvoiceRecord = function(invId) {
-    if (!confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រ [${invId}] និងបង្វិលទំនិញចូលស្តុកវិញមែនទេ?`)) return;
+    if (!confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រ [${invId}] មែនទេ?`)) return;
 
-    let branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('invoices_pro') : 'invoices_pro';
-    let invoices = window.invoices || JSON.parse(localStorage.getItem(branchKey)) || [];
-    const invIndex = invoices.findIndex(i => String(i.id || i.invoiceNo) === String(invId));
-    
-    if (invIndex === -1) {
-        alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
-        return;
-    }
+    try {
+        const targetId = String(invId).trim().toLowerCase();
+        let branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('invoices_pro') : 'invoices_pro';
+        
+        let invoices = JSON.parse(localStorage.getItem(branchKey)) || window.invoices || [];
+        let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+        
+        const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-    const inv = invoices[invIndex];
-    
-    // ១. បង្វិលទំនិញចូលស្តុកវិញ (Inventory)
-    if (inv.items && Array.isArray(inv.items) && window.inventory) {
-        inv.items.forEach(item => {
-            const realItem = window.inventory.find(p => p.id === item.id);
-            if (realItem) realItem.qty += (item.cartQty || item.qty || 1);
-        });
-        if (typeof window.getBranchKey === 'function') {
-            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
-        }
-    }
-    
-    // ២. លុបវិក្កយបត្រចេញពី Array និង LocalStorage
-    invoices.splice(invIndex, 1);
-    window.invoices = invoices;
-    localStorage.setItem(branchKey, JSON.stringify(invoices));
-
-    // ៣. 🌟 [សំខាន់] បង្ហាញការលុបនៅលើអេក្រង់ភ្លាមៗ (កុំចាំ Cloud ដើម្បីកុំឱ្យគាំង)
-    window.renderUnpaid();
-    if(typeof window.renderInventory === 'function') window.renderInventory();
-
-    // ៤. 🌟 [សំខាន់] Update Object សម្រាប់ត្រៀម Save ទៅ Cloud
-    if (window.userAccounts) {
-        if (Array.isArray(window.userAccounts)) {
-            window.userAccounts.forEach(account => {
-                if (account[branchKey] !== undefined) account[branchKey] = invoices;
-                if (account.invoices !== undefined) account.invoices = invoices;
-            });
-        } else {
-            if (window.userAccounts[branchKey] !== undefined) window.userAccounts[branchKey] = invoices;
-            if (window.userAccounts.invoices !== undefined) window.userAccounts.invoices = invoices;
-        }
-    }
-
-    // ៥. ដំណើរការលុបពី Cloud និង Save Background (លាក់មុខ មិនឱ្យទាក់អេក្រង់)
-    setTimeout(async () => {
-        try {
-            if (window.supabase) {
-                await window.supabase.from('invoices').delete().eq('id', String(invId));
-                await window.supabase.from(branchKey).delete().eq('id', String(invId));
+        // ១. បង្វិលស្តុកចូលវិញ (អនុញ្ញាតឲ្យបង្វិលតែម្តងគត់ ការពារ Error ចុចច្រើនដង)
+        if (!deletedTracker.includes(targetId)) {
+            if (invIndex !== -1) {
+                const inv = invoices[invIndex];
+                if (inv && inv.items && Array.isArray(inv.items) && window.inventory) {
+                    inv.items.forEach(item => {
+                        if (item && item.id) {
+                            const realItem = window.inventory.find(p => p.id === item.id);
+                            if (realItem) realItem.qty += (parseInt(item.cartQty || item.qty) || 1);
+                        }
+                    });
+                    // អាប់ដេតស្តុក Local ភ្លាមៗ
+                    if (typeof window.getBranchKey === 'function') {
+                        localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+                    }
+                }
             }
-        } catch (error) { 
-            console.log("Supabase delete skipped or error:", error); 
+            // ដាក់ឈ្មោះវាចូល "បញ្ជីខ្មៅ" ធានាថាវានឹងមិនអាចបូកស្តុកបានម្តងទៀតទេ
+            deletedTracker.push(targetId);
+            localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedTracker));
         }
 
-        if (typeof window.saveData === 'function') {
-            window.saveData(window.userAccounts);
-        }
-    }, 100);
+        // ២. លុបចេញពីបញ្ជីវិក្កយបត្រ
+        invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
+        window.invoices = invoices;
+        localStorage.setItem(branchKey, JSON.stringify(invoices));
 
-    // ៦. បង្ហាញសារជោគជ័យ
-    if(typeof window.ksMsg === 'function') {
-        window.ksMsg("✅ បានលុបវិក្កយបត្ររួចរាល់!", "ជោគជ័យ");
-    } else {
-        alert("✅ បានលុបវិក្កយបត្ររួចរាល់!");
+        // ៣. បាត់ពីអេក្រង់ភ្លាមៗ មិនបាច់រង់ចាំ Cloud
+        window.renderUnpaid();
+        if (typeof window.renderInventory === 'function') window.renderInventory();
+
+        // ៤. លុបពី Cloud និង Save Background ស្ងាត់ៗ
+        setTimeout(async () => {
+            try {
+                if (window.supabase) {
+                    await window.supabase.from('invoices').delete().eq('id', String(invId));
+                }
+            } catch (e) { console.log("Supabase error silently caught:", e); }
+            
+            if (typeof window.saveData === 'function') {
+                if (window.userAccounts && Array.isArray(window.userAccounts)) {
+                    window.userAccounts.forEach(acc => {
+                        if (acc[branchKey] !== undefined) acc[branchKey] = window.invoices;
+                    });
+                }
+                window.saveData(window.userAccounts);
+            }
+        }, 100);
+
+        if (typeof window.ksMsg === 'function') window.ksMsg("✅ បានលុបដោយជោគជ័យ!", "ជោគជ័យ");
+        else alert("✅ បានលុបដោយជោគជ័យ!");
+
+    } catch (error) {
+        console.error("Error deleting invoice:", error);
+        alert("❌ មានបញ្ហាក្នុងការលុប៖ " + error.message);
     }
 };
 
@@ -511,7 +531,8 @@ window.currentActiveInvoiceId = null;
 
 window.viewInvoiceDetails = function(invId) {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
-    const inv = invoices.find(i => String(i.id || i.invoiceNo) === String(invId));
+    const targetId = String(invId).trim().toLowerCase();
+    const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
     if (!inv) return alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
 
@@ -576,7 +597,8 @@ window.closeInvoiceViewModal = function() {
 window.reprintInvoice = function() {
     if (!window.currentActiveInvoiceId) return alert("❌ រកមិនឃើញវិក្កយបត្រសម្រាប់បោះពុម្ពទេ!");
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
-    const inv = invoices.find(i => String(i.id || i.invoiceNo) === String(window.currentActiveInvoiceId));
+    const targetId = String(window.currentActiveInvoiceId).trim().toLowerCase();
+    const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
     if (!inv) return;
 
     let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
@@ -590,7 +612,7 @@ window.reprintInvoice = function() {
     receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
     receiptHTML += `<p style="margin:4px 0; font-size:14px; font-weight:bold;">វិក្កយបត្រ / Invoice</p>`;
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${inv.date || inv.createdAt || 'N/A'}</p>`;
-    receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">លេខវិក្កយបត្រ: ${inv.id || inv.invoiceNo}</p>`;
+    receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">លេខវិក្កយបត្រ: ${inv.id || inv.invoiceNo || window.currentActiveInvoiceId}</p>`;
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${inv.customerName || inv.customer || 'ទូទៅ'}</b> ${inv.phone || inv.customerPhone ? '('+(inv.phone || inv.customerPhone)+')':''}</p>`;
     receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div></div>`;
 
@@ -650,8 +672,8 @@ window.exportInvoicesCSV = function() {
     if (invoices.length === 0) return alert("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!");
 
     let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,សរុបទឹកប្រាក់,ស្ថានភាព,អ្នកលក់\n";
-    invoices.forEach(inv => {
-        const id = inv.id || inv.invoiceNo || '';
+    invoices.forEach((inv, idx) => {
+        const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         const d = inv.date || inv.createdAt || '';
         const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
         const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
