@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>KouSuke MiSaKi AniMe - Digital Menu</title>
+    <title>Digital Menu - Client Portal</title>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -12,7 +12,7 @@
         :root {
             /* Dynamic Brand Colors */
             --brand-dark: #1d162d; 
-            --brand-cyan: #06b6d4; /* Will change dynamically */
+            --brand-cyan: #06b6d4; /* Will change dynamically from Admin */
             --store-bg: #f3f4f6;
             --card-bg: #ffffff;
             --text-dark: #1e293b;
@@ -57,8 +57,10 @@
             object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #fff;
         }
         .lp-title { color: white; font-size: 22px; font-weight: 900; margin-top: 15px; letter-spacing: 0.5px; text-transform: uppercase;}
-        .lp-yt { color: #a5b4fc; font-size: 13px; margin-top: 5px; display: flex; align-items: center; gap: 6px; text-decoration: none;}
-        .lp-yt i { color: #ef4444; background: white; border-radius: 50%; padding: 2px; font-size: 14px; }
+        
+        /* Dynamic Social Link */
+        .lp-yt { color: #a5b4fc; font-size: 13px; margin-top: 8px; display: flex; align-items: center; gap: 6px; text-decoration: none; padding: 6px 14px; background: rgba(255,255,255,0.1); border-radius: 20px;}
+        .lp-yt i { font-size: 16px; }
         
         .lp-btn {
             width: 260px; padding: 14px; border-radius: 30px; font-size: 15px; font-weight: 800;
@@ -84,7 +86,7 @@
             position: sticky; top: 0; z-index: 50;
         }
         .top-bar i { font-size: 20px; cursor: pointer; }
-        .top-bar .title { font-weight: 900; font-size: 18px; letter-spacing: 1px; }
+        .top-bar .title { font-weight: 900; font-size: 18px; letter-spacing: 1px; text-transform: uppercase;}
         
         .cart-icon-wrapper { position: relative; cursor: pointer; }
         .cart-badge {
@@ -229,12 +231,13 @@
         }
         .nav-fab:active { transform: scale(0.95); }
 
+        /* Animation for Cart Badge Pop */
         @keyframes popBounce {
             0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
+            50% { transform: scale(1.4); }
             100% { transform: scale(1); }
         }
-        .pop-anim { animation: popBounce 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .pop-anim { animation: popBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         .floating-chat {
             position: fixed; bottom: 95px; right: 20px; width: 50px; height: 50px;
@@ -281,13 +284,12 @@
     </style>
 </head>
 <body>
-
     <div id="storeClosedBanner">⚠️ ហាងសម្រាកបណ្តោះអាសន្ន! (Store Closed)</div>
 
     <!-- 1. SPLASH SCREEN -->
     <div id="splashScreen">
         <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 40px; color: var(--brand-cyan); margin-bottom: 15px;"></i>
-        <h2 style="font-weight: 900; letter-spacing: 1px;">KouSuke MiSaKi AniMe</h2>
+        <h2 style="font-weight: 900; letter-spacing: 1px;" id="splashName">Loading...</h2>
     </div>
 
     <!-- Welcome Popup Modal -->
@@ -304,17 +306,17 @@
 
     <!-- 2. LANDING PAGE -->
     <div id="landingPage">
-        <img id="lpLogo" src="https://i.pinimg.com/736x/8f/3e/39/8f3e390c5a31a9862562ec57dff69e8b.jpg" class="lp-profile-pic" alt="Logo">
-        <h1 id="lpName" class="lp-title">KouSuke MiSaKi AniMe</h1>
+        <img id="lpLogo" src="https://placehold.co/200x200" class="lp-profile-pic" alt="Logo">
+        <h1 id="lpName" class="lp-title">Shop Name</h1>
         
         <!-- Dynamic Social Media Link -->
         <a href="#" target="_blank" id="lpSocialLink" class="lp-yt" style="display: none;">
             <i id="lpSocialIcon" class="fa-brands fa-youtube"></i> 
-            <span id="lpSocialLabel">YouTube/KouSukeMiSaKiAniMe</span>
+            <span id="lpSocialLabel">Social Link</span>
         </a>
         
         <button class="lp-btn lp-btn-cyan" onclick="enterStore()">Digital Menu</button>
-        <button class="lp-btn lp-btn-dark" onclick="openModal('trackerModal')"><i class="fa-solid fa-play" style="font-size:11px;"></i> Derga Menu ></button>
+        <button class="lp-btn lp-btn-dark" onclick="openModal('trackerModal')"><i class="fa-solid fa-play" style="font-size:11px;"></i> លំដាប់ថ្នាក់ទំនិញ (Track)</button>
     </div>
 
     <!-- 3. STORE PAGE -->
@@ -346,7 +348,7 @@
         <div class="search-wrapper">
             <i class="fa-solid fa-magnifying-glass" style="margin-right: 10px;"></i>
             <input type="text" id="searchInput" placeholder="Search..." oninput="renderMenu()">
-            <i class="fa-solid fa-heart text-red-500" style="color: var(--danger); font-size: 18px; cursor: pointer;" onclick="openModal('wishlistModal')"></i>
+            <i class="fa-solid fa-heart" style="color: var(--danger); font-size: 18px; cursor: pointer;" onclick="openModal('wishlistModal')"></i>
         </div>
 
         <div class="cat-scroll" id="catTabs">
@@ -376,6 +378,7 @@
                 <div class="nav-fab" id="bottomCartFab">
                     <i class="fa-solid fa-cart-shopping"></i>
                 </div>
+                <!-- Badge on Bottom Cart -->
                 <div class="cart-badge" id="cartBadgeBottom" style="top: -5px; right: -2px; z-index: 10;">0</div>
             </div>
             
@@ -534,7 +537,8 @@
         </div>
     </div>
 
-    <div id="toast">Added to Cart!</div>
+    <!-- Custom Global Toast -->
+    <div id="toast">Message here!</div>
 
     <!-- Lightbox Modal -->
     <div id="lightboxModal" onclick="closeLightbox()">
@@ -567,6 +571,7 @@
         };
 
         // --- Core UI Functions ---
+        // REPLACED ALERT WITH TOAST
         function showToast(msg, isError = false) {
             const t = document.getElementById('toast'); 
             t.innerText = msg;
@@ -591,7 +596,7 @@
                 const now = new Date();
                 const currentTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
                 if (currentTime < sys.openTime || currentTime > sys.closeTime) {
-                    if (!sys.preorder) showToast(`⚠️ Store is Closed! (${sys.openTime} - ${sys.closeTime})`, true);
+                    if (!sys.preorder) showToast(`⚠️ ហាងសម្រាក! (${sys.openTime} - ${sys.closeTime})`, true);
                 }
             }
             
@@ -713,7 +718,7 @@
                         
                         if (sys.chatLink) dynamicChatLink = sys.chatLink;
                         
-                        // Social Media Display Logic
+                        // Social Media Link on Landing Page
                         if (sys.socialLabel && sys.socialLink) {
                             const socialEl = document.getElementById('lpSocialLink');
                             socialEl.href = sys.socialLink;
@@ -722,10 +727,10 @@
                             const iconEl = document.getElementById('lpSocialIcon');
                             iconEl.className = sys.socialIcon || 'fa-brands fa-youtube';
                             
-                            // Auto-adjust icon colors based on platform
-                            let iconColor = '#ef4444'; // default red
+                            // Auto color based on network
+                            let iconColor = '#ef4444'; // Red default
                             if (sys.socialIcon === 'fa-brands fa-facebook' || sys.socialIcon === 'fa-brands fa-telegram') iconColor = '#3b82f6';
-                            else if (sys.socialIcon === 'fa-brands fa-tiktok') iconColor = '#000000';
+                            else if (sys.socialIcon === 'fa-brands fa-tiktok') iconColor = '#ffffff';
                             else if (sys.socialIcon === 'fa-brands fa-instagram') iconColor = '#e1306c';
                             
                             iconEl.style.color = iconColor;
@@ -736,8 +741,9 @@
                     }
                     
                     inventory = (d.inventory || []).filter(p => p && (parseFloat(p.qty) > 0 || sys.preorder));
-                    const nm = d.shopName || 'KouSuke MiSaKi AniMe';
+                    const nm = d.shopName || 'Shop Name';
                     document.getElementById('lpName').innerText = nm;
+                    document.getElementById('splashName').innerText = nm;
                     if (d.shopLogo) document.getElementById('lpLogo').src = d.shopLogo;
                     botToken = d.telegramBotToken || ''; chatId = d.telegramChatId || '';
                     buildCats();
@@ -833,27 +839,35 @@
         
         function updateCartBadges() {
             const totalQty = cart.reduce((s,i)=>s+i.qty, 0);
-            document.getElementById('cartBadge').innerText = totalQty;
-            if(document.getElementById('cartBadgeBottom')) document.getElementById('cartBadgeBottom').innerText = totalQty;
             
-            // Add pop animation to bottom FAB
+            // Update Top Badge
+            document.getElementById('cartBadge').innerText = totalQty;
+            
+            // Update Bottom Badge
+            const botBadge = document.getElementById('cartBadgeBottom');
+            if(botBadge) botBadge.innerText = totalQty;
+            
+            // Add Bounce Animation to Bottom FAB
             const fab = document.getElementById('bottomCartFab');
             if(fab) {
                 fab.classList.remove('pop-anim');
-                void fab.offsetWidth; // trigger reflow to restart animation
+                void fab.offsetWidth; // Trigger reflow to restart animation
                 fab.classList.add('pop-anim');
             }
         }
 
+        // STRICT STOCK CHECK LOGIC
         function addCartLogic(silent=false) {
             const cid = curProd.id + '_' + selVar;
             const ex = cart.find(c=>c.cartId === cid);
+            const stockLimit = parseFloat(curProd.qty) || 0;
+            
             if(ex) { 
-                if(ex.qty < curProd.qty || sys.preorder) ex.qty++; 
-                else return showToast('Stock limit reached!', true); 
+                if(ex.qty < stockLimit || sys.preorder) ex.qty++; 
+                else return showToast('⚠️ មិនអាចថែមបានទេ! (អស់ស្តុក)', true); 
             } 
             else { 
-                if(curProd.qty<=0 && !sys.preorder) return showToast('Out of stock!', true); 
+                if(stockLimit <= 0 && !sys.preorder) return showToast('⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!', true); 
                 cart.push({...curProd, cartId: cid, cartVar: selVar, qty: 1}); 
             }
             
@@ -882,7 +896,6 @@
                 </div>
             `).join('');
         }
-        
         function delCart(cid) { cart = cart.filter(c=>c.cartId!==cid); updateCartBadges(); renderCart(); updateTotal(); }
 
         function toggleWl(id, btn, event) {
@@ -978,7 +991,8 @@
                 if(data && data.data_json) {
                     let d = data.data_json; if(!d.invoices) d.invoices=[];
                     d.invoices.unshift(ord);
-                    cart.forEach(c=>{ let i=(d.inventory||[]).find(x=>x.id===c.id); if(i) i.qty=Math.max(0, i.qty-c.qty); });
+                    // Deduct stock
+                    cart.forEach(c=>{ let i=(d.inventory||[]).find(x=>x.id===c.id); if(i) i.qty=Math.max(0, parseFloat(i.qty)-c.qty); });
                     await supabaseClient.from('branch_store').update({data_json: d}).eq('branch_id', BRANCH);
                     
                     points += Math.floor(tot); localStorage.setItem('skm_pts', points);
@@ -994,7 +1008,7 @@
                         });
                     }
                     showToast(`Order Success! ID: ${orderId}`);
-                    cart = []; updateCartBadges();
+                    cart = []; updateCartBadges(); 
                     document.getElementById('checkoutBtn').innerText = 'Checkout';
                     closeModal('cartModal'); init();
                 }
