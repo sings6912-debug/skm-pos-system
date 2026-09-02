@@ -11,7 +11,7 @@
     <style>
         :root {
             --brand-dark: #1d162d;
-            --brand-cyan: #10b981;
+            --brand-cyan: #06b6d4;
             --store-bg: #f3f4f6;
             --card-bg: #ffffff;
             --text-dark: #1e293b;
@@ -42,7 +42,7 @@
         .preview-box { margin-top: 8px; text-align: center; background: var(--store-bg); padding: 8px; border-radius: 12px; border: 1px dashed var(--border-color); }
         .preview-box img { max-height: 120px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; }
 
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--store-bg); padding: 10px 14px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; font-weight: 800; }
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--store-bg); padding: 10px 14px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; font-weight: 800; border: 1px solid var(--border-color);}
 
         #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background: var(--success); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; z-index: 9999; transition: transform 0.3s; box-shadow: 0 4px 15px rgba(34,197,94,0.4); }
         #toast.show { transform: translate(-50%, 0); }
@@ -52,7 +52,7 @@
 
     <div class="admin-container">
         <div class="admin-header">
-            <h2>⚙️ Advanced Digital Menu Control Panel</h2>
+            <h2>⚙️ កន្លែងកំណត់ (Settings) Digital Menu</h2>
             <div style="display: flex; gap: 8px;">
                 <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="openLiveMenu()"><i class="fa-solid fa-eye"></i> View Menu</button>
                 <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyMenuLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
@@ -61,32 +61,23 @@
 
         <!-- 1. Theme Color & Branding -->
         <div class="section-box">
-            <div class="section-title"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែក និងកម្រងព័ត៌មានហាង (Theme & Branding)</div>
+            <div class="section-title"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែកគោល (Theme Color)</div>
             <div class="form-group">
-                <label>ពណ៌ស្បែកหลัก (Theme Accent Color)</label>
+                <label>ពណ៌ស្បែក (Theme Accent Color) - ប្តូរពណ៌ប៊ូតុង និង Icon ទូទាំង Menu</label>
                 <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="color" id="setMenuThemeColor" value="#10b981" style="width: 50px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: transparent;" onchange="saveAdminSettings()">
-                    <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ជ្រើសរើសពណ៌គោលសម្រាប់ Menu អតិថិជន</span>
+                    <input type="color" id="setMenuThemeColor" value="#06b6d4" style="width: 50px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: transparent;" onchange="saveAdminSettings()">
+                    <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ជ្រើសរើសពណ៌ដែលត្រូវនឹងប្រេនអាជីវកម្មរបស់អ្នក</span>
                 </div>
             </div>
         </div>
 
         <!-- 2. Banner & Promo Configuration -->
         <div class="section-box">
-            <div class="section-title"><i class="fa-solid fa-image"></i> 2. ការកំណត់ Banner ពាណិជ្ជកម្ម (Banner & Promo Features)</div>
+            <div class="section-title"><i class="fa-solid fa-images"></i> 2. ការកំណត់ Banner ពាណិជ្ជកម្ម (Slider Banner)</div>
             <div class="form-group">
-                <label>បញ្ជីរូបភាព Banner (អាចដាក់បានច្រើនឥតកំណត់)</label>
+                <label>បញ្ជីរូបភាព Banner (អាចដាក់បានច្រើនឥតកំណត់ វានឹងរត់ប្តូរវេនគ្នាស្វ័យប្រវត្តិ)</label>
                 <div id="bannerListContainer"></div>
                 <button class="input-st" style="width: 100%; border-style: dashed; margin-top: 10px; cursor: pointer; color: var(--brand-cyan);" onclick="addAdminBanner()">+ បន្ថែម Banner ថ្មី</button>
-            </div>
-
-            <div class="toggle-row">
-                <span>⏱️ បើកដំណើរការនាឡិកាថយក្រោយ (Countdown Timer)</span>
-                <input type="checkbox" id="toggleCountdown" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
-            </div>
-            <div class="form-group">
-                <label>កាលបរិច្ឆេទ និងម៉ោងបញ្ចប់ Countdown:</label>
-                <input type="datetime-local" id="setCountdownEnd" class="input-st" onchange="saveAdminSettings()">
             </div>
 
             <div class="toggle-row">
@@ -99,28 +90,29 @@
             </div>
         </div>
 
-        <!-- 3. Ticker & Quick Categories -->
+        <!-- 3. Ticker & Announcements -->
         <div class="section-box">
-            <div class="section-title"><i class="fa-solid fa-bullhorn"></i> 3. របារប្រអប់អត្ថបទរត់ និងសេចក្តីជូនដំណឹង</div>
+            <div class="section-title"><i class="fa-solid fa-bullhorn"></i> 3. របារប្រអប់អត្ថបទរត់ (Marquee Ticker)</div>
             <div class="toggle-row">
-                <span>📢 បើករបារសេចក្តីជូនដំណឹងរត់ (Marquee Ticker)</span>
+                <span>📢 បើករបារសេចក្តីជូនដំណឹងរត់</span>
                 <input type="checkbox" id="toggleTicker" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
             </div>
             <div class="form-group">
                 <label>អត្ថបទជូនដំណឹងរត់៖</label>
-                <input type="text" id="setTickerText" class="input-st" placeholder="ឧ. ទิញទំនិញគ្រប់ ២០$ ថែមជូនកាតស្អាតមួយ..." onchange="saveAdminSettings()">
+                <input type="text" id="setTickerText" class="input-st" placeholder="ឧ. ទិញទំនិញគ្រប់ ២០$ ថែមជូនការដឹកជញ្ជូនឥតគិតថ្លៃ..." onchange="saveAdminSettings()">
             </div>
         </div>
 
         <!-- 4. Welcome Popup & Store Hours -->
         <div class="section-box">
-            <div class="section-title"><i class="fa-solid fa-clock"></i> 4. ផ្ទាំងស្វាគមន៍ (Popup) និងម៉ោងបើក-បិទហាង</div>
+            <div class="section-title"><i class="fa-solid fa-store"></i> 4. ផ្ទាំងស្វាគមន៍ & ម៉ោងបើកហាង (Popup & Store Hours)</div>
+            
             <div class="toggle-row">
                 <span>✨ បើកផ្ទាំង Pop-up ស្វាគមន៍ពេលចូលមើលដំបូង</span>
                 <input type="checkbox" id="toggleWelcomePopup" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
             </div>
             <div class="form-group">
-                <label>រូបភាព Welcome Popup (Link):</label>
+                <label>រូបភាព Welcome Popup (Link ឬ Base64):</label>
                 <input type="text" id="setWelcomeImg" class="input-st" placeholder="https://..." onchange="saveAdminSettings()">
             </div>
 
@@ -128,36 +120,32 @@
                 <span>🕒 បើកប្រព័ន្ធកំណត់ម៉ោងបើក-បិទហាងស្វ័យប្រវត្តិ</span>
                 <input type="checkbox" id="toggleStoreHours" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
             </div>
-            <div style="display: flex; gap: 10px;">
-                <div class="form-group" style="flex: 1;">
+            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label>ម៉ោងបើក (ឧ. 08:00)</label>
                     <input type="time" id="setOpenTime" class="input-st" value="08:00" onchange="saveAdminSettings()">
                 </div>
-                <div class="form-group" style="flex: 1;">
+                <div class="form-group" style="flex: 1; margin-bottom: 0;">
                     <label>ម៉ោងបិទ (ឧ. 21:00)</label>
                     <input type="time" id="setCloseTime" class="input-st" value="21:00" onchange="saveAdminSettings()">
                 </div>
             </div>
+
+            <!-- NEW: PRE-ORDER / OUT OF STOCK ORDERING TOGGLE -->
+            <div class="toggle-row" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3);">
+                <span style="color: var(--success);">📦 អនុញ្ញាតឱ្យភ្ញៀវកុម្មង់ទំនិញទោះអស់ស្តុក (បើក Pre-order)</span>
+                <input type="checkbox" id="togglePreorder" style="width: 20px; height: 20px; accent-color: var(--success); cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
+            <div style="font-size: 11px; color: var(--text-muted); margin-top: -5px; margin-bottom: 10px; padding: 0 5px;">* បើបិទមុខងារនេះ ភ្ញៀវមិនអាចចុច Add លើសចំនួនស្តុកដែលមានជាក់ស្តែងឡើយ។</div>
         </div>
 
         <!-- 5. Payment QR & Chat Link -->
         <div class="section-box">
-            <div class="section-title"><i class="fa-solid fa-qrcode"></i> 5. ការទូទាត់ប្រាក់ និងបណ្តាញទំនាក់ទំនង (Payment & Social Links)</div>
-            <div class="form-group">
-                <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ABA / ACLEDA)</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" id="setMenuQR" class="input-st" placeholder="Link ឬ Base64..." style="margin-bottom:0;" onchange="saveAdminSettings()">
-                    <input type="file" id="qrFile" accept="image/*" style="display:none;" onchange="uploadQR(event)">
-                    <button class="input-st" style="width: auto; cursor: pointer;" onclick="document.getElementById('qrFile').click()"><i class="fa-solid fa-upload"></i></button>
-                </div>
-                <div class="preview-box">
-                    <img id="menuQRPreview" src="" alt="QR Preview" style="display: none;">
-                </div>
-            </div>
-
+            <div class="section-title"><i class="fa-solid fa-link"></i> 5. បណ្តាញសង្គម & ទូទាត់ប្រាក់ (Social & Payments)</div>
+            
             <!-- NEW: Social Media Link for Landing Page -->
             <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--brand-cyan);">
-                <label style="color: var(--brand-dark);">បណ្តាញសង្គម (Social Media) - បង្ហាញលើ Landing Page</label>
+                <label style="color: var(--brand-dark);"><i class="fa-solid fa-share-nodes"></i> បណ្តាញសង្គម (បង្ហាញលើ Landing Page)</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                     <select id="setSocialIcon" class="input-st" style="width: auto; margin-bottom: 0;" onchange="saveAdminSettings()">
                         <option value="fa-brands fa-youtube">🔴 YouTube</option>
@@ -168,7 +156,19 @@
                     </select>
                     <input type="text" id="setSocialLabel" class="input-st" placeholder="ឈ្មោះបង្ហាញ (ឧ. YouTube/KouSuke...)" style="margin-bottom: 0;" onchange="saveAdminSettings()">
                 </div>
-                <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL ទៅកាន់ Page ឬ Channel របស់អ្នក..." onchange="saveAdminSettings()">
+                <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL (Link) ទៅកាន់ទំព័ររបស់អ្នក..." onchange="saveAdminSettings()">
+            </div>
+
+            <div class="form-group">
+                <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ABA / ACLEDA)</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="setMenuQR" class="input-st" placeholder="Link ឬ Base64..." style="margin-bottom:0;" onchange="saveAdminSettings()">
+                    <input type="file" id="qrFile" accept="image/*" style="display:none;" onchange="uploadQR(event)">
+                    <button class="input-st" style="width: auto; cursor: pointer;" onclick="document.getElementById('qrFile').click()"><i class="fa-solid fa-upload"></i></button>
+                </div>
+                <div class="preview-box">
+                    <img id="menuQRPreview" src="" alt="QR Preview" style="display: none;">
+                </div>
             </div>
 
             <div class="form-group">
@@ -183,6 +183,7 @@
     <div id="toast">Saved Successfully!</div>
 
     <script>
+        // Supabase Configuration
         const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -190,9 +191,12 @@
 
         let adminBanners = [];
 
-        function showToast(msg) {
-            const t = document.getElementById('toast'); t.innerText = msg;
-            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000);
+        function showToast(msg, isError = false) {
+            const t = document.getElementById('toast'); 
+            t.innerText = msg;
+            t.style.background = isError ? 'var(--danger)' : 'var(--success)';
+            t.classList.add('show'); 
+            setTimeout(() => t.classList.remove('show'), 2000);
         }
 
         async function initAdmin() {
@@ -200,27 +204,30 @@
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
                 if (data && data.data_json && data.data_json.sysSettings) {
                     let sys = data.data_json.sysSettings;
+                    
                     if(sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
                     
+                    // Banner Multiple Support
                     if(sys.menuBanners && sys.menuBanners.length > 0) {
                         adminBanners = sys.menuBanners;
                     } else if(sys.menuBanner) {
-                        adminBanners = [sys.menuBanner];
+                        adminBanners = [sys.menuBanner]; // Fallback for old single banner
                     }
                     renderAdminBanners();
                     
+                    // QR Code
                     if(sys.menuQR) {
                         document.getElementById('setMenuQR').value = sys.menuQR;
                         const qp = document.getElementById('menuQRPreview'); qp.src = sys.menuQR; qp.style.display = 'block';
                     }
-                    if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
                     
+                    // Chat & Social
+                    if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
                     if(sys.socialIcon) document.getElementById('setSocialIcon').value = sys.socialIcon;
                     if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
                     if(sys.socialLink) document.getElementById('setSocialLink').value = sys.socialLink;
                     
-                    document.getElementById('toggleCountdown').checked = !!sys.toggleCountdown;
-                    document.getElementById('setCountdownEnd').value = sys.countdownEnd || '';
+                    // Toggles & Settings
                     document.getElementById('togglePromoBadge').checked = !!sys.togglePromoBadge;
                     document.getElementById('setPromoCodeText').value = sys.promoCodeText || '';
                     document.getElementById('toggleTicker').checked = !!sys.toggleTicker;
@@ -230,8 +237,13 @@
                     document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
                     document.getElementById('setOpenTime').value = sys.openTime || '08:00';
                     document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
+                    
+                    // Preorder Toggle (Default to true if undefined for backward compatibility, but here we strictly read it)
+                    document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
                 }
-            } catch(e) {}
+            } catch(e) {
+                showToast("Connection Error!", true);
+            }
         }
 
         async function saveAdminSettings() {
@@ -242,7 +254,8 @@
                     if(!d.sysSettings) d.sysSettings = {};
                     
                     d.sysSettings.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
-                    d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== '');
+                    d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== ''); // Save valid banners
+                    
                     d.sysSettings.menuQR = document.getElementById('setMenuQR').value.trim();
                     d.sysSettings.chatLink = document.getElementById('setChatLink').value.trim();
                     
@@ -250,8 +263,6 @@
                     d.sysSettings.socialLabel = document.getElementById('setSocialLabel').value.trim();
                     d.sysSettings.socialLink = document.getElementById('setSocialLink').value.trim();
                     
-                    d.sysSettings.toggleCountdown = document.getElementById('toggleCountdown').checked;
-                    d.sysSettings.countdownEnd = document.getElementById('setCountdownEnd').value;
                     d.sysSettings.togglePromoBadge = document.getElementById('togglePromoBadge').checked;
                     d.sysSettings.promoCodeText = document.getElementById('setPromoCodeText').value.trim();
                     d.sysSettings.toggleTicker = document.getElementById('toggleTicker').checked;
@@ -261,11 +272,16 @@
                     d.sysSettings.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
                     d.sysSettings.openTime = document.getElementById('setOpenTime').value;
                     d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
+                    
+                    // Save Preorder Setting
+                    d.sysSettings.preorder = document.getElementById('togglePreorder').checked;
 
                     await supabaseClient.from('branch_store').update({ data_json: d }).eq('branch_id', BRANCH);
-                    showToast('រក្សាទុកបានជោគជ័យ!');
+                    showToast('រក្សាទុកបានជោគជ័យ! (Saved!)');
                 }
-            } catch(e) {}
+            } catch(e) {
+                showToast('Save Failed!', true);
+            }
         }
 
         function renderAdminBanners() {
@@ -319,7 +335,7 @@
             reader.onload = (ev) => {
                 const img = new Image();
                 img.onload = () => {
-                    const canvas = document.createElement('canvas'); const max = 300; let w = img.width, h = img.height;
+                    const canvas = document.createElement('canvas'); const max = 400; let w = img.width, h = img.height;
                     if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
                     canvas.width = w; canvas.height = h;
                     const ctx = canvas.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img, 0, 0, w, h);
@@ -335,7 +351,14 @@
 
         function copyMenuLink() {
             const menuUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'MENU.html') + '?branch=' + BRANCH;
-            navigator.clipboard.writeText(menuUrl).then(() => { showToast('Copied Menu Link!'); });
+            // Fallback for iFrame restrictions
+            const dummy = document.createElement('input');
+            document.body.appendChild(dummy);
+            dummy.value = menuUrl;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            showToast('Copied Menu Link!');
         }
 
         function openLiveMenu() {
