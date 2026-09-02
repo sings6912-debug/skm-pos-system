@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Digital Menu - Advanced Admin Panel</title>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --brand-dark: #1d162d;
+            --brand-cyan: #10b981;
+            --store-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e5e7eb;
+            --success: #22c55e;
+            --danger: #ef4444;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Battambang', sans-serif; }
+        body { background: var(--store-bg); color: var(--text-dark); min-height: 100vh; padding: 20px; }
+
+        .admin-container { max-width: 750px; margin: 0 auto; background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid var(--border-color); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .admin-header h2 { font-size: 18px; font-weight: 900; color: var(--text-dark); }
+        
+        .section-box { background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; margin-bottom: 20px; }
+        .section-title { font-size: 15px; font-weight: 900; color: var(--brand-dark); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 6px; color: var(--text-dark); }
+        .input-st { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--store-bg); color: var(--text-dark); font-size: 14px; outline: none; font-weight: 600; }
+        .input-st:focus { border-color: var(--brand-cyan); }
+
+        .btn-save { background: var(--success); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); transition: transform 0.2s; }
+        .btn-save:active { transform: scale(0.98); }
+
+        .preview-box { margin-top: 8px; text-align: center; background: var(--store-bg); padding: 8px; border-radius: 12px; border: 1px dashed var(--border-color); }
+        .preview-box img { max-height: 120px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; }
+
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--store-bg); padding: 10px 14px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; font-weight: 800; }
+
+        #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background: var(--success); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; z-index: 9999; transition: transform 0.3s; box-shadow: 0 4px 15px rgba(34,197,94,0.4); }
+        #toast.show { transform: translate(-50%, 0); }
+    </style>
+</head>
+<body>
+
+    <div class="admin-container">
+        <div class="admin-header">
+            <h2>⚙️ Advanced Digital Menu Control Panel</h2>
+            <div style="display: flex; gap: 8px;">
+                <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="openLiveMenu()"><i class="fa-solid fa-eye"></i> View Menu</button>
+                <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyMenuLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
+            </div>
+        </div>
+
+        <!-- 1. Theme Color & Branding -->
+        <div class="section-box">
+            <div class="section-title"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែក និងកម្រងព័ត៌មានហាង (Theme & Branding)</div>
+            <div class="form-group">
+                <label>ពណ៌ស្បែកหลัก (Theme Accent Color)</label>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="color" id="setMenuThemeColor" value="#10b981" style="width: 50px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: transparent;" onchange="saveAdminSettings()">
+                    <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ជ្រើសរើសពណ៌គោលសម្រាប់ Menu អតិថិជន</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Banner & Promo Configuration -->
+        <div class="section-box">
+            <div class="section-title"><i class="fa-solid fa-image"></i> 2. ការកំណត់ Banner ពាណិជ្ជកម្ម (Banner & Promo Features)</div>
+            <div class="form-group">
+                <label>បញ្ជីរូបភាព Banner (អាចដាក់បានច្រើនឥតកំណត់)</label>
+                <div id="bannerListContainer"></div>
+                <button class="input-st" style="width: 100%; border-style: dashed; margin-top: 10px; cursor: pointer; color: var(--brand-cyan);" onclick="addAdminBanner()">+ បន្ថែម Banner ថ្មី</button>
+            </div>
+
+            <div class="toggle-row">
+                <span>⏱️ បើកដំណើរការនាឡិកាថយក្រោយ (Countdown Timer)</span>
+                <input type="checkbox" id="toggleCountdown" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
+            <div class="form-group">
+                <label>កាលបរិច្ឆេទ និងម៉ោងបញ្ចប់ Countdown:</label>
+                <input type="datetime-local" id="setCountdownEnd" class="input-st" onchange="saveAdminSettings()">
+            </div>
+
+            <div class="toggle-row">
+                <span>🏷️ បង្ហាញកូដបញ្ចុះតម្លៃលើ Banner (Promo Code Badge)</span>
+                <input type="checkbox" id="togglePromoBadge" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
+            <div class="form-group">
+                <label>អត្ថបទកូដបញ្ចុះតម្លៃ (ឧ. SKM10):</label>
+                <input type="text" id="setPromoCodeText" class="input-st" placeholder="SKM10" onchange="saveAdminSettings()">
+            </div>
+        </div>
+
+        <!-- 3. Ticker & Quick Categories -->
+        <div class="section-box">
+            <div class="section-title"><i class="fa-solid fa-bullhorn"></i> 3. របារប្រអប់អត្ថបទរត់ និងសេចក្តីជូនដំណឹង</div>
+            <div class="toggle-row">
+                <span>📢 បើករបារសេចក្តីជូនដំណឹងរត់ (Marquee Ticker)</span>
+                <input type="checkbox" id="toggleTicker" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
+            <div class="form-group">
+                <label>អត្ថបទជូនដំណឹងរត់៖</label>
+                <input type="text" id="setTickerText" class="input-st" placeholder="ឧ. ទิញទំនិញគ្រប់ ២០$ ថែមជូនកាតស្អាតមួយ..." onchange="saveAdminSettings()">
+            </div>
+        </div>
+
+        <!-- 4. Welcome Popup & Store Hours -->
+        <div class="section-box">
+            <div class="section-title"><i class="fa-solid fa-clock"></i> 4. ផ្ទាំងស្វាគមន៍ (Popup) និងម៉ោងបើក-បិទហាង</div>
+            <div class="toggle-row">
+                <span>✨ បើកផ្ទាំង Pop-up ស្វាគមន៍ពេលចូលមើលដំបូង</span>
+                <input type="checkbox" id="toggleWelcomePopup" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
+            <div class="form-group">
+                <label>រូបភាព Welcome Popup (Link):</label>
+                <input type="text" id="setWelcomeImg" class="input-st" placeholder="https://..." onchange="saveAdminSettings()">
+            </div>
+
+            <div class="toggle-row">
+                <span>🕒 បើកប្រព័ន្ធកំណត់ម៉ោងបើក-បិទហាងស្វ័យប្រវត្តិ</span>
+                <input type="checkbox" id="toggleStoreHours" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <div class="form-group" style="flex: 1;">
+                    <label>ម៉ោងបើក (ឧ. 08:00)</label>
+                    <input type="time" id="setOpenTime" class="input-st" value="08:00" onchange="saveAdminSettings()">
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label>ម៉ោងបិទ (ឧ. 21:00)</label>
+                    <input type="time" id="setCloseTime" class="input-st" value="21:00" onchange="saveAdminSettings()">
+                </div>
+            </div>
+        </div>
+
+        <!-- 5. Payment QR & Chat Link -->
+        <div class="section-box">
+            <div class="section-title"><i class="fa-solid fa-qrcode"></i> 5. ការទូទាត់ប្រាក់ និងបណ្តាញទំនាក់ទំនង (Payment & Social Links)</div>
+            <div class="form-group">
+                <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ABA / ACLEDA)</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="setMenuQR" class="input-st" placeholder="Link ឬ Base64..." style="margin-bottom:0;" onchange="saveAdminSettings()">
+                    <input type="file" id="qrFile" accept="image/*" style="display:none;" onchange="uploadQR(event)">
+                    <button class="input-st" style="width: auto; cursor: pointer;" onclick="document.getElementById('qrFile').click()"><i class="fa-solid fa-upload"></i></button>
+                </div>
+                <div class="preview-box">
+                    <img id="menuQRPreview" src="" alt="QR Preview" style="display: none;">
+                </div>
+            </div>
+
+            <!-- NEW: Social Media Link for Landing Page -->
+            <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--brand-cyan);">
+                <label style="color: var(--brand-dark);">បណ្តាញសង្គម (Social Media) - បង្ហាញលើ Landing Page</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <select id="setSocialIcon" class="input-st" style="width: auto; margin-bottom: 0;" onchange="saveAdminSettings()">
+                        <option value="fa-brands fa-youtube">🔴 YouTube</option>
+                        <option value="fa-brands fa-facebook">🔵 Facebook</option>
+                        <option value="fa-brands fa-tiktok">⚫ TikTok</option>
+                        <option value="fa-brands fa-instagram">🟣 Instagram</option>
+                        <option value="fa-brands fa-telegram">🔵 Telegram</option>
+                    </select>
+                    <input type="text" id="setSocialLabel" class="input-st" placeholder="ឈ្មោះបង្ហាញ (ឧ. YouTube/KouSuke...)" style="margin-bottom: 0;" onchange="saveAdminSettings()">
+                </div>
+                <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL ទៅកាន់ Page ឬ Channel របស់អ្នក..." onchange="saveAdminSettings()">
+            </div>
+
+            <div class="form-group">
+                <label><i class="fa-brands fa-telegram"></i> តំណភ្ជាប់ Chat សម្រាប់ប៊ូតុងអណ្តែត (Floating Chat)</label>
+                <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
+            </div>
+        </div>
+
+        <button class="btn-save" onclick="saveAdminSettings()"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់ទាំងអស់ (Save Changes)</button>
+    </div>
+
+    <div id="toast">Saved Successfully!</div>
+
+    <script>
+        const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+
+        let adminBanners = [];
+
+        function showToast(msg) {
+            const t = document.getElementById('toast'); t.innerText = msg;
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2000);
+        }
+
+        async function initAdmin() {
+            try {
+                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
+                if (data && data.data_json && data.data_json.sysSettings) {
+                    let sys = data.data_json.sysSettings;
+                    if(sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
+                    
+                    if(sys.menuBanners && sys.menuBanners.length > 0) {
+                        adminBanners = sys.menuBanners;
+                    } else if(sys.menuBanner) {
+                        adminBanners = [sys.menuBanner];
+                    }
+                    renderAdminBanners();
+                    
+                    if(sys.menuQR) {
+                        document.getElementById('setMenuQR').value = sys.menuQR;
+                        const qp = document.getElementById('menuQRPreview'); qp.src = sys.menuQR; qp.style.display = 'block';
+                    }
+                    if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
+                    
+                    if(sys.socialIcon) document.getElementById('setSocialIcon').value = sys.socialIcon;
+                    if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
+                    if(sys.socialLink) document.getElementById('setSocialLink').value = sys.socialLink;
+                    
+                    document.getElementById('toggleCountdown').checked = !!sys.toggleCountdown;
+                    document.getElementById('setCountdownEnd').value = sys.countdownEnd || '';
+                    document.getElementById('togglePromoBadge').checked = !!sys.togglePromoBadge;
+                    document.getElementById('setPromoCodeText').value = sys.promoCodeText || '';
+                    document.getElementById('toggleTicker').checked = !!sys.toggleTicker;
+                    document.getElementById('setTickerText').value = sys.tickerText || '';
+                    document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
+                    document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
+                    document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
+                    document.getElementById('setOpenTime').value = sys.openTime || '08:00';
+                    document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
+                }
+            } catch(e) {}
+        }
+
+        async function saveAdminSettings() {
+            try {
+                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
+                if(data && data.data_json) {
+                    let d = data.data_json;
+                    if(!d.sysSettings) d.sysSettings = {};
+                    
+                    d.sysSettings.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
+                    d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== '');
+                    d.sysSettings.menuQR = document.getElementById('setMenuQR').value.trim();
+                    d.sysSettings.chatLink = document.getElementById('setChatLink').value.trim();
+                    
+                    d.sysSettings.socialIcon = document.getElementById('setSocialIcon').value;
+                    d.sysSettings.socialLabel = document.getElementById('setSocialLabel').value.trim();
+                    d.sysSettings.socialLink = document.getElementById('setSocialLink').value.trim();
+                    
+                    d.sysSettings.toggleCountdown = document.getElementById('toggleCountdown').checked;
+                    d.sysSettings.countdownEnd = document.getElementById('setCountdownEnd').value;
+                    d.sysSettings.togglePromoBadge = document.getElementById('togglePromoBadge').checked;
+                    d.sysSettings.promoCodeText = document.getElementById('setPromoCodeText').value.trim();
+                    d.sysSettings.toggleTicker = document.getElementById('toggleTicker').checked;
+                    d.sysSettings.tickerText = document.getElementById('setTickerText').value.trim();
+                    d.sysSettings.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
+                    d.sysSettings.welcomeImg = document.getElementById('setWelcomeImg').value.trim();
+                    d.sysSettings.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
+                    d.sysSettings.openTime = document.getElementById('setOpenTime').value;
+                    d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
+
+                    await supabaseClient.from('branch_store').update({ data_json: d }).eq('branch_id', BRANCH);
+                    showToast('រក្សាទុកបានជោគជ័យ!');
+                }
+            } catch(e) {}
+        }
+
+        function renderAdminBanners() {
+            const container = document.getElementById('bannerListContainer');
+            container.innerHTML = '';
+            if (adminBanners.length === 0) {
+                container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មាន Banner ទេ។ សូមចុច + បន្ថែម។</div>';
+            }
+            adminBanners.forEach((b, index) => {
+                container.innerHTML += `
+                    <div style="background: var(--store-bg); padding: 10px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 10px; position: relative;">
+                        <div style="font-size:12px; font-weight:bold; margin-bottom:6px; color:var(--text-muted);">Banner ទី ${index + 1}</div>
+                        <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                            <input type="text" class="input-st" value="${b}" placeholder="Link ឬ Base64..." style="margin-bottom:0; flex:1;" onchange="updateAdminBanner(${index}, this.value)">
+                            <input type="file" id="bannerFile_${index}" accept="image/*" style="display:none;" onchange="uploadAdminBanner(event, ${index})">
+                            <button class="input-st" style="width: auto; padding: 0 15px; cursor: pointer;" onclick="document.getElementById('bannerFile_${index}').click()"><i class="fa-solid fa-upload"></i></button>
+                            <button class="input-st" style="width: auto; padding: 0 15px; cursor: pointer; color: var(--danger);" onclick="removeAdminBanner(${index})"><i class="fa-solid fa-trash"></i></button>
+                        </div>
+                        ${b ? `<div class="preview-box"><img src="${b}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;"></div>` : ''}
+                    </div>
+                `;
+            });
+        }
+
+        function addAdminBanner() { adminBanners.push(''); renderAdminBanners(); }
+        function removeAdminBanner(index) { adminBanners.splice(index, 1); renderAdminBanners(); saveAdminSettings(); }
+        function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); }
+
+        function uploadAdminBanner(e, index) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); const max = 800; let w = img.width, h = img.height;
+                    if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                    adminBanners[index] = canvas.toDataURL('image/jpeg', 0.8);
+                    renderAdminBanners();
+                    saveAdminSettings();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function uploadQR(e) {
+            const file = e.target.files[0]; if(!file) return;
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const img = new Image();
+                img.onload = () => {
+                    const canvas = document.createElement('canvas'); const max = 300; let w = img.width, h = img.height;
+                    if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
+                    canvas.width = w; canvas.height = h;
+                    const ctx = canvas.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img, 0, 0, w, h);
+                    const url = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('setMenuQR').value = url;
+                    const qp = document.getElementById('menuQRPreview'); qp.src = url; qp.style.display = 'block';
+                    saveAdminSettings();
+                };
+                img.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function copyMenuLink() {
+            const menuUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'MENU.html') + '?branch=' + BRANCH;
+            navigator.clipboard.writeText(menuUrl).then(() => { showToast('Copied Menu Link!'); });
+        }
+
+        function openLiveMenu() {
+            const menuUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'MENU.html') + '?branch=' + BRANCH;
+            window.open(menuUrl, '_blank');
+        }
+
+        window.onload = initAdmin;
+    </script>
+</body>
+</html>
