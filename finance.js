@@ -87,7 +87,7 @@ window.renderUnpaid = function() {
 
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
-            itemsSummary = inv.items.map(it => `${it.name || it.title} (x${it.qty || it.cartQty || 1})`).join(', ');
+            itemsSummary = inv.items.map(it => `${it.name || it.title} (x${it.cartQty || it.qty || 1})`).join(', ');
         } else {
             itemsSummary = inv.itemsSummary || 'ទំនិញចម្រុះ';
         }
