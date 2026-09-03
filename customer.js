@@ -41,6 +41,10 @@ window.renderCustomers = function() {
     const tbody = document.getElementById('customerTable');
     if(!tbody) return; 
 
+    // 🌟 កាត់អតិថិជនខ្មោចចោលចេញពីអេក្រង់ (ការពារ Cloud ទាញមកវិញ)
+    let deletedCusts = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
+    window.customers = (window.customers || []).filter(c => !deletedCusts.includes(String(c.id)));
+
     const search = document.getElementById('searchCustomer');
     const term = search ? search.value.toLowerCase().trim() : ''; 
     const custStats = {};
@@ -165,13 +169,38 @@ window.editCustomer = function(id) {
 };
 
 window.deleteCustomer = function(id) { 
-    window.ksMsg('តើអ្នកពិតជាចង់លុបអតិថិជននេះមែនទេ?', 'បញ្ជាក់ការលុប', true, async () => { 
-        let idx = (window.customers || []).findIndex(c => c && c.id === id);
-        if(idx !== -1) window.customers.splice(idx, 1);
-        if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
-        window.renderCustomers(); 
-        window.updateCustomerDatalist();
-    }); 
+    if(typeof window.ksMsg === 'function') {
+        window.ksMsg('តើអ្នកពិតជាចង់លុបអតិថិជននេះមែនទេ?', 'បញ្ជាក់ការលុប', true, async () => { 
+            // ⚡ ១. កត់ត្រា ID ចូលបញ្ជីខ្មៅ (Blacklist) ការពារ Cloud ទាញមកវិញ
+            let deletedCusts = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
+            deletedCusts.push(String(id));
+            localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCusts));
+
+            // ⚡ ២. លុបចេញពីអេក្រង់ និង Local Storage
+            window.customers = window.customers.filter(c => String(c.id) !== String(id));
+            localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
+
+            // ⚡ ៣. Save ទៅ Cloud និង Refresh
+            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+            window.renderCustomers(); 
+            window.updateCustomerDatalist();
+
+            window.ksMsg('លុបជោគជ័យ!', 'ជោគជ័យ');
+        }); 
+    } else {
+        if(confirm('តើអ្នកពិតជាចង់លុបអតិថិជននេះមែនទេ?')) {
+            let deletedCusts = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
+            deletedCusts.push(String(id));
+            localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCusts));
+
+            window.customers = window.customers.filter(c => String(c.id) !== String(id));
+            localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
+
+            if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
+            window.renderCustomers(); 
+            window.updateCustomerDatalist();
+        }
+    }
 };
 
 window.exportCustomers = function() { 
