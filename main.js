@@ -1,6 +1,47 @@
 // main.js
 
 // ==========================================
+// 0. POS CUSTOM SCRIPT LOADER (Runs automatically)
+// ==========================================
+
+// Load from LocalStorage first for instant UI (With Try/Catch Protection)
+try {
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    const localPosScripts = JSON.parse(localStorage.getItem(`ks2_${branchId}_pos_scripts`));
+    if (localPosScripts && Array.isArray(localPosScripts)) {
+        window.customPosScripts = localPosScripts;
+    }
+} catch(e) {
+    console.warn("Error loading POS scripts from LocalStorage:", e);
+}
+
+function injectPosScripts() {
+    if (!window.customPosScripts || !Array.isArray(window.customPosScripts)) return;
+
+    window.customPosScripts.forEach(scriptObj => {
+        if (scriptObj && scriptObj.isActive && scriptObj.code) {
+            try {
+                // Remove existing script if any to prevent duplicate execution
+                const existingScript = document.getElementById(scriptObj.id);
+                if (existingScript) existingScript.remove();
+
+                const scriptEl = document.createElement('script');
+                // 🔒 ប្តូរពី innerHTML ទៅ textContent ដើម្បីឱ្យ Browser យល់ព្រម Execute កូដ
+                scriptEl.textContent = scriptObj.code;
+                scriptEl.id = scriptObj.id;
+                document.body.appendChild(scriptEl);
+                console.log(`✨ POS Custom JS loaded: ${scriptObj.name}`);
+            } catch (err) {
+                console.error(`Error loading POS script ${scriptObj.name}:`, err);
+            }
+        }
+    });
+}
+
+// ដំណើរការភ្លាមៗពេលបើកទំព័រ
+injectPosScripts();
+
+// ==========================================
 // 1. BIND UTILS & CONFIGS TO WINDOW
 // ==========================================
 window.fDate = function() { 
@@ -248,12 +289,12 @@ window.sysI18n = {
         thUserRole: 'សិទ្ធិប្រើប្រាស់',
         thUserPin: 'លេខ PIN',
         allRolesFilter: 'ទាំងអស់',
-        cantDeleteAdmin: '不可删除',
+        cantDeleteAdmin: 'មិនអាចលុប',
         setSysTitle: '⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)',
         setSysSub: 'កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។',
         setStorePinLabel: '🔐 លេខសម្ងាត់ហាង (Store PIN ៤ ខ្ទង់)៖',
         setTickerNewsLabel: '📢 សេចក្តីជូនដំណឹងរត់ខាងក្រោម (News Ticker)៖',
-        setCustLabel: 'អតិថិជន (Customers): 启用客户资料管理。',
+        setCustLabel: 'អតិថិជន (Customers): អនុញ្ញាតឲ្យកត់ត្រា និងគ្រប់គ្រងទិន្នន័យអតិថិជន។',
         setUnpaidLabel: 'រង់ចាំទូទាត់ (Unpaid Invoices): អនុញ្ញាតឲ្យរក្សាទុកវិក្កយបត្រមិនទាន់ទូទាត់។',
         setLogsLabel: 'ប្រវត្តិប្រតិបត្តិការ (Logs): កត់ត្រារាល់សកម្មភាព។',
         setCostLabel: 'តម្លៃដើម (Cost Price): អនុញ្ញាតឲ្យវាយបញ្ចូលតម្លៃដើម។',
@@ -306,7 +347,7 @@ window.sysI18n = {
         lblGrandTotalCheckout: 'សរុបប្រាក់ត្រូវបង់ (Grand Total):',
         lblReceivedUsd: 'ប្រាក់ទទួល ($):',
         lblReceivedRiel: 'ប្រាក់ទទួល (៛):',
-        lblChangeCheckout: 'ប្រាក់អាប់ (Change):',
+        lblChangeCheckout: 'Change:',
         btnConfirmCheckout: '✅ បញ្ជាក់ការទូទាត់',
 
         modalShopTitle: '✏️ ប្តូរឈ្មោះហាង និង Logo',
@@ -317,13 +358,13 @@ window.sysI18n = {
         lblShopAddress: 'អាសយដ្ឋានហាង:',
         lblShopAddressPlh: 'ឧ. ផ្ទះលេខ ១, ផ្លូវ ០០...',
         lblShopLogo: 'ឡូហ្គោហាង:',
-        lblShopQr: 'QR ទូទាត់ប្រាក់:',
+        lblShopQr: 'Payment QR Code:',
         btnUploadLogo: '📸 ឡូហ្គោ',
         btnUploadQr: '📷 QR Code',
         lblTelegramTitle: '🤖 ការកំណត់ Telegram អតិថិជន:',
         plhTelegramUser: 'Telegram Username (ឧ. Jheng6912)',
-        plhTelegramToken: 'Bot Token សម្រាប់ការលោតសារ',
-        plhTelegramChatId: 'Chat ID សម្រាប់ទទួលសារ',
+        plhTelegramToken: 'Bot Token for notifications',
+        plhTelegramChatId: 'Chat ID to receive alerts',
         btnCancel: 'បោះបង់',
         btnSave: 'រក្សាទុក',
         btnConfirmOk: 'យល់ព្រម',
@@ -331,7 +372,7 @@ window.sysI18n = {
         confirmNoticeTitle: 'ជូនដំណឹង',
         confirmClearCart: 'តើអ្នកពិតជាចង់លុបទំនិញទាំងអស់ចេញពីកន្ត្រកមែនទេ?',
         msgEmptyCart: 'គ្មានទំនិញក្នុងកន្ត្រកទេ!',
-        msgRequireCust: 'សូមបញ្ចូលឈ្មោះអតិថិជនសិន!',
+        msgRequireCust: 'Please enter customer name first!',
         custHistTitle: '🛍️ ប្រវត្តិទិញរបស់: ',
         custHistEmpty: 'អតិថិជននេះមិនទាន់មានប្រវត្តិទិញទេ',
         btnClose: 'បិទ',
@@ -1310,6 +1351,15 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 window.historyLog.sort((a, b) => b.id - a.id);
             }
 
+            // ⚡ 6. Preserve Custom Scripts (CRITICAL FIX)
+            if (cloudData.customPosScripts && (!window.customPosScripts || window.customPosScripts.length === 0)) {
+                window.customPosScripts = cloudData.customPosScripts;
+            }
+            if (cloudData.sysSettings && cloudData.sysSettings.customMenuScripts) {
+                if (!window.sysSettings) window.sysSettings = {};
+                window.sysSettings.customMenuScripts = cloudData.sysSettings.customMenuScripts;
+            }
+
             // អាប់ដេត Memory ម៉ាស៊ីនជាមួយនឹងទិន្នន័យដែលបាន Merge រួច
             window.inventory = cleanInventory;
 
@@ -1324,6 +1374,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 customers: window.customers, 
                 sysSettings: window.sysSettings, 
                 userAccounts: window.userAccounts,
+                customPosScripts: window.customPosScripts || [], // Preserve Custom Scripts!
                 shopPhone: window.shopPhone || '', 
                 shopAddress: window.shopAddress || '', 
                 shopTelegram: window.shopTelegram || '', 
@@ -1420,6 +1471,12 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             }
             if(d.userAccounts && userAccountsRef) {
                 userAccountsRef.splice(0, userAccountsRef.length, ...d.userAccounts);
+            }
+
+            // 💥 អនុវត្តកូដ POS Custom JS ដែលបានទាញពី Supabase (EXECUTE Custom POS Scripts)
+            if (d.customPosScripts && Array.isArray(d.customPosScripts)) {
+                window.customPosScripts = d.customPosScripts;
+                injectPosScripts(); // Execute scripts immediately
             }
         }
     } catch(e) {}

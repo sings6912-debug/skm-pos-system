@@ -295,7 +295,7 @@
     <!-- Welcome Popup Modal -->
     <div id="welcomePopupModal">
         <div class="welcome-popup-box">
-            <img id="welcomePopupImg" src="" alt="Welcome">
+            <img id="welcomePopupImg" src="" alt="Welcome" onerror="this.src='https://placehold.co/400x250/1e293b/06b6d4?text=Welcome'">
             <div style="padding: 20px;">
                 <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px;">🎉 សេចក្តីជូនដំណឹងពិសេស</h3>
                 <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">សូមរីករាយជាមួយការទស្សនា និងកុម្មង់ទំនិញពីហាងយើងខ្ញុំ!</p>
@@ -546,15 +546,63 @@
     </div>
 
     <script>
+        // 💥 Menu Custom Script Loader (ទាញកូដ JS ពី Admin មកឲ្យដើរលើ Menu)
+        
+        // ⚡ 1. Load Local Scripts First for instant UI rendering
+        try {
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            let localSys = JSON.parse(localStorage.getItem(`ks2_${branchId}_sys_settings`));
+            if (localSys && localSys.customMenuScripts) {
+                injectMenuScripts(localSys.customMenuScripts);
+            }
+        } catch(e) {}
+
+        function injectMenuScripts(scriptsArray) {
+            if (!Array.isArray(scriptsArray)) return;
+
+            scriptsArray.forEach(scriptObj => {
+                if (scriptObj && scriptObj.isActive && scriptObj.code) {
+                    try {
+                        const existingScript = document.getElementById(scriptObj.id);
+                        if (existingScript) existingScript.remove();
+
+                        const scriptEl = document.createElement('script');
+                        // 🔒 ប្រើ textContent ដើម្បីធានាថា Browser អនុញ្ញាតឱ្យកូដដំណើរការ ១០០% គ្មានបញ្ហា Security
+                        scriptEl.textContent = scriptObj.code;
+                        scriptEl.id = scriptObj.id;
+                        document.body.appendChild(scriptEl);
+                        console.log(`✨ Custom Menu JS loaded: ${scriptObj.name}`);
+                    } catch (e) {
+                        console.error(`Error loading script ${scriptObj.name}:`, e);
+                    }
+                }
+            });
+        }
+
         // Supabase DB connection
         const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let supabaseClient = null;
+        if (window.supabase) {
+            try {
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            } catch(e) {}
+        }
+        
         const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
         // State Systems
-        let inventory = [], cart = [], wishlist = JSON.parse(localStorage.getItem('skm_wl') || '[]');
-        let points = parseInt(localStorage.getItem('skm_pts') || '0');
+        let inventory = [], cart = [], wishlist = [];
+        try {
+            wishlist = JSON.parse(localStorage.getItem('skm_wl')) || [];
+        } catch(e) { console.warn("Wishlist parse error:", e); }
+        
+        let points = 0;
+        try {
+            points = parseInt(localStorage.getItem('skm_pts')) || 0;
+        } catch(e) { console.warn("Points parse error:", e); }
+
         let sys = {}, curr = 'USD', lang = 'en', exRate = 4000, discount = 0, rateStar = 5;
         let botToken = '', chatId = '';
         let selCat = 'all', selVar = '', curProd = null;
@@ -571,7 +619,6 @@
         };
 
         // --- Core UI Functions ---
-        // REPLACED ALERT WITH TOAST
         function showToast(msg, isError = false) {
             const t = document.getElementById('toast'); 
             t.innerText = msg;
@@ -642,115 +689,147 @@
         // --- Data Fetch & Render ---
         async function init() {
             document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
+            
+            // ⚡ 2. Load Inventory & UI from LocalStorage First (Instant UI Loading / Offline mode)
             try {
-                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
-                if (data && data.data_json) {
-                    let d = data.data_json;
-                    if (d.sysSettings) {
-                        sys = d.sysSettings;
-                        
-                        // 1. Dynamic Theme Color
-                        if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
-                        
-                        // 2. Banner Slider (Multiple Images)
-                        const promoBanner = document.getElementById('promoBannerWrapper');
-                        const slider = document.getElementById('bannerSlider');
-                        const dotsContainer = document.getElementById('bannerDots');
-                        
-                        if (sys.menuBanners && sys.menuBanners.length > 0) bannerBgs = sys.menuBanners;
-                        else if (sys.menuBanner) bannerBgs = [sys.menuBanner];
+                let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`));
+                let localSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`));
+                
+                if (localSys) {
+                    sys = localSys;
+                    if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
+                }
+                
+                if (localInv && Array.isArray(localInv)) {
+                    inventory = localInv.filter(p => p && (parseFloat(p.qty) > 0 || (sys && sys.preorder)));
+                    buildCats();
+                    renderMenu();
+                }
+            } catch(e) { console.warn("Local storage parse error:", e); }
 
-                        if (bannerBgs.length > 0) {
-                            promoBanner.style.display = 'block';
-                            slider.innerHTML = bannerBgs.map(b => `<img src="${b}" alt="Promo Banner" onerror="this.src='https://placehold.co/800x400/1d162d/ffffff?text=Promo+Banner'">`).join('');
+            // ⚡ 3. Fetch from Cloud (Supabase) in Background
+            try {
+                if (supabaseClient) {
+                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
+                    if (data && data.data_json) {
+                        let d = data.data_json;
+                        if (d.sysSettings) {
+                            sys = d.sysSettings;
                             
-                            if (bannerBgs.length > 1) {
-                                dotsContainer.innerHTML = bannerBgs.map((_, i) => `<div class="slider-dot ${i===0?'active':''}"></div>`).join('');
-                                clearInterval(bannerTimerInterval);
-                                bannerTimerInterval = setInterval(() => {
-                                    curBannerIdx = (curBannerIdx + 1) % bannerBgs.length;
-                                    slider.style.transform = `translateX(-${curBannerIdx * 100}%)`;
-                                    document.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === curBannerIdx));
-                                }, 3500);
-                            } else dotsContainer.innerHTML = '';
-                        } else promoBanner.style.display = 'none';
-                        
-                        // Promo Badge on Banner
-                        if (sys.togglePromoBadge && sys.promoCodeText) {
-                            document.getElementById('bannerBadgeText').innerText = `Code: ${sys.promoCodeText}`;
-                            document.getElementById('bannerBadge').style.display = 'flex';
-                        }
-                        
-                        // Marquee Ticker
-                        if (sys.toggleTicker && sys.tickerText) {
-                            document.getElementById('tickerContentText').innerText = sys.tickerText;
-                            document.getElementById('marqueeTickerBar').style.display = 'block';
-                        }
-                        
-                        // Welcome Popup
-                        if (sys.toggleWelcomePopup && sys.welcomeImg) {
-                            document.getElementById('welcomePopupImg').src = sys.welcomeImg;
-                            document.getElementById('welcomePopupModal').style.display = 'flex';
-                        }
-                        
-                        // Store Hours check
-                        if (sys.toggleStoreHours && sys.openTime && sys.closeTime) {
-                            const now = new Date();
-                            const currentTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
-                            if (currentTime < sys.openTime || currentTime > sys.closeTime) {
-                                document.getElementById('storeClosedBanner').style.display = 'block';
-                                if (!sys.preorder) {
-                                    document.getElementById('checkoutBtn').disabled = true;
-                                    document.getElementById('checkoutBtn').style.opacity = '0.5';
-                                    document.getElementById('checkoutBtn').innerText = 'Store Closed';
+                            // 1. Dynamic Theme Color
+                            if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
+                            
+                            // 2. Banner Slider (Multiple Images)
+                            const promoBanner = document.getElementById('promoBannerWrapper');
+                            const slider = document.getElementById('bannerSlider');
+                            const dotsContainer = document.getElementById('bannerDots');
+                            
+                            if (sys.menuBanners && sys.menuBanners.length > 0) bannerBgs = sys.menuBanners;
+                            else if (sys.menuBanner) bannerBgs = [sys.menuBanner];
+
+                            if (bannerBgs.length > 0) {
+                                promoBanner.style.display = 'block';
+                                slider.innerHTML = bannerBgs.map(b => `<img src="${b}" alt="Promo Banner" onerror="this.src='https://placehold.co/800x400/1d162d/ffffff?text=Promo+Banner'">`).join('');
+                                
+                                if (bannerBgs.length > 1) {
+                                    dotsContainer.innerHTML = bannerBgs.map((_, i) => `<div class="slider-dot ${i===0?'active':''}"></div>`).join('');
+                                    clearInterval(bannerTimerInterval);
+                                    bannerTimerInterval = setInterval(() => {
+                                        curBannerIdx = (curBannerIdx + 1) % bannerBgs.length;
+                                        slider.style.transform = `translateX(-${curBannerIdx * 100}%)`;
+                                        document.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === curBannerIdx));
+                                    }, 3500);
+                                } else dotsContainer.innerHTML = '';
+                            } else promoBanner.style.display = 'none';
+                            
+                            // Promo Badge on Banner
+                            if (sys.togglePromoBadge && sys.promoCodeText) {
+                                document.getElementById('bannerBadgeText').innerText = `Code: ${sys.promoCodeText}`;
+                                document.getElementById('bannerBadge').style.display = 'flex';
+                            }
+                            
+                            // Marquee Ticker
+                            if (sys.toggleTicker && sys.tickerText) {
+                                document.getElementById('tickerContentText').innerText = sys.tickerText;
+                                document.getElementById('marqueeTickerBar').style.display = 'block';
+                            }
+                            
+                            // Welcome Popup
+                            if (sys.toggleWelcomePopup && sys.welcomeImg) {
+                                document.getElementById('welcomePopupImg').src = sys.welcomeImg;
+                                document.getElementById('welcomePopupModal').style.display = 'flex';
+                            }
+                            
+                            // Store Hours check
+                            if (sys.toggleStoreHours && sys.openTime && sys.closeTime) {
+                                const now = new Date();
+                                const currentTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+                                if (currentTime < sys.openTime || currentTime > sys.closeTime) {
+                                    document.getElementById('storeClosedBanner').style.display = 'block';
+                                    if (!sys.preorder) {
+                                        document.getElementById('checkoutBtn').disabled = true;
+                                        document.getElementById('checkoutBtn').style.opacity = '0.5';
+                                        document.getElementById('checkoutBtn').innerText = 'Store Closed';
+                                    }
                                 }
+                            }
+                            
+                            // QR Code
+                            const shopQr = document.getElementById('shopQrImg');
+                            if (shopQr && sys.menuQR) {
+                                shopQr.src = sys.menuQR;
+                                document.getElementById('qrBoxContainer').style.display = 'block';
+                            } else {
+                                document.getElementById('qrBoxContainer').style.display = 'none';
+                            }
+                            
+                            if (sys.chatLink) dynamicChatLink = sys.chatLink;
+
+                            // 💥 Inject Custom Menu Scripts from Cloud
+                            if (sys.customMenuScripts) {
+                                injectMenuScripts(sys.customMenuScripts);
+                            }
+                            
+                            // Social Media Link on Landing Page
+                            if (sys.socialLabel && sys.socialLink) {
+                                const socialEl = document.getElementById('lpSocialLink');
+                                socialEl.href = sys.socialLink;
+                                socialEl.style.display = 'flex';
+                                
+                                const iconEl = document.getElementById('lpSocialIcon');
+                                iconEl.className = sys.socialIcon || 'fa-brands fa-youtube';
+                                
+                                // Auto color based on network
+                                let iconColor = '#ef4444'; // Red default
+                                if (sys.socialIcon === 'fa-brands fa-facebook' || sys.socialIcon === 'fa-brands fa-telegram') iconColor = '#3b82f6';
+                                else if (sys.socialIcon === 'fa-brands fa-tiktok') iconColor = '#ffffff';
+                                else if (sys.socialIcon === 'fa-brands fa-instagram') iconColor = '#e1306c';
+                                
+                                iconEl.style.color = iconColor;
+                                document.getElementById('lpSocialLabel').innerText = sys.socialLabel;
+                            } else {
+                                document.getElementById('lpSocialLink').style.display = 'none';
                             }
                         }
                         
-                        // QR Code
-                        const shopQr = document.getElementById('shopQrImg');
-                        if (shopQr && sys.menuQR) {
-                            shopQr.src = sys.menuQR;
-                            document.getElementById('qrBoxContainer').style.display = 'block';
-                        } else {
-                            document.getElementById('qrBoxContainer').style.display = 'none';
-                        }
+                        inventory = (d.inventory || []).filter(p => p && (parseFloat(p.qty) > 0 || sys.preorder));
+                        const nm = d.shopName || 'Shop Name';
+                        document.getElementById('lpName').innerText = nm;
+                        document.getElementById('splashName').innerText = nm;
+                        if (d.shopLogo) document.getElementById('lpLogo').src = d.shopLogo;
+                        botToken = d.telegramBotToken || ''; chatId = d.telegramChatId || '';
                         
-                        if (sys.chatLink) dynamicChatLink = sys.chatLink;
+                        // Re-build and re-render with fresh cloud data
+                        buildCats();
+                        renderMenu();
                         
-                        // Social Media Link on Landing Page
-                        if (sys.socialLabel && sys.socialLink) {
-                            const socialEl = document.getElementById('lpSocialLink');
-                            socialEl.href = sys.socialLink;
-                            socialEl.style.display = 'flex';
-                            
-                            const iconEl = document.getElementById('lpSocialIcon');
-                            iconEl.className = sys.socialIcon || 'fa-brands fa-youtube';
-                            
-                            // Auto color based on network
-                            let iconColor = '#ef4444'; // Red default
-                            if (sys.socialIcon === 'fa-brands fa-facebook' || sys.socialIcon === 'fa-brands fa-telegram') iconColor = '#3b82f6';
-                            else if (sys.socialIcon === 'fa-brands fa-tiktok') iconColor = '#ffffff';
-                            else if (sys.socialIcon === 'fa-brands fa-instagram') iconColor = '#e1306c';
-                            
-                            iconEl.style.color = iconColor;
-                            document.getElementById('lpSocialLabel').innerText = sys.socialLabel;
-                        } else {
-                            document.getElementById('lpSocialLink').style.display = 'none';
-                        }
+                        // Save fresh inventory & settings to local for next time
+                        localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
+                        if(sys) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sys));
                     }
-                    
-                    inventory = (d.inventory || []).filter(p => p && (parseFloat(p.qty) > 0 || sys.preorder));
-                    const nm = d.shopName || 'Shop Name';
-                    document.getElementById('lpName').innerText = nm;
-                    document.getElementById('splashName').innerText = nm;
-                    if (d.shopLogo) document.getElementById('lpLogo').src = d.shopLogo;
-                    botToken = d.telegramBotToken || ''; chatId = d.telegramChatId || '';
-                    buildCats();
                 }
-            } catch (e) { console.log('DB error'); }
+            } catch (e) { console.log('DB error, using offline local data', e); }
             
-            renderMenu();
             setTimeout(() => {
                 const sp = document.getElementById('splashScreen'); sp.style.opacity = '0';
                 setTimeout(() => sp.style.display = 'none', 500);
@@ -987,6 +1066,11 @@
             document.getElementById('checkoutBtn').innerText = 'Processing...';
 
             try {
+                if (!supabaseClient) {
+                    showToast('Offline Mode: Cannot submit order.', true);
+                    document.getElementById('checkoutBtn').innerText = 'Checkout';
+                    return;
+                }
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
                 if(data && data.data_json) {
                     let d = data.data_json; if(!d.invoices) d.invoices=[];
@@ -1024,6 +1108,10 @@
             if(!ph) return showToast('Enter phone number!', true);
             res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">Searching...</div>';
             try {
+                if (!supabaseClient) {
+                    res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--danger);">Offline Mode.</div>';
+                    return;
+                }
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
                 if(data && data.data_json && data.data_json.invoices) {
                     let uOrds = data.data_json.invoices.filter(i=>i.phone===ph);
@@ -1044,6 +1132,7 @@
             const n = document.getElementById('rName').value.trim();
             if(!n) return showToast('Name required!', true);
             try {
+                if (!supabaseClient) return showToast('Offline Mode', true);
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
                 if(data && data.data_json) {
                     let d = data.data_json; if(!d.reviews) d.reviews=[];
