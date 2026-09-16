@@ -33,7 +33,7 @@
 
         .admin-container { max-width: 800px; margin: 0 auto; background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid var(--border-color); }
         .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .admin-header h2 { font-size: 18px; font-weight: 900; color: var(--text-dark); }
+        .admin-header h2 { font-size: 18px; font-weight: 900; color: var(--text-dark); width: 100%; }
         
         .section-box { background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; margin-bottom: 20px; }
         .section-title { font-size: 15px; font-weight: 900; color: var(--brand-dark); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
@@ -100,15 +100,28 @@
 <div class="admin-container">
     <div class="admin-header">
         <h2>⚙️ កន្លែងកំណត់ (Settings) ប្រព័ន្ធ Menu & POS</h2>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <!-- ប៊ូតុងទៅកាន់ Welcome (ទំព័រដើម) -->
-            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToWelcome()"><i class="fa-solid fa-home"></i> ទំព័រដើម</button>
+        
+        <!-- តំបន់ប៊ូតុងចែកជាពីរ (Welcome & Menu) -->
+        <div style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color);">
             
-            <!-- ប៊ូតុង Copy Link របស់ Welcome -->
-            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyWelcomeLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
+            <!-- Welcome Link -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 120px;">🏠 ទំព័រ Welcome:</span>
+                <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToWelcome()"><i class="fa-solid fa-eye"></i> មើល</button>
+                <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyWelcomeLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
+                <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="showWelcomeQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
+            </div>
+            
+            <div style="width: 100%; height: 1px; background: var(--border-color);"></div>
 
-            <!-- ប៊ូតុង បង្ហាញ QR Code របស់ Welcome -->
-            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="showWelcomeQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
+            <!-- Menu Link -->
+            <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 120px;">🍔 ទំព័រ Menu ផ្ទាល់:</span>
+                <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToMenu()"><i class="fa-solid fa-eye"></i> មើល</button>
+                <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyMenuLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
+                <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--success); color: white; border: none;" onclick="showMenuQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
+            </div>
+
         </div>
     </div>
 
@@ -510,11 +523,9 @@
             return;
         }
 
-        // ចម្លងទិន្នន័យនិងត្រឡប់បញ្ច្រាសដើម្បីបង្ហាញកូដដែលទើប Upload ថ្មីៗនៅខាងលើ
         let displayScripts = [...menuScripts].reverse();
         let hasMore = displayScripts.length > 3;
 
-        // បើមិនទាន់ចុច Show All ទេ គឺកាត់យកតែ ៣ ខាងលើមកបង្ហាញ
         if (!showAllMenuScripts && hasMore) {
             displayScripts = displayScripts.slice(0, 3);
         }
@@ -533,7 +544,6 @@
             `;
         });
 
-        // បន្ថែមប៊ូតុង Show All / Show Less បើមានកូដលើសពី ៣
         if (hasMore) {
             let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length} ឯកសារ)`;
             container.innerHTML += `
@@ -633,11 +643,9 @@
             return;
         }
 
-        // ចម្លងទិន្នន័យនិងត្រឡប់បញ្ច្រាសដើម្បីបង្ហាញកូដដែលទើប Upload ថ្មីៗនៅខាងលើ
         let displayScripts = [...posScripts].reverse();
         let hasMore = displayScripts.length > 3;
 
-        // បើមិនទាន់ចុច Show All ទេ គឺកាត់យកតែ ៣ ខាងលើមកបង្ហាញ
         if (!showAllPosScripts && hasMore) {
             displayScripts = displayScripts.slice(0, 3);
         }
@@ -656,7 +664,6 @@
             `;
         });
 
-        // បន្ថែមប៊ូតុង Show All / Show Less បើមានកូដលើសពី ៣
         if (hasMore) {
             let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${posScripts.length} ឯកសារ)`;
             container.innerHTML += `
@@ -747,9 +754,19 @@
         r.readAsText(file);
     }
 
-    /* --- Utilities --- */
+    /* --- Utilities & URL Logic --- */
+    
+    // អនុគមន៍ថ្មីសម្រាប់ទាញយក URL ត្រឹមត្រូវទៅតាមឈ្មោះ File
+    function getPageUrl(pageName) {
+        let path = window.location.pathname;
+        let lastSlash = path.lastIndexOf('/');
+        let newPath = path.substring(0, lastSlash + 1) + pageName;
+        return window.location.origin + newPath + '?branch=' + BRANCH;
+    }
+
+    // --- Welcome Page Functions ---
     function copyWelcomeLink() {
-        const welcomeUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'welcome.html') + '?branch=' + BRANCH;
+        const welcomeUrl = getPageUrl('welcome.html');
         const dummy = document.createElement('input');
         document.body.appendChild(dummy);
         dummy.value = welcomeUrl;
@@ -760,12 +777,9 @@
     }
 
     function showWelcomeQR() {
-        // បង្កើត Link សម្រាប់ Welcome
-        const welcomeUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'welcome.html') + '?branch=' + BRANCH;
-        // ទាញ QR ពី API ដោយស្វ័យប្រវត្តិ
+        const welcomeUrl = getPageUrl('welcome.html');
         const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(welcomeUrl)}`;
         
-        // បើកផ្ទាំងថ្មីសម្រាប់បង្ហាញ QR
         const win = window.open('', '_blank', 'width=450,height=550');
         win.document.write(`
             <html>
@@ -785,12 +799,47 @@
         win.document.close();
     }
 
-    function goToPOS() {
-        window.location.href = 'index.html?branch=' + BRANCH;
+    function goToWelcome() {
+        window.location.href = getPageUrl('welcome.html');
     }
 
-    function goToWelcome() {
-        window.location.href = 'welcome.html?branch=' + BRANCH;
+    // --- Menu Page Functions ---
+    function copyMenuLink() {
+        const menuUrl = getPageUrl('menu.html');
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = menuUrl;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        showToast('Copied Menu Link!');
+    }
+
+    function showMenuQR() {
+        const menuUrl = getPageUrl('menu.html');
+        const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(menuUrl)}`;
+        
+        const win = window.open('', '_blank', 'width=450,height=550');
+        win.document.write(`
+            <html>
+            <head><title>Menu QR Code</title></head>
+            <body style="text-align:center; font-family:sans-serif; padding: 20px; background: #f3f4f6;">
+                <h2 style="color: #1e293b; margin-bottom: 5px;">QR Code សម្រាប់ Menu ផ្ទាល់</h2>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">ឱ្យអតិថិជនស្កេន QR នេះដើម្បីចូលមើល Menu តែម្តង</p>
+                <div style="background: #fff; padding: 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <img src="${qrApi}" alt="QR Code" style="width: 250px; height: 250px;">
+                </div>
+                <br><br>
+                <p style="font-size: 11px; color: #94a3b8; word-break: break-all; max-width: 350px; margin: 0 auto 20px;">${menuUrl}</p>
+                <button onclick="window.print()" style="padding: 10px 25px; background: #22c55e; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">🖨️ បោះពុម្ព (Print)</button>
+            </body>
+            </html>
+        `);
+        win.document.close();
+    }
+
+    function goToMenu() {
+        window.location.href = getPageUrl('menu.html');
     }
 
     window.onload = initAdmin;
