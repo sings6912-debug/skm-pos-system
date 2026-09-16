@@ -54,14 +54,43 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background: var(--success); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; z-index: 9999; transition: transform 0.3s; box-shadow: 0 4px 15px rgba(34,197,94,0.4); }
         #toast.show { transform: translate(-50%, 0); }
         
+        /* ===== រចនាប័ទ្មថ្មីសម្រាប់ផ្នែក Custom JS ===== */
+        .action-btn-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn-action { 
+            padding: 8px 16px; font-size: 13px; font-weight: 700; border-radius: 8px; 
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px; 
+            transition: all 0.2s; background: transparent;
+        }
+        .btn-upload-menu { background: var(--brand-cyan); color: white; border: 1px solid var(--brand-cyan); }
+        .btn-upload-pos { background: var(--danger); color: white; border: 1px solid var(--danger); }
+        .btn-restore { color: var(--warning); border: 1px solid var(--warning); }
+        .btn-restore:hover { background: rgba(245, 158, 11, 0.1); }
+        .btn-backup { color: var(--success); border: 1px solid var(--success); }
+        .btn-backup:hover { background: rgba(34, 197, 94, 0.1); }
+
         .script-list-container { display: flex; flex-direction: column; gap: 10px; }
-        .script-item { display: flex; align-items: center; justify-content: space-between; background: var(--card-bg); padding: 10px 15px; border-radius: 10px; border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.02);}
-        .script-name { font-weight: bold; font-size: 14px; color: var(--brand-dark); word-break: break-all;}
-        .script-actions { display: flex; gap: 8px; flex-shrink: 0;}
-        .btn-script { width: 80px; padding: 6px; font-size: 12px; margin-bottom: 0; cursor: pointer; border-radius: 8px; border: 1px solid transparent; font-weight: bold; transition: all 0.2s;}
-        .btn-toggle-on { color: var(--success); border-color: var(--success); background: rgba(34,197,94,0.1); }
-        .btn-toggle-off { color: var(--text-muted); border-color: var(--text-muted); background: rgba(100,116,139,0.1); }
-        .btn-delete { color: white; background: var(--danger); width: auto;}
+        .script-item { 
+            display: flex; align-items: center; justify-content: space-between; 
+            background: #ffffff; padding: 12px 16px; border-radius: 8px; 
+            border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .script-item.menu-type { border-left: 4px solid var(--brand-cyan); }
+        .script-item.pos-type { border-left: 4px solid var(--danger); }
+        
+        .script-name { font-weight: 700; font-size: 14px; color: var(--text-dark); word-break: break-all;}
+        .script-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0;}
+        
+        .btn-script { 
+            padding: 6px 16px; font-size: 12px; cursor: pointer; border-radius: 20px; 
+            border: 1px solid transparent; font-weight: 700; transition: all 0.2s; background: transparent;
+        }
+        .btn-toggle-on { color: var(--success); border-color: var(--success); }
+        .btn-toggle-off { color: var(--text-muted); border-color: var(--text-muted); }
+        
+        .btn-delete { 
+            color: white; background: var(--danger); border-radius: 6px; 
+            padding: 7px 12px; border: none; cursor: pointer; transition: 0.2s;
+        }
         .btn-delete:hover { background: #b91c1c; }
         .help-text { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5;}
     </style>
@@ -71,9 +100,15 @@
 <div class="admin-container">
     <div class="admin-header">
         <h2>⚙️ កន្លែងកំណត់ (Settings) ប្រព័ន្ធ Menu & POS</h2>
-        <div style="display: flex; gap: 8px;">
-            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="openLiveMenu()"><i class="fa-solid fa-eye"></i> View Menu</button>
-            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyMenuLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <!-- ប៊ូតុងទៅកាន់ Welcome (ទំព័រដើម) -->
+            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToWelcome()"><i class="fa-solid fa-home"></i> ទំព័រដើម</button>
+            
+            <!-- ប៊ូតុង Copy Link របស់ Welcome -->
+            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyWelcomeLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
+
+            <!-- ប៊ូតុង បង្ហាញ QR Code របស់ Welcome -->
+            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="showWelcomeQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
         </div>
     </div>
 
@@ -194,18 +229,18 @@
     </div>
 
     <!-- 6. MENU CUSTOM JS MANAGEMENT -->
-    <div class="section-box" style="border-color: var(--brand-cyan); background: rgba(6, 182, 212, 0.02);">
+    <div class="section-box" style="border-color: var(--brand-cyan); background: #ffffff;">
         <div class="section-title" style="color: var(--brand-cyan);"><i class="fa-solid fa-code"></i> 6. គ្រប់គ្រងកូដបន្ថែមអតិថិជន (Menu Custom JS)</div>
         <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>Menu អតិថិជន (menu.html)</b>។ អ្នកអាចជ្រើសរើសច្រើន File ក្នុងពេលតែមួយបាន។</p>
         
-        <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
+        <div class="action-btn-group">
             <input type="file" id="menuJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadMenuScripts(event)">
-            <button class="input-st" style="width: auto; padding: 10px 15px; background: var(--brand-cyan); color: white; border: none; cursor: pointer;" onclick="document.getElementById('menuJsFileInput').click()">📥 Upload JS</button>
+            <button class="btn-action btn-upload-menu" onclick="document.getElementById('menuJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
             
             <input type="file" id="importMenuJsBackup" accept=".json" style="display: none;" onchange="importMenuScriptsBackup(event)">
-            <button class="input-st" style="width: auto; padding: 10px 15px; border-color: var(--warning); color: var(--warning); background: transparent; cursor: pointer;" onclick="document.getElementById('importMenuJsBackup').click()">📂 Restore JSON</button>
+            <button class="btn-action btn-restore" onclick="document.getElementById('importMenuJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
             
-            <button class="input-st" style="width: auto; padding: 10px 15px; border-color: var(--success); color: var(--success); background: transparent; cursor: pointer;" onclick="exportMenuScriptsBackup()">💾 Backup JSON</button>
+            <button class="btn-action btn-backup" onclick="exportMenuScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
         </div>
 
         <div id="menuScriptsListContainer" class="script-list-container">
@@ -214,18 +249,18 @@
     </div>
 
     <!-- 7. POS CUSTOM JS MANAGEMENT -->
-    <div class="section-box" style="border-color: var(--danger); background: rgba(239, 68, 68, 0.02);">
-        <div class="section-title" style="color: var(--danger);"><i class="fa-solid fa-terminal"></i> 7. គ្រប់គ្រងកូដបន្ថែមប្រព័ន្ធ (POS Custom JS)</div>
+    <div class="section-box" style="border-color: #ef4444; background: #ffffff;">
+        <div class="section-title" style="color: #ef4444;"><i class="fa-solid fa-terminal"></i> 7. គ្រប់គ្រងកូដបន្ថែមប្រព័ន្ធ (POS Custom JS)</div>
         <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>ប្រព័ន្ធគិតលុយរបស់ Admin & Staff (index.html)</b>។ អ្នកអាចជ្រើសរើសច្រើន File ក្នុងពេលតែមួយបាន។</p>
         
-        <div style="display: flex; gap: 8px; margin-bottom: 15px; flex-wrap: wrap;">
+        <div class="action-btn-group">
             <input type="file" id="posJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadPosScripts(event)">
-            <button class="input-st" style="width: auto; padding: 10px 15px; background: var(--danger); color: white; border: none; cursor: pointer;" onclick="document.getElementById('posJsFileInput').click()">📥 Upload JS</button>
+            <button class="btn-action btn-upload-pos" onclick="document.getElementById('posJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
             
             <input type="file" id="importPosJsBackup" accept=".json" style="display: none;" onchange="importPosScriptsBackup(event)">
-            <button class="input-st" style="width: auto; padding: 10px 15px; border-color: var(--warning); color: var(--warning); background: transparent; cursor: pointer;" onclick="document.getElementById('importPosJsBackup').click()">📂 Restore JSON</button>
+            <button class="btn-action btn-restore" onclick="document.getElementById('importPosJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
             
-            <button class="input-st" style="width: auto; padding: 10px 15px; border-color: var(--success); color: var(--success); background: transparent; cursor: pointer;" onclick="exportPosScriptsBackup()">💾 Backup JSON</button>
+            <button class="btn-action btn-backup" onclick="exportPosScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
         </div>
 
         <div id="posScriptsListContainer" class="script-list-container">
@@ -467,7 +502,7 @@
         const container = document.getElementById('menuScriptsListContainer');
         container.innerHTML = '';
         if (menuScripts.length === 0) {
-            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
+            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 8px;">មិនទាន់មានកូដ (Script) ទេ</div>';
             return;
         }
 
@@ -475,11 +510,11 @@
             let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off';
             let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
             container.innerHTML += `
-                <div class="script-item" style="border-left: 4px solid var(--brand-cyan);">
+                <div class="script-item menu-type">
                     <div class="script-name">${s.name}</div>
                     <div class="script-actions">
                         <button class="btn-script ${btnClass}" onclick="toggleMenuScript('${s.id}')">${btnText}</button>
-                        <button class="btn-script btn-delete" onclick="deleteMenuScript('${s.id}')"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn-delete" onclick="deleteMenuScript('${s.id}')" title="លុបចោល"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
             `;
@@ -566,7 +601,7 @@
         const container = document.getElementById('posScriptsListContainer');
         container.innerHTML = '';
         if (posScripts.length === 0) {
-            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
+            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 8px;">មិនទាន់មានកូដ (Script) ទេ</div>';
             return;
         }
 
@@ -574,11 +609,11 @@
             let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off';
             let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
             container.innerHTML += `
-                <div class="script-item" style="border-left: 4px solid var(--danger);">
+                <div class="script-item pos-type">
                     <div class="script-name">${s.name}</div>
                     <div class="script-actions">
                         <button class="btn-script ${btnClass}" onclick="togglePosScript('${s.id}')">${btnText}</button>
-                        <button class="btn-script btn-delete" onclick="deletePosScript('${s.id}')"><i class="fa-solid fa-trash"></i></button>
+                        <button class="btn-delete" onclick="deletePosScript('${s.id}')" title="លុបចោល"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>
             `;
@@ -661,20 +696,49 @@
     }
 
     /* --- Utilities --- */
-    function copyMenuLink() {
-        const menuUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'MENU.html') + '?branch=' + BRANCH;
+    function copyWelcomeLink() {
+        const welcomeUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'welcome.html') + '?branch=' + BRANCH;
         const dummy = document.createElement('input');
         document.body.appendChild(dummy);
-        dummy.value = menuUrl;
+        dummy.value = welcomeUrl;
         dummy.select();
         document.execCommand('copy');
         document.body.removeChild(dummy);
-        showToast('Copied Menu Link!');
+        showToast('Copied Welcome Link!');
     }
-    
-    function openLiveMenu() {
-        const menuUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'MENU.html') + '?branch=' + BRANCH;
-        window.open(menuUrl, '_blank');
+
+    function showWelcomeQR() {
+        // បង្កើត Link សម្រាប់ Welcome
+        const welcomeUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'welcome.html') + '?branch=' + BRANCH;
+        // ទាញ QR ពី API ដោយស្វ័យប្រវត្តិ
+        const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(welcomeUrl)}`;
+        
+        // បើកផ្ទាំងថ្មីសម្រាប់បង្ហាញ QR
+        const win = window.open('', '_blank', 'width=450,height=550');
+        win.document.write(`
+            <html>
+            <head><title>Welcome QR Code</title></head>
+            <body style="text-align:center; font-family:sans-serif; padding: 20px; background: #f3f4f6;">
+                <h2 style="color: #1e293b; margin-bottom: 5px;">QR Code សម្រាប់អតិថិជន</h2>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">ឱ្យអតិថិជនស្កេន QR នេះដើម្បីចូលទំព័រ Welcome</p>
+                <div style="background: #fff; padding: 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <img src="${qrApi}" alt="QR Code" style="width: 250px; height: 250px;">
+                </div>
+                <br><br>
+                <p style="font-size: 11px; color: #94a3b8; word-break: break-all; max-width: 350px; margin: 0 auto 20px;">${welcomeUrl}</p>
+                <button onclick="window.print()" style="padding: 10px 25px; background: #06b6d4; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">🖨️ បោះពុម្ព (Print)</button>
+            </body>
+            </html>
+        `);
+        win.document.close();
+    }
+
+    function goToPOS() {
+        window.location.href = 'index.html?branch=' + BRANCH;
+    }
+
+    function goToWelcome() {
+        window.location.href = 'welcome.html?branch=' + BRANCH;
     }
 
     window.onload = initAdmin;
