@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - Menu & POS</title>
+    
+    <!-- បន្ថែម Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- បន្ថែម FontAwesome សម្រាប់ Icon -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- បន្ថែម Font ខ្មែរ -->
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-dark: #1d162d;
+            --brand-cyan: #06b6d4;
+            --store-bg: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-dark: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #e5e7eb;
+            --success: #22c55e;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Battambang', sans-serif; }
+        body { background: var(--store-bg); color: var(--text-dark); min-height: 100vh; padding: 20px; }
+
+        .admin-container { max-width: 800px; margin: 0 auto; background: var(--card-bg); border-radius: 20px; padding: 25px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); border: 1px solid var(--border-color); }
+        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+        .admin-header h2 { font-size: 18px; font-weight: 900; color: var(--text-dark); }
+        
+        .section-box { background: rgba(0,0,0,0.02); border: 1px solid var(--border-color); border-radius: 14px; padding: 18px; margin-bottom: 20px; }
+        .section-title { font-size: 15px; font-weight: 900; color: var(--brand-dark); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 6px; color: var(--text-dark); }
+        .input-st { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border-color); background: var(--store-bg); color: var(--text-dark); font-size: 14px; outline: none; font-weight: 600; }
+        .input-st:focus { border-color: var(--brand-cyan); }
+
+        .btn-save { background: var(--success); color: white; border: none; width: 100%; padding: 14px; border-radius: 12px; font-size: 15px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); transition: transform 0.2s; margin-top: 20px;}
+        .btn-save:active { transform: scale(0.98); }
+
+        .preview-box { margin-top: 8px; text-align: center; background: var(--store-bg); padding: 8px; border-radius: 12px; border: 1px dashed var(--border-color); }
+        .preview-box img { max-height: 120px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; }
+
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--store-bg); padding: 10px 14px; border-radius: 10px; margin-bottom: 10px; font-size: 13px; font-weight: 800; border: 1px solid var(--border-color);}
+
+        #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background: var(--success); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; z-index: 9999; transition: transform 0.3s; box-shadow: 0 4px 15px rgba(34,197,94,0.4); }
+        #toast.show { transform: translate(-50%, 0); }
+        
+        /* ===== រចនាប័ទ្មថ្មីសម្រាប់ផ្នែក Custom JS ===== */
+        .action-btn-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .btn-action { 
+            padding: 8px 16px; font-size: 13px; font-weight: 700; border-radius: 8px; 
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px; 
+            transition: all 0.2s; background: transparent;
+        }
+        .btn-upload-menu { background: var(--brand-cyan); color: white; border: 1px solid var(--brand-cyan); }
+        .btn-upload-pos { background: var(--danger); color: white; border: 1px solid var(--danger); }
+        .btn-restore { color: var(--warning); border: 1px solid var(--warning); }
+        .btn-restore:hover { background: rgba(245, 158, 11, 0.1); }
+        .btn-backup { color: var(--success); border: 1px solid var(--success); }
+        .btn-backup:hover { background: rgba(34, 197, 94, 0.1); }
+
+        .script-list-container { display: flex; flex-direction: column; gap: 10px; }
+        .script-item { 
+            display: flex; align-items: center; justify-content: space-between; 
+            background: #ffffff; padding: 12px 16px; border-radius: 8px; 
+            border: 1px solid var(--border-color); box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+        }
+        .script-item.menu-type { border-left: 4px solid var(--brand-cyan); }
+        .script-item.pos-type { border-left: 4px solid var(--danger); }
+        
+        .script-name { font-weight: 700; font-size: 14px; color: var(--text-dark); word-break: break-all;}
+        .script-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0;}
+        
+        .btn-script { 
+            padding: 6px 16px; font-size: 12px; cursor: pointer; border-radius: 20px; 
+            border: 1px solid transparent; font-weight: 700; transition: all 0.2s; background: transparent;
+        }
+        .btn-toggle-on { color: var(--success); border-color: var(--success); }
+        .btn-toggle-off { color: var(--text-muted); border-color: var(--text-muted); }
+        
+        .btn-delete { 
+            color: white; background: var(--danger); border-radius: 6px; 
+            padding: 7px 12px; border: none; cursor: pointer; transition: 0.2s;
+        }
+        .btn-delete:hover { background: #b91c1c; }
+        .help-text { font-size: 12px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5;}
+    </style>
+</head>
+<body>
+
+<div class="admin-container">
+    <div class="admin-header">
+        <h2>⚙️ កន្លែងកំណត់ (Settings) ប្រព័ន្ធ Menu & POS</h2>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+            <!-- ប៊ូតុងទៅកាន់ Welcome (ទំព័រដើម) -->
+            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToWelcome()"><i class="fa-solid fa-home"></i> ទំព័រដើម</button>
+            
+            <!-- ប៊ូតុង Copy Link របស់ Welcome -->
+            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyWelcomeLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
+
+            <!-- ប៊ូតុង បង្ហាញ QR Code របស់ Welcome -->
+            <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="showWelcomeQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
+        </div>
+    </div>
+
+    <!-- 1. Theme Color & Branding -->
+    <div class="section-box">
+        <div class="section-title"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែកគោល Menu (Theme Color)</div>
+        <div class="form-group">
+            <label>ពណ៌ស្បែក (Theme Accent Color) - ប្តូរពណ៌ប៊ូតុង និង Icon ទូទាំង Menu</label>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="color" id="setMenuThemeColor" value="#06b6d4" style="width: 50px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: transparent;" onchange="saveAdminSettings()">
+                <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ជ្រើសរើសពណ៌ដែលត្រូវនឹងប្រេនអាជីវកម្មរបស់អ្នក</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Banner & Promo Configuration -->
+    <div class="section-box">
+        <div class="section-title"><i class="fa-solid fa-images"></i> 2. ការកំណត់ Banner ពាណិជ្ជកម្ម (Slider Banner)</div>
+        <div class="form-group">
+            <label>បញ្ជីរូបភាព Banner (អាចដាក់បានច្រើនឥតកំណត់ វានឹងរត់ប្តូរវេនគ្នាស្វ័យប្រវត្តិ)</label>
+            <div id="bannerListContainer"></div>
+            <button class="input-st" style="width: 100%; border-style: dashed; margin-top: 10px; cursor: pointer; color: var(--brand-cyan);" onclick="addAdminBanner()">+ បន្ថែម Banner ថ្មី</button>
+        </div>
+
+        <div class="toggle-row">
+            <span>🏷️ បង្ហាញកូដបញ្ចុះតម្លៃលើ Banner (Promo Code Badge)</span>
+            <input type="checkbox" id="togglePromoBadge" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+        </div>
+        <div class="form-group">
+            <label>អត្ថបទកូដបញ្ចុះតម្លៃ (ឧ. SKM10):</label>
+            <input type="text" id="setPromoCodeText" class="input-st" placeholder="SKM10" onchange="saveAdminSettings()">
+        </div>
+    </div>
+
+    <!-- 3. Ticker & Announcements -->
+    <div class="section-box">
+        <div class="section-title"><i class="fa-solid fa-bullhorn"></i> 3. របារប្រអប់អត្ថបទរត់ (Marquee Ticker)</div>
+        <div class="toggle-row">
+            <span>📢 បើករបារសេចក្តីជូនដំណឹងរត់</span>
+            <input type="checkbox" id="toggleTicker" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+        </div>
+        <div class="form-group">
+            <label>អត្ថបទជូនដំណឹងរត់៖</label>
+            <input type="text" id="setTickerText" class="input-st" placeholder="ឧ. ទិញទំនិញគ្រប់ ២០$ ថែមជូនការដឹកជញ្ជូនឥតគិតថ្លៃ..." onchange="saveAdminSettings()">
+        </div>
+    </div>
+
+    <!-- 4. Welcome Popup & Store Hours -->
+    <div class="section-box">
+        <div class="section-title"><i class="fa-solid fa-store"></i> 4. ផ្ទាំងស្វាគមន៍ & ម៉ោងបើកហាង (Popup & Store Hours)</div>
+        
+        <div class="toggle-row">
+            <span>✨ បើកផ្ទាំង Pop-up ស្វាគមន៍ពេលចូលមើលដំបូង</span>
+            <input type="checkbox" id="toggleWelcomePopup" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+        </div>
+        <div class="form-group">
+            <label>រូបភាព Welcome Popup (Link ឬ Base64):</label>
+            <input type="text" id="setWelcomeImg" class="input-st" placeholder="https://..." onchange="saveAdminSettings()">
+        </div>
+
+        <div class="toggle-row">
+            <span>🕒 បើកប្រព័ន្ធកំណត់ម៉ោងបើក-បិទហាងស្វ័យប្រវត្តិ</span>
+            <input type="checkbox" id="toggleStoreHours" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+        </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 15px;">
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                <label>ម៉ោងបើក (ឧ. 08:00)</label>
+                <input type="time" id="setOpenTime" class="input-st" value="08:00" onchange="saveAdminSettings()">
+            </div>
+            <div class="form-group" style="flex: 1; margin-bottom: 0;">
+                <label>ម៉ោងបិទ (ឧ. 21:00)</label>
+                <input type="time" id="setCloseTime" class="input-st" value="21:00" onchange="saveAdminSettings()">
+            </div>
+        </div>
+
+        <div class="toggle-row" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3);">
+            <span style="color: var(--success);">📦 អនុញ្ញាតឱ្យភ្ញៀវកុម្មង់ទំនិញទោះអស់ស្តុក (បើក Pre-order)</span>
+            <input type="checkbox" id="togglePreorder" style="width: 20px; height: 20px; accent-color: var(--success); cursor: pointer;" onchange="saveAdminSettings()">
+        </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: -5px; margin-bottom: 10px; padding: 0 5px;">* បើបិទមុខងារនេះ ភ្ញៀវមិនអាចចុច Add លើសចំនួនស្តុកដែលមានជាក់ស្តែងឡើយ។</div>
+    </div>
+
+    <!-- 5. Payment QR & Chat Link -->
+    <div class="section-box">
+        <div class="section-title"><i class="fa-solid fa-link"></i> 5. បណ្តាញសង្គម & ទូទាត់ប្រាក់ (Social & Payments)</div>
+        
+        <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--brand-cyan);">
+            <label style="color: var(--brand-dark);"><i class="fa-solid fa-share-nodes"></i> បណ្តាញសង្គម (បង្ហាញលើ Landing Page)</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <select id="setSocialIcon" class="input-st" style="width: auto; margin-bottom: 0;" onchange="saveAdminSettings()">
+                    <option value="fa-brands fa-youtube">🔴 YouTube</option>
+                    <option value="fa-brands fa-facebook">🔵 Facebook</option>
+                    <option value="fa-brands fa-tiktok">⚫ TikTok</option>
+                    <option value="fa-brands fa-instagram">🟣 Instagram</option>
+                    <option value="fa-brands fa-telegram">🔵 Telegram</option>
+                </select>
+                <input type="text" id="setSocialLabel" class="input-st" placeholder="ឈ្មោះបង្ហាញ (ឧ. YouTube/KouSuke...)" style="margin-bottom: 0;" onchange="saveAdminSettings()">
+            </div>
+            <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL (Link) ទៅកាន់ទំព័ររបស់អ្នក..." onchange="saveAdminSettings()">
+        </div>
+
+        <div class="form-group">
+            <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ABA / ACLEDA)</label>
+            <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                <input type="text" id="setMenuQR" class="input-st" placeholder="Link ឬ Base64..." style="margin-bottom:0;" onchange="saveAdminSettings()">
+                <input type="file" id="qrFile" accept="image/*" style="display:none;" onchange="uploadQR(event)">
+                <button class="input-st" style="width: auto; cursor: pointer;" onclick="document.getElementById('qrFile').click()"><i class="fa-solid fa-upload"></i></button>
+            </div>
+            <div class="preview-box">
+                <img id="menuQRPreview" src="" alt="QR Preview" style="display: none;">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fa-brands fa-telegram"></i> តំណភ្ជាប់ Chat សម្រាប់ប៊ូតុងអណ្តែត (Floating Chat)</label>
+            <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
+        </div>
+    </div>
+
+    <!-- 6. MENU CUSTOM JS MANAGEMENT -->
+    <div class="section-box" style="border-color: var(--brand-cyan); background: #ffffff;">
+        <div class="section-title" style="color: var(--brand-cyan);"><i class="fa-solid fa-code"></i> 6. គ្រប់គ្រងកូដបន្ថែមអតិថិជន (Menu Custom JS)</div>
+        <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>Menu អតិថិជន (menu.html)</b>។ អ្នកអាចជ្រើសរើសច្រើន File ក្នុងពេលតែមួយបាន។</p>
+        
+        <div class="action-btn-group">
+            <input type="file" id="menuJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadMenuScripts(event)">
+            <button class="btn-action btn-upload-menu" onclick="document.getElementById('menuJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
+            
+            <input type="file" id="importMenuJsBackup" accept=".json" style="display: none;" onchange="importMenuScriptsBackup(event)">
+            <button class="btn-action btn-restore" onclick="document.getElementById('importMenuJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
+            
+            <button class="btn-action btn-backup" onclick="exportMenuScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
+        </div>
+
+        <div id="menuScriptsListContainer" class="script-list-container">
+            <!-- Script List will be rendered here -->
+        </div>
+    </div>
+
+    <!-- 7. POS CUSTOM JS MANAGEMENT -->
+    <div class="section-box" style="border-color: #ef4444; background: #ffffff;">
+        <div class="section-title" style="color: #ef4444;"><i class="fa-solid fa-terminal"></i> 7. គ្រប់គ្រងកូដបន្ថែមប្រព័ន្ធ (POS Custom JS)</div>
+        <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>ប្រព័ន្ធគិតលុយរបស់ Admin & Staff (index.html)</b>។ អ្នកអាចជ្រើសរើសច្រើន File ក្នុងពេលតែមួយបាន។</p>
+        
+        <div class="action-btn-group">
+            <input type="file" id="posJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadPosScripts(event)">
+            <button class="btn-action btn-upload-pos" onclick="document.getElementById('posJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
+            
+            <input type="file" id="importPosJsBackup" accept=".json" style="display: none;" onchange="importPosScriptsBackup(event)">
+            <button class="btn-action btn-restore" onclick="document.getElementById('importPosJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
+            
+            <button class="btn-action btn-backup" onclick="exportPosScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
+        </div>
+
+        <div id="posScriptsListContainer" class="script-list-container">
+            <!-- Script List will be rendered here -->
+        </div>
+    </div>
+
+    <!-- Save Button -->
+    <button class="btn-save" onclick="saveAdminSettings()"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់ទាំងអស់ (Save Changes)</button>
+</div>
+
+<div id="toast">Saved Successfully!</div>
+
+<script>
+    // Supabase Configuration
+    const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+    
+    // បង្ការកុំឱ្យគាំងបើសិនអត់មាន Supabase
+    let supabaseClient = null;
+    if (window.supabase) {
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (err) {
+            console.error("Supabase init error:", err);
+        }
+    } else {
+        console.error("Supabase library is missing!");
+    }
+
+    const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+
+    let adminBanners = [];
+    let menuScripts = []; // Custom JS for Menu
+    let posScripts = [];  // Custom JS for POS
+    
+    // បន្ថែមអថេរសម្រាប់កំណត់ការបង្ហាញ Script ត្រឹម ៣
+    let showAllMenuScripts = false;
+    let showAllPosScripts = false;
+
+    function showToast(msg, isError = false) {
+        const t = document.getElementById('toast'); 
+        t.innerText = msg;
+        t.style.background = isError ? 'var(--danger)' : 'var(--success)';
+        t.classList.add('show'); 
+        setTimeout(() => t.classList.remove('show'), 2500);
+    }
+
+    async function initAdmin() {
+        try {
+            // Load from LocalStorage first for instant UI (With Try/Catch Protection)
+            let localSys = {};
+            let localPosScripts = [];
+            try {
+                const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`);
+                if (rawSys) localSys = JSON.parse(rawSys);
+            } catch(e) { console.warn("Error parsing Sys Settings:", e); }
+            
+            try {
+                const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`);
+                if (rawPos) localPosScripts = JSON.parse(rawPos);
+            } catch(e) { console.warn("Error parsing POS scripts:", e); }
+            
+            if (localSys.customMenuScripts) menuScripts = localSys.customMenuScripts;
+            if (localPosScripts.length > 0) posScripts = localPosScripts;
+            renderMenuScripts();
+            renderPosScripts();
+
+            // Fetch from Supabase (Cloud)
+            if (supabaseClient) {
+                try {
+                    let { data, error } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                    if (data && data.data_json) {
+                        let d = data.data_json;
+                        let sys = d.sysSettings || {};
+                        
+                        if(sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
+                        if(sys.menuBanners && sys.menuBanners.length > 0) adminBanners = sys.menuBanners;
+                        else if(sys.menuBanner) adminBanners = [sys.menuBanner];
+                        renderAdminBanners();
+                        
+                        if(sys.menuQR) {
+                            document.getElementById('setMenuQR').value = sys.menuQR;
+                            const qp = document.getElementById('menuQRPreview'); qp.src = sys.menuQR; qp.style.display = 'block';
+                        }
+                        
+                        if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
+                        if(sys.socialIcon) document.getElementById('setSocialIcon').value = sys.socialIcon;
+                        if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
+                        if(sys.socialLink) document.getElementById('setSocialLink').value = sys.socialLink;
+                        
+                        document.getElementById('togglePromoBadge').checked = !!sys.togglePromoBadge;
+                        document.getElementById('setPromoCodeText').value = sys.promoCodeText || '';
+                        document.getElementById('toggleTicker').checked = !!sys.toggleTicker;
+                        document.getElementById('setTickerText').value = sys.tickerText || '';
+                        document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
+                        document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
+                        document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
+                        document.getElementById('setOpenTime').value = sys.openTime || '08:00';
+                        document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
+                        document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
+
+                        if(sys.customMenuScripts && Array.isArray(sys.customMenuScripts)) {
+                            menuScripts = sys.customMenuScripts;
+                        }
+                        if(d.customPosScripts && Array.isArray(d.customPosScripts)) {
+                            posScripts = d.customPosScripts;
+                        }
+                        
+                        renderMenuScripts();
+                        renderPosScripts();
+                    }
+                } catch(e) {
+                    console.error("Supabase Fetch Error:", e);
+                }
+            }
+        } catch(e) {
+            console.error("Init admin generic error:", e);
+        }
+    }
+
+    async function saveAdminSettings() {
+        try {
+            localStorage.setItem(`ks2_${BRANCH}_pos_scripts`, JSON.stringify(posScripts));
+            
+            let d = {};
+            if (supabaseClient) {
+                try {
+                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                    if (data && data.data_json) d = data.data_json;
+                } catch(err) { console.warn("Could not fetch latest cloud data, will override."); }
+            }
+
+            if(!d.sysSettings) d.sysSettings = {};
+            
+            d.sysSettings.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
+            d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== '');
+            d.sysSettings.menuQR = document.getElementById('setMenuQR').value.trim();
+            d.sysSettings.chatLink = document.getElementById('setChatLink').value.trim();
+            d.sysSettings.socialIcon = document.getElementById('setSocialIcon').value;
+            d.sysSettings.socialLabel = document.getElementById('setSocialLabel').value.trim();
+            d.sysSettings.socialLink = document.getElementById('setSocialLink').value.trim();
+            d.sysSettings.togglePromoBadge = document.getElementById('togglePromoBadge').checked;
+            d.sysSettings.promoCodeText = document.getElementById('setPromoCodeText').value.trim();
+            d.sysSettings.toggleTicker = document.getElementById('toggleTicker').checked;
+            d.sysSettings.tickerText = document.getElementById('setTickerText').value.trim();
+            d.sysSettings.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
+            d.sysSettings.welcomeImg = document.getElementById('setWelcomeImg').value.trim();
+            d.sysSettings.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
+            d.sysSettings.openTime = document.getElementById('setOpenTime').value;
+            d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
+            d.sysSettings.preorder = document.getElementById('togglePreorder').checked;
+
+            d.sysSettings.customMenuScripts = menuScripts;
+            d.customPosScripts = posScripts;
+
+            localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
+
+            if (supabaseClient) {
+                let { error } = await supabaseClient.from('branch_store').upsert({ 
+                    branch_id: BRANCH, 
+                    data_json: d,
+                    updated_at: new Date().toISOString()
+                }, { onConflict: 'branch_id' });
+
+                if (error) throw error;
+            }
+            showToast('រក្សាទុកបានជោគជ័យ! (Saved!)');
+        } catch(e) {
+            showToast('Save Failed: ' + e.message, true);
+            console.error(e);
+        }
+    }
+
+    /* --- Banner Functions --- */
+    function renderAdminBanners() {
+        const container = document.getElementById('bannerListContainer');
+        container.innerHTML = '';
+        if (adminBanners.length === 0) {
+            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មាន Banner ទេ។ សូមចុច + បន្ថែម។</div>';
+        }
+        adminBanners.forEach((b, index) => {
+            container.innerHTML += `
+                <div style="background: var(--store-bg); padding: 10px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 10px; position: relative;">
+                    <div style="font-size:12px; font-weight:bold; margin-bottom:6px; color:var(--text-muted);">Banner ទី ${index + 1}</div>
+                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                        <input type="text" class="input-st" value="${b}" placeholder="Link ឬ Base64..." style="margin-bottom:0; flex:1;" onchange="updateAdminBanner(${index}, this.value)">
+                        <input type="file" id="bannerFile_${index}" accept="image/*" style="display:none;" onchange="uploadAdminBanner(event, ${index})">
+                        <button class="input-st" style="width: auto; padding: 0 15px; cursor: pointer;" onclick="document.getElementById('bannerFile_${index}').click()"><i class="fa-solid fa-upload"></i></button>
+                        <button class="input-st" style="width: auto; padding: 0 15px; cursor: pointer; color: var(--danger);" onclick="removeAdminBanner(${index})"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                    ${b ? `<div class="preview-box"><img src="${b}" style="width: 100%; max-height: 120px; object-fit: cover; border-radius: 8px;"></div>` : ''}
+                </div>
+            `;
+        });
+    }
+    function addAdminBanner() { adminBanners.push(''); renderAdminBanners(); }
+    function removeAdminBanner(index) { adminBanners.splice(index, 1); renderAdminBanners(); saveAdminSettings(); }
+    function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); }
+    
+    function uploadAdminBanner(e, index) {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas'); const max = 800; let w = img.width, h = img.height;
+                if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+                adminBanners[index] = canvas.toDataURL('image/jpeg', 0.8);
+                renderAdminBanners();
+                saveAdminSettings();
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    /* --- QR Upload --- */
+    function uploadQR(e) {
+        const file = e.target.files[0]; if(!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas'); const max = 400; let w = img.width, h = img.height;
+                if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img, 0, 0, w, h);
+                const url = canvas.toDataURL('image/jpeg', 0.8);
+                document.getElementById('setMenuQR').value = url;
+                const qp = document.getElementById('menuQRPreview'); qp.src = url; qp.style.display = 'block';
+                saveAdminSettings();
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
+    /* --- MENU CUSTOM JS MANAGEMENT FUNCTIONS --- */
+    function renderMenuScripts() {
+        const container = document.getElementById('menuScriptsListContainer');
+        container.innerHTML = '';
+        if (menuScripts.length === 0) {
+            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
+            return;
+        }
+
+        // ចម្លងទិន្នន័យនិងត្រឡប់បញ្ច្រាសដើម្បីបង្ហាញកូដដែលទើប Upload ថ្មីៗនៅខាងលើ
+        let displayScripts = [...menuScripts].reverse();
+        let hasMore = displayScripts.length > 3;
+
+        // បើមិនទាន់ចុច Show All ទេ គឺកាត់យកតែ ៣ ខាងលើមកបង្ហាញ
+        if (!showAllMenuScripts && hasMore) {
+            displayScripts = displayScripts.slice(0, 3);
+        }
+
+        displayScripts.forEach(s => {
+            let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off';
+            let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
+            container.innerHTML += `
+                <div class="script-item" style="border-left: 4px solid var(--brand-cyan);">
+                    <div class="script-name">${s.name}</div>
+                    <div class="script-actions">
+                        <button class="btn-script ${btnClass}" onclick="toggleMenuScript('${s.id}')">${btnText}</button>
+                        <button class="btn-script btn-delete" onclick="deleteMenuScript('${s.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+
+        // បន្ថែមប៊ូតុង Show All / Show Less បើមានកូដលើសពី ៣
+        if (hasMore) {
+            let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length} ឯកសារ)`;
+            container.innerHTML += `
+                <button class="input-st" style="margin-top:5px; background:rgba(6, 182, 212, 0.05); border: 1px dashed var(--brand-cyan); color:var(--brand-cyan); cursor:pointer; text-align:center;" onclick="toggleMenuScriptsView()">
+                    ${toggleBtnText}
+                </button>
+            `;
+        }
+    }
+
+    function toggleMenuScriptsView() {
+        showAllMenuScripts = !showAllMenuScripts;
+        renderMenuScripts();
+    }
+
+    function uploadMenuScripts(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        let filesProcessed = 0;
+        
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const existingIdx = menuScripts.findIndex(s => s.name === file.name);
+                if (existingIdx !== -1) {
+                    menuScripts[existingIdx].code = ev.target.result;
+                } else {
+                    menuScripts.push({
+                        id: 'mjs_' + Date.now() + Math.floor(Math.random() * 1000),
+                        name: file.name,
+                        code: ev.target.result,
+                        isActive: true
+                    });
+                }
+                filesProcessed++;
+                
+                if (filesProcessed === files.length) {
+                    renderMenuScripts(); 
+                    saveAdminSettings();
+                    showToast(`បាន Upload ចំនួន ${files.length} Menu Scripts ជោគជ័យ!`);
+                }
+            };
+            reader.readAsText(file);
+        });
+        e.target.value = '';
+    }
+
+    function toggleMenuScript(id) {
+        let s = menuScripts.find(x => x.id === id);
+        if (s) { 
+            s.isActive = !s.isActive; 
+            renderMenuScripts(); 
+            saveAdminSettings(); 
+        }
+    }
+
+    function deleteMenuScript(id) {
+        if (confirm('តើអ្នកពិតជាចង់លុបកូដ Menu នេះមែនទេ?')) {
+            menuScripts = menuScripts.filter(x => x.id !== id);
+            renderMenuScripts(); 
+            saveAdminSettings();
+        }
+    }
+
+    function exportMenuScriptsBackup() {
+        if(menuScripts.length === 0) return showToast("គ្មានកូដសម្រាប់ Backup ទេ!", true);
+        const a = document.createElement("a"); 
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); 
+        a.download = `Menu_CustomJS_Backup_${Date.now()}.json`; 
+        a.click(); 
+    }
+
+    function importMenuScriptsBackup(e) {
+        const file = e.target.files[0]; if (!file) return; 
+        const r = new FileReader();
+        r.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if(Array.isArray(data)) {
+                    menuScripts = data; 
+                    renderMenuScripts(); 
+                    saveAdminSettings();
+                    showToast('Restore ឯកសារ Menu JS បានជោគជ័យ!');
+                } else alert("ទម្រង់ File មិនត្រឹមត្រូវ!");
+            } catch(err) { alert("មិនអាចអាន File បានទេ!"); }
+            e.target.value = '';
+        };
+        r.readAsText(file);
+    }
+
+    /* --- POS CUSTOM JS MANAGEMENT FUNCTIONS --- */
+    function renderPosScripts() {
+        const container = document.getElementById('posScriptsListContainer');
+        container.innerHTML = '';
+        if (posScripts.length === 0) {
+            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
+            return;
+        }
+
+        // ចម្លងទិន្នន័យនិងត្រឡប់បញ្ច្រាសដើម្បីបង្ហាញកូដដែលទើប Upload ថ្មីៗនៅខាងលើ
+        let displayScripts = [...posScripts].reverse();
+        let hasMore = displayScripts.length > 3;
+
+        // បើមិនទាន់ចុច Show All ទេ គឺកាត់យកតែ ៣ ខាងលើមកបង្ហាញ
+        if (!showAllPosScripts && hasMore) {
+            displayScripts = displayScripts.slice(0, 3);
+        }
+
+        displayScripts.forEach(s => {
+            let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off';
+            let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
+            container.innerHTML += `
+                <div class="script-item" style="border-left: 4px solid var(--danger);">
+                    <div class="script-name">${s.name}</div>
+                    <div class="script-actions">
+                        <button class="btn-script ${btnClass}" onclick="togglePosScript('${s.id}')">${btnText}</button>
+                        <button class="btn-script btn-delete" onclick="deletePosScript('${s.id}')"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>
+            `;
+        });
+
+        // បន្ថែមប៊ូតុង Show All / Show Less បើមានកូដលើសពី ៣
+        if (hasMore) {
+            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${posScripts.length} ឯកសារ)`;
+            container.innerHTML += `
+                <button class="input-st" style="margin-top:5px; background:rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); color:var(--danger); cursor:pointer; text-align:center;" onclick="togglePosScriptsView()">
+                    ${toggleBtnText}
+                </button>
+            `;
+        }
+    }
+
+    function togglePosScriptsView() {
+        showAllPosScripts = !showAllPosScripts;
+        renderPosScripts();
+    }
+
+    function uploadPosScripts(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        let filesProcessed = 0;
+        
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const existingIdx = posScripts.findIndex(s => s.name === file.name);
+                if (existingIdx !== -1) {
+                    posScripts[existingIdx].code = ev.target.result;
+                } else {
+                    posScripts.push({
+                        id: 'pjs_' + Date.now() + Math.floor(Math.random() * 1000),
+                        name: file.name,
+                        code: ev.target.result,
+                        isActive: true
+                    });
+                }
+                filesProcessed++;
+                
+                if (filesProcessed === files.length) {
+                    renderPosScripts(); 
+                    saveAdminSettings();
+                    showToast(`បាន Upload ចំនួន ${files.length} POS Scripts ជោគជ័យ!`);
+                }
+            };
+            reader.readAsText(file);
+        });
+        e.target.value = '';
+    }
+
+    function togglePosScript(id) {
+        let s = posScripts.find(x => x.id === id);
+        if (s) { 
+            s.isActive = !s.isActive; 
+            renderPosScripts(); 
+            saveAdminSettings(); 
+        }
+    }
+
+    function deletePosScript(id) {
+        if (confirm('តើអ្នកពិតជាចង់លុបកូដ POS នេះមែនទេ?')) {
+            posScripts = posScripts.filter(x => x.id !== id);
+            renderPosScripts(); 
+            saveAdminSettings();
+        }
+    }
+
+    function exportPosScriptsBackup() {
+        if(posScripts.length === 0) return showToast("គ្មានកូដសម្រាប់ Backup ទេ!", true);
+        const a = document.createElement("a"); 
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); 
+        a.download = `POS_CustomJS_Backup_${Date.now()}.json`; 
+        a.click(); 
+    }
+
+    function importPosScriptsBackup(e) {
+        const file = e.target.files[0]; if (!file) return; 
+        const r = new FileReader();
+        r.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if(Array.isArray(data)) {
+                    posScripts = data; 
+                    renderPosScripts(); 
+                    saveAdminSettings();
+                    showToast('Restore ឯកសារ POS JS បានជោគជ័យ!');
+                } else alert("ទម្រង់ File មិនត្រឹមត្រូវ!");
+            } catch(err) { alert("មិនអាចអាន File បានទេ!"); }
+            e.target.value = '';
+        };
+        r.readAsText(file);
+    }
+
+    /* --- Utilities --- */
+    function copyWelcomeLink() {
+        const welcomeUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'welcome.html') + '?branch=' + BRANCH;
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = welcomeUrl;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        showToast('Copied Welcome Link!');
+    }
+
+    function showWelcomeQR() {
+        // បង្កើត Link សម្រាប់ Welcome
+        const welcomeUrl = window.location.origin + window.location.pathname.replace('menu_admin.html', 'welcome.html') + '?branch=' + BRANCH;
+        // ទាញ QR ពី API ដោយស្វ័យប្រវត្តិ
+        const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(welcomeUrl)}`;
+        
+        // បើកផ្ទាំងថ្មីសម្រាប់បង្ហាញ QR
+        const win = window.open('', '_blank', 'width=450,height=550');
+        win.document.write(`
+            <html>
+            <head><title>Welcome QR Code</title></head>
+            <body style="text-align:center; font-family:sans-serif; padding: 20px; background: #f3f4f6;">
+                <h2 style="color: #1e293b; margin-bottom: 5px;">QR Code សម្រាប់អតិថិជន</h2>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">ឱ្យអតិថិជនស្កេន QR នេះដើម្បីចូលទំព័រ Welcome</p>
+                <div style="background: #fff; padding: 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <img src="${qrApi}" alt="QR Code" style="width: 250px; height: 250px;">
+                </div>
+                <br><br>
+                <p style="font-size: 11px; color: #94a3b8; word-break: break-all; max-width: 350px; margin: 0 auto 20px;">${welcomeUrl}</p>
+                <button onclick="window.print()" style="padding: 10px 25px; background: #06b6d4; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">🖨️ បោះពុម្ព (Print)</button>
+            </body>
+            </html>
+        `);
+        win.document.close();
+    }
+
+    function goToPOS() {
+        window.location.href = 'index.html?branch=' + BRANCH;
+    }
+
+    function goToWelcome() {
+        window.location.href = 'welcome.html?branch=' + BRANCH;
+    }
+
+    window.onload = initAdmin;
+</script>
+</body>
+</html>
