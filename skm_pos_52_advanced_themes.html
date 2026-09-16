@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKM Integrate POS - 52 Dynamic Advanced Themes & Live Editor</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Inter:wght@400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', 'Battambang', sans-serif; }
+        body { background-color: #cbd5e1; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 20px; overflow-x: hidden;}
+
+        .controls-container {
+            background: white; padding: 20px; border-radius: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            margin-bottom: 20px; width: 100%; max-width: 950px; display: flex; flex-direction: column; gap: 15px; z-index: 100;
+        }
+        .controls-header { display: flex; justify-content: space-between; align-items: center; gap: 15px; flex-wrap: wrap; }
+        .controls-title { font-size: 18px; font-weight: 900; color: #1e293b; display: flex; align-items: center; gap: 10px;}
+        
+        /* Live Editor Section */
+        .live-editor-box {
+            background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px;
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;
+        }
+        .input-group { display: flex; flex-direction: column; gap: 5px; }
+        .input-group label { font-size: 12px; font-weight: 700; color: #475569; display: flex; justify-content: space-between; align-items: center;}
+        .input-group input { padding: 9px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; font-family: inherit; outline: none; transition: 0.2s; }
+        .input-group input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,0.1); }
+        
+        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; cursor: pointer; }
+        .upload-btn-wrapper button { padding: 8px 12px; background: #e2e8f0; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; color: #334155; cursor: pointer; transition: 0.2s;}
+        .upload-btn-wrapper button:hover { background: #cbd5e1; }
+        .upload-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+
+        .search-box {
+            display: flex; align-items: center; background: #f1f5f9; border-radius: 8px; padding: 10px 15px; flex-grow: 1; max-width: 400px; border: 1px solid #e2e8f0;
+        }
+        .search-box i { color: #64748b; margin-right: 10px; }
+        .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 14px; }
+        
+        .controls-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px;
+            max-height: 250px; overflow-y: auto; padding-right: 5px;
+        }
+        .controls-grid::-webkit-scrollbar { width: 6px; }
+        .controls-grid::-webkit-scrollbar-track { background: #f1f5f9; border-radius: 10px; }
+        .controls-grid::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        .btn {
+            padding: 10px 12px; border: none; border-radius: 8px; font-weight: 700; cursor: pointer;
+            transition: all 0.2s; font-size: 13px; display: flex; align-items: center; gap: 8px; color: white;
+            justify-content: flex-start; text-align: left;
+        }
+        .btn:hover { filter: brightness(1.1); transform: translateY(-2px); box-shadow: 0 5px 10px rgba(0,0,0,0.1); }
+        .dl-group { display: flex; gap: 10px; margin-top: 5px; flex-wrap: wrap; }
+        .btn-download { font-size: 15px; justify-content: center; padding: 14px; text-align: center; flex: 1; min-width: 250px;}
+        .dl-standard { background: linear-gradient(135deg, #10b981, #059669); }
+        .dl-4k { background: linear-gradient(135deg, #2563eb, #1d4ed8); }
+
+        .b-pro { background: #0f172a; } .b-cool { background: #000; color: #00f0ff; border: 1px solid #00f0ff; }
+        .b-med { background: #059669; } .b-resto { background: #ea580c; } .b-mart { background: #0284c7; } 
+        .b-fashion { background: #e11d48; } .b-flower { background: #c026d3; } .b-broker { background: #475569; }
+        .b-cafe { background: #78350f; } .b-salon { background: #f43f5e; } .b-hardware { background: #ca8a04; } 
+        .b-garage { background: #3f3f46; border-bottom: 2px solid #ef4444; } .b-jewelry { background: #111; border: 1px solid #eab308; color: #fef08a;}
+        .b-mobile { background: #4338ca; } .b-bakery { background: #d97706; } .b-cosmetic { background: #be185d; } 
+        .b-gym { background: #000; color: #34d399; border: 1px solid #34d399;} .b-book { background: #ea580c; } 
+        .b-autopart { background: #1e3a8a; } .b-furniture { background: #4d7c0f; } .b-pet { background: #0284c7; }
+        .b-optic { background: #0d9488; } .b-tailor { background: #6d28d9; } .b-carwash { background: #0284c7; } 
+        .b-laundry { background: #0ea5e9; } .b-toy { background: #eab308; color: #000; } .b-shoe { background: #475569; }
+        .b-watch { background: #172554; } .b-music { background: #9f1239; } .b-sport { background: #facc15; color: #000;} 
+        .b-dental { background: #0891b2; } .b-agri { background: #166534; } .b-print { background: #be123c; }
+        .b-travel { background: #0284c7; } .b-wedding { background: #db2777; } .b-wine { background: #831843; } 
+        .b-souvenir { background: #d946ef; } .b-motor { background: #b91c1c; } .b-pc { background: #0f172a; border-bottom: 2px solid #38bdf8;}
+        .b-boba { background: #f59e0b; } .b-delivery { background: #eab308; color:#000; } .b-hotel { background: #1e3a8a; color: #fde047;} 
+        .b-wholesale { background: #064e3b; } .b-ktv { background: #be185d; } .b-school { background: #1d4ed8; }
+        .b-barber { background: #111827; border: 1px solid #475569;} .b-clinic { background: #ec4899; } .b-pawn { background: #166534; } 
+        .b-gas { background: #dc2626; } .b-studio { background: #4f46e5; } .b-build { background: #b45309; } .b-condo { background: #0f766e; }
+
+        .poster-wrapper {
+            width: 100%; max-width: 100%; display: flex; justify-content: center; overflow-x: hidden;
+            padding: 10px 0;
+        }
+
+        .poster {
+            width: 800px; min-height: 1060px; height: auto; position: relative; overflow: hidden;
+            background-color: var(--bg-color); color: var(--text-main); transition: all 0.5s ease;
+            transform-origin: top center; flex-shrink: 0;
+            --bg-color: #f1f5f9; --text-main: #0f172a; --text-sub: #475569;
+            --card-bg: #ffffff; --accent-1: #2563eb; --accent-2: #d97706; --border-color: #cbd5e1;
+        }
+
+        .theme-pro { --bg-color: #f1f5f9; --text-main: #0f172a; --text-sub: #475569; --card-bg: #ffffff; --accent-1: #2563eb; --accent-2: #d97706; --border-color: #cbd5e1; }
+        .theme-cool { --bg-color: #050505; --text-main: #ffffff; --text-sub: #94a3b8; --card-bg: #111111; --accent-1: #00f0ff; --accent-2: #8b5cf6; --border-color: #333333; }
+        .theme-med { --bg-color: #f0fdf4; --text-main: #064e3b; --text-sub: #0f766e; --card-bg: #ffffff; --accent-1: #059669; --accent-2: #0284c7; --border-color: #a7f3d0; }
+        .theme-resto { --bg-color: #fff7ed; --text-main: #7c2d12; --text-sub: #9a3412; --card-bg: #ffffff; --accent-1: #ea580c; --accent-2: #dc2626; --border-color: #fed7aa; }
+        .theme-mart { --bg-color: #f0f9ff; --text-main: #0c4a6e; --text-sub: #0369a1; --card-bg: #ffffff; --accent-1: #0284c7; --accent-2: #16a34a; --border-color: #bae6fd; }
+        .theme-fashion { --bg-color: #fff1f2; --text-main: #881337; --text-sub: #be123c; --card-bg: #ffffff; --accent-1: #e11d48; --accent-2: #db2777; --border-color: #fecdd3; }
+        .theme-flower { --bg-color: #fdf4ff; --text-main: #4a044e; --text-sub: #86198f; --card-bg: #ffffff; --accent-1: #c026d3; --accent-2: #10b981; --border-color: #f5d0fe; }
+        .theme-broker { --bg-color: #f8fafc; --text-main: #0f172a; --text-sub: #334155; --card-bg: #ffffff; --accent-1: #475569; --accent-2: #b45309; --border-color: #cbd5e1; }
+        .theme-cafe { --bg-color: #fffbeb; --text-main: #451a03; --text-sub: #78350f; --card-bg: #ffffff; --accent-1: #92400e; --accent-2: #b45309; --border-color: #fde68a; }
+        .theme-salon { --bg-color: #fdf2f8; --text-main: #831843; --text-sub: #9d174d; --card-bg: #ffffff; --accent-1: #f43f5e; --accent-2: #fb7185; --border-color: #fbcfe8; }
+        .theme-hardware { --bg-color: #fefce8; --text-main: #713f12; --text-sub: #854d0e; --card-bg: #ffffff; --accent-1: #ca8a04; --accent-2: #eab308; --border-color: #fef08a; }
+        .theme-garage { --bg-color: #f8fafc; --text-main: #0f172a; --text-sub: #334155; --card-bg: #ffffff; --accent-1: #475569; --accent-2: #ef4444; --border-color: #e2e8f0; }
+        .theme-jewelry { --bg-color: #050505; --text-main: #fef08a; --text-sub: #fde047; --card-bg: #111111; --accent-1: #eab308; --accent-2: #facc15; --border-color: #333333; }
+        .theme-mobile { --bg-color: #eef2ff; --text-main: #312e81; --text-sub: #4338ca; --card-bg: #ffffff; --accent-1: #4f46e5; --accent-2: #c026d3; --border-color: #c7d2fe; }
+        .theme-bakery { --bg-color: #fffbeb; --text-main: #78350f; --text-sub: #92400e; --card-bg: #ffffff; --accent-1: #d97706; --accent-2: #b45309; --border-color: #fde68a; }
+        .theme-cosmetic { --bg-color: #fdf2f8; --text-main: #831843; --text-sub: #be185d; --card-bg: #ffffff; --accent-1: #db2777; --accent-2: #f43f5e; --border-color: #fbcfe8; }
+        .theme-gym { --bg-color: #000000; --text-main: #ffffff; --text-sub: #a1a1aa; --card-bg: #18181b; --accent-1: #34d399; --accent-2: #10b981; --border-color: #27272a; }
+        .theme-book { --bg-color: #fff7ed; --text-main: #9a3412; --text-sub: #c2410c; --card-bg: #ffffff; --accent-1: #ea580c; --accent-2: #f97316; --border-color: #fed7aa; }
+        .theme-autopart { --bg-color: #eff6ff; --text-main: #1e3a8a; --text-sub: #1d4ed8; --card-bg: #ffffff; --accent-1: #2563eb; --accent-2: #dc2626; --border-color: #bfdbfe; }
+        .theme-furniture { --bg-color: #f7fee7; --text-main: #3f6212; --text-sub: #4d7c0f; --card-bg: #ffffff; --accent-1: #65a30d; --accent-2: #84cc16; --border-color: #d9f99d; }
+        .theme-pet { --bg-color: #f0f9ff; --text-main: #075985; --text-sub: #0284c7; --card-bg: #ffffff; --accent-1: #0ea5e9; --accent-2: #38bdf8; --border-color: #bae6fd; }
+        .theme-optic { --bg-color: #f0fdfa; --text-main: #115e59; --text-sub: #0f766e; --card-bg: #ffffff; --accent-1: #14b8a6; --accent-2: #2dd4bf; --border-color: #99f6e4; }
+        .theme-tailor { --bg-color: #faf5ff; --text-main: #581c87; --text-sub: #7e22ce; --card-bg: #ffffff; --accent-1: #a855f7; --accent-2: #c084fc; --border-color: #e9d5ff; }
+        .theme-carwash { --bg-color: #ecfeff; --text-main: #164e63; --text-sub: #0891b2; --card-bg: #ffffff; --accent-1: #06b6d4; --accent-2: #22d3ee; --border-color: #a5f3fc; }
+        .theme-laundry { --bg-color: #f0f9ff; --text-main: #0c4a6e; --text-sub: #0284c7; --card-bg: #ffffff; --accent-1: #38bdf8; --accent-2: #0ea5e9; --border-color: #bae6fd; }
+        .theme-toy { --bg-color: #fefce8; --text-main: #854d0e; --text-sub: #a16207; --card-bg: #ffffff; --accent-1: #eab308; --accent-2: #facc15; --border-color: #fef08a; }
+        .theme-shoe { --bg-color: #f8fafc; --text-main: #334155; --text-sub: #475569; --card-bg: #ffffff; --accent-1: #64748b; --accent-2: #94a3b8; --border-color: #e2e8f0; }
+        .theme-watch { --bg-color: #f1f5f9; --text-main: #0f172a; --text-sub: #1e293b; --card-bg: #ffffff; --accent-1: #334155; --accent-2: #475569; --border-color: #cbd5e1; }
+        .theme-music { --bg-color: #fff1f2; --text-main: #881337; --text-sub: #9f1239; --card-bg: #ffffff; --accent-1: #e11d48; --accent-2: #f43f5e; --border-color: #fecdd3; }
+        .theme-sport { --bg-color: #111827; --text-main: #facc15; --text-sub: #fef08a; --card-bg: #1f2937; --accent-1: #facc15; --accent-2: #eab308; --border-color: #374151; }
+        .theme-dental { --bg-color: #f0f9ff; --text-main: #083344; --text-sub: #164e63; --card-bg: #ffffff; --accent-1: #0891b2; --accent-2: #06b6d4; --border-color: #cffafe; }
+        .theme-agri { --bg-color: #f0fdf4; --text-main: #14532d; --text-sub: #166534; --card-bg: #ffffff; --accent-1: #15803d; --accent-2: #22c55e; --border-color: #bbf7d0; }
+        .theme-print { --bg-color: #fff1f2; --text-main: #881337; --text-sub: #be123c; --card-bg: #ffffff; --accent-1: #e11d48; --accent-2: #0284c7; --border-color: #fecdd3; }
+        .theme-travel { --bg-color: #f0f9ff; --text-main: #0c4a6e; --text-sub: #0284c7; --card-bg: #ffffff; --accent-1: #0ea5e9; --accent-2: #eab308; --border-color: #bae6fd; }
+        .theme-wedding { --bg-color: #fdf2f8; --text-main: #831843; --text-sub: #9d174d; --card-bg: #ffffff; --accent-1: #db2777; --accent-2: #f43f5e; --border-color: #fbcfe8; }
+        .theme-wine { --bg-color: #fff1f2; --text-main: #4c0519; --text-sub: #881337; --card-bg: #ffffff; --accent-1: #9f1239; --accent-2: #e11d48; --border-color: #fecdd3; }
+        .theme-souvenir { --bg-color: #fdf4ff; --text-main: #4a044e; --text-sub: #701a75; --card-bg: #ffffff; --accent-1: #d946ef; --accent-2: #e879f9; --border-color: #fae8ff; }
+        .theme-motor { --bg-color: #fef2f2; --text-main: #7f1d1d; --text-sub: #991b1b; --card-bg: #ffffff; --accent-1: #dc2626; --accent-2: #ef4444; --border-color: #fecaca; }
+        .theme-pc { --bg-color: #f8fafc; --text-main: #0f172a; --text-sub: #1e293b; --card-bg: #ffffff; --accent-1: #0ea5e9; --accent-2: #38bdf8; --border-color: #cbd5e1; }
+        .theme-boba { --bg-color: #fffbeb; --text-main: #78350f; --text-sub: #92400e; --card-bg: #ffffff; --accent-1: #f59e0b; --accent-2: #fbbf24; --border-color: #fde68a; }
+        .theme-delivery { --bg-color: #111827; --text-main: #fef08a; --text-sub: #fde047; --card-bg: #1f2937; --accent-1: #eab308; --accent-2: #facc15; --border-color: #374151; }
+        .theme-hotel { --bg-color: #eff6ff; --text-main: #1e3a8a; --text-sub: #1e40af; --card-bg: #ffffff; --accent-1: #2563eb; --accent-2: #eab308; --border-color: #bfdbfe; }
+        .theme-wholesale { --bg-color: #f0fdf4; --text-main: #064e3b; --text-sub: #065f46; --card-bg: #ffffff; --accent-1: #059669; --accent-2: #10b981; --border-color: #a7f3d0; }
+        .theme-ktv { --bg-color: #fdf2f8; --text-main: #831843; --text-sub: #be185d; --card-bg: #ffffff; --accent-1: #db2777; --accent-2: #f43f5e; --border-color: #fbcfe8; }
+        .theme-school { --bg-color: #eff6ff; --text-main: #1e3a8a; --text-sub: #1d4ed8; --card-bg: #ffffff; --accent-1: #2563eb; --accent-2: #3b82f6; --border-color: #bfdbfe; }
+        .theme-barber { --bg-color: #f8fafc; --text-main: #0f172a; --text-sub: #334155; --card-bg: #ffffff; --accent-1: #475569; --accent-2: #64748b; --border-color: #e2e8f0; }
+        .theme-clinic { --bg-color: #fff1f2; --text-main: #9f1239; --text-sub: #be123c; --card-bg: #ffffff; --accent-1: #f43f5e; --accent-2: #fb7185; --border-color: #fecdd3; }
+        .theme-pawn { --bg-color: #f0fdf4; --text-main: #14532d; --text-sub: #166534; --card-bg: #ffffff; --accent-1: #15803d; --accent-2: #22c55e; --border-color: #bbf7d0; }
+        .theme-gas { --bg-color: #fef2f2; --text-main: #7f1d1d; --text-sub: #991b1b; --card-bg: #ffffff; --accent-1: #dc2626; --accent-2: #ef4444; --border-color: #fecaca; }
+        .theme-studio { --bg-color: #eef2ff; --text-main: #312e81; --text-sub: #3730a3; --card-bg: #ffffff; --accent-1: #4f46e5; --accent-2: #6366f1; --border-color: #c7d2fe; }
+        .theme-build { --bg-color: #fff7ed; --text-main: #78350f; --text-sub: #92400e; --card-bg: #ffffff; --accent-1: #b45309; --accent-2: #f59e0b; --border-color: #fde68a; }
+        .theme-condo { --bg-color: #f0fdfa; --text-main: #115e59; --text-sub: #0f766e; --card-bg: #ffffff; --accent-1: #0f766e; --accent-2: #14b8a6; --border-color: #99f6e4; }
+
+        .poster-decorations { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; z-index: 1; }
+        .shape { position: absolute; transition: all 0.6s ease; }
+
+        .group-tech .s1 { width: 100%; height: 100%; background-image: linear-gradient(var(--border-color) 1px, transparent 1px), linear-gradient(90deg, var(--border-color) 1px, transparent 1px); background-size: 40px 40px; opacity: 0.3; }
+        .group-tech .s2 { width: 400px; height: 400px; background: radial-gradient(circle, var(--accent-1) 0%, transparent 70%); opacity: 0.15; top: -100px; right: -100px; border-radius: 50%; }
+        .group-tech .s3 { width: 300px; height: 300px; background: radial-gradient(circle, var(--accent-2) 0%, transparent 70%); opacity: 0.1; bottom: 100px; left: -100px; border-radius: 50%; }
+        .group-tech .stat-card { border-left: 4px solid var(--accent-1); }
+
+        .group-food .s1 { width: 500px; height: 500px; background: var(--accent-1); opacity: 0.08; border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%; top: -100px; right: -50px; }
+        .group-food .s2 { width: 350px; height: 350px; background: var(--accent-2); opacity: 0.05; border-radius: 60% 40% 30% 70% / 50% 60% 40% 50%; bottom: -50px; left: -100px; }
+        .group-food .price-card { border-radius: 40px 10px 40px 10px; }
+
+        .group-health .s1 { width: 100%; height: 350px; background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 100%); background-color: var(--accent-1); opacity: 0.08; border-bottom-left-radius: 50% 20%; border-bottom-right-radius: 50% 20%; top: 0; left: 0; }
+        .group-health .s2 { width: 150px; height: 150px; border: 20px solid var(--accent-1); opacity: 0.05; top: 50px; right: 50px; border-radius: 50%; }
+        .group-health .stat-card { border-radius: 30px; box-shadow: 0 10px 40px rgba(0,0,0,0.03); }
+
+        .group-retail .s1 { width: 120%; height: 400px; background: var(--accent-1); opacity: 0.05; transform: skewY(-8deg); top: -100px; left: -10%; }
+        .group-retail .s2 { width: 120px; height: 120px; background: var(--accent-2); opacity: 0.08; top: 80px; right: 80px; border-radius: 16px; transform: rotate(15deg); }
+        .group-retail .stat-card { border: none; background: rgba(128,128,128,0.05); }
+
+        .group-industrial .s1 { width: 100%; height: 40px; background: repeating-linear-gradient(45deg, var(--accent-2), var(--accent-2) 10px, transparent 10px, transparent 20px); opacity: 0.2; top: 0; left: 0; }
+        .group-industrial .s2 { width: 400px; height: 100%; background: var(--accent-1); opacity: 0.04; top: 0; right: 0; border-left: 10px solid var(--accent-2); transform: skewX(-15deg) translateX(150px); }
+        .group-industrial .stat-card, .group-industrial .price-card, .group-industrial .footer { border-radius: 0; border: 2px solid var(--border-color); }
+        .group-industrial .price-card.premium { border-bottom: 8px solid var(--accent-2); }
+
+        .group-luxury .s1 { width: 600px; height: 600px; border: 1px solid var(--accent-2); opacity: 0.2; border-radius: 50%; top: -200px; right: -200px; }
+        .group-luxury .s2 { width: 500px; height: 500px; border: 1px solid var(--accent-1); opacity: 0.15; border-radius: 50%; top: -150px; right: -150px; }
+        .group-luxury .price-card.premium { background: rgba(255,255,255,0.9); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 30px 60px rgba(0,0,0,0.1); color: var(--text-main); }
+        .theme-jewelry.group-luxury .price-card.premium { background: #1a1a1a; border-color: #eab308; color: #fff;}
+        .group-luxury .pc-header { border-bottom: 1px solid rgba(128,128,128,0.2); }
+
+        .group-service .s1 { width: 100%; height: 100%; background: linear-gradient(120deg, transparent 40%, rgba(128,128,128,0.05) 40%, rgba(128,128,128,0.05) 60%, transparent 60%); }
+        .group-service .s2 { width: 150px; height: 150px; background: var(--accent-2); opacity: 0.08; border-radius: 30%; top: 30px; left: 30px; transform: rotate(45deg); }
+        .group-service .price-card.premium { background: var(--accent-1); color: white; }
+
+        .content { 
+            position: relative; z-index: 10; padding: 40px; height: 100%;
+            display: grid; gap: 20px; transition: all 0.5s ease;
+        }
+        .header { transition: all 0.5s ease; text-align: center; }
+        .stats-container { display: flex; justify-content: center; gap: 20px; transition: all 0.5s ease; }
+        .pricing-section { display: flex; flex-direction: column; justify-content: center; transition: all 0.5s ease; }
+        .pricing-grid { display: grid; gap: 20px; width: 100%; transition: all 0.5s ease; align-items: center; }
+        .footer { transition: all 0.5s ease; margin-top: 10px; }
+
+        .layout-default .content { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; grid-template-areas: "header" "stats" "pricing" "footer"; }
+        .layout-default .header { grid-area: header; }
+        .layout-default .stats-container { grid-area: stats; }
+        .layout-default .pricing-section { grid-area: pricing; }
+        .layout-default .footer { grid-area: footer; }
+        .layout-default .pricing-grid { grid-template-columns: 1fr 1.1fr; }
+
+        .layout-side-stats .content { grid-template-columns: 360px 1fr; grid-template-rows: auto 1fr auto; grid-template-areas: "header pricing" "stats pricing" "footer footer"; align-items: center; }
+        .layout-side-stats .header { grid-area: header; text-align: left; }
+        .layout-side-stats .subtitle { margin: 0; }
+        .layout-side-stats .stats-container { grid-area: stats; flex-direction: column; justify-content: flex-start; gap: 15px;}
+        .layout-side-stats .pricing-section { grid-area: pricing; }
+        .layout-side-stats .footer { grid-area: footer; }
+        .layout-side-stats .pricing-grid { grid-template-columns: 1fr; gap: 15px; } 
+        .layout-side-stats .stat-card { width: 100%; }
+
+        .layout-side-pricing .content { grid-template-columns: 1.1fr 0.9fr; grid-template-rows: auto 1fr auto; grid-template-areas: "header header" "pricing stats" "footer footer"; }
+        .layout-side-pricing .header { grid-area: header; }
+        .layout-side-pricing .pricing-section { grid-area: pricing; }
+        .layout-side-pricing .stats-container { grid-area: stats; flex-direction: column; justify-content: center; }
+        .layout-side-pricing .footer { grid-area: footer; }
+        .layout-side-pricing .pricing-grid { grid-template-columns: 1fr; gap: 15px; }
+        .layout-side-pricing .stat-card { width: 100%; }
+
+        .layout-stacked .content { grid-template-columns: 1fr; grid-template-rows: auto 1fr auto auto; grid-template-areas: "header" "pricing" "stats" "footer"; }
+        .layout-stacked .header { grid-area: header; }
+        .layout-stacked .pricing-section { grid-area: pricing; }
+        .layout-stacked .stats-container { grid-area: stats; }
+        .layout-stacked .footer { grid-area: footer; }
+        .layout-stacked .pricing-grid { grid-template-columns: 1fr 1fr; }
+
+        .layout-reverse .content { grid-template-columns: 320px 1fr; grid-template-rows: auto 1fr auto; grid-template-areas: "stats header" "stats pricing" "footer footer"; }
+        .layout-reverse .header { grid-area: header; text-align: right; }
+        .layout-reverse .subtitle { margin-left: auto; margin-right: 0; }
+        .layout-reverse .stats-container { grid-area: stats; flex-direction: column; justify-content: center; }
+        .layout-reverse .pricing-section { grid-area: pricing; }
+        .layout-reverse .footer { grid-area: footer; }
+        .layout-reverse .pricing-grid { grid-template-columns: 1fr; gap: 15px;}
+        .layout-reverse .stat-card { width: 100%; }
+
+        .layout-boxy .content { grid-template-columns: 1fr; grid-template-rows: auto auto 1fr auto; grid-template-areas: "header" "stats" "pricing" "footer"; }
+        .layout-boxy .header { grid-area: header; }
+        .layout-boxy .stats-container { grid-area: stats; }
+        .layout-boxy .pricing-section { grid-area: pricing; }
+        .layout-boxy .footer { grid-area: footer; }
+        .layout-boxy .pricing-grid { grid-template-columns: 1fr 1.1fr; }
+
+
+        .badge-top { display: inline-block; background: var(--card-bg); color: var(--accent-1); padding: 8px 25px; border-radius: 50px; font-weight: 800; font-size: 14px; margin-bottom: 15px; border: 1px solid var(--border-color); box-shadow: 0 5px 15px rgba(0,0,0,0.05);}
+        #custom-logo-img { display: none; height: 20px; margin-right: 8px; vertical-align: middle; border-radius: 4px; }
+        .title { font-size: 48px; font-weight: 900; line-height: 1.1; margin-bottom: 15px;}
+        .subtitle { font-size: 16px; color: var(--text-sub); font-weight: 600; line-height: 1.6; max-width: 680px; margin: 0 auto; }
+
+        .stat-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 16px; padding: 20px; display: flex; align-items: center; gap: 15px; width: 340px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .stat-icon { font-size: 30px; color: var(--accent-1); width: 60px; height: 60px; background: rgba(128,128,128,0.05); border-radius: 12px; display: flex; justify-content: center; align-items: center; flex-shrink: 0;}
+        .stat-info h4 { font-size: 30px; font-weight: 900; line-height: 1; margin-bottom: 5px; font-family: 'Inter'; }
+        .stat-info p { font-size: 13px; color: var(--text-sub); font-weight: 700; line-height: 1.4;}
+
+        .price-card { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 24px; padding: 30px 25px; position: relative; display: flex; flex-direction: column; box-shadow: 0 10px 30px rgba(0,0,0,0.03);}
+        .price-card.premium { transform: scale(1.03); z-index: 5; background: var(--accent-1); color: white; border: none; box-shadow: 0 20px 40px rgba(0,0,0,0.15);}
+        
+        .badge-popular { position: absolute; top: -14px; right: 25px; padding: 6px 18px; border-radius: 50px; font-weight: 900; font-size: 13px; background: var(--accent-2); color: white;}
+        .pc-header { border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; margin-bottom: 15px; }
+        .premium .pc-header { border-bottom-color: rgba(255,255,255,0.2); }
+        .pc-title { font-size: 16px; font-weight: 800; color: var(--text-sub); margin-bottom: 5px; }
+        .premium .pc-title { color: inherit; opacity: 0.8; }
+        .pc-price { font-size: 42px; font-weight: 900; line-height: 1; font-family: 'Inter'; color: var(--text-main);}
+        .premium .pc-price { color: inherit; }
+        .pc-price span { font-size: 14px; font-weight: 600; margin-left: 5px; opacity: 0.8; font-family: 'Battambang';}
+        
+        .pc-list { list-style: none; flex-grow: 1; }
+        .pc-list li { margin-bottom: 12px; font-size: 14px; display: flex; align-items: flex-start; gap: 10px; line-height: 1.5; font-weight: 600; }
+        .pc-list li i { font-size: 16px; margin-top: 2px; color: var(--accent-1); }
+        .premium .pc-list li i { color: inherit; opacity: 0.9; }
+        
+        .highlight-item { padding: 15px; border-radius: 12px; margin-top: 15px; display: flex; align-items: center; gap: 15px; font-weight: 700; font-size: 13px; line-height: 1.5; background: rgba(128,128,128,0.15); border-left: 4px solid var(--accent-2); }
+        .highlight-item i { font-size: 24px; }
+        .theme-med .highlight-item, .theme-pawn .highlight-item { color: #064e3b; } /* Fix readability on specific light themes */
+        
+        .sub-option { background: rgba(128,128,128,0.05); border-radius: 12px; padding: 15px; text-align: center; font-size: 14px; color: var(--text-sub); margin-top: 20px; border: 1px dashed var(--border-color); }
+        .sub-option strong { color: var(--text-main); font-size: 18px; font-weight: 900; }
+
+        .footer { background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 20px; padding: 20px 30px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+        .contact-wrap { display: flex; flex-direction: column; }
+        .contact-label { font-size: 13px; color: var(--text-sub); font-weight: 700; margin-bottom: 5px; }
+        .contact-number { display: flex; align-items: center; gap: 12px; font-size: 40px; font-weight: 900; color: var(--text-main); font-family: 'Inter'; }
+        .contact-number i { color: #38bdf8; font-size: 38px; } 
+        
+        .qr-section { display: flex; align-items: center; gap: 15px; }
+        .qr-text { text-align: right; }
+        .qr-text h4 { font-size: 15px; font-weight: 800; margin-bottom: 2px; color: var(--text-main);}
+        .qr-text p { font-size: 12px; color: var(--text-sub); font-weight: 600; }
+        .actual-qr { width: 75px; height: 75px; border-radius: 8px; border: 2px solid var(--border-color); background: white; padding: 3px;}
+
+    </style>
+</head>
+<body>
+
+    <div class="controls-container" data-html2canvas-ignore="true">
+        <div class="controls-header" style="border-bottom: 1px dashed #cbd5e1; padding-bottom: 10px;">
+            <div class="controls-title"><i class="fa-solid fa-wand-magic-sparkles" style="color: #2563eb;"></i> SKM Poster Maker (52 Themes)</div>
+        </div>
+
+        <!-- Live Editor Settings -->
+        <div class="live-editor-box">
+            <div class="input-group">
+                <label>ស្លាកលើគេ (Top Badge)
+                    <div style="display: flex; gap: 5px; align-items: center;">
+                        <span class="upload-btn-wrapper">
+                            <button type="button"><i class="fa-solid fa-image"></i> + Logo</button>
+                            <input type="file" accept="image/*" id="logoInput" onchange="handleLogoUpload(event)">
+                        </span>
+                        <button type="button" id="removeLogoBtn" onclick="removeLogo()" title="លុបរូបភាពចោល" style="display: none; padding: 8px 10px; background: #fee2e2; color: #ef4444; border: 1px solid #fca5a5; border-radius: 6px; cursor: pointer; font-size: 12px; transition: 0.2s;"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                </label>
+                <input type="text" id="inp-badge" value="ប្រព័ន្ធគ្រប់គ្រងជំនាន់ថ្មី ២០២៦" oninput="document.getElementById('txt-badge').innerText = this.value;">
+            </div>
+            <div class="input-group">
+                <label>តម្លៃទិញដាច់ (Lifetime)</label>
+                <input type="text" id="inp-lifetime" value="$2500" oninput="document.getElementById('val-lifetime').innerText = this.value;">
+            </div>
+            <div class="input-group">
+                <label>តម្លៃប្រចាំឆ្នាំ (Yearly)</label>
+                <input type="text" id="inp-yearly" value="$200" oninput="document.getElementById('val-yearly').innerText = this.value;">
+            </div>
+            <div class="input-group">
+                <label>តម្លៃប្រចាំខែ (Monthly)</label>
+                <input type="text" id="inp-monthly" value="$25" oninput="document.getElementById('val-monthly').innerText = this.value;">
+            </div>
+            <div class="input-group">
+                <label>លេខទូរស័ព្ទ (Phone)</label>
+                <input type="text" id="inp-phone" value="010 233 911" oninput="document.getElementById('val-phone').innerText = this.value;">
+            </div>
+            <div class="input-group">
+                <label>តំណភ្ជាប់ QR Code (Link)</label>
+                <input type="text" id="inp-qr" value="https://t.me/JHENG6912" placeholder="Ex: https://t.me/..." oninput="updateQR()">
+            </div>
+        </div>
+
+        <!-- Theme Selection -->
+        <div class="controls-header" style="margin-top: 5px;">
+            <div style="font-weight: 700; font-size: 14px; color: #334155;"><i class="fa-solid fa-layer-group"></i> ជ្រើសរើសប្រភេទអាជីវកម្ម (៥២ ប្រភេទ)</div>
+            <div class="search-box">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" id="searchTheme" onkeyup="filterThemes()" placeholder="ស្វែងរកឈ្មោះអាជីវកម្ម (ឧ. ហាងកាហ្វេ)...">
+            </div>
+        </div>
+
+        <div class="controls-grid" id="themeGrid">
+            <!-- Buttons dynamically generated here -->
+        </div>
+        
+        <!-- Export Quality Buttons -->
+        <div class="dl-group">
+            <button class="btn btn-download dl-standard" onclick="downloadPoster('Standard', 2)" id="dlBtnStandard"><i class="fa-brands fa-facebook"></i> ទាញយកធម្មតា (Standard)</button>
+            <button class="btn btn-download dl-4k" onclick="downloadPoster('4K', 4)" id="dlBtn4K"><i class="fa-solid fa-print"></i> ទាញយកច្បាស់ខ្លាំង (4K HD)</button>
+        </div>
+    </div>
+
+    <div class="poster-wrapper">
+        <div class="poster theme-pro layout-default group-tech" id="poster-canvas">
+            <div class="poster-decorations">
+                <div class="shape s1"></div>
+                <div class="shape s2"></div>
+                <div class="shape s3"></div>
+            </div>
+
+            <div class="content">
+                <!-- Header Area -->
+                <div class="header">
+                    <div class="badge-top">
+                        <img id="custom-logo-img" src="" alt="Logo">
+                        <i class="fa-solid fa-star" id="badge-icon"></i> 
+                        <span id="txt-badge">ប្រព័ន្ធគ្រប់គ្រងជំនាន់ថ្មី ២០២៦</span>
+                    </div>
+                    <h1 class="title">SKM INTEGRATE POS</h1>
+                    <p class="subtitle" id="txt-subtitle">បញ្ឈប់ការឈឺក្បាលរឿងបាត់ស្តុក និងគិតលុយខុស!<br>ប្រព័ន្ធគ្រប់គ្រងអាជីវកម្មដ៏វៃឆ្លាត ដំណើរការយ៉ាងរលូនទោះ <strong>គ្មានអ៊ីនធឺណិត (Offline Mode)</strong></p>
+                </div>
+
+                <!-- Stats Area -->
+                <div class="stats-container">
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-qrcode" id="stat1-icon"></i></div>
+                        <div class="stat-info">
+                            <h4>100+</h4>
+                            <p id="txt-stat1">មុខងារ Digital Menu សម្រាប់ភ្ញៀវ</p>
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon"><i class="fa-solid fa-laptop-code" id="stat2-icon"></i></div>
+                        <div class="stat-info">
+                            <h4>60+</h4>
+                            <p id="txt-stat2">មុខងារប្រព័ន្ធ POS សម្រាប់អ្នកលក់</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pricing Area -->
+                <div class="pricing-section">
+                    <div class="pricing-grid">
+                        
+                        <div class="price-card">
+                            <div class="pc-header">
+                                <div class="pc-title">SaaS Subscription</div>
+                                <div class="pc-price"><span id="val-yearly">$200</span> <span>/ មួយឆ្នាំ</span></div>
+                            </div>
+                            <ul class="pc-list">
+                                <li><i class="fa-solid fa-check"></i> រួមបញ្ចូលការ Support បច្ចេកទេសពេញមួយឆ្នាំ</li>
+                                <li><i class="fa-solid fa-check"></i> ទទួលបានការ Update មុខងារថ្មីៗជានិច្ច</li>
+                                <li><i class="fa-solid fa-check"></i> ងាយស្រួលគ្រប់គ្រងការចំណាយដើមទុន</li>
+                            </ul>
+                            <div class="sub-option">ជម្រើសបង់ប្រចាំខែត្រឹមតែ<br><strong id="val-monthly">$25</strong><strong> / ខែ</strong></div>
+                        </div>
+
+                        <div class="price-card premium">
+                            <div class="badge-popular">⭐ Best Value</div>
+                            <div class="pc-header">
+                                <div class="pc-title">Lifetime License</div>
+                                <div class="pc-price"><span id="val-lifetime">$2500</span> <span>/ មួយជីវិត</span></div>
+                            </div>
+                            <ul class="pc-list">
+                                <li><i class="fa-solid fa-circle-check"></i> បង់ប្រាក់តែម្តង ប្រើបានជារៀងរហូត</li>
+                                <li><i class="fa-solid fa-circle-check"></i> គ្មានការគិតថ្លៃសេវាប្រចាំខែឡើយ</li>
+                                <li><i class="fa-solid fa-circle-check"></i> ទទួលបានមុខងារទាំង ១៦០+ ពេញលេញ</li>
+                                <li><i class="fa-solid fa-circle-check"></i> សិទ្ធិគ្រប់គ្រងទិន្នន័យ (Data) ខ្លួនឯង ១០០%</li>
+                                <li><i class="fa-solid fa-circle-check"></i> តម្លើងជូន និងបង្រៀនប្រើដោយឥតគិតថ្លៃ</li>
+                            </ul>
+                            <div class="highlight-item" id="bonus-box">
+                                <i class="fa-solid fa-book-open-reader"></i>
+                                <span>ភ្ជាប់មកជាមួយនូវ សៀវភៅណែនាំប្រើប្រាស់ (User Manual) យ៉ាងលម្អិត ងាយស្រួលអនុវត្តតាម។</span>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- Footer Area -->
+                <div class="footer">
+                    <div class="contact-wrap">
+                        <div class="contact-label">ទំនាក់ទំនងសាកសួរព័ត៌មានបន្ថែម៖</div>
+                        <div class="contact-number">
+                            <i class="fa-brands fa-telegram"></i> <span id="val-phone">010 233 911</span>
+                        </div>
+                    </div>
+                    <div class="qr-section">
+                        <div class="qr-text">
+                            <h4>ស្កេនដើម្បីឆាត</h4>
+                            <p>ស្កេន QR កូដ</p>
+                        </div>
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://t.me/JHENG6912" id="val-qr" class="actual-qr" alt="QR Code" crossorigin="anonymous">
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const contentData = {
+            'theme-pro': { name: 'បែបអាជីព / ក្រុមហ៊ុន', cls: 'b-pro', layout: 'layout-default', group: 'group-tech', badgeIcon: 'fa-briefcase', badgeTxt: 'ប្រព័ន្ធគ្រប់គ្រងជំនាន់ថ្មី ២០២៦', sub: 'បញ្ឈប់ការឈឺក្បាលរឿងបាត់ស្តុក និងគិតលុយខុស!<br>ប្រព័ន្ធគ្រប់គ្រងអាជីវកម្មដ៏វៃឆ្លាត ដំណើរការយ៉ាងរលូនទោះ <strong>គ្មានអ៊ីនធឺណិត (Offline Mode)</strong>', s1Icon: 'fa-qrcode', s1Txt: 'មុខងារ Digital Menu សម្រាប់ភ្ញៀវ', s2Icon: 'fa-laptop-code', s2Txt: 'មុខងារប្រព័ន្ធ POS សម្រាប់អ្នកលក់' },
+            'theme-cool': { name: 'បែបសង្ហា / Dark Mode', cls: 'b-cool', layout: 'layout-side-stats', group: 'group-tech', badgeIcon: 'fa-rocket', badgeTxt: 'បច្ចេកវិទ្យាចុងក្រោយ V.2026', sub: 'លឿន រហ័ស និងសុវត្ថិភាពទិន្នន័យខ្ពស់បំផុត!<br>គ្រប់គ្រងការលក់ និងស្តុកទំនិញរបស់អ្នកប្រកបដោយភាពជឿជាក់ <strong>ទោះដាច់អ៊ីនធឺណិតក៏ដោយ</strong>', s1Icon: 'fa-mobile-screen', s1Txt: 'Digital Menu ស្កេនបញ្ជាទិញផ្ទាល់', s2Icon: 'fa-microchip', s2Txt: 'ប្រព័ន្ធ POS ដំណើរការលឿនរហ័ស' },
+            'theme-med': { name: 'ឱសថស្ថាន & គ្លីនិក', cls: 'b-med', layout: 'layout-side-pricing', group: 'group-health', badgeIcon: 'fa-notes-medical', badgeTxt: 'សម្រាប់ឱសថស្ថាន និងគ្លីនិក', sub: 'លែងព្រួយបារម្ភរឿងថ្នាំផុតកំណត់ និងបាត់ស្តុកទៀតហើយ!<br>ប្រព័ន្ធមានមុខងារ <strong>Alert ថ្នាំជិតផុតកំណត់ (Expiry Date)</strong> យ៉ាងសុក្រឹតបំផុត។', s1Icon: 'fa-pills', s1Txt: 'មុខងារគ្រប់គ្រងស្តុក និងកាលបរិច្ឆេទថ្នាំ', s2Icon: 'fa-file-prescription', s2Txt: 'POS គិតប្រាក់សម្រាប់ឱសថការី' },
+            'theme-resto': { name: 'ភោជនីយដ្ឋាន & អាហារដ្ឋាន', cls: 'b-resto', layout: 'layout-stacked', group: 'group-food', badgeIcon: 'fa-utensils', badgeTxt: 'សម្រាប់ភោជនីយដ្ឋាន និងហាងកាហ្វេ', sub: 'ភ្ញៀវស្កេនកុម្ម៉ង់អាហារពីតុ វិក្កយបត្រលោតចូលកន្លែងគិតលុយ និងផ្ទះបាយភ្លាមៗ!<br>ជួយចំណេញពេលវេលា កាត់បន្ថយការប្រើបុគ្គលិកច្រើន និង <strong>គ្មានការកុម្ម៉ង់ខុស</strong>។', s1Icon: 'fa-bell-concierge', s1Txt: 'Digital Menu ស្កេនកុម្ម៉ង់តាមតុ', s2Icon: 'fa-receipt', s2Txt: 'POS បោះពុម្ពវិក្កយបត្រចូលផ្ទះបាយ' },
+            'theme-mart': { name: 'ម៉ាត / ផ្សារទំនើប', cls: 'b-mart', layout: 'layout-reverse', group: 'group-retail', badgeIcon: 'fa-cart-shopping', badgeTxt: 'សម្រាប់ម៉ាត និងផ្សារទំនើប (Retail)', sub: 'ស្កេនបាកូដលក់ចេញយ៉ាងរហ័ស ងាយស្រួលឆែកស្តុកទំនិញរាប់ពាន់មុខ!<br>ដឹងពីប្រាក់ចំណេញ-ខាត និងទំនិញលក់ដាច់ប្រចាំថ្ងៃ <strong>យ៉ាងច្បាស់លាស់</strong>។', s1Icon: 'fa-barcode', s1Txt: 'ប្រព័ន្ធស្កេនបាកូដរហ័សទាន់ចិត្ត', s2Icon: 'fa-boxes-stacked', s2Txt: 'គ្រប់គ្រងស្តុកទំនិញរាប់ពាន់មុខ' },
+            'theme-fashion': { name: 'ហាងសម្លៀកបំពាក់', cls: 'b-fashion', layout: 'layout-default', group: 'group-luxury', badgeIcon: 'fa-shirt', badgeTxt: 'សម្រាប់ហាងសម្លៀកបំពាក់ និងអនឡាញ', sub: 'គ្រប់គ្រងម៉ូដ ទំហំ (Size) និងពណ៌ (Color) យ៉ាងងាយស្រួល!<br>មានប្រព័ន្ធ <strong>Digital Catalog</strong> សម្រាប់ឱ្យភ្ញៀវឆែកមើលស្តុក និងម៉ូដខោអាវបានដោយខ្លួនឯង។', s1Icon: 'fa-images', s1Txt: 'កាតាឡុកទំនិញអនឡាញ (Catalog)', s2Icon: 'fa-tags', s2Txt: 'គ្រប់គ្រង Size និង ពណ៌ទំនិញ' },
+            'theme-flower': { name: 'ហាងផ្កា & កាដូ', cls: 'b-flower', layout: 'layout-default', group: 'group-luxury', badgeIcon: 'fa-seedling', badgeTxt: 'សម្រាប់ហាងផ្កា និងកាដូ (Florist)', sub: 'កត់ត្រាការកុម្ម៉ង់ (Pre-order) ថ្ងៃដឹកជញ្ជូន និងសារជូនពរយ៉ាងរៀបរយ!<br>ងាយស្រួលតាមដានការកក់ប្រាក់ និងការរៀបចំផ្កា <strong>មិនឱ្យរំលងថ្ងៃអតិថិជន</strong>។', s1Icon: 'fa-calendar-check', s1Txt: 'គ្រប់គ្រងការកុម្ម៉ង់ទុកមុន (Pre-order)', s2Icon: 'fa-truck-fast', s2Txt: 'តាមដានថ្ងៃ និងការដឹកជញ្ជូនផ្កា' },
+            'theme-broker': { name: 'ភ្នាក់ងារអចលនទ្រព្យ', cls: 'b-broker', layout: 'layout-default', group: 'group-tech', badgeIcon: 'fa-building', badgeTxt: 'សម្រាប់ភ្នាក់ងារអចលនទ្រព្យ (Broker)', sub: 'គ្រប់គ្រងទិន្នន័យអតិថិជន (CRM), កិច្ចសន្យា, និង Listing អចលនទ្រព្យ!<br>រក្សាទុកប្រវត្តិការលក់ និងកម្រៃជើងសារ (Commission) <strong>ប្រកបដោយសុវត្ថិភាព</strong>។', s1Icon: 'fa-users-gear', s1Txt: 'ប្រព័ន្ធគ្រប់គ្រងអតិថិជន (CRM)', s2Icon: 'fa-house-flag', s2Txt: 'គ្រប់គ្រង Listing អចលនទ្រព្យ' },
+            'theme-cafe': { name: 'ហាងកាហ្វេ & ភេសជ្ជៈ', cls: 'b-cafe', layout: 'layout-stacked', group: 'group-food', badgeIcon: 'fa-mug-hot', badgeTxt: 'សម្រាប់ហាងកាហ្វេ និងភេសជ្ជៈ', sub: 'កត់ត្រារូបមន្តភេសជ្ជៈ ការបន្ថែម (Toppings) និងទំហំ (Sizes) បានយ៉ាងងាយស្រួល!<br>គ្រប់គ្រងការកុម្ម៉ង់លឿនរហ័ស <strong>ជួយមិនឱ្យភ្ញៀវរង់ចាំយូរឡើយ</strong>។', s1Icon: 'fa-blender', s1Txt: 'គ្រប់គ្រងរូបមន្ត និងស្តុកវត្ថុធាតុដើម', s2Icon: 'fa-mug-saucer', s2Txt: 'ប្រព័ន្ធបញ្ជាទិញលឿនរហ័ស (Quick POS)' },
+            'theme-salon': { name: 'សាឡន & ស្ប៉ា', cls: 'b-salon', layout: 'layout-default', group: 'group-luxury', badgeIcon: 'fa-spa', badgeTxt: 'សម្រាប់សាឡន និងស្ប៉ា (Salon & Spa)', sub: 'រៀបចំការកក់ទុក (Booking) និងគណនាកម្រៃជើងសារបុគ្គលិក (Commission)!<br>រក្សាទុកប្រវត្តិសេវាកម្មអតិថិជន <strong>ដើម្បីផ្តល់សេវាកម្មកាន់តែប្រសើរ</strong>។', s1Icon: 'fa-calendar-days', s1Txt: 'ប្រព័ន្ធគ្រប់គ្រងការកក់ (Booking Calendar)', s2Icon: 'fa-hand-holding-dollar', s2Txt: 'គណនាកម្រៃជើងសារបុគ្គលិក' },
+            'theme-hardware': { name: 'គ្រឿងសំណង់ & ដែក', cls: 'b-hardware', layout: 'layout-reverse', group: 'group-industrial', badgeIcon: 'fa-hammer', badgeTxt: 'សម្រាប់ហាងលក់គ្រឿងសំណង់', sub: 'គ្រប់គ្រងឥណទានអតិថិជន (ជំពាក់ប្រាក់) និងស្តុកទំនិញខ្នាតធំ!<br>ចេញវិក្កយបត្រ សម្រង់តម្លៃ (Quotation) <strong>និងតាមដានការដឹកជញ្ជូនយ៉ាងសុក្រឹត</strong>។', s1Icon: 'fa-file-invoice-dollar', s1Txt: 'គ្រប់គ្រងបំណុល និងសម្រង់តម្លៃ', s2Icon: 'fa-truck-ramp-box', s2Txt: 'គ្រប់គ្រងឃ្លាំងទំនិញមានច្រើនទីតាំង' },
+            'theme-garage': { name: 'យានដ្ឋានជួសជុលឡាន', cls: 'b-garage', layout: 'layout-boxy', group: 'group-industrial', badgeIcon: 'fa-wrench', badgeTxt: 'សម្រាប់យានដ្ឋានជួសជុលរថយន្ត', sub: 'កត់ត្រាប្រវត្តិជួសជុលរថយន្ត តាមដានគ្រឿងបន្លាស់ និងថ្លៃពលកម្ម!<br>ផ្តល់ទំនុកចិត្តដល់អតិថិជន <strong>តាមរយៈការគ្រប់គ្រងប្រកបដោយស្តង់ដារ</strong>។', s1Icon: 'fa-clipboard-list', s1Txt: 'តាមដានប្រវត្តិជួសជុលរបស់រថយន្ត', s2Icon: 'fa-gears', s2Txt: 'គ្រប់គ្រងស្តុកគ្រឿងបន្លាស់រាប់ម៉ឺនមុខ' },
+            'theme-jewelry': { name: 'ហាងមាសពេជ្រ', cls: 'b-jewelry', layout: 'layout-side-stats', group: 'group-luxury', badgeIcon: 'fa-gem', badgeTxt: 'សម្រាប់ហាងមាសពេជ្រ (Jewelry)', sub: 'គ្រប់គ្រងការទិញចូល លក់ចេញ និងប្តូរម៉ូត ជាមួយប្រព័ន្ធស្កេនបាកូដដ៏សុក្រឹត!<br>អាប់ដេតហាងឆេងមាសប្រចាំថ្ងៃ <strong>និងរក្សាទិន្នន័យមានសុវត្ថិភាពខ្ពស់បំផុត</strong>។', s1Icon: 'fa-ring', s1Txt: 'ប្រព័ន្ធស្កេនបាកូដគ្រឿងអលង្ការ', s2Icon: 'fa-money-bill-trend-up', s2Txt: 'កំណត់ហាងឆេងមាសប្រចាំថ្ងៃ (Live Rate)' },
+            'theme-mobile': { name: 'ហាងលក់ទូរស័ព្ទ', cls: 'b-mobile', layout: 'layout-default', group: 'group-tech', badgeIcon: 'fa-mobile-button', badgeTxt: 'សម្រាប់ហាងលក់ទូរស័ព្ទដៃ', sub: 'គ្រប់គ្រងស៊េរីទូរស័ព្ទ លេខកូដម៉ាស៊ីន (IMEI) និងគ្រឿងបន្លាស់បានយ៉ាងច្បាស់លាស់!<br>ងាយស្រួលតាមដានការលក់បង់រំលស់ និង <strong>ការធានា (Warranty) ជូនអតិថិជន</strong>។', s1Icon: 'fa-barcode', s1Txt: 'ស្កេននិងតាមដានលេខ IMEI ម៉ាស៊ីន', s2Icon: 'fa-shield-halved', s2Txt: 'គ្រប់គ្រងការធានា (Warranty Tracker)' },
+            'theme-bakery': { name: 'ហាងនំប៉័ង / នំខេក', cls: 'b-bakery', layout: 'layout-stacked', group: 'group-food', badgeIcon: 'fa-cake-candles', badgeTxt: 'សម្រាប់ហាងនំប៉័ង និងនំខេក (Bakery)', sub: 'គ្រប់គ្រងរូបមន្តនំ វត្ថុធាតុដើម និងថ្ងៃថតនំផុតកំណត់ (Expiry) យ៉ាងសុក្រឹត!<br>កត់ត្រាការកុម្ម៉ង់នំខេកតាមថ្ងៃបុណ្យ <strong>ជៀសវាងការភ្លេចថ្ងៃភ្ញៀវមកយក</strong>។', s1Icon: 'fa-calendar-day', s1Txt: 'កត់ត្រា Pre-order នំខេកខួបកំណើត', s2Icon: 'fa-bread-slice', s2Txt: 'គ្រប់គ្រងស្តុកនំ និងវត្ថុធាតុដើម' },
+            'theme-cosmetic': { name: 'គ្រឿងសម្អាង & ថែរក្សាស្បែក', cls: 'b-cosmetic', layout: 'layout-reverse', group: 'group-health', badgeIcon: 'fa-spray-can-sparkles', badgeTxt: 'សម្រាប់ហាងលក់គ្រឿងសម្អាង', sub: 'ចាត់ចែងទំនិញរាប់ពាន់មុខតាមប្រេន (Brand) និងកាលបរិច្ឆេទផុតកំណត់ (Expiry)!<br>មានប្រព័ន្ធ <strong>Digital Catalog</strong> សម្រាប់ឱ្យភ្ញៀវឆែកមើលផលិតផលលើទូរស័ព្ទ។', s1Icon: 'fa-images', s1Txt: 'កាតាឡុកគ្រឿងសម្អាង (Online Catalog)', s2Icon: 'fa-clock-rotate-left', s2Txt: 'មុខងារ Alert ផលិតផលជិតផុតកំណត់' },
+            'theme-gym': { name: 'ក្លឹបហាត់ប្រាណ (Gym)', cls: 'b-gym', layout: 'layout-side-stats', group: 'group-service', badgeIcon: 'fa-dumbbell', badgeTxt: 'សម្រាប់ក្លឹបហាត់ប្រាណ (Gym & Fitness)', sub: 'គ្រប់គ្រងសមាជិក (Membership) កាលបរិច្ឆេទផុតកំណត់ និងការចុះឈ្មោះ!<br>ងាយស្រួលឆែកមើលអ្នកចូលហាត់ <strong>និងលក់ភេសជ្ជៈបន្ថែមក្នុងក្លឹបបានភ្លាមៗ</strong>។', s1Icon: 'fa-id-card', s1Txt: 'ប្រព័ន្ធគ្រប់គ្រងសមាជិក (Membership)', s2Icon: 'fa-bottle-water', s2Txt: 'POS លក់ភេសជ្ជៈ និងអាហារបំប៉ន' },
+            'theme-book': { name: 'បណ្ណាគារ / សៀវភៅ', cls: 'b-book', layout: 'layout-default', group: 'group-retail', badgeIcon: 'fa-book-open', badgeTxt: 'សម្រាប់បណ្ណាគារ និងសម្ភារៈសិក្សា', sub: 'ស្កេនបាកូដលក់សៀវភៅ និងសម្ភារៈសិក្សារាប់ម៉ឺនមុខបានយ៉ាងរហ័ស!<br>ងាយស្រួលបែងចែកប្រភេទសៀវភៅ និង <strong>ដឹងពីទំនិញណាដែលលក់ដាច់ជាងគេ</strong>។', s1Icon: 'fa-barcode', s1Txt: 'ស្កេនបាកូដសៀវភៅ (ISBN) លឿនរហ័ស', s2Icon: 'fa-layer-group', s2Txt: 'គ្រប់គ្រងទំនិញច្រើនប្រភេទ (Categories)' },
+            'theme-autopart': { name: 'គ្រឿងបន្លាស់ឡាន', cls: 'b-autopart', layout: 'layout-reverse', group: 'group-industrial', badgeIcon: 'fa-car-battery', badgeTxt: 'សម្រាប់ហាងលក់គ្រឿងបន្លាស់រថយន្ត', sub: 'ស្វែងរកគ្រឿងបន្លាស់តាមកូដ (Part Number) និងម៉ូដែលរថយន្តបានត្រឹមត្រូវ!<br>គ្រប់គ្រងការនាំចូល បោះដុំ និងលក់រាយ <strong>ដឹងប្រាក់ចំណេញច្បាស់លាស់</strong>។', s1Icon: 'fa-magnifying-glass', s1Txt: 'ស្វែងរកទំនិញតាម Part Number', s2Icon: 'fa-boxes-packing', s2Txt: 'គ្រប់គ្រងតម្លៃលក់ដុំ និងលក់រាយ' },
+            'theme-furniture': { name: 'គ្រឿងសង្ហារិម', cls: 'b-furniture', layout: 'layout-reverse', group: 'group-retail', badgeIcon: 'fa-couch', badgeTxt: 'សម្រាប់ហាងលក់គ្រឿងសង្ហារិម', sub: 'តាមដានស្តុកទំនិញខ្នាតធំ ការដំឡើង និងសេវាកម្មដឹកជញ្ជូនដល់ផ្ទះអតិថិជន!<br>ចេញវិក្កយបត្រ សម្រង់តម្លៃ (Quote) <strong>និងកត់ត្រាការកក់ប្រាក់ (Deposit)</strong>។', s1Icon: 'fa-truck-fast', s1Txt: 'តាមដានការដឹកជញ្ជូន និងដំឡើង', s2Icon: 'fa-file-invoice', s2Txt: 'ចេញសម្រង់តម្លៃ និងវិក្កយបត្រកក់ប្រាក់' },
+            'theme-pet': { name: 'ហាងចំណីសត្វ (Pet Shop)', cls: 'b-pet', layout: 'layout-default', group: 'group-health', badgeIcon: 'fa-paw', badgeTxt: 'សម្រាប់ហាងចំណីសត្វ និងគ្លីនិក', sub: 'លក់ចំណីសត្វ សម្ភារៈ និងកត់ត្រាប្រវត្តិព្យាបាលសត្វចិញ្ចឹមក្នុងប្រព័ន្ធតែមួយ!<br>មានមុខងាររំលឹកថ្ងៃចាក់វ៉ាក់សាំង <strong>និងគ្រប់គ្រងសេវាកម្មកាត់សក់សត្វ (Grooming)</strong>។', s1Icon: 'fa-notes-medical', s1Txt: 'កត់ត្រាប្រវត្តិព្យាបាល និងវ៉ាក់សាំង', s2Icon: 'fa-bone', s2Txt: 'POS លក់ចំណីសត្វ និងសម្ភារៈប្រើប្រាស់' },
+            'theme-optic': { name: 'ហាងលក់វ៉ែនតា (Optic)', cls: 'b-optic', layout: 'layout-side-pricing', group: 'group-health', badgeIcon: 'fa-glasses', badgeTxt: 'សម្រាប់ហាងលក់វ៉ែនតា (Optic Shop)', sub: 'រក្សាទុកប្រវត្តិវាស់ភ្នែក (Eye Test) និងការកុម្ម៉ង់កាត់ឡែន (Lens) របស់អតិថិជន!<br>តាមដានការយកវ៉ែនតា និង <strong>គ្រប់គ្រងស្តុកដងវ៉ែនតារាប់រយម៉ូដ</strong>។', s1Icon: 'fa-eye', s1Txt: 'រក្សាទុកទិន្នន័យវាស់ភ្នែកអតិថិជន', s2Icon: 'fa-glasses', s2Txt: 'គ្រប់គ្រងការកុម្ម៉ង់ និងស្តុកដងវ៉ែនតា' },
+            'theme-tailor': { name: 'ហាងកាត់ដេរ (Tailor)', cls: 'b-tailor', layout: 'layout-boxy', group: 'group-luxury', badgeIcon: 'fa-scissors', badgeTxt: 'សម្រាប់ហាងកាត់ដេរ និងប៊ូទិក', sub: 'កត់ត្រារង្វាស់រាងកាយអតិថិជន ម៉ូដខោអាវ និងថ្ងៃត្រូវយកអោយបានច្បាស់លាស់!<br>គណនាថ្លៃឈ្នួល និង <strong>តាមដានដំណាក់កាលនៃការកាត់ដេរ</strong>។', s1Icon: 'fa-ruler-combined', s1Txt: 'រក្សាទុករង្វាស់អតិថិជនម្នាក់ៗ', s2Icon: 'fa-calendar-check', s2Txt: 'កំណត់ថ្ងៃសាកខោអាវ និងថ្ងៃយក' },
+            'theme-carwash': { name: 'កន្លែងលាងឡាន', cls: 'b-carwash', layout: 'layout-boxy', group: 'group-industrial', badgeIcon: 'fa-shower', badgeTxt: 'សម្រាប់កន្លែងលាងរថយន្ត (Car Wash)', sub: 'គ្រប់គ្រងកញ្ចប់សេវាកម្មលាងឡាន ប៉ូលា និងគណនាកម្រៃជើងសារជាង!<br>ចេញវិក្កយបត្ររហ័ស <strong>និងធ្វើកាតសមាជិក (Member) អោយអតិថិជនប្រចាំ</strong>។', s1Icon: 'fa-id-card-clip', s1Txt: 'គ្រប់គ្រងកាតសមាជិកលាងរថយន្ត', s2Icon: 'fa-hand-holding-dollar', s2Txt: 'គណនាកម្រៃជើងសារ (Commission)' },
+            'theme-laundry': { name: 'សេវាកម្មបោកអ៊ុត', cls: 'b-laundry', layout: 'layout-boxy', group: 'group-service', badgeIcon: 'fa-jug-detergent', badgeTxt: 'សម្រាប់សេវាកម្មបោកអ៊ុត (Laundry)', sub: 'គិតលុយតាមគីឡូ ឬតាមខោអាវ និងកំណត់ថ្ងៃអតិថិជនមកយកបានយ៉ាងងាយ!<br>មានប្រព័ន្ធ <strong>បោះពុម្ពស្លាក (Tag) បិទលើខោអាវកុំអោយច្រឡំគ្នា</strong>។', s1Icon: 'fa-weight-scale', s1Txt: 'គិតលុយតាមគីឡូក្រាម និងកញ្ចប់', s2Icon: 'fa-tag', s2Txt: 'ប្រព័ន្ធបោះពុម្ពស្លាកចំណាំខោអាវ' },
+            'theme-toy': { name: 'ប្រដាប់ក្មេងលេង', cls: 'b-toy', layout: 'layout-boxy', group: 'group-retail', badgeIcon: 'fa-gamepad', badgeTxt: 'សម្រាប់ហាងលក់ប្រដាប់ក្មេងលេង', sub: 'ចាត់ចែងស្តុកតុក្កតា និងឡានបញ្ជារាប់ពាន់ប្រភេទយ៉ាងងាយស្រួល!<br>មានប្រព័ន្ធស្កេនបាកូដរហ័ស <strong>និងអាចបង្កើតប្រូម៉ូសិនបញ្ចុះតម្លៃសម្រាប់ក្មេងៗ</strong>។', s1Icon: 'fa-tags', s1Txt: 'បង្កើតប្រូម៉ូសិន និងបញ្ចុះតម្លៃងាយៗ', s2Icon: 'fa-barcode', s2Txt: 'ស្កេនបាកូដលក់ទំនិញរហ័សទាន់ចិត្ត' },
+            'theme-shoe': { name: 'ហាងស្បែកជើង', cls: 'b-shoe', layout: 'layout-default', group: 'group-retail', badgeIcon: 'fa-shoe-prints', badgeTxt: 'សម្រាប់ហាងលក់ស្បែកជើង', sub: 'គ្រប់គ្រងទំហំ (Size) ម៉ូដ និងពណ៌ស្បែកជើងបានយ៉ាងមានសណ្តាប់ធ្នាប់!<br>ដឹងពីចំនួនស្តុកពិតប្រាកដនៅក្នុងឃ្លាំង <strong>ជៀសវាងការខកខានលក់ឱ្យភ្ញៀវ</strong>។', s1Icon: 'fa-shoe-prints', s1Txt: 'ចាត់ចែងទំនិញតាម ទំហំ និង ពណ៌', s2Icon: 'fa-boxes-stacked', s2Txt: 'ឆែកមើលចំនួនស្តុកក្នុងឃ្លាំងភ្លាមៗ' },
+            'theme-watch': { name: 'ហាងនាឡិកា (Watch)', cls: 'b-watch', layout: 'layout-default', group: 'group-luxury', badgeIcon: 'fa-clock', badgeTxt: 'សម្រាប់ហាងលក់នាឡិកា', sub: 'រក្សាទុកព័ត៌មាននាឡិកា ស៊េរី និងការធានា (Warranty) ប្រកបដោយសុវត្ថិភាព!<br>តាមដានសេវាកម្មជួសជុល ប្តូរថ្ម <strong>និងកត់ត្រាការទិញ-លក់ច្បាស់លាស់</strong>។', s1Icon: 'fa-shield-halved', s1Txt: 'ចេញប័ណ្ណធានា និងតាមដាន (Warranty)', s2Icon: 'fa-screwdriver-wrench', s2Txt: 'កត់ត្រាសេវាកម្មជួសជុល និងប្តូរថ្ម' },
+            'theme-music': { name: 'ឧបករណ៍តន្ត្រី', cls: 'b-music', layout: 'layout-boxy', group: 'group-service', badgeIcon: 'fa-guitar', badgeTxt: 'សម្រាប់ហាងលក់ឧបករណ៍តន្ត្រី', sub: 'គ្រប់គ្រងហ្គីតា អ័ក ព្យាណូ និងគ្រឿងបន្លាស់ឧបករណ៍តន្ត្រីគ្រប់ប្រភេទ!<br>ចេញវិក្កយបត្រ រៀបចំការដឹកជញ្ជូន <strong>និងតាមដានការលក់បង់រំលស់</strong>។', s1Icon: 'fa-file-invoice', s1Txt: 'ចេញវិក្កយបត្រ និងការធានាឧបករណ៍', s2Icon: 'fa-boxes-packing', s2Txt: 'គ្រប់គ្រងស្តុកគ្រឿងបន្លាស់តន្ត្រី' },
+            'theme-sport': { name: 'សម្ភារៈកីឡា (Sport)', cls: 'b-sport', layout: 'layout-side-stats', group: 'group-retail', badgeIcon: 'fa-volleyball', badgeTxt: 'សម្រាប់ហាងសម្ភារៈកីឡា', sub: 'ចាត់ចែងឯកសណ្ឋានកីឡា ស្បែកជើង និងឧបករណ៍កីឡាតាមប្រភេទ!<br>កត់ត្រាការកុម្ម៉ង់បោះពុម្ពឈ្មោះលើអាវ <strong>និងគ្រប់គ្រងការលក់ដុំអោយក្រុមបាល់ទាត់</strong>។', s1Icon: 'fa-shirt', s1Txt: 'តាមដានការកុម្ម៉ង់បោះពុម្ពឈ្មោះ/លេខ', s2Icon: 'fa-users', s2Txt: 'កំណត់តម្លៃលក់ដុំសម្រាប់ក្រុម (Team)' },
+            'theme-dental': { name: 'គ្លីនិកធ្មេញ (Dental)', cls: 'b-dental', layout: 'layout-side-pricing', group: 'group-health', badgeIcon: 'fa-tooth', badgeTxt: 'សម្រាប់គ្លីនិកធ្មេញ (Dental Clinic)', sub: 'គ្រប់គ្រងការកក់ម៉ោង (Appointment) និងប្រវត្តិព្យាបាលធ្មេញរបស់អតិថិជន!<br>តាមដានការបង់ប្រាក់ជាដំណាក់កាល <strong>និងចំណាយលើសម្ភារៈពេទ្យ</strong>។', s1Icon: 'fa-calendar-check', s1Txt: 'ប្រព័ន្ធគ្រប់គ្រងការកក់ម៉ោងព្យាបាល', s2Icon: 'fa-file-medical', s2Txt: 'កត់ត្រាប្រវត្តិ និងការបង់ប្រាក់អ្នកជំងឺ' },
+            'theme-agri': { name: 'ជី & កសិកម្ម (Agri)', cls: 'b-agri', layout: 'layout-side-pricing', group: 'group-retail', badgeIcon: 'fa-leaf', badgeTxt: 'សម្រាប់ហាងលក់ជី និងកសិកម្ម', sub: 'គ្រប់គ្រងស្តុកជី ថ្នាំកសិកម្ម និងគ្រាប់ពូជខ្នាតធំដោយមានការបែងចែកច្បាស់លាស់!<br>ងាយស្រួលគិតលុយ និង <strong>គ្រប់គ្រងការជំពាក់ប្រាក់របស់កសិករ</strong>។', s1Icon: 'fa-sack-dollar', s1Txt: 'គ្រប់គ្រងបញ្ជីបំណុល និងការសងប្រាក់', s2Icon: 'fa-warehouse', s2Txt: 'គ្រប់គ្រងឃ្លាំង និងស្តុកទំនិញខ្នាតធំ' },
+            'theme-print': { name: 'រោងពុម្ព / កូពី', cls: 'b-print', layout: 'layout-reverse', group: 'group-service', badgeIcon: 'fa-print', badgeTxt: 'សម្រាប់រោងពុម្ព និងកូពី (Print Shop)', sub: 'គណនាតម្លៃបោះពុម្ពតាមទំហំ ក្រដាស និងចំនួន បានយ៉ាងរហ័ស!<br>កត់ត្រាការកុម្ម៉ង់ទុកមុន និង <strong>គ្រប់គ្រងចំណាយលើទឹកថ្នាំនិងក្រដាស</strong>។', s1Icon: 'fa-calculator', s1Txt: 'មុខងារគណនាតម្លៃបោះពុម្ពស្វ័យប្រវត្តិ', s2Icon: 'fa-clipboard-check', s2Txt: 'តាមដានការកុម្ម៉ង់ (Order Tracking)' },
+            'theme-travel': { name: 'ទីភ្នាក់ងារទេសចរណ៍', cls: 'b-travel', layout: 'layout-boxy', group: 'group-service', badgeIcon: 'fa-plane', badgeTxt: 'សម្រាប់ទីភ្នាក់ងារទេសចរណ៍', sub: 'គ្រប់គ្រងការកក់សំបុត្រយន្តហោះ ឡានក្រុង និងកញ្ចប់ទស្សនកិច្ច (Tour)!<br>កត់ត្រាប្រាក់ចំណូល/ចំណាយ <strong>និងប្រវត្តិធ្វើដំណើររបស់អតិថិជន</strong>។', s1Icon: 'fa-ticket', s1Txt: 'ប្រព័ន្ធគ្រប់គ្រងការកក់សំបុត្រ និង Tour', s2Icon: 'fa-address-book', s2Txt: 'រក្សាទុកទិន្នន័យ និងប្រវត្តិអតិថិជន' },
+            'theme-wedding': { name: 'សម្អាងការ & រៀបចំពិធី', cls: 'b-wedding', layout: 'layout-boxy', group: 'group-luxury', badgeIcon: 'fa-rings-wedding', badgeTxt: 'សម្រាប់សម្អាងការ និងរៀបចំពិធី', sub: 'រៀបចំកញ្ចប់សេវាកម្មសម្អាង កត់ត្រាការកក់ប្រាក់ និងកាលបរិច្ឆេទកម្មវិធី!<br>តាមដានការជួលរ៉ូប និង <strong>ធានាថាមិនមានការជាន់ថ្ងៃកម្មវិធីគ្នាឡើយ</strong>។', s1Icon: 'fa-calendar-days', s1Txt: 'ប្រតិទិនរៀបចំកម្មវិធី (Event Calendar)', s2Icon: 'fa-file-contract', s2Txt: 'ចេញកិច្ចសន្យា និងតាមដានការកក់ប្រាក់' },
+            'theme-wine': { name: 'ហាងលក់ស្រា (Wine)', cls: 'b-wine', layout: 'layout-stacked', group: 'group-food', badgeIcon: 'fa-wine-glass', badgeTxt: 'សម្រាប់ហាងលក់ស្រា (Liquor/Wine)', sub: 'គ្រប់គ្រងស្រាបៀរ ស្រា តាមឆ្នាំផលិត (Vintage) និងប្រទេសដើមយ៉ាងលម្អិត!<br>ស្កេនបាកូដលក់ចេញរហ័ស <strong>និងមានមុខងារបញ្ចុះតម្លៃសម្រាប់ការទិញដុំ</strong>។', s1Icon: 'fa-wine-bottle', s1Txt: 'ចាត់ចែងទំនិញតាម ឆ្នាំផលិត និង ប្រទេស', s2Icon: 'fa-tags', s2Txt: 'កំណត់តម្លៃលក់រាយ និងលក់ដុំស្វ័យប្រវត្តិ' },
+            'theme-souvenir': { name: 'វត្ថុអនុស្សាវរីយ៍', cls: 'b-souvenir', layout: 'layout-boxy', group: 'group-retail', badgeIcon: 'fa-gift', badgeTxt: 'សម្រាប់ហាងលក់វត្ថុអនុស្សាវរីយ៍', sub: 'ចាត់ចែងទំនិញកាដូ វត្ថុសិល្បៈ និងកត់ត្រាការខ្ចប់កាដូ!<br>ងាយស្រួលលក់ជូនភ្ញៀវទេសចរ <strong>និងត្រួតពិនិត្យស្តុកទំនិញមិនឱ្យបាត់បង់</strong>។', s1Icon: 'fa-barcode', s1Txt: 'ស្កេនបាកូដលក់ទំនិញចម្រុះរហ័ស', s2Icon: 'fa-box-open', s2Txt: 'គ្រប់គ្រងសេវាកម្មខ្ចប់កាដូបន្ថែម' },
+            'theme-motor': { name: 'ហាងលក់ម៉ូតូ', cls: 'b-motor', layout: 'layout-side-stats', group: 'group-industrial', badgeIcon: 'fa-motorcycle', badgeTxt: 'សម្រាប់ហាងលក់ម៉ូតូ និងកង់', sub: 'គ្រប់គ្រងការទិញ-លក់ម៉ូតូ លេខតួ លេខម៉ាស៊ីន និងការធ្វើស្លាកលេខ!<br>កត់ត្រាការបង់រំលស់ <strong>និងរក្សាទុកប្រវត្តិសេវាកម្មជួសជុលម៉ូតូ</strong>។', s1Icon: 'fa-id-card', s1Txt: 'តាមដានលេខតួម៉ាស៊ីន និងការធ្វើស្លាកលេខ', s2Icon: 'fa-hand-holding-dollar', s2Txt: 'គ្រប់គ្រងបញ្ជីបង់រំលស់អតិថិជន' },
+            'theme-pc': { name: 'ហាងកុំព្យូទ័រ / IT', cls: 'b-pc', layout: 'layout-default', group: 'group-tech', badgeIcon: 'fa-laptop', badgeTxt: 'សម្រាប់ហាងកុំព្យូទ័រ (IT Shop)', sub: 'គ្រប់គ្រងស្តុកកុំព្យូទ័រ គ្រឿងបន្លាស់ (RAM, SSD) និងការធានា (Warranty)!<br>កត់ត្រាការបញ្ជាទិញ (Pre-order) <strong>និងទទួលសេវាកម្មជួសជុលម៉ាស៊ីន</strong>។', s1Icon: 'fa-screwdriver-wrench', s1Txt: 'កត់ត្រាសេវាកម្មជួសជុល និងតម្លើង PC', s2Icon: 'fa-shield', s2Txt: 'តាមដានការធានា (Warranty Tracker)' },
+            'theme-boba': { name: 'តែគជ់ / ភេសជ្ជៈ', cls: 'b-boba', layout: 'layout-stacked', group: 'group-food', badgeIcon: 'fa-glass-water', badgeTxt: 'សម្រាប់ហាងតែគជ់ និងទឹកក្រឡុក', sub: 'កុម្ម៉ង់រហ័សដោយជ្រើសរើស កម្រិតស្ករ ទឹកកក និង Topping ផ្សេងៗបានងាយ!<br>មានប្រព័ន្ធ <strong>បោះពុម្ព Sticker បិទលើកែវ (Cup Label) យ៉ាងត្រឹមត្រូវ</strong>។', s1Icon: 'fa-tags', s1Txt: 'ប្រព័ន្ធព្រីន Sticker បិទលើកែវ (Label)', s2Icon: 'fa-blender', s2Txt: 'ជ្រើសរើស Topping និងកម្រិតស្កររហ័ស' },
+            'theme-delivery': { name: 'សេវាដឹកជញ្ជូន (Delivery)', cls: 'b-delivery', layout: 'layout-side-stats', group: 'group-industrial', badgeIcon: 'fa-truck-fast', badgeTxt: 'សម្រាប់សេវាកម្មដឹកជញ្ជូន (Delivery)', sub: 'កត់ត្រាអ្នកផ្ញើ អ្នកទទួល និងគណនាតម្លៃសេវាតាមគីឡូ ឬចម្ងាយផ្លូវ!<br>ចេញវិក្កយបត្រ (Waybill) <strong>និងតាមដានស្ថានភាពទំនិញបានច្បាស់លាស់</strong>។', s1Icon: 'fa-map-location-dot', s1Txt: 'តាមដានទិសដៅ និងស្ថានភាពដឹកជញ្ជូន', s2Icon: 'fa-receipt', s2Txt: 'បោះពុម្ពវិក្កយបត្រផ្ញើឥវ៉ាន់ (Waybill)' },
+            'theme-hotel': { name: 'សណ្ឋាគារ & ផ្ទះសំណាក់', cls: 'b-hotel', layout: 'layout-boxy', group: 'group-luxury', badgeIcon: 'fa-bed', badgeTxt: 'សម្រាប់សណ្ឋាគារ និងផ្ទះសំណាក់', sub: 'គ្រប់គ្រងការកក់បន្ទប់ (Booking) ឆែកមើលបន្ទប់ទំនេរ និងម៉ោងចេញ-ចូល!<br>បូកបញ្ចូលការចំណាយលើម្ហូបអាហារ <strong>ទៅក្នុងវិក្កយបត្របន្ទប់បានតែម្តង</strong>។', s1Icon: 'fa-bed', s1Txt: 'ប្រព័ន្ធគ្រប់គ្រងការកក់បន្ទប់ (Room Booking)', s2Icon: 'fa-file-invoice-dollar', s2Txt: 'គិតលុយរួមគ្នាជាមួយសេវាកម្មផ្សេងៗ' },
+            'theme-wholesale': { name: 'ដេប៉ូចែកចាយបោះដុំ', cls: 'b-wholesale', layout: 'layout-reverse', group: 'group-retail', badgeIcon: 'fa-warehouse', badgeTxt: 'សម្រាប់ដេប៉ូចែកចាយ និងបោះដុំ', sub: 'គ្រប់គ្រងការលក់បោះដុំ តម្លៃតាមចំនួនទិញ និងប្រព័ន្ធជំពាក់ប្រាក់!<br>ងាយស្រួលគ្រប់គ្រងឃ្លាំងច្រើនទីតាំង <strong>និងតាមដានរថយន្តដឹកជញ្ជូនទំនិញ</strong>។', s1Icon: 'fa-boxes-packing', s1Txt: 'កំណត់តម្លៃលក់ដុំតាមកម្រិត (Tiers)', s2Icon: 'fa-truck-moving', s2Txt: 'ចេញវិក្កយបត្រធំ និងតាមដានការដឹកជញ្ជូន' },
+            'theme-ktv': { name: 'ខារ៉ាអូខេ & ក្លឹប', cls: 'b-ktv', layout: 'layout-side-stats', group: 'group-food', badgeIcon: 'fa-microphone-lines', badgeTxt: 'សម្រាប់ខារ៉ាអូខេ និងក្លឹប (KTV)', sub: 'គ្រប់គ្រងបន្ទប់ VIP គិតលុយតាមម៉ោង និងការកុម្ម៉ង់ភេសជ្ជៈយ៉ាងរហ័ស!<br>កាត់បន្ថយការបាត់បង់ស្តុកស្រាបៀរ <strong>និងមានប្រព័ន្ធបូកបញ្ជីច្បាស់លាស់</strong>។', s1Icon: 'fa-stopwatch', s1Txt: 'ប្រព័ន្ធគិតលុយតាមម៉ោងបន្ទប់ស្វ័យប្រវត្តិ', s2Icon: 'fa-martini-glass', s2Txt: 'គ្រប់គ្រងស្តុកភេសជ្ជៈ និងការកុម្ម៉ង់រហ័ស' },
+            'theme-school': { name: 'សាលារៀន & វគ្គសិក្សា', cls: 'b-school', layout: 'layout-default', group: 'group-tech', badgeIcon: 'fa-graduation-cap', badgeTxt: 'សម្រាប់សាលារៀន និងវគ្គសិក្សា', sub: 'គ្រប់គ្រងទិន្នន័យសិស្ស ចេញវិក្កយបត្របង់ថ្លៃសិក្សា និងតាមដានការជំពាក់ប្រាក់!<br>ងាយស្រួលឆែកមើលអវត្តមាន <strong>និងបោះពុម្ពកាតសិស្ស (ID Card)</strong>។', s1Icon: 'fa-user-graduate', s1Txt: 'គ្រប់គ្រងប្រវត្តិសិស្ស និងការចុះឈ្មោះ', s2Icon: 'fa-file-invoice', s2Txt: 'ចេញវិក្កយបត្របង់ប្រាក់ និងរំលឹកការជំពាក់' },
+            'theme-barber': { name: 'ហាងកាត់សក់បុរស', cls: 'b-barber', layout: 'layout-boxy', group: 'group-service', badgeIcon: 'fa-scissors', badgeTxt: 'សម្រាប់ហាងកាត់សក់បុរស (Barber)', sub: 'រៀបចំការកក់ម៉ោង (Booking) និងគណនាកម្រៃជើងសារ (Commission) របស់ជាង!<br>រក្សាប្រវត្តិម៉ូដសក់ភ្ញៀវ <strong>និងលក់ផលិតផលថែរក្សាសក់បន្ថែម</strong>។', s1Icon: 'fa-calendar-check', s1Txt: 'ប្រព័ន្ធកក់ម៉ោង និងជ្រើសរើសជាង', s2Icon: 'fa-hand-holding-dollar', s2Txt: 'គណនាភាគរយ (Commission) សម្រាប់ជាង' },
+            'theme-clinic': { name: 'គ្លីនិកកែសម្ផស្ស', cls: 'b-clinic', layout: 'layout-default', group: 'group-health', badgeIcon: 'fa-wand-magic-sparkles', badgeTxt: 'សម្រាប់គ្លីនិកកែសម្ផស្ស (Beauty Clinic)', sub: 'រក្សាទុកប្រវត្តិព្យាបាល កញ្ចប់សេវាកម្ម (Course) និងការណាត់ជួបគ្រូពេទ្យ!<br>ផ្តល់ទំនុកចិត្តដល់អតិថិជន <strong>តាមរយៈការគ្រប់គ្រងប្រកបដោយស្តង់ដារ</strong>។', s1Icon: 'fa-notes-medical', s1Txt: 'កត់ត្រាប្រវត្តិព្យាបាល និងរូបភាពមុន-ក្រោយ', s2Icon: 'fa-box-open', s2Txt: 'គ្រប់គ្រងកញ្ចប់សេវាកម្ម (Package/Course)' },
+            'theme-pawn': { name: 'ហាងបញ្ចាំ & កម្ចីប្រាក់', cls: 'b-pawn', layout: 'layout-side-pricing', group: 'group-industrial', badgeIcon: 'fa-money-bill-transfer', badgeTxt: 'សម្រាប់ហាងបញ្ចាំ និងកម្ចីប្រាក់', sub: 'គណនាការប្រាក់ស្វ័យប្រវត្តិ និងមានមុខងារ (Alert) រំលឹកថ្ងៃដល់កំណត់បង់ប្រាក់!<br>រក្សាទុកឯកសារបញ្ចាំ និង <strong>ប្រវត្តិអតិថិជនមានសុវត្ថិភាពខ្ពស់</strong>។', s1Icon: 'fa-calculator', s1Txt: 'មុខងារគណនាការប្រាក់ស្វ័យប្រវត្តិ', s2Icon: 'fa-bell', s2Txt: 'ប្រព័ន្ធលោតរំលឹកថ្ងៃដល់កំណត់បង់ប្រាក់' },
+            'theme-gas': { name: 'ស្ថានីយប្រេងឥន្ធនៈ', cls: 'b-gas', layout: 'layout-side-stats', group: 'group-industrial', badgeIcon: 'fa-gas-pump', badgeTxt: 'សម្រាប់ស្ថានីយប្រេងឥន្ធនៈ (Gas Station)', sub: 'តាមដានចំណូលប្រចាំថ្ងៃតាមក្បាលបូម និងគ្រប់គ្រងស្តុកប្រេងក្នុងស៊ីទែន (Tank)!<br>ដឹងពីចំនួនលីត្រលក់ចេញ <strong>និងការចំណាយបុគ្គលិកយ៉ាងជាក់លាក់</strong>។', s1Icon: 'fa-gas-pump', s1Txt: 'កត់ត្រាចំណូល និងចំនួនលីត្រតាមក្បាលបូម', s2Icon: 'fa-truck-droplet', s2Txt: 'គ្រប់គ្រងស្តុកប្រេងក្នុងស៊ីទែនធំ (Tank)' },
+            'theme-studio': { name: 'ស្ទូឌីយោថតរូប (Studio)', cls: 'b-studio', layout: 'layout-default', group: 'group-tech', badgeIcon: 'fa-camera', badgeTxt: 'សម្រាប់ស្ទូឌីយោថតរូប (Photo Studio)', sub: 'រៀបចំកាលវិភាគថតរូប កត់ត្រាការកក់ប្រាក់ និងគ្រប់គ្រងការជួលសម្លៀកបំពាក់!<br>តាមដានដំណាក់កាលកាត់តរូប <strong>និងថ្ងៃអតិថិជនត្រូវមកយក</strong>។', s1Icon: 'fa-calendar-days', s1Txt: 'កាលវិភាគថត និងការកក់ប្រាក់ (Deposit)', s2Icon: 'fa-shirt', s2Txt: 'គ្រប់គ្រងការជួលសម្លៀកបំពាក់ និងសម្ភារៈ' },
+            'theme-build': { name: 'ក្រុមហ៊ុនសាងសង់ & ដេប៉ូ', cls: 'b-build', layout: 'layout-boxy', group: 'group-industrial', badgeIcon: 'fa-trowel-bricks', badgeTxt: 'សម្រាប់ក្រុមហ៊ុនសាងសង់ (Construction)', sub: 'គ្រប់គ្រងគម្រោងសាងសង់ វាយតម្លៃចំណាយ និងស្តុកសម្ភារៈសំណង់ខ្នាតធំ!<br>គណនាប្រាក់ខែកម្មករ <strong>និងតាមដានវឌ្ឍនភាពគម្រោងបានយ៉ាងច្បាស់</strong>។', s1Icon: 'fa-helmet-safety', s1Txt: 'គ្រប់គ្រងការដ្ឋាន និងឃ្លាំងច្រើនទីតាំង', s2Icon: 'fa-chart-pie', s2Txt: 'តាមដានចំណាយ និងវឌ្ឍនភាពគម្រោង' },
+            'theme-condo': { name: 'គ្រប់គ្រងអគារ & ខុនដូ', cls: 'b-condo', layout: 'layout-side-pricing', group: 'group-service', badgeIcon: 'fa-building-user', badgeTxt: 'សម្រាប់គ្រប់គ្រងអគារ និងខុនដូ (Property)', sub: 'ប្រព័ន្ធគ្រប់គ្រងការជួលបន្ទប់ ចេញវិក្កយបត្រទឹកភ្លើងស្វ័យប្រវត្តិ និងតាមដានការជំពាក់ប្រាក់!<br>ផ្តល់ភាពងាយស្រួលដល់អ្នកជួល <strong>ក្នុងការទទួលវិក្កយបត្រតាម Telegram</strong>។', s1Icon: 'fa-file-invoice', s1Txt: 'ចេញវិក្កយបត្រទឹកភ្លើងស្វ័យប្រវត្តិ', s2Icon: 'fa-handshake-angle', s2Txt: 'គ្រប់គ្រងអ្នកជួល និងកុងត្រាស្នាក់នៅ' }
+        };
+
+        const themeGrid = document.getElementById('themeGrid');
+        for (const [id, data] of Object.entries(contentData)) {
+            const btn = document.createElement('button');
+            btn.className = `btn ${data.cls} theme-btn`;
+            btn.innerHTML = `<i class="fa-solid ${data.badgeIcon}"></i> ${data.name}`;
+            btn.onclick = () => setTheme(id);
+            themeGrid.appendChild(btn);
+        }
+
+        function filterThemes() {
+            let input = document.getElementById('searchTheme').value.toLowerCase();
+            let btns = document.querySelectorAll('.theme-btn');
+            btns.forEach(btn => {
+                if (btn.innerText.toLowerCase().includes(input)) {
+                    btn.style.display = "flex";
+                } else {
+                    btn.style.display = "none";
+                }
+            });
+        }
+
+        function setTheme(themeName) {
+            const poster = document.getElementById('poster-canvas');
+            const data = contentData[themeName];
+            if(!data) return;
+
+            poster.className = `poster ${themeName} ${data.layout} ${data.group}`;
+
+            document.getElementById('badge-icon').className = `fa-solid ${data.badgeIcon}`;
+            document.getElementById('txt-badge').innerHTML = data.badgeTxt;
+            document.getElementById('txt-subtitle').innerHTML = data.sub;
+            document.getElementById('stat1-icon').className = `fa-solid ${data.s1Icon}`;
+            document.getElementById('txt-stat1').innerHTML = data.s1Txt;
+            document.getElementById('stat2-icon').className = `fa-solid ${data.s2Icon}`;
+            document.getElementById('txt-stat2').innerHTML = data.s2Txt;
+            
+            // Sync default badge text to Live Editor input
+            document.getElementById('inp-badge').value = data.badgeTxt;
+        }
+
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const badgeIcon = document.getElementById('badge-icon');
+                    badgeIcon.style.display = 'none'; // Hide star icon
+                    
+                    const img = document.getElementById('custom-logo-img');
+                    img.src = e.target.result;
+                    img.style.display = 'inline-block';
+                    
+                    // បង្ហាញប៊ូតុងលុបរូបភាព
+                    document.getElementById('removeLogoBtn').style.display = 'inline-block';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removeLogo() {
+            // លុបទិន្នន័យក្នុង Input
+            document.getElementById('logoInput').value = '';
+            // លាក់រូបភាព និងលុបប្រភពរូបភាព (Src)
+            const img = document.getElementById('custom-logo-img');
+            img.src = '';
+            img.style.display = 'none';
+            // បង្ហាញសញ្ញា Icon ផ្កាយមកវិញ
+            document.getElementById('badge-icon').style.display = 'inline-block';
+            // លាក់ប៊ូតុងលុបខ្លួនឯង
+            document.getElementById('removeLogoBtn').style.display = 'none';
+        }
+
+        function updateQR() {
+            let link = document.getElementById('inp-qr').value || 'https://t.me/JHENG6912';
+            document.getElementById('val-qr').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(link)}`;
+        }
+
+        // Auto-scale poster for mobile viewing
+        function resizePoster() {
+            const wrapper = document.querySelector('.poster-wrapper');
+            const poster = document.getElementById('poster-canvas');
+            const wrapperWidth = wrapper.clientWidth;
+            
+            if (wrapperWidth < 820) { 
+                const scale = wrapperWidth / 820; // 800 + padding
+                poster.style.transform = `scale(${scale})`;
+                // Adjust margin to fix container height gap left by scale
+                poster.style.marginBottom = `-${poster.offsetHeight * (1 - scale)}px`;
+            } else {
+                poster.style.transform = `scale(1)`;
+                poster.style.marginBottom = '0px';
+            }
+        }
+        window.addEventListener('resize', resizePoster);
+        // Initial call after a slight delay to ensure rendering
+        setTimeout(resizePoster, 100);
+
+        async function downloadPoster(qualityType, scaleMultiplier) {
+            const btnId = qualityType === '4K' ? 'dlBtn4K' : 'dlBtnStandard';
+            const btn = document.getElementById(btnId);
+            const originalText = btn.innerHTML;
+            
+            // Disable buttons and show loading
+            document.getElementById('dlBtnStandard').style.pointerEvents = 'none';
+            document.getElementById('dlBtn4K').style.pointerEvents = 'none';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> កំពុងរៀបចំ...';
+
+            const posterElement = document.getElementById('poster-canvas');
+            
+            // VERY IMPORTANT: Reset CSS transform before capturing to prevent html2canvas bugs
+            const currentTransform = posterElement.style.transform;
+            const currentMargin = posterElement.style.marginBottom;
+            posterElement.style.transform = 'none';
+            posterElement.style.marginBottom = '0px';
+
+            try {
+                await document.fonts.ready;
+                await new Promise(resolve => setTimeout(resolve, 300)); // allow UI to settle
+
+                const canvas = await html2canvas(posterElement, { 
+                    scale: scaleMultiplier, // 2 for Standard, 4 for 4K
+                    backgroundColor: window.getComputedStyle(posterElement).backgroundColor,
+                    useCORS: true,
+                    logging: false
+                });
+
+                const link = document.createElement('a');
+                let currentTheme = posterElement.classList[1] || 'default';
+                link.download = `SKM_POS_${currentTheme}_${qualityType}.png`; 
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+
+            } catch (err) {
+                console.error("Error generating poster:", err);
+                alert("មានបញ្ហាក្នុងការទាញយករូបភាព។ សូមប្រាកដថាអ៊ិនធឺណិតដើរស្រួល (ដើម្បីទាញ QR)។");
+            } finally {
+                // Restore responsive scale and UI
+                posterElement.style.transform = currentTransform;
+                posterElement.style.marginBottom = currentMargin;
+                
+                btn.innerHTML = originalText;
+                document.getElementById('dlBtnStandard').style.pointerEvents = 'auto';
+                document.getElementById('dlBtn4K').style.pointerEvents = 'auto';
+            }
+        }
+    </script>
+</body>
+</html>

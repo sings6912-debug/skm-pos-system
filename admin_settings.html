@@ -254,6 +254,9 @@
             <button class="btn-action btn-restore" onclick="document.getElementById('importMenuJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
             
             <button class="btn-action btn-backup" onclick="exportMenuScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
+
+            <!-- ប៊ូតុងបិទ/បើកទាំងអស់ -->
+            <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg); border: 1px solid var(--border-color);" onclick="toggleAllMenuScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
         </div>
 
         <div id="menuScriptsListContainer" class="script-list-container">
@@ -274,6 +277,9 @@
             <button class="btn-action btn-restore" onclick="document.getElementById('importPosJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
             
             <button class="btn-action btn-backup" onclick="exportPosScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
+
+            <!-- ប៊ូតុងបិទ/បើកទាំងអស់ -->
+            <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg); border: 1px solid var(--border-color);" onclick="toggleAllPosScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
         </div>
 
         <div id="posScriptsListContainer" class="script-list-container">
@@ -600,6 +606,15 @@
         }
     }
 
+    function toggleAllMenuScripts() {
+        if (menuScripts.length === 0) return;
+        let hasOff = menuScripts.some(s => !s.isActive);
+        let targetState = hasOff ? true : false;
+        menuScripts.forEach(s => s.isActive = targetState);
+        renderMenuScripts();
+        saveAdminSettings();
+    }
+
     function deleteMenuScript(id) {
         if (confirm('តើអ្នកពិតជាចង់លុបកូដ Menu នេះមែនទេ?')) {
             menuScripts = menuScripts.filter(x => x.id !== id);
@@ -718,6 +733,15 @@
             renderPosScripts(); 
             saveAdminSettings(); 
         }
+    }
+
+    function toggleAllPosScripts() {
+        if (posScripts.length === 0) return;
+        let hasOff = posScripts.some(s => !s.isActive);
+        let targetState = hasOff ? true : false;
+        posScripts.forEach(s => s.isActive = targetState);
+        renderPosScripts();
+        saveAdminSettings();
     }
 
     function deletePosScript(id) {
