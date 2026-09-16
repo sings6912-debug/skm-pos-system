@@ -55,7 +55,7 @@
         #toast.show { transform: translate(-50%, 0); }
         
         /* ===== រចនាប័ទ្មថ្មីសម្រាប់ផ្នែក Custom JS ===== */
-        .action-btn-group { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .action-btn-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .btn-action { 
             padding: 8px 16px; font-size: 13px; font-weight: 700; border-radius: 8px; 
             cursor: pointer; display: inline-flex; align-items: center; gap: 6px; 
@@ -67,6 +67,8 @@
         .btn-restore:hover { background: rgba(245, 158, 11, 0.1); }
         .btn-backup { color: var(--success); border: 1px solid var(--success); }
         .btn-backup:hover { background: rgba(34, 197, 94, 0.1); }
+        .btn-delete-all { color: white; background: var(--danger); border: 1px solid var(--danger); }
+        .btn-delete-all:hover { background: #dc2626; border-color: #dc2626; }
 
         .script-list-container { display: flex; flex-direction: column; gap: 10px; }
         .script-item { 
@@ -257,7 +259,13 @@
 
             <!-- ប៊ូតុងបិទ/បើកទាំងអស់ -->
             <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg); border: 1px solid var(--border-color);" onclick="toggleAllMenuScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
+            
+            <!-- ប៊ូតុងលុបទាំងអស់ -->
+            <button class="btn-action btn-delete-all" onclick="deleteAllMenuScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
         </div>
+
+        <!-- កន្លែងបង្ហាញប៊ូតុង "បង្ហាញទាំងអស់" (ស្ថិតនៅខាងលើបញ្ជី) -->
+        <div id="menuScriptsToggleContainer" style="margin-bottom: 10px;"></div>
 
         <div id="menuScriptsListContainer" class="script-list-container">
             <!-- Script List will be rendered here -->
@@ -280,7 +288,13 @@
 
             <!-- ប៊ូតុងបិទ/បើកទាំងអស់ -->
             <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg); border: 1px solid var(--border-color);" onclick="toggleAllPosScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
+
+            <!-- ប៊ូតុងលុបទាំងអស់ -->
+            <button class="btn-action btn-delete-all" onclick="deleteAllPosScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
         </div>
+
+        <!-- កន្លែងបង្ហាញប៊ូតុង "បង្ហាញទាំងអស់" (ស្ថិតនៅខាងលើបញ្ជី) -->
+        <div id="posScriptsToggleContainer" style="margin-bottom: 10px;"></div>
 
         <div id="posScriptsListContainer" class="script-list-container">
             <!-- Script List will be rendered here -->
@@ -523,16 +537,28 @@
     /* --- MENU CUSTOM JS MANAGEMENT FUNCTIONS --- */
     function renderMenuScripts() {
         const container = document.getElementById('menuScriptsListContainer');
+        const toggleContainer = document.getElementById('menuScriptsToggleContainer');
         container.innerHTML = '';
+        toggleContainer.innerHTML = '';
+
         if (menuScripts.length === 0) {
             container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
             return;
         }
 
         let displayScripts = [...menuScripts].reverse();
-        let hasMore = displayScripts.length > 3;
+        
+        // បង្ហាញប៊ូតុង Show All នៅខាងលើ
+        if (menuScripts.length > 3) {
+            let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length} ឯកសារ)`;
+            toggleContainer.innerHTML = `
+                <button class="input-st" style="width: 100%; padding: 10px; background:rgba(6, 182, 212, 0.05); border: 1px dashed var(--brand-cyan); color:var(--brand-cyan); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='rgba(6, 182, 212, 0.1)'" onmouseout="this.style.background='rgba(6, 182, 212, 0.05)'" onclick="toggleMenuScriptsView()">
+                    ${toggleBtnText}
+                </button>
+            `;
+        }
 
-        if (!showAllMenuScripts && hasMore) {
+        if (!showAllMenuScripts && menuScripts.length > 3) {
             displayScripts = displayScripts.slice(0, 3);
         }
 
@@ -540,7 +566,7 @@
             let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off';
             let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
             container.innerHTML += `
-                <div class="script-item" style="border-left: 4px solid var(--brand-cyan);">
+                <div class="script-item menu-type">
                     <div class="script-name">${s.name}</div>
                     <div class="script-actions">
                         <button class="btn-script ${btnClass}" onclick="toggleMenuScript('${s.id}')">${btnText}</button>
@@ -549,15 +575,6 @@
                 </div>
             `;
         });
-
-        if (hasMore) {
-            let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length} ឯកសារ)`;
-            container.innerHTML += `
-                <button class="input-st" style="margin-top:5px; background:rgba(6, 182, 212, 0.05); border: 1px dashed var(--brand-cyan); color:var(--brand-cyan); cursor:pointer; text-align:center;" onclick="toggleMenuScriptsView()">
-                    ${toggleBtnText}
-                </button>
-            `;
-        }
     }
 
     function toggleMenuScriptsView() {
@@ -623,6 +640,20 @@
         }
     }
 
+    // អនុគមន៍ថ្មីសម្រាប់លុប Menu Script ទាំងអស់
+    function deleteAllMenuScripts() {
+        if (menuScripts.length === 0) {
+            showToast('គ្មានឯកសារត្រូវលុបទេ!', true);
+            return;
+        }
+        if (confirm('⚠️ តើអ្នកពិតជាចង់លុបកូដ Menu ទាំងអស់មែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។')) {
+            menuScripts = [];
+            renderMenuScripts();
+            saveAdminSettings();
+            showToast('បានលុបឯកសារ Menu ទាំងអស់ជោគជ័យ!');
+        }
+    }
+
     function exportMenuScriptsBackup() {
         if(menuScripts.length === 0) return showToast("គ្មានកូដសម្រាប់ Backup ទេ!", true);
         const a = document.createElement("a"); 
@@ -652,16 +683,28 @@
     /* --- POS CUSTOM JS MANAGEMENT FUNCTIONS --- */
     function renderPosScripts() {
         const container = document.getElementById('posScriptsListContainer');
+        const toggleContainer = document.getElementById('posScriptsToggleContainer');
         container.innerHTML = '';
+        toggleContainer.innerHTML = '';
+        
         if (posScripts.length === 0) {
             container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
             return;
         }
 
         let displayScripts = [...posScripts].reverse();
-        let hasMore = displayScripts.length > 3;
 
-        if (!showAllPosScripts && hasMore) {
+        // បង្ហាញប៊ូតុង Show All នៅខាងលើ
+        if (posScripts.length > 3) {
+            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${posScripts.length} ឯកសារ)`;
+            toggleContainer.innerHTML = `
+                <button class="input-st" style="width: 100%; padding: 10px; background:rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); color:var(--danger); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.05)'" onclick="togglePosScriptsView()">
+                    ${toggleBtnText}
+                </button>
+            `;
+        }
+
+        if (!showAllPosScripts && posScripts.length > 3) {
             displayScripts = displayScripts.slice(0, 3);
         }
 
@@ -669,7 +712,7 @@
             let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off';
             let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
             container.innerHTML += `
-                <div class="script-item" style="border-left: 4px solid var(--danger);">
+                <div class="script-item pos-type">
                     <div class="script-name">${s.name}</div>
                     <div class="script-actions">
                         <button class="btn-script ${btnClass}" onclick="togglePosScript('${s.id}')">${btnText}</button>
@@ -678,15 +721,6 @@
                 </div>
             `;
         });
-
-        if (hasMore) {
-            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${posScripts.length} ឯកសារ)`;
-            container.innerHTML += `
-                <button class="input-st" style="margin-top:5px; background:rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); color:var(--danger); cursor:pointer; text-align:center;" onclick="togglePosScriptsView()">
-                    ${toggleBtnText}
-                </button>
-            `;
-        }
     }
 
     function togglePosScriptsView() {
@@ -752,6 +786,20 @@
         }
     }
 
+    // អនុគមន៍ថ្មីសម្រាប់លុប POS Script ទាំងអស់
+    function deleteAllPosScripts() {
+        if (posScripts.length === 0) {
+            showToast('គ្មានឯកសារត្រូវលុបទេ!', true);
+            return;
+        }
+        if (confirm('⚠️ តើអ្នកពិតជាចង់លុបកូដ POS ទាំងអស់មែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។')) {
+            posScripts = [];
+            renderPosScripts();
+            saveAdminSettings();
+            showToast('បានលុបឯកសារ POS ទាំងអស់ជោគជ័យ!');
+        }
+    }
+
     function exportPosScriptsBackup() {
         if(posScripts.length === 0) return showToast("គ្មានកូដសម្រាប់ Backup ទេ!", true);
         const a = document.createElement("a"); 
@@ -780,7 +828,6 @@
 
     /* --- Utilities & URL Logic --- */
     
-    // អនុគមន៍ថ្មីសម្រាប់ទាញយក URL ត្រឹមត្រូវទៅតាមឈ្មោះ File
     function getPageUrl(pageName) {
         let path = window.location.pathname;
         let lastSlash = path.lastIndexOf('/');
