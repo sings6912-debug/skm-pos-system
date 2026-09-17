@@ -86,7 +86,7 @@
             position: sticky; top: 0; z-index: 50;
         }
         .top-bar i { font-size: 20px; cursor: pointer; }
-        .top-bar .title { font-weight: 900; font-size: 18px; letter-spacing: 1px;}
+        .top-bar .title { font-weight: 900; font-size: 18px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
         
         .cart-icon-wrapper { position: relative; cursor: pointer; }
         .cart-badge {
@@ -323,7 +323,10 @@
     <div id="storePage">
         <div class="top-bar">
             <i class="fa-solid fa-bars" onclick="openSidebar()"></i>
-            <div class="title">menu</div>
+            <div class="title" style="display: flex; align-items: center; gap: 8px;">
+                menu 
+                <span id="tableBadgeDisplay" style="display:none; background: var(--danger); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px;"></span>
+            </div>
             <div class="cart-icon-wrapper" onclick="openModal('cartModal')">
                 <i class="fa-solid fa-cart-shopping" style="font-size: 22px;"></i>
                 <div class="cart-badge" id="cartBadge">0</div>
@@ -591,6 +594,9 @@
         }
         
         const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        
+        // 🌟 ចាប់យកលេខតុពី URL បើមាន
+        const TABLE_NO = new URLSearchParams(window.location.search).get('table') || '';
 
         // State Systems
         let inventory = [], cart = [], wishlist = [];
@@ -689,6 +695,22 @@
         // --- Data Fetch & Render ---
         async function init() {
             document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
+            
+            // 🌟 បង្ហាញលេខតុ ប្រសិនបើភ្ញៀវស្កេនពីតុមក
+            if (TABLE_NO) {
+                const tbBadge = document.getElementById('tableBadgeDisplay');
+                if(tbBadge) {
+                    tbBadge.innerText = `តុលេខ ${TABLE_NO}`;
+                    tbBadge.style.display = 'inline-block';
+                }
+                
+                // លាក់ប្រអប់បញ្ចូលឈ្មោះ ព្រោះយើងនឹងយកលេខតុធ្វើជាឈ្មោះអតិថិជន
+                const cNameInput = document.getElementById('cName');
+                if(cNameInput) {
+                    cNameInput.value = `តុលេខ ${TABLE_NO}`;
+                    cNameInput.style.display = 'none'; 
+                }
+            }
             
             // ⚡ 2. Load Inventory & UI from LocalStorage First (Instant UI Loading / Offline mode)
             try {
@@ -1048,8 +1070,16 @@
         }
 
         async function submitOrder() {
-            const n = document.getElementById('cName').value.trim();
+            let n = document.getElementById('cName').value.trim();
             const ph = document.getElementById('cPhone').value.trim();
+            let note = document.getElementById('cNote').value.trim();
+            
+            // 🌟 បញ្ចូលលេខតុទៅក្នុងឈ្មោះអតិថិជន និងចំណាំដោយស្វ័យប្រវត្តិ បើមានលេខតុ
+            if (TABLE_NO) {
+                if (!n) n = `តុលេខ ${TABLE_NO}`;
+                note = note ? `[តុលេខ ${TABLE_NO}] ${note}` : `[តុលេខ ${TABLE_NO}]`;
+            }
+
             if(!n) return showToast('Please enter your name!', true);
             if(cart.length===0) return showToast('Cart is empty!', true);
 
@@ -1059,7 +1089,7 @@
             
             const ord = {
                 id: orderId, date: new Date().toLocaleString(),
-                customer: n, phone: ph, note: document.getElementById('cNote').value,
+                customer: n, phone: ph, note: note,
                 items: [...cart], totalAmount: tot, status: 'Processing'
             };
 
@@ -1085,7 +1115,7 @@
 
                     if(botToken && chatId) {
                         let itxt = ord.items.map((i,x)=>`${x+1}. ${i.name} [${i.cartVar}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
-                        let msg = `🛒 <b>New Order!</b>\n👤 Name: ${n}\n📞 Phone: ${ph}\n📝 Note: ${ord.note}\n\n🛍 Items:\n${itxt}\n💰 <b>Total: $${tot.toFixed(2)}</b>`;
+                        let msg = `🛒 <b>ការកុម្ម៉ង់ថ្មី (New Order)</b>\n👤 អតិថិជន: ${n}\n📞 លេខទូរស័ព្ទ: ${ph || 'គ្មាន'}\n📝 ចំណាំ: ${ord.note || 'គ្មាន'}\n\n🛍 ទំនិញ:\n${itxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
                         fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                             method: 'POST', headers: {'Content-Type':'application/json'},
                             body: JSON.stringify({chat_id: chatId, text: msg, parse_mode: 'HTML'})
