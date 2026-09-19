@@ -232,7 +232,7 @@
                 <input type="file" id="qrFile" accept="image/*" style="display:none;" onchange="uploadQR(event)">
                 <button class="input-st" style="width: auto; cursor: pointer;" onclick="document.getElementById('qrFile').click()"><i class="fa-solid fa-upload"></i></button>
             </div>
-            <div class="preview-box">
+            <div class="preview-box" id="qrPreviewContainer" style="display: none;">
                 <img id="menuQRPreview" src="" alt="QR Preview" style="display: none;">
             </div>
         </div>
@@ -240,6 +240,17 @@
         <div class="form-group">
             <label><i class="fa-brands fa-telegram"></i> តំណភ្ជាប់ Chat សម្រាប់ប៊ូតុងអណ្តែត (Floating Chat)</label>
             <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
+        </div>
+
+        <!-- បន្ថែមកន្លែងកំណត់ Telegram Bot នៅទីនេះ -->
+        <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-top: 15px;">
+            <label style="color: var(--success);"><i class="fa-solid fa-robot"></i> ការកំណត់ Telegram Bot សម្រាប់ទទួលសារ (ហៅបុគ្គលិក / កុម្ម៉ង់)</label>
+            <div style="margin-bottom: 10px;">
+                <input type="text" id="setTelegramBotToken" class="input-st" placeholder="Bot Token (ឧ. 123456:ABC-DEF...)" onchange="saveAdminSettings()">
+            </div>
+            <div>
+                <input type="text" id="setTelegramChatId" class="input-st" placeholder="Chat ID (ឧ. -1001234567890)" onchange="saveAdminSettings()">
+            </div>
         </div>
     </div>
 
@@ -378,6 +389,7 @@
                         if(sys.menuQR) {
                             document.getElementById('setMenuQR').value = sys.menuQR;
                             const qp = document.getElementById('menuQRPreview'); qp.src = sys.menuQR; qp.style.display = 'block';
+                            document.getElementById('qrPreviewContainer').style.display = 'block';
                         }
                         
                         if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
@@ -395,6 +407,10 @@
                         document.getElementById('setOpenTime').value = sys.openTime || '08:00';
                         document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
                         document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
+
+                        // ទាញយក Telegram Bot Token និង Chat ID មកបង្ហាញ
+                        if(sys.telegramBotToken) document.getElementById('setTelegramBotToken').value = sys.telegramBotToken;
+                        if(sys.telegramChatId) document.getElementById('setTelegramChatId').value = sys.telegramChatId;
 
                         if(sys.customMenuScripts && Array.isArray(sys.customMenuScripts)) {
                             menuScripts = sys.customMenuScripts;
@@ -446,6 +462,10 @@
             d.sysSettings.openTime = document.getElementById('setOpenTime').value;
             d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
             d.sysSettings.preorder = document.getElementById('togglePreorder').checked;
+
+            // រក្សាទុក Telegram Bot Token និង Chat ID
+            d.sysSettings.telegramBotToken = document.getElementById('setTelegramBotToken').value.trim();
+            d.sysSettings.telegramChatId = document.getElementById('setTelegramChatId').value.trim();
 
             d.sysSettings.customMenuScripts = menuScripts;
             d.customPosScripts = posScripts;
@@ -527,6 +547,7 @@
                 const url = canvas.toDataURL('image/jpeg', 0.8);
                 document.getElementById('setMenuQR').value = url;
                 const qp = document.getElementById('menuQRPreview'); qp.src = url; qp.style.display = 'block';
+                document.getElementById('qrPreviewContainer').style.display = 'block';
                 saveAdminSettings();
             };
             img.src = ev.target.result;
@@ -871,7 +892,7 @@
     }
 
     function goToWelcome() {
-        window.location.href = getPageUrl('welcome.html');
+        window.open(getPageUrl('welcome.html'), '_blank');
     }
 
     // --- Menu Page Functions ---
@@ -910,7 +931,7 @@
     }
 
     function goToMenu() {
-        window.location.href = getPageUrl('menu.html');
+        window.open(getPageUrl('menu.html'), '_blank');
     }
 
     window.onload = initAdmin;
