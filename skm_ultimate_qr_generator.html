@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="km"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SKM POS - Ultimate Menu QR Generator</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&amp;family=Chenla&amp;family=Hanuman:wght@400;700;900&amp;family=Kantumruy+Pro:wght@400;700&amp;family=Moul&amp;family=Siemreap&amp;family=Suwannaphum:wght@400;700;900&amp;family=Inter:wght@400;600;800;900&amp;display=swap" rel="stylesheet" crossorigin="anonymous">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" crossorigin="anonymous">
+
+<script src="https://cdn.jsdelivr.net/npm/qr-code-styling@1.5.0/lib/qr-code-styling.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html-to-image/1.11.11/html-to-image.min.js" crossorigin="anonymous"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background-color: #0f172a; color: #f8fafc; display: flex; flex-direction: column; align-items: center; min-height: 100vh; padding: 15px; font-family: 'Inter', 'Battambang', sans-serif; }
+.container { width: 100%; max-width: 550px; text-align: center; }
+h1 { font-size: 24px; font-weight: 900; margin-bottom: 5px; color: #38bdf8; }
+p.subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 20px; }
+
+.generator-card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); margin-bottom: 25px; text-align: left; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #cbd5e1; }
+.input-st, .select-st { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 13px; outline: none; transition: 0.2s; font-family: 'Battambang', sans-serif;}
+.input-st:focus, .select-st:focus { border-color: #06b6d4; box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2); }
+
+.row-flex { display: flex; justify-content: space-between; align-items: center; }
+.row-flex label { margin-bottom: 0; }
+.switch { position: relative; display: inline-block; width: 44px; height: 24px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 24px;}
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;}
+input:checked + .slider { background-color: #10b981; }
+input:checked + .slider:before { transform: translateX(20px); }
+
+.color-picker-group { display: flex; flex-direction: column; gap: 10px; }
+.color-input-wrapper { display: flex; gap: 10px; align-items: center; }
+.color-input-wrapper input[type="color"] { width: 45px; height: 35px; padding: 0; border: none; border-radius: 8px; cursor: pointer; background: transparent; }
+.color-input-wrapper input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+.color-input-wrapper input[type="color"]::-webkit-color-swatch { border: 2px solid #475569; border-radius: 8px; }
+.hex-input { flex: 1; padding: 8px 15px; border-radius: 8px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 13px; font-family: monospace; text-transform: uppercase; }
+
+.theme-selector-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; max-height: 180px; overflow-y: auto; padding: 8px; border: 1px solid #475569; border-radius: 12px; background: #0f172a; }
+.theme-selector-grid::-webkit-scrollbar { width: 6px; }
+.theme-selector-grid::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+.theme-option { background: #1e293b; border: 1px solid #334155; padding: 8px; border-radius: 10px; font-size: 11px; font-weight: 700; cursor: pointer; text-align: center; transition: 0.2s; color: #cbd5e1; }
+.theme-option:hover { border-color: #06b6d4; color: #fff; }
+.theme-option.active { background: #06b6d4; color: #000; border-color: #06b6d4; }
+
+.advanced-panel { background: #0f172a; padding: 15px; border-radius: 12px; border: 1px dashed #475569; margin-top: 15px; display: flex; flex-direction: column; gap: 12px; }
+.advanced-panel .sec-title { color: #38bdf8; font-weight: 900; font-size: 13px; margin-bottom: 5px; display: block;}
+.batch-flex { display: flex; gap: 10px; flex-wrap: wrap;}
+.batch-flex > div { flex: 1; min-width: 140px; }
+
+.lang-group { display: flex; border-radius: 10px; overflow: hidden; border: 1px solid #475569; }
+.lang-btn { flex: 1; padding: 10px; background: #1e293b; color: #94a3b8; border: none; cursor: pointer; font-size: 12px; font-weight: bold; transition: 0.2s; border-right: 1px solid #475569; }
+.lang-btn:last-child { border-right: none; }
+.lang-btn.active { background: #38bdf8; color: #000; }
+
+.file-upload { display: flex; flex-direction: column; gap: 8px; }
+.file-upload-btn { background: #334155; padding: 10px; border-radius: 10px; cursor: pointer; font-size: 12px; text-align: center; color: #fff; border: 1px solid #475569; transition: 0.2s; display: block; }
+.file-upload-btn:hover { background: #475569; }
+.file-upload input[type="file"] { display: none; }
+
+.preview-wrapper { display: flex; justify-content: center; margin-bottom: 25px; width: 100%; transition: 0.3s; }
+
+@media (max-width: 450px) { .preview-wrapper { transform: scale(0.85); transform-origin: top center; margin-bottom: -50px; } }
+@media (max-width: 380px) { .preview-wrapper { transform: scale(0.75); transform-origin: top center; margin-bottom: -100px; } }
+
+.qr-card {
+    width: 360px !important; height: 540px !important; padding: 25px 20px;
+    border-radius: 28px; text-align: center;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.5); position: relative;
+    overflow: hidden; 
+    background-color: #1a110a; background-size: cover !important; background-position: center !important;
+    display: block; margin: 0 auto; box-sizing: border-box;
+    transition: 0.3s ease;
+}
+
+.qr-card-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; width: 100%; }
+.qc-badge { display: inline-block; padding: 7px 18px; border-radius: 30px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); outline: none; border-bottom: 1px dashed transparent; }
+.qc-title { font-size: 26px; font-weight: 900; margin-top: 5px; margin-bottom: 5px; width: 100%; word-break: break-word; line-height: 1.3; outline: none; border-bottom: 1px dashed transparent;}
+.qc-sub { font-size: 13px; margin-bottom: 0px; font-weight: 700; opacity: 0.85; width: 100%; word-break: break-word; line-height: 1.5; outline: none; border-bottom: 1px dashed transparent;}
+.is-capturing .qc-title, .is-capturing .qc-sub, .is-capturing .qc-badge { border-bottom-color: transparent !important; }
+
+.card-bg-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.65); z-index: 1; display: none; }
+.qr-card.has-bg .card-bg-overlay { display: block; }
+
+.qr-frame-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; }
+.qr-frame-box { border: 3px dashed transparent; border-radius: 24px; padding: 10px; position: relative; transition: 0.3s; }
+.qr-frame-text { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: inherit; padding: 4px 15px; border-radius: 20px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; display: none; white-space: nowrap;}
+.has-frame .qr-frame-box { border-color: inherit; margin-top: 15px; }
+.has-frame .qr-frame-text { display: block; }
+
+.qc-qr-box { background: #ffffff; border-radius: 16px; padding: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.qc-qr-box canvas, .qc-qr-box img { 
+    border-radius: 8px; display: block;
+    width: 230px !important; 
+    height: 230px !important;
+}
+.qc-footer { font-size: 11px; font-weight: 700; opacity: 0.8; margin-top: 5px; font-family: 'Inter', 'Battambang', sans-serif; }
+
+.btn-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; width: 100%;}
+.btn { flex: 1; min-width: 120px; padding: 14px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
+.btn:active { transform: scale(0.96); }
+.btn-primary { background: #06b6d4; color: #000; }
+.btn-print { background: #10b981; color: #fff; }
+.btn-print-grid { background: #f59e0b; color: #000; }
+.btn-share { background: #3b82f6; color: #fff; }
+.btn-download { background: #8b5cf6; color: #fff; width: 100%; padding: 16px; font-size: 15px; margin-bottom: 30px;}
+
+@media print {
+    * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+    body * { visibility: hidden; }
+    .qr-card, .qr-card * { visibility: visible; }
+    .qr-card { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); border: none; box-shadow: none; margin: 0; }
+    .generator-card, .btn-group, .btn-download, h1, p.subtitle { display: none !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="container">
+    <h1>កសាង QR Code ម៉ឺនុយ (Ultimate)</h1>
+    <p class="subtitle">៥២ ជម្រើស ជាមួយភាសា៣ និងការបោះពុម្ព A4 ឆ្លាតវៃ</p>
+
+    <div class="generator-card no-print">
+        
+        <div class="form-group" id="linkGroup">
+            <label><i class="fa-solid fa-store"></i> ឈ្មោះហាង ឬ តំណភ្ជាប់ផ្ទាល់ (Link):</label>
+            <input type="text" id="branchInput" class="input-st" value="K_fe" placeholder="ឧ. coffee_shop_1" oninput="debounceUpdate()">
+        </div>
+        
+        <div class="form-group" id="tableGroup">
+            <div class="batch-flex">
+                <div>
+                    <label><i class="fa-solid fa-hashtag"></i> លេខតុ (Table No):</label>
+                    <input type="text" id="tableInput" class="input-st" placeholder="ទុកទទេបើគ្មាន (ឧ. 01, VIP)" oninput="debounceUpdate()">
+                    <div style="margin-top: 8px; display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="autoNumbering" checked="" style="accent-color: #06b6d4; width: 16px; height: 16px; cursor: pointer;" onchange="toggleAutoNumbering(); saveState()">
+                        <label for="autoNumbering" style="font-size: 11px; color: #cbd5e1; cursor: pointer; margin: 0; font-weight: normal;">រាប់លេខរៀងស្វ័យប្រវត្តិ</label>
+                    </div>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-layer-group"></i> ចំនួនកាតសរុប (Total):</label>
+                    <input type="number" id="tableCount" class="input-st" placeholder="ឧ. ១២" value="12" min="1" max="200" oninput="syncAutoCount()">
+                    <div id="autoCountDiv" style="margin-top: 8px; display: flex; align-items: center; justify-content: space-between; gap: 8px; opacity: 1; pointer-events: auto;">
+                        <label style="font-size: 11px; color: #cbd5e1; margin: 0; font-weight: normal;">រាប់ត្រឹមលេខ៖</label>
+                        <input type="number" id="autoCountLimit" class="input-st" style="padding: 2px 8px; font-size: 11px; height: 26px; width: 60px; text-align: center;" value="12" min="1" max="200" onchange="saveState()">
+                    </div>
+                </div>
+                <div>
+                    <label><i class="fa-solid fa-table-columns"></i> ទម្រង់ A4 Grid:</label>
+                    <select id="gridColsSelect" class="select-st" onchange="saveState()">
+                        <option value="3" selected="">១ជួរ ៣កាត (ធំច្បាស់ល្អ)</option>
+                        <option value="4">១ជួរ ៤កាត (តូចសន្សំសំចៃ)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group" id="wifiGroup" style="display: none;">
+            <label><i class="fa-solid fa-wifi"></i> ព័ត៌មាន WiFi:</label>
+            <div class="batch-flex">
+                <input type="text" id="wifiSsid" class="input-st" placeholder="ឈ្មោះ WiFi (SSID)" oninput="debounceUpdate()">
+                <input type="text" id="wifiPwd" class="input-st" placeholder="លេខសម្ងាត់" oninput="debounceUpdate()">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label><i class="fa-solid fa-palette"></i> ជ្រើសរើសស្ទីលអាជីវកម្ម (Themes):</label>
+            <div class="theme-selector-grid" id="themeGrid"><div class="theme-option active" onclick="selectTheme('cafe')">☕ កាហ្វេ</div><div class="theme-option " onclick="selectTheme('resto')">🍲 ភោជនីយដ្ឋាន</div><div class="theme-option " onclick="selectTheme('bubble_tea')">🧋 តែគុជ</div><div class="theme-option " onclick="selectTheme('bakery')">🥐 នំប៉័ង</div><div class="theme-option " onclick="selectTheme('bbq')">🥩 BBQ &amp; សាច់អាំង</div><div class="theme-option " onclick="selectTheme('pizza')">🍕 ភីហ្សា</div><div class="theme-option " onclick="selectTheme('sushi')">🍣 ជប៉ុន/ស៊ូស៊ី</div><div class="theme-option " onclick="selectTheme('mart')">🛒 ម៉ាត</div><div class="theme-option " onclick="selectTheme('pharmacy')">💊 ឱសថស្ថាន</div><div class="theme-option " onclick="selectTheme('fashion')">👗 សម្លៀកបំពាក់</div><div class="theme-option " onclick="selectTheme('shoes')">👟 ស្បែកជើង</div><div class="theme-option " onclick="selectTheme('cosmetic')">💄 គ្រឿងសម្អាង</div><div class="theme-option " onclick="selectTheme('salon')">💇 សាឡន</div><div class="theme-option " onclick="selectTheme('spa')">💆 ស្ប៉ា</div><div class="theme-option " onclick="selectTheme('flower')">💐 ហាងផ្កា</div><div class="theme-option " onclick="selectTheme('phone')">📱 ទូរស័ព្ទ</div><div class="theme-option " onclick="selectTheme('computer')">💻 កុំព្យូទ័រ</div><div class="theme-option " onclick="selectTheme('hardware')">🔩 សម្ភារៈសំណង់</div><div class="theme-option " onclick="selectTheme('furniture')">🛋️ គ្រឿងសង្ហារិម</div><div class="theme-option " onclick="selectTheme('pet')">🐶 ហាងសត្វ</div><div class="theme-option " onclick="selectTheme('gym')">🏋️ ក្លឹបហាត់ប្រាណ</div><div class="theme-option " onclick="selectTheme('car_parts')">🚗 គ្រឿងបន្លាស់</div><div class="theme-option " onclick="selectTheme('car_wash')">🧼 លាងឡាន</div><div class="theme-option " onclick="selectTheme('hotel')">🏨 សណ្ឋាគារ</div><div class="theme-option " onclick="selectTheme('karaoke')">🎤 ខារ៉ាអូខេ</div><div class="theme-option " onclick="selectTheme('game')">🎮 កន្លែងហ្គេម</div><div class="theme-option " onclick="selectTheme('book')">📚 សៀវភៅ</div><div class="theme-option " onclick="selectTheme('baby')">🍼 សម្ភារៈទារក</div><div class="theme-option " onclick="selectTheme('anime')">🎎 តុក្កតា/Anime</div><div class="theme-option " onclick="selectTheme('jewelry')">💎 គ្រឿងអលង្ការ</div><div class="theme-option " onclick="selectTheme('watch')">⌚ នាឡិកា</div><div class="theme-option " onclick="selectTheme('optics')">👓 វ៉ែនតា</div><div class="theme-option " onclick="selectTheme('cinema')">🍿 រោងកុន</div><div class="theme-option " onclick="selectTheme('bar')">🍻 បារ &amp; ផាប់</div><div class="theme-option " onclick="selectTheme('icecream')">🍦 ការ៉េម</div><div class="theme-option " onclick="selectTheme('seafood')">🦀 គ្រឿងសមុទ្រ</div><div class="theme-option " onclick="selectTheme('fruit')">🍉 ផ្លែឈើ</div><div class="theme-option " onclick="selectTheme('veg')">🥬 បន្លែធម្មជាតិ</div><div class="theme-option " onclick="selectTheme('bike')">🚲 ហាងកង់</div><div class="theme-option " onclick="selectTheme('sports')">⚽ សម្ភារៈកីឡា</div><div class="theme-option " onclick="selectTheme('music')">🎸 តន្ត្រី</div><div class="theme-option " onclick="selectTheme('art')">🎨 សិល្បៈគំនូរ</div><div class="theme-option " onclick="selectTheme('photo')">📸 ស្ទូឌីយោ</div><div class="theme-option " onclick="selectTheme('print')">🖨️ រោងពុម្ព</div><div class="theme-option " onclick="selectTheme('travel')">✈️ ទេសចរណ៍</div><div class="theme-option " onclick="selectTheme('laundry')">🧺 បោកអ៊ុត</div><div class="theme-option " onclick="selectTheme('dental')">🦷 គ្លីនិកធ្មេញ</div><div class="theme-option " onclick="selectTheme('edu')">🎓 សាលារៀន</div><div class="theme-option " onclick="selectTheme('real_estate')">🏘️ អចលនទ្រព្យ</div><div class="theme-option " onclick="selectTheme('wedding')">💍 សម្អាងការ</div><div class="theme-option " onclick="selectTheme('bank')">🏦 ធនាគារ</div><div class="theme-option " onclick="selectTheme('delivery')">🚚 ដឹកជញ្ជូន</div><div class="theme-option " onclick="selectTheme('other')">🏢 ផ្សេងៗ</div></div>
+        </div>
+
+        <div class="form-group row-flex">
+            <label><i class="fa-solid fa-eye-slash"></i> បង្ហាញ / លាក់ Badge ប្រភេទហាង:</label>
+            <label class="switch">
+                <input type="checkbox" id="badgeToggle" checked="" onchange="toggleBadge()">
+                <span class="slider round"></span>
+            </label>
+        </div>
+
+        <div class="form-group mb-0">
+            <label><i class="fa-solid fa-fill-drip"></i> ពណ៌ផ្ទៃកាត (Gradient ២ពណ៌):</label>
+            <div class="color-picker-group">
+                <div class="color-input-wrapper">
+                    <input type="color" id="bgColor1" oninput="syncColor('1', 'picker')">
+                    <input type="text" id="bgColorText1" class="hex-input" oninput="syncColor('1', 'text')" maxlength="7">
+                </div>
+                <div class="color-input-wrapper">
+                    <input type="color" id="bgColor2" oninput="syncColor('2', 'picker')">
+                    <input type="text" id="bgColorText2" class="hex-input" oninput="syncColor('2', 'text')" maxlength="7">
+                </div>
+            </div>
+        </div>
+        
+        <div class="form-group mb-0" style="margin-top: 15px;">
+            <label><i class="fa-solid fa-font"></i> ពណ៌អក្សរ (Text Color):</label>
+            <div class="color-picker-group">
+                <div class="color-input-wrapper">
+                    <input type="color" id="textColor" oninput="syncTextColor('picker')">
+                    <input type="text" id="textColorText" class="hex-input" oninput="syncTextColor('text')" maxlength="7">
+                </div>
+            </div>
+        </div>
+
+        <div class="advanced-panel">
+            <span class="sec-title"><i class="fa-solid fa-sliders"></i> កម្រិតខ្ពស់ (Advanced Features)</span>
+            
+            <div class="batch-flex" style="background: #1e293b; padding: 10px; border-radius: 10px; border: 1px dashed #334155;">
+                <button class="btn" style="background:#3b82f6; color:#fff;" onclick="exportConfig()"><i class="fa-solid fa-download"></i> Backup គំរូ</button>
+                <button class="btn" style="background:#10b981; color:#fff;" onclick="document.getElementById('importConfig').click()"><i class="fa-solid fa-upload"></i> Restore គំរូ</button>
+                <input type="file" id="importConfig" accept=".json" style="display:none" onchange="importConfig(event)">
+            </div>
+
+            <div class="batch-flex">
+                <div>
+                    <label>ភាសាបកប្រែ (Language):</label>
+                    <div class="lang-group">
+                        <button class="lang-btn active" onclick="setLang('km', this)">🇰🇭 KM</button>
+                        <button class="lang-btn" onclick="setLang('en', this)">🇬🇧 EN</button>
+                        <button class="lang-btn" onclick="setLang('cn', this)">🇨🇳 CN</button>
+                    </div>
+                </div>
+                <div>
+                    <label>ពុម្ពអក្សរខ្មែរ (Khmer Fonts):</label>
+                    <select id="fontSelect" class="select-st" onchange="changeFont()">
+                        <option value="'Battambang', sans-serif">បាត់ដំបង (Battambang)</option>
+                        <option value="'Moul', serif">ខ្មែរមូល (Moul)</option>
+                        <option value="'Suwannaphum', serif">សុវណ្ណភូមិ (Suwannaphum)</option>
+                        <option value="'Kantumruy Pro', sans-serif">កន្ត្រក ប្រូ (Kantumruy Pro)</option>
+                        <option value="'Hanuman', serif">ហនុមាន (Hanuman)</option>
+                        <option value="'Chenla', sans-serif">ចេនឡា (Chenla)</option>
+                        <option value="'Siemreap', sans-serif">សៀមរាប (Siemreap)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="batch-flex">
+                <div>
+                    <label>ទំហំចំណងជើង: <span id="titleSizeDisp">26px</span></label>
+                    <input type="range" id="titleSizeRange" min="14" max="50" value="26" step="1" style="width:100%; margin-top:8px; cursor:pointer; accent-color: #38bdf8;" oninput="changeFontSize('title')">
+                </div>
+                <div>
+                    <label>ទំហំអត្ថបទរង: <span id="subSizeDisp">13px</span></label>
+                    <input type="range" id="subSizeRange" min="9" max="24" value="13" step="1" style="width:100%; margin-top:8px; cursor:pointer; accent-color: #38bdf8;" oninput="changeFontSize('sub')">
+                </div>
+            </div>
+
+            <div class="batch-flex">
+                <div>
+                    <label>ស៊ុម (Frame):</label>
+                    <select id="frameSelect" class="select-st" onchange="changeFrame()">
+                        <option value="none">គ្មានស៊ុម</option>
+                        <option value="MENU">MENU</option>
+                        <option value="SCAN ME">SCAN ME</option>
+                        <option value="ORDER HERE">ORDER HERE</option>
+                        <option value="FREE WIFI">FREE WIFI</option>
+                    </select>
+                </div>
+                <div>
+                    <label>ពណ៌ស៊ុម (Frame Color):</label>
+                    <input type="color" id="frameColor" value="#d97706" style="width:100%; height:38px; border-radius:8px; border:none; cursor:pointer;" onchange="updateFrameColor()">
+                </div>
+            </div>
+
+            <div class="batch-flex">
+                <div>
+                    <label>សណ្ឋាន QR (Dots):</label>
+                    <select id="dotSelect" class="select-st" onchange="debounceUpdate()">
+                        <option value="square">ការ៉េ (Square)</option>
+                        <option value="dots">រាងមូល (Dots)</option>
+                        <option value="rounded">ជ្រុងមូល (Rounded)</option>
+                        <option value="classy">រាងគ្រាប់កាហ្វេ (Classy)</option>
+                        <option value="classy-rounded">គ្រាប់កាហ្វេមូល (Classy R.)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>ភ្នែក QR (Eye Shape):</label>
+                    <select id="eyeSelect" class="select-st" onchange="debounceUpdate()">
+                        <option value="square">ការ៉េ (Square)</option>
+                        <option value="extra-rounded">មូល (Rounded)</option>
+                        <option value="dot">តំណក់ទឹក (Dot)</option>
+                    </select>
+                </div>
+                <div>
+                    <label>ពណ៌ QR:</label>
+                    <input type="color" id="qrColor" value="#000000" style="width:100%; height:38px; border-radius:8px; border:none; cursor:pointer;" onchange="debounceUpdate()">
+                </div>
+            </div>
+
+            <div class="batch-flex">
+                <div class="file-upload">
+                    <label class="file-upload-btn" for="logoUpload"><i class="fa-solid fa-cloud-arrow-up"></i> ដាក់ឡូហ្គោកណ្តាល</label>
+                    <input type="file" id="logoUpload" accept="image/*" onchange="handleLogoUpload(event)">
+                </div>
+                <div class="file-upload">
+                    <label class="file-upload-btn" for="bgUpload" style="background:#1e3a8a; border-color:#1e40af;"><i class="fa-solid fa-image"></i> រូបភាពផ្ទៃខាងក្រោយ</label>
+                    <input type="file" id="bgUpload" accept="image/*" onchange="handleBgUpload(event)">
+                </div>
+                <button class="btn" style="background:#ef4444; color:#fff; max-width:45px;" onclick="clearImages()" title="លុបរូបភាព"><i class="fa-solid fa-trash-can"></i></button>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="preview-wrapper">
+        <div class="qr-card" id="qrCardTheme" style="font-family: Battambang, sans-serif; background: linear-gradient(135deg, rgb(41, 27, 17) 0%, rgb(10, 5, 2) 100%); color: rgb(243, 232, 255);">
+            <div class="card-bg-overlay" id="cardOverlay"></div>
+            
+            <div class="qr-card-content">
+                <div id="badgeWrapper">
+                    <div class="qc-badge" id="cardBadge" contenteditable="true" spellcheck="false" style="background: rgb(217, 119, 6); color: rgb(255, 255, 255);"><i class="fa-solid fa-mug-hot"></i> Coffee &amp; Cafe</div>
+                </div>
+                
+                <div style="width: 100%;">
+                    <div class="qc-title" id="cardShopTitle" contenteditable="true" spellcheck="false" style="font-size: 26px;" onblur="saveState()">ខេហ្វេ-K.fe</div>
+                    
+                    <div id="tableDisplayWrapper" style="display: none; margin-bottom: 5px;">
+                        <span id="tableDisplay" style="font-size: 15px; font-weight: 900; background: rgb(217, 119, 6); color: rgb(255, 255, 255); padding: 4px 15px; border-radius: 20px; display: inline-block;">តុលេខ: <span id="tableVal"></span></span>
+                    </div>
+
+                    <div class="qc-sub" id="cardSub" contenteditable="true" spellcheck="false" style="font-size: 13px;" onblur="saveState()">សូមស្កេនដើម្បីមើលម៉ឺនុយ និងកុម្មង់</div>
+                </div>
+                
+                <div class="qr-frame-wrapper" id="qrFrameWrapper">
+                    <div class="qr-frame-box" id="qrFrameBox" style="color: rgb(217, 119, 6);">
+                        <div class="qr-frame-text" id="frameText" style="background: rgb(217, 119, 6); color: rgb(255, 255, 255);">MENU</div>
+                        <div class="qc-qr-box" id="qrImageContainer"><canvas width="1000" height="1000"></canvas></div>
+                    </div>
+                </div>
+                
+                <div class="qc-footer">
+                    <i class="fa-solid fa-bolt"></i> Powered by SKM Integrate POS
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="btn-group no-print">
+        <button class="btn btn-primary" onclick="copyURL()"><i class="fa-solid fa-link"></i> Link</button>
+        <button class="btn btn-share" onclick="shareCard()"><i class="fa-solid fa-share-nodes"></i> Share</button>
+        <button class="btn btn-print" onclick="window.print()"><i class="fa-solid fa-print"></i> Print</button>
+        <button class="btn btn-print-grid" id="gridPrintBtn" onclick="printA4Grid()"><i class="fa-solid fa-table-cells"></i> A4 Grid Print</button>
+    </div>
+    <button class="btn btn-download no-print" id="downloadBtn" onclick="downloadCard()"><i class="fa-solid fa-camera"></i> ទាញយករូបភាព (PNG)</button>
+</div>
+
+<script>
+function showToast(message) {
+    let toast = document.createElement('div');
+    toast.innerText = message;
+    toast.style.cssText = 'position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:#334155; color:#fff; padding:12px 24px; border-radius:8px; z-index:9999; font-size:14px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transition: 0.3s ease-in-out; text-align: center; font-family:"Battambang", sans-serif; font-weight: bold; border: 1px solid #475569;';
+    document.body.appendChild(toast);
+    setTimeout(() => { 
+        toast.style.opacity = '0'; 
+        toast.style.bottom = '10px';
+        setTimeout(() => toast.remove(), 300); 
+    }, 3000);
+}
+
+const translations = {
+    menu: { km: 'សូមស្កេនដើម្បីមើលម៉ឺនុយ និងកុម្មង់', en: 'Scan to view menu and order', cn: '扫码查看菜单并点餐' },
+    shop: { km: 'សូមស្កេនដើម្បីមើលបញ្ជីទំនិញ', en: 'Scan to view our products', cn: '扫码查看商品列表' },
+    service: { km: 'សូមស្កេនដើម្បីមើលសេវាកម្ម', en: 'Scan to view our services', cn: '扫码查看我们的服务' },
+    wifi: { km: 'សូមស្កេនដើម្បីភ្ជាប់ WiFi ដោយឥតគិតថ្លៃ', en: 'Scan to connect Free WiFi', cn: '扫码连接免费WiFi' }
+};
+
+const themesData = [
+    { id: 'cafe', type: 'menu', name: '☕ កាហ្វេ', badge: '<i class="fa-solid fa-mug-hot"></i> Coffee & Cafe', bg: 'linear-gradient(135deg, #291b11 0%, #0a0502 100%)', text: '#f3e8ff', badgeBg: '#d97706', badgeText: '#fff' },
+    { id: 'resto', type: 'menu', name: '🍲 ភោជនីយដ្ឋាន', badge: '<i class="fa-solid fa-utensils"></i> Restaurant', bg: 'linear-gradient(135deg, #7c2d12 0%, #2e0e02 100%)', text: '#fff7ed', badgeBg: '#ea580c', badgeText: '#fff' },
+    { id: 'bubble_tea', type: 'menu', name: '🧋 តែគុជ', badge: '<i class="fa-solid fa-martini-glass"></i> Bubble Tea', bg: 'linear-gradient(135deg, #831843 0%, #360216 100%)', text: '#fce7f3', badgeBg: '#db2777', badgeText: '#fff' },
+    { id: 'bakery', type: 'menu', name: '🥐 នំប៉័ង', badge: '<i class="fa-solid fa-bread-slice"></i> Bakery', bg: 'linear-gradient(135deg, #78350f 0%, #381301 100%)', text: '#fef3c7', badgeBg: '#f59e0b', badgeText: '#000' },
+    { id: 'bbq', type: 'menu', name: '🥩 BBQ & សាច់អាំង', badge: '<i class="fa-solid fa-fire-burner"></i> BBQ & Grill', bg: 'linear-gradient(135deg, #450a0a 0%, #170101 100%)', text: '#fee2e2', badgeBg: '#dc2626', badgeText: '#fff' },
+    { id: 'pizza', type: 'menu', name: '🍕 ភីហ្សា', badge: '<i class="fa-solid fa-pizza-slice"></i> Pizza', bg: 'linear-gradient(135deg, #14532d 0%, #052e16 100%)', text: '#dcfce7', badgeBg: '#16a34a', badgeText: '#fff' },
+    { id: 'sushi', type: 'menu', name: '🍣 ជប៉ុន/ស៊ូស៊ី', badge: '<i class="fa-solid fa-fish"></i> Japanese Sushi', bg: 'linear-gradient(135deg, #18181b 0%, #09090b 100%)', text: '#f4f4f5', badgeBg: '#ef4444', badgeText: '#fff' },
+    { id: 'mart', type: 'shop', name: '🛒 ម៉ាត', badge: '<i class="fa-solid fa-cart-shopping"></i> Minimart', bg: 'linear-gradient(135deg, #0c4a6e 0%, #031e30 100%)', text: '#e0f2fe', badgeBg: '#0284c7', badgeText: '#fff' },
+    { id: 'pharmacy', type: 'shop', name: '💊 ឱសថស្ថាន', badge: '<i class="fa-solid fa-capsules"></i> Pharmacy', bg: 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)', text: '#ecfdf5', badgeBg: '#10b981', badgeText: '#fff' },
+    { id: 'fashion', type: 'shop', name: '👗 សម្លៀកបំពាក់', badge: '<i class="fa-solid fa-shirt"></i> Fashion', bg: 'linear-gradient(135deg, #831843 0%, #4c0519 100%)', text: '#ffe4e6', badgeBg: '#f43f5e', badgeText: '#fff' },
+    { id: 'shoes', type: 'shop', name: '👟 ស្បែកជើង', badge: '<i class="fa-solid fa-shoe-prints"></i> Shoes Store', bg: 'linear-gradient(135deg, #312e81 0%, #1e1b4b 100%)', text: '#e0e7ff', badgeBg: '#6366f1', badgeText: '#fff' },
+    { id: 'cosmetic', type: 'shop', name: '💄 គ្រឿងសម្អាង', badge: '<i class="fa-solid fa-wand-magic-sparkles"></i> Cosmetic', bg: 'linear-gradient(135deg, #701a75 0%, #4a044e 100%)', text: '#f5d0fe', badgeBg: '#d946ef', badgeText: '#fff' },
+    { id: 'salon', type: 'service', name: '💇 សាឡន', badge: '<i class="fa-solid fa-scissors"></i> Hair Salon', bg: 'linear-gradient(135deg, #1e1b4b 0%, #0f172a 100%)', text: '#e2e8f0', badgeBg: '#8b5cf6', badgeText: '#fff' },
+    { id: 'spa', type: 'service', name: '💆 ស្ប៉ា', badge: '<i class="fa-solid fa-spa"></i> Spa & Wellness', bg: 'linear-gradient(135deg, #134e4a 0%, #042f2e 100%)', text: '#ccfbf1', badgeBg: '#14b8a6', badgeText: '#fff' },
+    { id: 'flower', type: 'shop', name: '💐 ហាងផ្កា', badge: '<i class="fa-solid fa-seedling"></i> Florist', bg: 'linear-gradient(135deg, #881337 0%, #3f0f1d 100%)', text: '#ffe4e6', badgeBg: '#fb7185', badgeText: '#fff' },
+    { id: 'phone', type: 'shop', name: '📱 ទូរស័ព្ទ', badge: '<i class="fa-solid fa-mobile-screen"></i> Phone Shop', bg: 'linear-gradient(135deg, #0f172a 0%, #020617 100%)', text: '#38bdf8', badgeBg: '#0ea5e9', badgeText: '#000' },
+    { id: 'computer', type: 'shop', name: '💻 កុំព្យូទ័រ', badge: '<i class="fa-solid fa-laptop"></i> Computer & IT', bg: 'linear-gradient(135deg, #111827 0%, #030712 100%)', text: '#a7f3d0', badgeBg: '#10b981', badgeText: '#000' },
+    { id: 'hardware', type: 'shop', name: '🔩 សម្ភារៈសំណង់', badge: '<i class="fa-solid fa-hammer"></i> Hardware', bg: 'linear-gradient(135deg, #27272a 0%, #09090b 100%)', text: '#f4f4f5', badgeBg: '#f97316', badgeText: '#fff' },
+    { id: 'furniture', type: 'shop', name: '🛋️ គ្រឿងសង្ហារិម', badge: '<i class="fa-solid fa-couch"></i> Furniture', bg: 'linear-gradient(135deg, #292524 0%, #1c1917 100%)', text: '#f5f5f4', badgeBg: '#d7823e', badgeText: '#fff' },
+    { id: 'pet', type: 'shop', name: '🐶 ហាងសត្វ', badge: '<i class="fa-solid fa-paw"></i> Pet Shop', bg: 'linear-gradient(135deg, #3f3f46 0%, #18181b 100%)', text: '#fef08a', badgeBg: '#eab308', badgeText: '#000' },
+    { id: 'gym', type: 'service', name: '🏋️ ក្លឹបហាត់ប្រាណ', badge: '<i class="fa-solid fa-dumbbell"></i> Gym & Fitness', bg: 'linear-gradient(135deg, #09090b 0%, #000000 100%)', text: '#fafafa', badgeBg: '#22c55e', badgeText: '#000' },
+    { id: 'car_parts', type: 'shop', name: '🚗 គ្រឿងបន្លាស់', badge: '<i class="fa-solid fa-car"></i> Auto Parts', bg: 'linear-gradient(135deg, #18181b 0%, #0f172a 100%)', text: '#e2e8f0', badgeBg: '#3b82f6', badgeText: '#fff' },
+    { id: 'car_wash', type: 'service', name: '🧼 លាងឡាន', badge: '<i class="fa-solid fa-soap"></i> Car Wash', bg: 'linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%)', text: '#7dd3fc', badgeBg: '#0284c7', badgeText: '#fff' },
+    { id: 'hotel', type: 'service', name: '🏨 សណ្ឋាគារ', badge: '<i class="fa-solid fa-hotel"></i> Hotel & Stay', bg: 'linear-gradient(135deg, #451a03 0%, #291b11 100%)', text: '#fef3c7', badgeBg: '#d97706', badgeText: '#fff' },
+    { id: 'karaoke', type: 'service', name: '🎤 ខារ៉ាអូខេ', badge: '<i class="fa-solid fa-microphone-lines"></i> Karaoke', bg: 'linear-gradient(135deg, #3b0764 0%, #1e1b4b 100%)', text: '#e9d5ff', badgeBg: '#a855f7', badgeText: '#fff' },
+    { id: 'game', type: 'service', name: '🎮 កន្លែងហ្គេម', badge: '<i class="fa-solid fa-gamepad"></i> Game Station', bg: 'linear-gradient(135deg, #1e1b4b 0%, #020617 100%)', text: '#c084fc', badgeBg: '#9333ea', badgeText: '#fff' },
+    { id: 'book', type: 'shop', name: '📚 សៀវភៅ', badge: '<i class="fa-solid fa-book"></i> Book Store', bg: 'linear-gradient(135deg, #065f46 0%, #064e3b 100%)', text: '#a7f3d0', badgeBg: '#059669', badgeText: '#fff' },
+    { id: 'baby', type: 'shop', name: '🍼 សម្ភារៈទារក', badge: '<i class="fa-solid fa-baby"></i> Baby Shop', bg: 'linear-gradient(135deg, #fbcfe8 0%, #f472b6 100%)', text: '#500724', badgeBg: '#ffffff', badgeText: '#831843' },
+    { id: 'anime', type: 'shop', name: '🎎 តុក្កតា/Anime', badge: '<i class="fa-solid fa-dragon"></i> Figures & Anime', bg: 'linear-gradient(135deg, #4c0519 0%, #020617 100%)', text: '#f472b6', badgeBg: '#e11d48', badgeText: '#fff' },
+    { id: 'jewelry', type: 'shop', name: '💎 គ្រឿងអលង្ការ', badge: '<i class="fa-solid fa-gem"></i> Jewelry', bg: 'linear-gradient(135deg, #020617 0%, #172554 100%)', text: '#fef08a', badgeBg: '#eab308', badgeText: '#000' },
+    { id: 'watch', type: 'shop', name: '⌚ នាឡិកា', badge: '<i class="fa-solid fa-stopwatch"></i> Watch Store', bg: 'linear-gradient(135deg, #18181b 0%, #09090b 100%)', text: '#e4e4e7', badgeBg: '#71717a', badgeText: '#fff' },
+    { id: 'optics', type: 'shop', name: '👓 វ៉ែនតា', badge: '<i class="fa-solid fa-glasses"></i> Optical', bg: 'linear-gradient(135deg, #0f172a 0%, #064e3b 100%)', text: '#ccfbf1', badgeBg: '#0d9488', badgeText: '#fff' },
+    { id: 'cinema', type: 'service', name: '🍿 រោងកុន', badge: '<i class="fa-solid fa-film"></i> Cinema', bg: 'linear-gradient(135deg, #450a0a 0%, #000000 100%)', text: '#fecaca', badgeBg: '#b91c1c', badgeText: '#fff' },
+    { id: 'bar', type: 'menu', name: '🍻 បារ & ផាប់', badge: '<i class="fa-solid fa-beer-mug-empty"></i> Bar & Pub', bg: 'linear-gradient(135deg, #2e1065 0%, #000000 100%)', text: '#e9d5ff', badgeBg: '#c026d3', badgeText: '#fff' },
+    { id: 'icecream', type: 'menu', name: '🍦 ការ៉េម', badge: '<i class="fa-solid fa-ice-cream"></i> Ice Cream', bg: 'linear-gradient(135deg, #fce7f3 0%, #e0e7ff 100%)', text: '#831843', badgeBg: '#ec4899', badgeText: '#fff' },
+    { id: 'seafood', type: 'menu', name: '🦀 គ្រឿងសមុទ្រ', badge: '<i class="fa-solid fa-shrimp"></i> Seafood', bg: 'linear-gradient(135deg, #082f49 0%, #020617 100%)', text: '#bae6fd', badgeBg: '#0369a1', badgeText: '#fff' },
+    { id: 'fruit', type: 'shop', name: '🍉 ផ្លែឈើ', badge: '<i class="fa-solid fa-apple-whole"></i> Fruits', bg: 'linear-gradient(135deg, #14532d 0%, #78350f 100%)', text: '#fef3c7', badgeBg: '#f59e0b', badgeText: '#000' },
+    { id: 'veg', type: 'shop', name: '🥬 បន្លែធម្មជាតិ', badge: '<i class="fa-solid fa-carrot"></i> Organic Veggies', bg: 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)', text: '#d1fae5', badgeBg: '#10b981', badgeText: '#fff' },
+    { id: 'bike', type: 'shop', name: '🚲 ហាងកង់', badge: '<i class="fa-solid fa-bicycle"></i> Bike Shop', bg: 'linear-gradient(135deg, #3f3f46 0%, #18181b 100%)', text: '#fef08a', badgeBg: '#eab308', badgeText: '#000' },
+    { id: 'sports', type: 'shop', name: '⚽ សម្ភារៈកីឡា', badge: '<i class="fa-solid fa-futbol"></i> Sports', bg: 'linear-gradient(135deg, #1e3a8a 0%, #172554 100%)', text: '#bfdbfe', badgeBg: '#2563eb', badgeText: '#fff' },
+    { id: 'music', type: 'shop', name: '🎸 តន្ត្រី', badge: '<i class="fa-solid fa-guitar"></i> Music', bg: 'linear-gradient(135deg, #451a03 0%, #2e0e02 100%)', text: '#fed7aa', badgeBg: '#ea580c', badgeText: '#fff' },
+    { id: 'art', type: 'shop', name: '🎨 សិល្បៈគំនូរ', badge: '<i class="fa-solid fa-palette"></i> Art & Craft', bg: 'linear-gradient(135deg, #831843 0%, #4c1d95 100%)', text: '#fbcfe8', badgeBg: '#db2777', badgeText: '#fff' },
+    { id: 'photo', type: 'service', name: '📸 ស្ទូឌីយោ', badge: '<i class="fa-solid fa-camera-retro"></i> Photo Studio', bg: 'linear-gradient(135deg, #27272a 0%, #09090b 100%)', text: '#e4e4e7', badgeBg: '#52525b', badgeText: '#fff' },
+    { id: 'print', type: 'service', name: '🖨️ រោងពុម្ព', badge: '<i class="fa-solid fa-print"></i> Printing', bg: 'linear-gradient(135deg, #164e63 0%, #083344 100%)', text: '#cffafe', badgeBg: '#0891b2', badgeText: '#fff' },
+    { id: 'travel', type: 'service', name: '✈️ ទេសចរណ៍', badge: '<i class="fa-solid fa-plane-departure"></i> Travel Agency', bg: 'linear-gradient(135deg, #0284c7 0%, #0369a1 100%)', text: '#f0f9ff', badgeBg: '#0ea5e9', badgeText: '#fff' },
+    { id: 'laundry', type: 'service', name: '🧺 បោកអ៊ុត', badge: '<i class="fa-solid fa-shirt"></i> Laundry', bg: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)', text: '#f0f9ff', badgeBg: '#38bdf8', badgeText: '#000' },
+    { id: 'dental', type: 'service', name: '🦷 គ្លីនិកធ្មេញ', badge: '<i class="fa-solid fa-tooth"></i> Dental', bg: 'linear-gradient(135deg, #0f766e 0%, #115e59 100%)', text: '#ccfbf1', badgeBg: '#14b8a6', badgeText: '#fff' },
+    { id: 'edu', type: 'service', name: '🎓 សាលារៀន', badge: '<i class="fa-solid fa-graduation-cap"></i> Education', bg: 'linear-gradient(135deg, #1e3a8a 0%, #172554 100%)', text: '#fef08a', badgeBg: '#eab308', badgeText: '#000' },
+    { id: 'real_estate', type: 'service', name: '🏘️ អចលនទ្រព្យ', badge: '<i class="fa-solid fa-house-flag"></i> Real Estate', bg: 'linear-gradient(135deg, #064e3b 0%, #022c22 100%)', text: '#d1fae5', badgeBg: '#10b981', badgeText: '#fff' },
+    { id: 'wedding', type: 'service', name: '💍 សម្អាងការ', badge: '<i class="fa-solid fa-ring"></i> Wedding', bg: 'linear-gradient(135deg, #9f1239 0%, #4c0519 100%)', text: '#ffe4e6', badgeBg: '#e11d48', badgeText: '#fff' },
+    { id: 'bank', type: 'service', name: '🏦 ធនាគារ', badge: '<i class="fa-solid fa-building-columns"></i> Bank & Finance', bg: 'linear-gradient(135deg, #1e40af 0%, #1e3a8a 100%)', text: '#e0f2fe', badgeBg: '#38bdf8', badgeText: '#000' },
+    { id: 'delivery', type: 'service', name: '🚚 ដឹកជញ្ជូន', badge: '<i class="fa-solid fa-truck-fast"></i> Logistics', bg: 'linear-gradient(135deg, #b45309 0%, #78350f 100%)', text: '#fef3c7', badgeBg: '#f59e0b', badgeText: '#000' },
+    { id: 'other', type: 'service', name: '🏢 ផ្សេងៗ', badge: '<i class="fa-solid fa-building"></i> Services', bg: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)', text: '#f8fafc', badgeBg: '#38bdf8', badgeText: '#000' }
+];
+
+let selectedTheme = themesData[0];
+let uploadedLogoUrl = null;
+let currentQrCode = null;
+let debounceTimer;
+let currentLang = 'km';
+
+function toggleAutoNumbering() {
+    const isChecked = document.getElementById('autoNumbering').checked;
+    const autoCountDiv = document.getElementById('autoCountDiv');
+    if (autoCountDiv) {
+        autoCountDiv.style.opacity = isChecked ? '1' : '0.3';
+        autoCountDiv.style.pointerEvents = isChecked ? 'auto' : 'none';
+    }
+}
+
+function syncAutoCount() {
+    const total = document.getElementById('tableCount').value;
+    const limitInput = document.getElementById('autoCountLimit');
+    if (limitInput) limitInput.value = total;
+    saveState();
+}
+
+function initGenerator() {
+    const grid = document.getElementById('themeGrid');
+    grid.innerHTML = themesData.map((t, idx) => 
+        `<div class="theme-option ${idx === 0 ? 'active' : ''}" onclick="selectTheme('${t.id}')">${t.name}</div>`
+    ).join('');
+    
+    currentQrCode = new QRCodeStyling({
+        width: 1000, height: 1000, margin: 0, type: "canvas",
+        data: "https://skm-pos.com",
+        imageOptions: { crossOrigin: "anonymous", margin: 15, imageSize: 0.35, hideBackgroundDots: true },
+        qrOptions: { errorCorrectionLevel: 'H' }
+    });
+    
+    loadState();
+    selectTheme(selectedTheme.id, true);
+    if(typeof toggleAutoNumbering === 'function') toggleAutoNumbering(); 
+}
+
+function selectTheme(id, isInit = false) {
+    selectedTheme = themesData.find(t => t.id === id) || themesData[0];
+    
+    document.querySelectorAll('.theme-option').forEach(el => {
+        el.classList.toggle('active', el.innerText.trim() === selectedTheme.name.replace(/<[^>]*>?/gm, '').trim());
+    });
+
+    const card = document.getElementById('qrCardTheme');
+    if (!card.classList.contains('has-bg')) { card.style.background = selectedTheme.bg; }
+    
+    card.style.color = selectedTheme.text;
+    
+    const badge = document.getElementById('cardBadge');
+    badge.style.background = selectedTheme.badgeBg;
+    badge.style.color = selectedTheme.badgeText;
+    badge.innerHTML = selectedTheme.badge; 
+    
+    const tableDisp = document.getElementById('tableDisplay');
+    if(tableDisp) {
+        tableDisp.style.background = selectedTheme.badgeBg;
+        tableDisp.style.color = selectedTheme.badgeText;
+    }
+    
+    if(isInit && document.getElementById('frameSelect').value !== 'FREE WIFI') {
+        document.getElementById('cardSub').innerText = translations[selectedTheme.type][currentLang];
+    }
+    
+    if (document.getElementById('frameColor')) {
+        document.getElementById('frameColor').value = selectedTheme.badgeBg;
+        updateFrameColor();
+    }
+    
+    const hexColors = selectedTheme.bg.match(/#[0-9a-fA-F]{6}/g);
+    if(hexColors && hexColors.length >= 2) {
+        document.getElementById('bgColor1').value = hexColors[0];
+        document.getElementById('bgColorText1').value = hexColors[0].toUpperCase();
+        document.getElementById('bgColor2').value = hexColors[1];
+        document.getElementById('bgColorText2').value = hexColors[1].toUpperCase();
+    }
+    
+    if (selectedTheme.text) {
+        let txtColor = selectedTheme.text;
+        if(txtColor.length === 4) txtColor = '#' + txtColor[1]+txtColor[1]+txtColor[2]+txtColor[2]+txtColor[3]+txtColor[3];
+        document.getElementById('textColor').value = txtColor;
+        document.getElementById('textColorText').value = txtColor.toUpperCase();
+    }
+    
+    updateQR(); saveState();
+}
+
+function setLang(lang, btn) {
+    currentLang = lang;
+    document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+    if(btn) btn.classList.add('active'); 
+    
+    let isWifi = document.getElementById('frameSelect').value === 'FREE WIFI';
+    if(isWifi) {
+        document.getElementById('cardSub').innerText = translations.wifi[lang];
+    } else {
+        document.getElementById('cardSub').innerText = translations[selectedTheme.type][lang];
+    }
+}
+
+function changeFont() {
+    const font = document.getElementById('fontSelect').value;
+    document.getElementById('cardShopTitle').style.fontFamily = font;
+    saveState();
+}
+
+function changeFontSize(type) {
+    if(type === 'title') {
+        const val = document.getElementById('titleSizeRange').value;
+        document.getElementById('cardShopTitle').style.fontSize = val + 'px';
+        document.getElementById('titleSizeDisp').innerText = val + 'px';
+    } else if (type === 'sub') {
+        const val = document.getElementById('subSizeRange').value;
+        document.getElementById('cardSub').style.fontSize = val + 'px';
+        document.getElementById('subSizeDisp').innerText = val + 'px';
+    }
+    saveState();
+}
+
+function toggleBadge() { document.getElementById('badgeWrapper').style.display = document.getElementById('badgeToggle').checked ? 'block' : 'none'; }
+
+function syncColor(num, source) {
+    const picker = document.getElementById(`bgColor${num}`);
+    const text = document.getElementById(`bgColorText${num}`);
+    if (source === 'picker') { text.value = picker.value.toUpperCase(); } 
+    else if (source === 'text') {
+        let hex = text.value.trim();
+        if(!hex.startsWith('#') && hex.length > 0) hex = '#' + hex;
+        if (/^#[0-9A-F]{6}$/i.test(hex)) picker.value = hex;
+    }
+    const card = document.getElementById('qrCardTheme');
+    card.classList.remove('has-bg');
+    card.style.backgroundImage = 'none';
+    card.style.background = `linear-gradient(135deg, ${document.getElementById('bgColor1').value} 0%, ${document.getElementById('bgColor2').value} 100%)`;
+}
+
+function syncTextColor(source) {
+    const picker = document.getElementById('textColor');
+    const text = document.getElementById('textColorText');
+    if (source === 'picker') { text.value = picker.value.toUpperCase(); } 
+    else if (source === 'text') {
+        let hex = text.value.trim();
+        if(!hex.startsWith('#') && hex.length > 0) hex = '#' + hex;
+        if (/^#[0-9A-F]{6}$/i.test(hex)) picker.value = hex;
+    }
+    document.getElementById('qrCardTheme').style.color = document.getElementById('textColor').value;
+}
+
+function changeFrame() {
+    const val = document.getElementById('frameSelect').value;
+    const wrapper = document.getElementById('qrFrameWrapper');
+    const linkG = document.getElementById('linkGroup');
+    const wifiG = document.getElementById('wifiGroup');
+    
+    if(val === 'none') { wrapper.classList.remove('has-frame'); } 
+    else { wrapper.classList.add('has-frame'); document.getElementById('frameText').innerText = val; }
+    
+    if(val === 'FREE WIFI') {
+        linkG.style.display = 'none'; 
+        wifiG.style.display = 'block';
+        document.getElementById('cardSub').innerText = translations.wifi[currentLang];
+        document.getElementById('badgeWrapper').style.display = 'none';
+        if(document.getElementById('tableDisplayWrapper')) document.getElementById('tableDisplayWrapper').style.display = 'none';
+    } else {
+        linkG.style.display = 'block'; 
+        wifiG.style.display = 'none';
+        if(document.getElementById('badgeToggle').checked) document.getElementById('badgeWrapper').style.display = 'block';
+        if(document.getElementById('cardSub').innerText.includes("WiFi")) document.getElementById('cardSub').innerText = translations[selectedTheme.type][currentLang];
+    }
+    updateFrameColor();
+    updateQR(); saveState();
+}
+
+function updateFrameColor() {
+    const customFrameColor = document.getElementById('frameColor').value;
+    document.getElementById('qrFrameBox').style.color = customFrameColor;
+    document.getElementById('frameText').style.background = customFrameColor;
+    document.getElementById('frameText').style.color = selectedTheme ? selectedTheme.badgeText : '#ffffff';
+    saveState();
+}
+
+function handleLogoUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const img = new Image();
+        img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const size = Math.max(img.width, img.height); 
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            ctx.clearRect(0, 0, size, size);
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+            ctx.fillStyle = "#ffffff";
+            ctx.fill();
+            ctx.clip();
+
+            const padding = size * 0.1;
+            const maxDrawSize = size - (padding * 2);
+            const scale = Math.min(maxDrawSize / img.width, maxDrawSize / img.height);
+            const drawWidth = img.width * scale;
+            const drawHeight = img.height * scale;
+            const startX = (size - drawWidth) / 2;
+            const startY = (size - drawHeight) / 2;
+
+            ctx.drawImage(img, startX, startY, drawWidth, drawHeight);
+
+            uploadedLogoUrl = canvas.toDataURL('image/png');
+            updateQR();
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+function handleBgUpload(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const bgUrl = URL.createObjectURL(file);
+        const card = document.getElementById('qrCardTheme');
+        card.style.background = `url(${bgUrl})`;
+        card.classList.add('has-bg');
+    }
+}
+
+function clearImages() {
+    document.getElementById('logoUpload').value = ''; uploadedLogoUrl = null;
+    document.getElementById('bgUpload').value = '';
+    const card = document.getElementById('qrCardTheme');
+    card.classList.remove('has-bg');
+    selectTheme(selectedTheme.id);
+    updateQR();
+}
+
+function debounceUpdate() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { updateQR(); saveState(); }, 300); }
+
+function updateQR() {
+    if(!currentQrCode) return;
+    const branchName = document.getElementById('branchInput').value.trim() || 'Heng';
+    let tableNo = document.getElementById('tableInput') ? document.getElementById('tableInput').value.trim() : '';
+    
+    let finalUrl = branchName.startsWith('http') ? branchName : 'https://skm-pos.com/menu?branch=' + encodeURIComponent(branchName);
+    
+    if (tableNo && document.getElementById('frameSelect').value !== 'FREE WIFI') {
+        if (!branchName.startsWith('http')) {
+            finalUrl += '&table=' + encodeURIComponent(tableNo);
+        } else {
+            finalUrl += (finalUrl.includes('?') ? '&' : '?') + 'table=' + encodeURIComponent(tableNo);
+        }
+        
+        if (document.getElementById('tableDisplayWrapper')) {
+            document.getElementById('tableDisplayWrapper').style.display = 'block';
+            document.getElementById('tableVal').innerText = tableNo;
+        }
+    } else {
+        if (document.getElementById('tableDisplayWrapper')) {
+            document.getElementById('tableDisplayWrapper').style.display = 'none';
+        }
+    }
+    
+    if(document.getElementById('frameSelect').value === 'FREE WIFI') {
+        let ssid = document.getElementById('wifiSsid').value;
+        let pwd = document.getElementById('wifiPwd').value;
+        finalUrl = `WIFI:S:${ssid};T:WPA;P:${pwd};;`;
+    }
+    
+    const dotType = document.getElementById('dotSelect').value;
+    const eyeShape = document.getElementById('eyeSelect').value;
+    const qrCol = document.getElementById('qrColor').value;
+    
+    currentQrCode.update({
+        width: 1000, height: 1000, data: finalUrl, image: uploadedLogoUrl || "",
+        dotsOptions: { type: dotType, color: qrCol }, 
+        backgroundOptions: { color: "#ffffff" },
+        cornersSquareOptions: { type: eyeShape, color: qrCol },
+        cornersDotOptions: { type: eyeShape === 'extra-rounded' ? 'dot' : eyeShape, color: qrCol },
+        imageOptions: {
+            crossOrigin: "anonymous", 
+            margin: 0, 
+            imageSize: 0.35, 
+            hideBackgroundDots: false 
+        }
+    });
+    
+    const container = document.getElementById("qrImageContainer");
+    container.innerHTML = ""; currentQrCode.append(container);
+}
+
+function saveState() {
+    const state = {
+        theme: selectedTheme.id,
+        frame: document.getElementById('frameSelect').value, 
+        dots: document.getElementById('dotSelect').value,
+        eye: document.getElementById('eyeSelect').value, 
+        qrCol: document.getElementById('qrColor').value,
+        font: document.getElementById('fontSelect').value,
+        frameColor: document.getElementById('frameColor') ? document.getElementById('frameColor').value : '#d97706',
+        gridCols: document.getElementById('gridColsSelect') ? document.getElementById('gridColsSelect').value : '3',
+        titleSize: document.getElementById('titleSizeRange').value,
+        subSize: document.getElementById('subSizeRange').value,
+        autoNum: document.getElementById('autoNumbering') ? document.getElementById('autoNumbering').checked : true,
+        autoLimit: document.getElementById('autoCountLimit') ? document.getElementById('autoCountLimit').value : "12",
+        branchInput: document.getElementById('branchInput').value,
+        tableCount: document.getElementById('tableCount').value,
+        cardTitle: document.getElementById('cardShopTitle').innerText,
+        cardSub: document.getElementById('cardSub').innerText,
+        lang: currentLang,
+        bgColor1: document.getElementById('bgColor1').value,
+        bgColor2: document.getElementById('bgColor2').value,
+        textColor: document.getElementById('textColor').value
+    };
+    localStorage.setItem('skmQrState_ultimate', JSON.stringify(state));
+}
+
+function applyStateObj(saved) {
+    if(!saved) return;
+    if(saved.theme) selectTheme(saved.theme, false);
+    if(saved.frame) document.getElementById('frameSelect').value = saved.frame;
+    if(saved.dots) document.getElementById('dotSelect').value = saved.dots;
+    if(saved.eye) document.getElementById('eyeSelect').value = saved.eye;
+    if(saved.qrCol) document.getElementById('qrColor').value = saved.qrCol;
+    if(saved.font) { document.getElementById('fontSelect').value = saved.font; changeFont(); }
+    
+    if(saved.frameColor && document.getElementById('frameColor')) { document.getElementById('frameColor').value = saved.frameColor; }
+    if(saved.gridCols && document.getElementById('gridColsSelect')) { document.getElementById('gridColsSelect').value = saved.gridCols; }
+    
+    if(saved.titleSize) { document.getElementById('titleSizeRange').value = saved.titleSize; changeFontSize('title'); }
+    if(saved.subSize) { document.getElementById('subSizeRange').value = saved.subSize; changeFontSize('sub'); }
+    
+    if(saved.autoNum !== undefined && document.getElementById('autoNumbering')) {
+        document.getElementById('autoNumbering').checked = saved.autoNum;
+        if(typeof toggleAutoNumbering === 'function') toggleAutoNumbering();
+    }
+    if(saved.autoLimit !== undefined && document.getElementById('autoCountLimit')) { document.getElementById('autoCountLimit').value = saved.autoLimit; }
+    
+    if(saved.branchInput) document.getElementById('branchInput').value = saved.branchInput;
+    if(saved.tableCount) document.getElementById('tableCount').value = saved.tableCount;
+    if(saved.cardTitle) document.getElementById('cardShopTitle').innerText = saved.cardTitle;
+    if(saved.cardSub) document.getElementById('cardSub').innerText = saved.cardSub;
+    
+    if(saved.lang) {
+        currentLang = saved.lang;
+        document.querySelectorAll('.lang-btn').forEach(b => {
+            b.classList.remove('active');
+            if(b.getAttribute('onclick').includes(`'${saved.lang}'`)) b.classList.add('active');
+        });
+    }
+    
+    if(saved.bgColor1 && saved.bgColor2) {
+        document.getElementById('bgColor1').value = saved.bgColor1;
+        document.getElementById('bgColor2').value = saved.bgColor2;
+        syncColor('1', 'picker'); syncColor('2', 'picker');
+    }
+    if(saved.textColor) {
+        document.getElementById('textColor').value = saved.textColor;
+        syncTextColor('picker');
+    }
+    
+    changeFrame();
+}
+
+function loadState() {
+    try {
+        const saved = JSON.parse(localStorage.getItem('skmQrState_ultimate'));
+        applyStateObj(saved);
+    } catch(e) {}
+}
+
+function exportConfig() {
+    saveState();
+    const stateStr = localStorage.getItem('skmQrState_ultimate');
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(stateStr);
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", "SKM_Template_" + Date.now() + ".json");
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
+    showToast("✅ បាន Backup រក្សាទុកគំរូជោគជ័យ!");
+}
+
+function importConfig(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const saved = JSON.parse(e.target.result);
+            applyStateObj(saved);
+            updateQR();
+            saveState();
+            showToast("✅ បាន Restore គំរូជោគជ័យ!");
+        } catch (err) {
+            console.error(err);
+            showToast("❌ ឯកសារមិនត្រឹមត្រូវ!");
+        }
+        document.getElementById('importConfig').value = ""; 
+    };
+    reader.readAsText(file);
+}
+
+async function copyURL() {
+    const branchName = document.getElementById('branchInput').value.trim() || 'Heng';
+    let url = branchName.startsWith('http') ? branchName : 'https://skm-pos.com/menu?branch=' + encodeURIComponent(branchName);
+    let tableNo = document.getElementById('tableInput') ? document.getElementById('tableInput').value.trim() : '';
+    if (tableNo && !branchName.startsWith('http')) { url += '&table=' + encodeURIComponent(tableNo); }
+    
+    try {
+        if(navigator.clipboard && window.isSecureContext) {
+            await navigator.clipboard.writeText(url);
+            showToast('✅ បាន Copy លីងជោគជ័យ!');
+        } else {
+            let textArea = document.createElement("textarea");
+            textArea.value = url;
+            textArea.style.position = "fixed";
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            showToast('✅ បាន Copy លីងជោគជ័យ!');
+        }
+    } catch(err) { showToast('❌ បរាជ័យក្នុងការ Copy លីង!'); }
+}
+
+async function shareCard() {
+    const branchName = document.getElementById('branchInput').value.trim() || 'Heng';
+    let url = branchName.startsWith('http') ? branchName : 'https://skm-pos.com/menu?branch=' + encodeURIComponent(branchName);
+    let tableNo = document.getElementById('tableInput') ? document.getElementById('tableInput').value.trim() : '';
+    if (tableNo && !branchName.startsWith('http')) { url += '&table=' + encodeURIComponent(tableNo); }
+    
+    if (navigator.share) {
+        try { 
+            await navigator.share({ 
+                title: 'ម៉ឺនុយហាង', 
+                text: 'សូមស្កេនកាត QR នេះដើម្បីមើលម៉ឺនុយ!',
+                url: url
+            }); 
+        } 
+        catch (err) { console.log(err); }
+    } else { showToast("⚠️ ទូរស័ព្ទអ្នកមិនគាំទ្រការ Share នេះទេ។"); }
+}
+
+async function downloadCard() {
+    const btn = document.getElementById('downloadBtn'); const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> កំពុងថតយករូបភាព...'; btn.disabled = true;
+    const card = document.getElementById('qrCardTheme');
+    
+    document.getElementById('cardShopTitle').contentEditable = false; document.getElementById('cardSub').contentEditable = false;
+    card.classList.add('is-capturing');
+    
+    try {
+        const dataUrl = await htmlToImage.toPng(card, { 
+            quality: 1.0, 
+            pixelRatio: 4, 
+            width: 360,
+            height: 540,
+            style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } 
+        });
+        const link = document.createElement('a'); link.download = `SKM_QR_${Date.now()}.png`;
+        link.href = dataUrl; link.click();
+        showToast("✅ បានទាញយករូបភាពជោគជ័យ!");
+    } catch (error) { showToast('❌ មានបញ្ហាក្នុងការថត។ សូមសាកល្បងម្តងទៀត។'); } 
+    finally {
+        document.getElementById('cardShopTitle').contentEditable = true; document.getElementById('cardSub').contentEditable = true;
+        card.classList.remove('is-capturing'); btn.innerHTML = originalText; btn.disabled = false;
+    }
+}
+
+async function printA4Grid() {
+    const btn = document.getElementById('gridPrintBtn');
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> កំពុងរៀបចំ...';
+    btn.disabled = true;
+    
+    const card = document.getElementById('qrCardTheme');
+    document.getElementById('cardShopTitle').contentEditable = false; document.getElementById('cardSub').contentEditable = false;
+    card.classList.add('is-capturing');
+    
+    try {
+        let tableCount = parseInt(document.getElementById('tableCount') ? document.getElementById('tableCount').value : "12") || 12;
+        let originalTableInput = document.getElementById('tableInput') ? document.getElementById('tableInput').value.trim() : "";
+        let autoNumbering = document.getElementById('autoNumbering') ? document.getElementById('autoNumbering').checked : false;
+        let autoLimit = parseInt(document.getElementById('autoCountLimit') ? document.getElementById('autoCountLimit').value : tableCount) || tableCount;
+        
+        let cols = parseInt(document.getElementById('gridColsSelect') ? document.getElementById('gridColsSelect').value : "3") || 3;
+        
+        let win = window.open('', '_blank');
+        win.document.write(`
+        <html><head><title>SKM Batch A4 Print</title>
+        <style>
+            @page { size: A4; margin: 5mm; }
+            body { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(${cols}, 1fr); grid-auto-rows: minmax(min-content, max-content); gap: 4mm; align-items: center; justify-items: center; }
+            img { max-width: 100%; height: auto; object-fit: contain; box-shadow: 0 0 5px rgba(0,0,0,0.1); border-radius: 12px; page-break-inside: avoid; image-rendering: high-quality; image-rendering: -webkit-optimize-contrast; }
+        </style></head><body>`);
+        
+        let blankDataUrl = "";
+        if (autoNumbering && autoLimit < tableCount) {
+            document.getElementById('tableInput').value = "";
+            updateQR();
+            await new Promise(r => setTimeout(r, 200));
+            blankDataUrl = await htmlToImage.toPng(card, { quality: 1.0, pixelRatio: 4, width: 360, height: 540, style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } });
+        }
+
+        let identicalDataUrl = "";
+        if (!autoNumbering) {
+            document.getElementById('tableInput').value = originalTableInput;
+            updateQR();
+            await new Promise(r => setTimeout(r, 200));
+            identicalDataUrl = await htmlToImage.toPng(card, { quality: 1.0, pixelRatio: 4, width: 360, height: 540, style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } });
+        }
+
+        for(let i = 1; i <= tableCount; i++) {
+            if (autoNumbering) {
+                if (i <= autoLimit) {
+                    let displayVal = originalTableInput ? originalTableInput + " " + i : i.toString();
+                    document.getElementById('tableInput').value = displayVal; 
+                    updateQR();
+                    await new Promise(r => setTimeout(r, 200)); 
+                    
+                    let dataUrl = await htmlToImage.toPng(card, { 
+                        quality: 1.0, 
+                        pixelRatio: 4, 
+                        width: 360,
+                        height: 540,
+                        style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } 
+                    });
+                    win.document.write(`<img src="${dataUrl}">`);
+                } else {
+                    win.document.write(`<img src="${blankDataUrl}">`);
+                }
+            } else {
+                win.document.write(`<img src="${identicalDataUrl}">`);
+            }
+        }
+        
+        win.document.write(`</body></html>`);
+        win.document.close();
+        
+        if (document.getElementById('tableInput')) {
+            document.getElementById('tableInput').value = originalTableInput;
+            updateQR();
+        }
+        
+        setTimeout(() => { win.print(); }, 1500); 
+    } catch (error) {
+        console.error(error);
+        showToast('❌ មានបញ្ហាក្នុងការរៀបចំ Grid Print');
+    } finally {
+        document.getElementById('cardShopTitle').contentEditable = true; document.getElementById('cardSub').contentEditable = true;
+        card.classList.remove('is-capturing'); btn.innerHTML = originalText; btn.disabled = false;
+    }
+}
+
+window.onload = initGenerator;
+</script>
+
+</body></html>
