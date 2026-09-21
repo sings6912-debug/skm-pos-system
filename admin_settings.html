@@ -242,14 +242,17 @@
             <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
         </div>
 
-        <!-- បន្ថែមកន្លែងកំណត់ Telegram Bot នៅទីនេះ -->
+        <!-- កន្លែងកំណត់ Telegram Bot និងប៊ូតុង Test -->
         <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-top: 15px;">
             <label style="color: var(--success);"><i class="fa-solid fa-robot"></i> ការកំណត់ Telegram Bot សម្រាប់ទទួលសារ (ហៅបុគ្គលិក / កុម្ម៉ង់)</label>
             <div style="margin-bottom: 10px;">
                 <input type="text" id="setTelegramBotToken" class="input-st" placeholder="Bot Token (ឧ. 123456:ABC-DEF...)" onchange="saveAdminSettings()">
             </div>
-            <div>
+            <div style="margin-bottom: 10px;">
                 <input type="text" id="setTelegramChatId" class="input-st" placeholder="Chat ID (ឧ. -1001234567890)" onchange="saveAdminSettings()">
+            </div>
+            <div>
+                <button type="button" class="input-st" style="background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold; text-align: center;" onclick="testTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 ផ្ញើសារសាកល្បងទៅ Telegram (Test)</button>
             </div>
         </div>
     </div>
@@ -353,9 +356,38 @@
         setTimeout(() => t.classList.remove('show'), 2500);
     }
 
+    // មុខងារសាកល្បងផ្ញើសារ Telegram ពីหน้า Admin
+    async function testTelegramBot() {
+        const token = document.getElementById('setTelegramBotToken').value.trim();
+        const chatId = document.getElementById('setTelegramChatId').value.trim();
+        if (!token || !chatId) {
+            showToast('សូមបំពេញ Bot Token និង Chat ID ជាមុនសិន!', true);
+            return;
+        }
+        showToast('កំពុងផ្ញើសារសាកល្បង...');
+        try {
+            const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: "🔔 សារសាកល្បង (Test Message) ពីប្រព័ន្ធ Menu & POS - ដំណើរការបានជោគជ័យ!",
+                    parse_mode: 'HTML'
+                })
+            });
+            const data = await res.json();
+            if (data.ok) {
+                showToast('✅ ផ្ញើសារសាកល្បងចូល Telegram ជោគជ័យ!');
+            } else {
+                showToast('❌ Telegram Error: ' + (data.description || 'Invalid token/chat id'), true);
+            }
+        } catch(err) {
+            showToast('❌ Error: ' + err.message, true);
+        }
+    }
+
     async function initAdmin() {
         try {
-            // Load from LocalStorage first for instant UI (With Try/Catch Protection)
             let localSys = {};
             let localPosScripts = [];
             try {
@@ -373,7 +405,6 @@
             renderMenuScripts();
             renderPosScripts();
 
-            // Fetch from Supabase (Cloud)
             if (supabaseClient) {
                 try {
                     let { data, error } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
@@ -408,7 +439,6 @@
                         document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
                         document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
 
-                        // ទាញយក Telegram Bot Token និង Chat ID មកបង្ហាញ
                         if(sys.telegramBotToken) document.getElementById('setTelegramBotToken').value = sys.telegramBotToken;
                         if(sys.telegramChatId) document.getElementById('setTelegramChatId').value = sys.telegramChatId;
 
@@ -463,7 +493,6 @@
             d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
             d.sysSettings.preorder = document.getElementById('togglePreorder').checked;
 
-            // រក្សាទុក Telegram Bot Token និង Chat ID
             d.sysSettings.telegramBotToken = document.getElementById('setTelegramBotToken').value.trim();
             d.sysSettings.telegramChatId = document.getElementById('setTelegramChatId').value.trim();
 
@@ -569,7 +598,6 @@
 
         let displayScripts = [...menuScripts].reverse();
         
-        // បង្ហាញប៊ូតុង Show All នៅខាងលើ
         if (menuScripts.length > 3) {
             let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length} ឯកសារ)`;
             toggleContainer.innerHTML = `
@@ -661,7 +689,6 @@
         }
     }
 
-    // អនុគមន៍ថ្មីសម្រាប់លុប Menu Script ទាំងអស់
     function deleteAllMenuScripts() {
         if (menuScripts.length === 0) {
             showToast('គ្មានឯកសារត្រូវលុបទេ!', true);
@@ -715,7 +742,6 @@
 
         let displayScripts = [...posScripts].reverse();
 
-        // បង្ហាញប៊ូតុង Show All នៅខាងលើ
         if (posScripts.length > 3) {
             let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${posScripts.length} ឯកសារ)`;
             toggleContainer.innerHTML = `
@@ -807,7 +833,6 @@
         }
     }
 
-    // អនុគមន៍ថ្មីសម្រាប់លុប POS Script ទាំងអស់
     function deleteAllPosScripts() {
         if (posScripts.length === 0) {
             showToast('គ្មានឯកសារត្រូវលុបទេ!', true);
@@ -848,7 +873,6 @@
     }
 
     /* --- Utilities & URL Logic --- */
-    
     function getPageUrl(pageName) {
         let path = window.location.pathname;
         let lastSlash = path.lastIndexOf('/');
@@ -856,7 +880,6 @@
         return window.location.origin + newPath + '?branch=' + BRANCH;
     }
 
-    // --- Welcome Page Functions ---
     function copyWelcomeLink() {
         const welcomeUrl = getPageUrl('welcome.html');
         const dummy = document.createElement('input');
@@ -895,7 +918,6 @@
         window.open(getPageUrl('welcome.html'), '_blank');
     }
 
-    // --- Menu Page Functions ---
     function copyMenuLink() {
         const menuUrl = getPageUrl('menu.html');
         const dummy = document.createElement('input');
