@@ -235,17 +235,31 @@
             <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
         </div>
 
-        <!-- កន្លែងកំណត់ Telegram Bot និងប៊ូតុង Test -->
-        <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-top: 15px;">
-            <label style="color: var(--success);"><i class="fa-solid fa-robot"></i> ការកំណត់ Telegram Bot សម្រាប់ទទួលសារ (ហៅបុគ្គលិក / កុម្ម៉ង់)</label>
+        <!-- ================= BOT ទី១៖ សម្រាប់កុម្មង់ Drink ================= -->
+        <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--brand-cyan); margin-top: 15px;">
+            <label style="color: var(--brand-cyan);"><i class="fa-solid fa-robot"></i> 1. Telegram Bot សម្រាប់ទទួលសារ "កុម្មង់ Drink"</label>
             <div style="margin-bottom: 10px;">
-                <input type="text" id="setTelegramBotToken" class="input-st" placeholder="Bot Token (ឧ. 123456:ABC-DEF...)" onchange="saveAdminSettings()">
+                <input type="text" id="setOrderTelegramBotToken" class="input-st" placeholder="Bot Token (Drink Order)..." onchange="saveAdminSettings()">
             </div>
             <div style="margin-bottom: 10px;">
-                <input type="text" id="setTelegramChatId" class="input-st" placeholder="Chat ID (ឧ. -1003965871190)" onchange="saveAdminSettings()">
+                <input type="text" id="setOrderTelegramChatId" class="input-st" placeholder="Group Chat ID (ឧ. -100xxxxxxxxx)" onchange="saveAdminSettings()">
             </div>
             <div>
-                <button type="button" class="input-st" style="background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold; text-align: center;" onclick="testTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 ផ្ញើសារសាកល្បងទៅ Telegram (Test)</button>
+                <button type="button" class="input-st" style="background: var(--brand-cyan); color: white; border: none; cursor: pointer; font-weight: bold; text-align: center;" onclick="testOrderTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 Test Bot កុម្មង់ Drink</button>
+            </div>
+        </div>
+
+        <!-- ================= BOT ទី២៖ សម្រាប់សេវាកម្ម / ហៅបុគ្គលិក ================= -->
+        <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-top: 15px;">
+            <label style="color: var(--success);"><i class="fa-solid fa-bell-concierge"></i> 2. Telegram Bot សម្រាប់ "សេវាកម្ម / ហៅបុគ្គលិក"</label>
+            <div style="margin-bottom: 10px;">
+                <input type="text" id="setServiceTelegramBotToken" class="input-st" placeholder="Bot Token (Service/Staff)..." onchange="saveAdminSettings()">
+            </div>
+            <div style="margin-bottom: 10px;">
+                <input type="text" id="setServiceTelegramChatId" class="input-st" placeholder="Group Chat ID (ឧ. -100xxxxxxxxx)" onchange="saveAdminSettings()">
+            </div>
+            <div>
+                <button type="button" class="input-st" style="background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold; text-align: center;" onclick="testServiceTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 Test Bot ហៅបុគ្គលិក (Service)</button>
             </div>
         </div>
     </div>
@@ -319,29 +333,60 @@
         setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    async function testTelegramBot() {
-        const token = document.getElementById('setTelegramBotToken').value.trim();
-        const chatId = document.getElementById('setTelegramChatId').value.trim();
+    // 🧪 Test Bot កុម្មង់ Drink
+    async function testOrderTelegramBot() {
+        const token = document.getElementById('setOrderTelegramBotToken').value.trim();
+        const chatId = document.getElementById('setOrderTelegramChatId').value.trim();
         if (!token || !chatId) {
-            showToast('សូមបំពេញ Bot Token និង Chat ID ជាមុនសិន!', true);
+            showToast('សូមបំពេញ Bot Token និង Chat ID ផ្នែកកុម្មង់ Drink ជាមុនសិន!', true);
             return;
         }
-        showToast('កំពុងផ្ញើសារសាកល្បង...');
+        showToast('កំពុងផ្ញើសារសាកល្បង Drink Bot...');
         try {
             const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     chat_id: chatId,
-                    text: "🔔 សារសាកល្បង (Test Message) ពីប្រព័ន្ធ Menu & POS - ដំណើរការបានជោគជ័យ!",
+                    text: "🔔 [TEST] សារសាកល្បងសម្រាប់ Bot កុម្មង់ Drink ដំណើរការជោគជ័យ!",
                     parse_mode: 'HTML'
                 })
             });
             const data = await res.json();
             if (data.ok) {
-                showToast('✅ ផ្ញើសារសាកល្បងចូល Telegram ជោគជ័យ!');
+                showToast('✅ ផ្ញើសារ Test Bot កុម្មង់ Drink ជោគជ័យ!');
             } else {
-                showToast('❌ Telegram Error: ' + (data.description || 'Invalid token/chat id'), true);
+                showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
+            }
+        } catch(err) {
+            showToast('❌ Error: ' + err.message, true);
+        }
+    }
+
+    // 🧪 Test Bot ហៅបុគ្គលិក (Service)
+    async function testServiceTelegramBot() {
+        const token = document.getElementById('setServiceTelegramBotToken').value.trim();
+        const chatId = document.getElementById('setServiceTelegramChatId').value.trim();
+        if (!token || !chatId) {
+            showToast('សូមបំពេញ Bot Token និង Chat ID ផ្នែកហៅបុគ្គលិកជាមុនសិន!', true);
+            return;
+        }
+        showToast('កំពុងផ្ញើសារសាកល្បង Service Bot...');
+        try {
+            const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    chat_id: chatId,
+                    text: "🔔 [TEST] សារសាកល្បងសម្រាប់ Bot ហៅបុគ្គលិក (Service) ដំណើរការជោគជ័យ!",
+                    parse_mode: 'HTML'
+                })
+            });
+            const data = await res.json();
+            if (data.ok) {
+                showToast('✅ ផ្ញើសារ Test Bot ហៅបុគ្គលិកជោគជ័យ!');
+            } else {
+                showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
             }
         } catch(err) {
             showToast('❌ Error: ' + err.message, true);
@@ -365,8 +410,11 @@
             if (localSys.customMenuScripts) menuScripts = localSys.customMenuScripts;
             if (localPosScripts.length > 0) posScripts = localPosScripts;
             
-            if (localSys.telegramBotToken) document.getElementById('setTelegramBotToken').value = localSys.telegramBotToken;
-            if (localSys.telegramChatId) document.getElementById('setTelegramChatId').value = localSys.telegramChatId;
+            // LocalStorage fallback values
+            if (localSys.orderTelegramBotToken) document.getElementById('setOrderTelegramBotToken').value = localSys.orderTelegramBotToken;
+            if (localSys.orderTelegramChatId) document.getElementById('setOrderTelegramChatId').value = localSys.orderTelegramChatId;
+            if (localSys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = localSys.serviceTelegramBotToken;
+            if (localSys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = localSys.serviceTelegramChatId;
 
             renderMenuScripts();
             renderPosScripts();
@@ -405,8 +453,11 @@
                         document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
                         document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
 
-                        if(sys.telegramBotToken) document.getElementById('setTelegramBotToken').value = sys.telegramBotToken;
-                        if(sys.telegramChatId) document.getElementById('setTelegramChatId').value = sys.telegramChatId;
+                        // Load Cloud Telegram settings
+                        if(sys.orderTelegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken;
+                        if(sys.orderTelegramChatId) document.getElementById('setOrderTelegramChatId').value = sys.orderTelegramChatId;
+                        if(sys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = sys.serviceTelegramBotToken;
+                        if(sys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = sys.serviceTelegramChatId;
 
                         if(sys.customMenuScripts && Array.isArray(sys.customMenuScripts)) {
                             menuScripts = sys.customMenuScripts;
@@ -459,8 +510,11 @@
             d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
             d.sysSettings.preorder = document.getElementById('togglePreorder').checked;
 
-            d.sysSettings.telegramBotToken = document.getElementById('setTelegramBotToken').value.trim();
-            d.sysSettings.telegramChatId = document.getElementById('setTelegramChatId').value.trim();
+            // Save both bots data
+            d.sysSettings.orderTelegramBotToken = document.getElementById('setOrderTelegramBotToken').value.trim();
+            d.sysSettings.orderTelegramChatId = document.getElementById('setOrderTelegramChatId').value.trim();
+            d.sysSettings.serviceTelegramBotToken = document.getElementById('setServiceTelegramBotToken').value.trim();
+            d.sysSettings.serviceTelegramChatId = document.getElementById('setServiceTelegramChatId').value.trim();
 
             d.sysSettings.customMenuScripts = menuScripts;
             d.customPosScripts = posScripts;
