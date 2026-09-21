@@ -247,6 +247,15 @@
         }
         .floating-chat:active { transform: scale(0.95); }
 
+        /* 🛎️ Floating Waiter Button */
+        .floating-waiter {
+            position: fixed; bottom: 95px; left: 20px; width: 50px; height: 50px;
+            background: #f59e0b; color: white; border-radius: 50%; display: flex;
+            align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
+            z-index: 850; cursor: pointer; transition: transform 0.2s;
+        }
+        .floating-waiter:active { transform: scale(0.95); }
+
         /* Welcome Popup & Store Closed Banner */
         #storeClosedBanner {
             position: fixed; top: 0; left: 0; width: 100%; background: var(--danger); color: white;
@@ -272,7 +281,7 @@
         #toast {
             position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px);
             background: var(--success); color: white; padding: 10px 20px; border-radius: 20px;
-            font-size: 13px; font-weight: 800; z-index: 9999; transition: transform 0.3s;
+            font-size: 13px; font-weight: 800; z-index: 999999; transition: transform 0.3s;
             box-shadow: 0 4px 15px rgba(34,197,94,0.4); text-align: center;
         }
         #toast.show { transform: translate(-50%, 0); }
@@ -364,6 +373,11 @@
         <!-- Floating Chat Button -->
         <div class="floating-chat" onclick="openChat()">
             <i class="fa-solid fa-comment-dots"></i>
+        </div>
+
+        <!-- 🛎️ Floating Call Waiter Button -->
+        <div class="floating-waiter" onclick="openWaiterModal()">
+            <i class="fa-solid fa-bell"></i>
         </div>
 
         <!-- Bottom Navigation Bar -->
@@ -537,6 +551,35 @@
             <input type="text" id="rName" class="input-st" placeholder="Name...">
             <textarea id="rCom" class="input-st" placeholder="Comment..." style="height: 60px; resize:none;"></textarea>
             <button class="btn-act btn-green" style="width: 100%;" onclick="submitReview()">Submit</button>
+        </div>
+    </div>
+
+    <!-- 6. CALL WAITER MODAL (Cafe Theme) -->
+    <div class="modal-bg" id="waiterModal" onclick="checkClose(event, 'waiterModal')">
+        <div style="background: #FAF6F0; color: #4A3B32; padding: 25px; border-radius: 24px; width: 90%; max-width: 360px; text-align: center; border: 2px solid #E8D8C8; box-shadow: 0 15px 35px rgba(0,0,0,0.3); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2001;" id="waiterModalContent">
+            <div style="font-size: 40px; margin-bottom: 10px;">🛎️</div>
+            <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #6F4E37;">សេវាកម្ម / ហៅបុគ្គលិក</h3>
+            <p style="font-size: 13px; color: #8C7A6B; margin-bottom: 20px; font-weight: bold;">ទីតាំងបច្ចុប្បន្ន: <span id="waiterTableDisplay" style="color:#ef4444;">មិនមានលេខតុទេ</span></p>
+
+            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
+                <button onclick="sendWaiterRequest('សុំទឹកស / ទឹកកកបន្ថែម')" style="background: #F3EBE1; color: #4A3B32; border: 1px solid #E8D8C8; padding: 14px 15px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; display:flex; align-items:center; gap:12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <i class="fa-solid fa-droplet" style="color:#38bdf8; font-size: 18px; width: 20px;"></i> សុំទឹកស / ទឹកកកបន្ថែម
+                </button>
+                
+                <button onclick="sendWaiterRequest('សុំគិតលុយ (Request Bill)')" style="background: #E8D8C8; color: #6F4E37; border: 1px solid #D4B89F; padding: 14px 15px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; display:flex; align-items:center; gap:12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <i class="fa-solid fa-file-invoice-dollar" style="color:#8b5cf6; font-size: 18px; width: 20px;"></i> សុំគិតលុយ (Request Bill)
+                </button>
+                
+                <button onclick="sendWaiterRequest('សម្អាតតុ (Clean Table)')" style="background: #EAF0E6; color: #4A5D23; border: 1px solid #C5D4B5; padding: 14px 15px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; display:flex; align-items:center; gap:12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                    <i class="fa-solid fa-broom" style="color:#ef4444; font-size: 18px; width: 20px;"></i> សម្អាតតុ (Clean Table)
+                </button>
+                
+                <button onclick="sendWaiterRequest('ហៅបុគ្គលិកមកជួយផ្ទាល់')" style="background: #6F4E37; color: #fff; border: 1px solid #4A3B32; padding: 14px 15px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 10px rgba(111, 78, 55, 0.3);">
+                    <i class="fa-solid fa-person-rays" style="color:#facc15; font-size: 18px; width: 20px;"></i> ហៅបុគ្គលិកមកជួយផ្ទាល់
+                </button>
+            </div>
+
+            <button style="width: 100%; background: transparent; color: #8C7A6B; border: 1px solid #E8D8C8; border-radius: 12px; padding: 12px; font-weight: bold; cursor: pointer; font-family: 'Battambang';" onclick="closeWaiterModal()">បិទ</button>
         </div>
     </div>
 
@@ -1038,6 +1081,57 @@
         function openChat() {
             if(dynamicChatLink) window.open(dynamicChatLink, '_blank');
             else showToast("មុខងារ Chat មិនទាន់មានតំណភ្ជាប់នៅឡើយទេ", true);
+        }
+
+        // --- Call Waiter Logic ---
+        function openWaiterModal() {
+            const tableText = TABLE_NO ? `តុលេខ ${TABLE_NO}` : 'មិនមានលេខតុ (មិនអាចហៅបានទេ)';
+            document.getElementById('waiterTableDisplay').innerText = tableText;
+            document.getElementById('waiterTableDisplay').style.color = TABLE_NO ? '#d97706' : '#ef4444';
+            
+            const m = document.getElementById('waiterModal'); 
+            m.style.display = 'flex'; 
+            setTimeout(() => m.classList.add('show'), 10);
+            setTimeout(() => document.getElementById('waiterModalContent').style.transform = 'translateY(0)', 10);
+        }
+
+        function closeWaiterModal() {
+            document.getElementById('waiterModalContent').style.transform = 'translateY(100%)';
+            const m = document.getElementById('waiterModal'); 
+            m.classList.remove('show'); 
+            setTimeout(() => m.style.display = 'none', 400); 
+        }
+
+        function sendWaiterRequest(reqType) {
+            if (!TABLE_NO) {
+                showToast('សុំទោស! លោកអ្នកមិនទាន់បានស្កេន QR លើតុទេ។', true);
+                return;
+            }
+
+            closeWaiterModal();
+            showToast(`កំពុងហៅបុគ្គលិក...`);
+
+            // ផ្ញើសារលោតចូល Telegram ហាងភ្លាមៗ
+            if (botToken && chatId) {
+                let msg = `🛎️ <b>ការហៅសេវាកម្មបន្ទាន់!</b>\n📍 ទីតាំង: <b>តុលេខ ${TABLE_NO}</b>\n🔔 សំណើ: <b>${reqType}</b>`;
+                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    method: 'POST', headers: {'Content-Type':'application/json'},
+                    body: JSON.stringify({chat_id: chatId, text: msg, parse_mode: 'HTML'})
+                }).then(res => {
+                    if(res.ok) {
+                        showToast(`បានផ្ញើសំណើ "${reqType}" រួចរាល់!`);
+                        playDing();
+                    } else {
+                        showToast(`បរាជ័យក្នុងការផ្ញើសំណើ!`, true);
+                    }
+                }).catch(err => {
+                    showToast(`បរាជ័យក្នុងការផ្ញើសំណើ!`, true);
+                });
+            } else {
+                // Fallback បើមិនទាន់ភ្ជាប់ Telegram
+                showToast(`បានផ្ញើសំណើ "${reqType}" រួចរាល់!`);
+                playDing();
+            }
         }
 
         function renderQA() {
