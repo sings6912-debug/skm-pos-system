@@ -270,26 +270,27 @@
                             </div>
 
                             <div class="summary-row summary-total"><span>សរុបទឹកប្រាក់:</span><span style="text-align:right;"><div id="cartTotalAmount">$0.00</div><div id="cartTotalAmountRiel" style="font-size: var(--fs-14); color: var(--text-muted); font-weight: normal; margin-top: 4px;"></div></span></div>
-                            <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border);">
-                                <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%;">
+                            
+                            <!-- 🌟 ប្រអប់បញ្ចូលឈ្មោះអតិថិជន 🌟 -->
+                            <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); transition: 0.3s;">
+                                <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%; transition: 0.3s;">
                                 <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
                                 <datalist id="customerDatalist"></datalist>
                             </div>
-
-                            <!-- 🌟 ប្រអប់ជ្រើសរើសលេខតុ (Table Management) ដែលបានបន្ថែមថ្មី 🌟 -->
+                            
+                            <!-- 🌟 ប្រអប់ជ្រើសរើសលេខតុ (Table Management) 🌟 -->
                             <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--brand-cyan); display: none;">
                                 <label style="font-size: var(--fs-13); font-weight: bold; color: var(--brand-dark); display: block; margin-bottom: 5px;">🪑 ជ្រើសរើសលេខតុ (Table):</label>
-                                <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--brand-cyan);">
+                                <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--brand-cyan);" onchange="window.handleTableSelectionChange()">
                                     <option value="">-- សូមជ្រើសរើសតុ --</option>
                                 </select>
                             </div>
-                            <!-- 🌟 ចប់ផ្នែកជ្រើសរើសលេខតុ 🌟 -->
 
-                            <!-- 🌟 កែប្រែប៊ូតុងទាំង៣ ឲ្យឆ្លងកាត់មុខងារ validateTableAndProceed ជាមុនសិន 🌟 -->
+                            <!-- 🌟 ប៊ូតុងគិតលុយ ឆ្លងកាត់ការត្រួតពិនិត្យ 🌟 -->
                             <div style="display: flex; gap: 10px; flex-shrink: 0;">
-                                <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
-                                <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
-                                <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('paid')">💰 ទូទាត់រួច</button>
+                                <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.processPosCheckout('preorder')">📝 កក់ប្រាក់</button>
+                                <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.processPosCheckout('unpaid')">📝 រង់ចាំទូទាត់</button>
+                                <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.processPosCheckout('paid')">💰 ទូទាត់រួច</button>
                             </div>
                         </div>
                     </div>
@@ -1299,8 +1300,29 @@
                     let tableName = `${prefix} ${i}`;
                     tableSelect.innerHTML += `<option value="${tableName}">${tableName}</option>`;
                 }
+                
+                // ហៅមុខងារកំណត់ Placeholder ដំបូងគេ
+                window.handleTableSelectionChange();
             } else if (tableContainer) {
                 tableContainer.style.display = 'none'; // លាក់ប្រអប់លេខតុ បើបិទមុខងារ
+            }
+        };
+
+        // 🌟 មុខងារថ្មី៖ ប្តូរអក្សរ Placeholder ពេលរើស ឬមិនរើសតុ
+        window.handleTableSelectionChange = function() {
+            const tableSelect = document.getElementById('posTableSelect');
+            const custNameInput = document.getElementById('posCustomerName');
+            
+            if (!custNameInput) return;
+
+            if (tableSelect && tableSelect.value) {
+                // បើរើសតុ ដូរពាក្យប្រាប់ថាមិនបាច់ដាក់ឈ្មោះក៏បាន
+                custNameInput.placeholder = "ឈ្មោះអតិថិជន (មិនបាច់ដាក់ក៏បាន)";
+                custNameInput.style.borderLeft = "4px solid var(--success)"; // ដាក់ពណ៌បៃតងឲ្យដឹងថា Ready
+            } else {
+                // បើអត់រើសតុ តម្រូវឲ្យវាយឈ្មោះដដែល
+                custNameInput.placeholder = "ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)";
+                custNameInput.style.borderLeft = "1px solid var(--border)";
             }
         };
 
@@ -1308,19 +1330,28 @@
         window.validateTableAndProceed = function(action) {
             const tableContainer = document.getElementById('posTableInputContainer');
             const tableSelect = document.getElementById('posTableSelect');
+            const custNameInput = document.getElementById('posCustomerName');
             
-            // បើបើកមុខងារតុ ហើយអត់ទាន់រើសលេខតុ
-            if (tableContainer && tableContainer.style.display !== 'none' && !tableSelect.value) {
-                if (typeof window.showToast === 'function') {
-                    window.showToast("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន ទើបអាចបន្តបាន!", true);
-                } else {
-                    alert("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!");
+            // ១. បើបើកមុខងារតុ ត្រូវឆែកមើលលេខតុ
+            if (tableContainer && tableContainer.style.display !== 'none') {
+                if (!tableSelect.value) {
+                    if (typeof window.showToast === 'function') {
+                        window.showToast("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន ទើបអាចបន្តបាន!", true);
+                    } else {
+                        alert("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!");
+                    }
+                    tableSelect.focus();
+                    return; // បញ្ឈប់មិនឲ្យគិតលុយ
                 }
-                tableSelect.focus();
-                return; // បញ្ឈប់មិនឲ្យគិតលុយ
+                
+                // ២. បើអត់បានវាយឈ្មោះភ្ញៀវទេ យកលេខតុធ្វើជាឈ្មោះភ្ញៀវតែម្តង 
+                // (អញ្ចឹងពេលព្រីនវិក្កយបត្រ វានឹងចេញឈ្មោះ "តុលេខ ១" ងាយស្រួលមើល)
+                if (custNameInput && custNameInput.value.trim() === '') {
+                    custNameInput.value = tableSelect.value;
+                }
             }
             
-            // បើរើសរួច អនុញ្ញាតឲ្យគិតលុយបន្ត
+            // ៣. បន្តទៅមុខងារគិតលុយដើម
             if (action === 'unpaid' && typeof window.checkout === 'function') window.checkout('unpaid');
             else if (action === 'paid' && typeof window.openCheckoutModal === 'function') window.openCheckoutModal();
             else if (action === 'preorder' && typeof window.openPreorderModal === 'function') window.openPreorderModal();
