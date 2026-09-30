@@ -273,24 +273,24 @@
                             
                             <!-- 🌟 ប្រអប់បញ្ចូលឈ្មោះអតិថិជន 🌟 -->
                             <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); transition: 0.3s;">
-                                <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%; transition: 0.3s;">
-                                <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
-                                <datalist id="customerDatalist"></datalist>
-                            </div>
-                            
-                            <!-- 🌟 ប្រអប់ជ្រើសរើសលេខតុ (Table Management) 🌟 -->
-                            <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--brand-cyan); display: none;">
-                                <label style="font-size: var(--fs-13); font-weight: bold; color: var(--brand-dark); display: block; margin-bottom: 5px;">🪑 ជ្រើសរើសលេខតុ (Table):</label>
-                                <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--brand-cyan);" onchange="window.handleTableSelectionChange()">
-                                    <option value="">-- សូមជ្រើសរើសតុ --</option>
-                                </select>
-                            </div>
+    <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%; transition: 0.3s;">
+    <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
+    <datalist id="customerDatalist"></datalist>
+</div>
 
-                            <!-- 🌟 ប៊ូតុងគិតលុយ ឆ្លងកាត់ការត្រួតពិនិត្យ 🌟 -->
-                            <div style="display: flex; gap: 10px; flex-shrink: 0;">
-                                <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.processPosCheckout('preorder')">📝 កក់ប្រាក់</button>
-                                <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.processPosCheckout('unpaid')">📝 រង់ចាំទូទាត់</button>
-                                <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.processPosCheckout('paid')">💰 ទូទាត់រួច</button>
+<!-- 🌟 ប្រអប់ជ្រើសរើសលេខតុ (Table Management) 🌟 -->
+<div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--brand-cyan); display: none;">
+    <label style="font-size: var(--fs-13); font-weight: bold; color: var(--brand-dark); display: block; margin-bottom: 5px;">🪑 ជ្រើសរើសលេខតុ (Table):</label>
+    <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--brand-cyan);" onchange="window.handleTableSelectionChange()">
+        <option value="">-- សូមជ្រើសរើសតុ --</option>
+    </select>
+</div>
+
+<!-- 🌟 ប៊ូតុងគិតលុយ ឆ្លងកាត់ការត្រួតពិនិត្យ 🌟 -->
+<div style="display: flex; gap: 10px; flex-shrink: 0;">
+    <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
+    <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
+    <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('paid')">💰 ទូទាត់រួច</button>
                             </div>
                         </div>
                     </div>
@@ -1277,8 +1277,7 @@
                 modal.style.display = 'none';
             }
         };
-
-        // 🪑 មុខងារទាញយកលេខតុមកបង្ហាញ
+// 🪑 មុខងារទាញយកលេខតុមកបង្ហាញ
         window.loadTableSettingsForPOS = function() {
             const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             let sysSettings = {};
@@ -1300,15 +1299,12 @@
                     let tableName = `${prefix} ${i}`;
                     tableSelect.innerHTML += `<option value="${tableName}">${tableName}</option>`;
                 }
-                
-                // ហៅមុខងារកំណត់ Placeholder ដំបូងគេ
-                window.handleTableSelectionChange();
             } else if (tableContainer) {
                 tableContainer.style.display = 'none'; // លាក់ប្រអប់លេខតុ បើបិទមុខងារ
             }
         };
 
-        // 🌟 មុខងារថ្មី៖ ប្តូរអក្សរ Placeholder ពេលរើស ឬមិនរើសតុ
+        // 🌟 មុខងារថ្មី៖ ចាប់យកលេខតុ ទៅដាក់ចូលឈ្មោះអតិថិជនស្វ័យប្រវត្តិ
         window.handleTableSelectionChange = function() {
             const tableSelect = document.getElementById('posTableSelect');
             const custNameInput = document.getElementById('posCustomerName');
@@ -1316,11 +1312,11 @@
             if (!custNameInput) return;
 
             if (tableSelect && tableSelect.value) {
-                // បើរើសតុ ដូរពាក្យប្រាប់ថាមិនបាច់ដាក់ឈ្មោះក៏បាន
-                custNameInput.placeholder = "ឈ្មោះអតិថិជន (មិនបាច់ដាក់ក៏បាន)";
-                custNameInput.style.borderLeft = "4px solid var(--success)"; // ដាក់ពណ៌បៃតងឲ្យដឹងថា Ready
+                // លោតឈ្មោះតុចូលប្រអប់ឈ្មោះអតិថិជនស្វ័យប្រវត្តិ
+                custNameInput.value = tableSelect.value;
+                custNameInput.style.borderLeft = "4px solid var(--success)"; // ដាក់ពណ៌បៃតង
             } else {
-                // បើអត់រើសតុ តម្រូវឲ្យវាយឈ្មោះដដែល
+                custNameInput.value = "";
                 custNameInput.placeholder = "ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)";
                 custNameInput.style.borderLeft = "1px solid var(--border)";
             }
@@ -1344,14 +1340,39 @@
                     return; // បញ្ឈប់មិនឲ្យគិតលុយ
                 }
                 
-                // ២. បើអត់បានវាយឈ្មោះភ្ញៀវទេ យកលេខតុធ្វើជាឈ្មោះភ្ញៀវតែម្តង 
-                // (អញ្ចឹងពេលព្រីនវិក្កយបត្រ វានឹងចេញឈ្មោះ "តុលេខ ១" ងាយស្រួលមើល)
+                // បញ្ជាក់ម្តងទៀត ក្រែងលោអ្នកប្រើលុបឈ្មោះចោល
                 if (custNameInput && custNameInput.value.trim() === '') {
                     custNameInput.value = tableSelect.value;
                 }
             }
             
-            // ៣. បន្តទៅមុខងារគិតលុយដើម
+            // ២. បន្តទៅមុខងារគិតលុយដើម (ប្រើ Try/Catch ការពារកុំឲ្យគាំង)
+            try {
+                if (action === 'unpaid') {
+                    if (typeof window.checkout === 'function') window.checkout('unpaid');
+                    else alert("ប៊ូតុងរង់ចាំទូទាត់ត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)");
+                } 
+                else if (action === 'paid') {
+                    if (typeof window.openCheckoutModal === 'function') window.openCheckoutModal();
+                    else alert("ប៊ូតុងទូទាត់រួចត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)");
+                } 
+                else if (action === 'preorder') {
+                    if (typeof window.openPreorderModal === 'function') window.openPreorderModal();
+                    else alert("ប៊ូតុងកក់ប្រាក់ត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)");
+                }
+            } catch (err) {
+                console.error("កំហុសពេលចុចគិតលុយ:", err);
+                alert("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។");
+            }
+        };
+
+        // បញ្ជាឲ្យទាញលេខតុមកបង្ហាញពេលបើកទំព័រ
+        window.addEventListener('DOMContentLoaded', () => {
+            if(typeof window.loadTableSettingsForPOS === 'function') {
+                window.loadTableSettingsForPOS(); 
+            }
+        });
+                    // ៣. បន្តទៅមុខងារគិតលុយដើម
             if (action === 'unpaid' && typeof window.checkout === 'function') window.checkout('unpaid');
             else if (action === 'paid' && typeof window.openCheckoutModal === 'function') window.openCheckoutModal();
             else if (action === 'preorder' && typeof window.openPreorderModal === 'function') window.openPreorderModal();
