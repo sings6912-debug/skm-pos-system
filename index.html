@@ -80,7 +80,10 @@
         <div class="nav-item" id="nav-unpaid" onclick="window.switchTab('unpaid', '📝 វិក្កយបត្រ & ទូទាត់ (Invoices)', this)"><i>📝</i> វិក្កយបត្រ & ទូទាត់</div>
         <div class="nav-item" id="nav-expenses" onclick="window.switchTab('expenses', '📉 ការចំណាយ (Expenses)', this)"><i>📉</i> ការចំណាយ</div>
         <div class="nav-item" id="nav-history" onclick="window.switchTab('history', '📜 ប្រវត្តិប្រតិបត្តិការ (Activity Logs)', this)"><i>📜</i> ប្រតិបត្តិការ</div>
-        <div class="nav-item" id="nav-settings" onclick="window.switchTab('settings', '⚙️ ការកំណត់ប្រព័ន្ធ (Settings)', this)"><i>⚙️</i> ការកំណត់</div>
+        
+        <!-- កន្លែងកែប្រែ៖ Link ទៅកាន់ admin_settings.html -->
+        <div class="nav-item" id="nav-settings" onclick="const b = new URLSearchParams(window.location.search).get('branch') || 'branch_1'; window.location.href='admin_settings.html?branch=' + b"><i>⚙️</i> ការកំណត់</div>
+        
         <div class="nav-item" id="nav-about" onclick="window.switchTab('about', 'ℹ️ អំពីប្រព័ន្ធ (About & Version)', this)"><i>ℹ️</i> អំពីប្រព័ន្ធ</div>
         
         <div style="flex-grow: 1;"></div>
@@ -441,7 +444,7 @@
                 </div>
             </div>
 
-            <!-- ផ្ទាំងការកំណត់ (Settings) -->
+            <!-- ផ្ទាំងការកំណត់ (Settings) - ចាស់ -->
             <div id="tab-settings" class="tab-content">
                 <div style="max-width: 900px; margin: auto; display: flex; flex-direction: column; gap: 25px;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
@@ -1009,8 +1012,11 @@
 
     <!-- កូដចុះឈ្មោះ Service Worker និងមុខងារ Helper Globals -->
     <script>
-        if (navigator.serviceWorker) {
-            navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' });
+        // កែប្រែកន្លែង PWA ដើម្បីកុំឲ្យលោត Error ពេល Preview
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
+            navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' }).catch(function(err) {
+                console.log('Service Worker registration skipped or failed in preview: ', err);
+            });
         }
         
         // មុខងារបិទ/បើក ផ្នែកផ្ទាំងទិន្នន័យ
@@ -1259,6 +1265,46 @@
                 modal.style.display = 'none';
             }
         };
+
+        // មុខងារបម្រុង (Fallback Functions) សម្រាប់ឲ្យ UI អាចចុចបានក្នុង Preview (ការពារការលោត Error)
+        window.addEventListener('DOMContentLoaded', () => {
+            if (typeof window.handleLogin !== 'function') window.handleLogin = () => { document.getElementById('authScreen').style.display = 'none'; };
+            if (typeof window.handleLogout !== 'function') window.handleLogout = () => { document.getElementById('authScreen').style.display = 'flex'; };
+            if (typeof window.toggleForgotPass !== 'function') window.toggleForgotPass = (show) => { 
+                document.getElementById('loginForm').style.display = show ? 'none' : 'block';
+                document.getElementById('forgotPassForm').style.display = show ? 'block' : 'none';
+            };
+            if (typeof window.handleResetPassword !== 'function') window.handleResetPassword = () => window.toggleForgotPass(false);
+            if (typeof window.verifyAndSaveLicense !== 'function') window.verifyAndSaveLicense = () => { document.getElementById('licenseLockScreen').style.display = 'none'; };
+            if (typeof window.toggleDesktopSidebar !== 'function') window.toggleDesktopSidebar = () => {
+                const s = document.getElementById('appSidebar');
+                if (s) s.classList.toggle('active');
+            };
+            if (typeof window.switchTab !== 'function') window.switchTab = (tabId, title, btn) => {
+                document.querySelectorAll('.tab-content').forEach(t => t.style.display = 'none');
+                document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+                const target = document.getElementById('tab-' + tabId);
+                if (target) target.style.display = 'block';
+                if (btn) btn.classList.add('active');
+                const titleEl = document.getElementById('pageTitle');
+                if (titleEl && title) titleEl.innerText = title;
+            };
+            
+            const registerModal = (openFn, closeFn, modalId) => {
+                if (typeof window[openFn] !== 'function') window[openFn] = () => { const m = document.getElementById(modalId); if(m) m.style.display = 'flex'; };
+                if (typeof window[closeFn] !== 'function') window[closeFn] = () => { const m = document.getElementById(modalId); if(m) m.style.display = 'none'; };
+            };
+            registerModal('openUserModal', 'closeUserModal', 'userManageModal');
+            registerModal('openProductModal', 'closeModal', 'productModal');
+            registerModal('openCustomerModal', 'closeCustomerModal', 'customerModal');
+            registerModal('openShopNameModal', 'closeShopNameModal', 'shopNameModal');
+            registerModal('openCheckoutModal', 'closeCheckoutModal', 'checkoutModal');
+            registerModal('openPreorderModal', 'closePreorderModal', 'preorderModal');
+            
+            if(typeof window.closeInvoiceViewModal !== 'function') window.closeInvoiceViewModal = () => document.getElementById('invoiceViewModal').style.display = 'none';
+            if(typeof window.closeInvoiceEditModal !== 'function') window.closeInvoiceEditModal = () => document.getElementById('invoiceEditModal').style.display = 'none';
+            if(typeof window.closeCustomerHistoryModal !== 'function') window.closeCustomerHistoryModal = () => document.getElementById('customerHistoryModal').style.display = 'none';
+        });
     </script>
 </body>
 </html>
