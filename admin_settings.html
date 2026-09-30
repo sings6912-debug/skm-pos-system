@@ -54,6 +54,7 @@
         #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background: var(--success); color: white; padding: 10px 20px; border-radius: 20px; font-size: 13px; font-weight: 800; z-index: 9999; transition: transform 0.3s; box-shadow: 0 4px 15px rgba(34,197,94,0.4); }
         #toast.show { transform: translate(-50%, 0); }
         
+        /* ===== រចនាប័ទ្មថ្មីសម្រាប់ផ្នែក Custom JS ===== */
         .action-btn-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
         .btn-action { 
             padding: 8px 16px; font-size: 13px; font-weight: 700; border-radius: 8px; 
@@ -102,7 +103,10 @@
     <div class="admin-header">
         <h2>⚙️ កន្លែងកំណត់ (Settings) ប្រព័ន្ធ Menu & POS</h2>
         
+        <!-- តំបន់ប៊ូតុងចែកជាពីរ (Welcome & Menu) -->
         <div style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color);">
+            
+            <!-- Welcome Link -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                 <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 120px;">🏠 ទំព័រ Welcome:</span>
                 <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToWelcome()"><i class="fa-solid fa-eye"></i> មើល</button>
@@ -112,12 +116,14 @@
             
             <div style="width: 100%; height: 1px; background: var(--border-color);"></div>
 
+            <!-- Menu Link -->
             <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
                 <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 120px;">🍔 ទំព័រ Menu ផ្ទាល់:</span>
                 <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToMenu()"><i class="fa-solid fa-eye"></i> មើល</button>
                 <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyMenuLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
                 <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--success); color: white; border: none;" onclick="showMenuQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
             </div>
+
         </div>
     </div>
 
@@ -125,7 +131,7 @@
     <div class="section-box">
         <div class="section-title"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែកគោល Menu (Theme Color)</div>
         <div class="form-group">
-            <label>ពណ៌ស្បែក (Theme Accent Color)</label>
+            <label>ពណ៌ស្បែក (Theme Accent Color) - ប្តូរពណ៌ប៊ូតុង និង Icon ទូទាំង Menu</label>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="color" id="setMenuThemeColor" value="#06b6d4" style="width: 50px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: transparent;" onchange="saveAdminSettings()">
                 <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ជ្រើសរើសពណ៌ដែលត្រូវនឹងប្រេនអាជីវកម្មរបស់អ្នក</span>
@@ -137,7 +143,7 @@
     <div class="section-box">
         <div class="section-title"><i class="fa-solid fa-images"></i> 2. ការកំណត់ Banner ពាណិជ្ជកម្ម (Slider Banner)</div>
         <div class="form-group">
-            <label>បញ្ជីរូបភាព Banner</label>
+            <label>បញ្ជីរូបភាព Banner (អាចដាក់បានច្រើនឥតកំណត់ វានឹងរត់ប្តូរវេនគ្នាស្វ័យប្រវត្តិ)</label>
             <div id="bannerListContainer"></div>
             <button class="input-st" style="width: 100%; border-style: dashed; margin-top: 10px; cursor: pointer; color: var(--brand-cyan);" onclick="addAdminBanner()">+ បន្ថែម Banner ថ្មី</button>
         </div>
@@ -161,7 +167,7 @@
         </div>
         <div class="form-group">
             <label>អត្ថបទជូនដំណឹងរត់៖</label>
-            <input type="text" id="setTickerText" class="input-st" placeholder="ឧ. ទិញទំនិញគ្រប់ ២០$..." onchange="saveAdminSettings()">
+            <input type="text" id="setTickerText" class="input-st" placeholder="ឧ. ទិញទំនិញគ្រប់ ២០$ ថែមជូនការដឹកជញ្ជូនឥតគិតថ្លៃ..." onchange="saveAdminSettings()">
         </div>
     </div>
 
@@ -197,6 +203,7 @@
             <span style="color: var(--success);">📦 អនុញ្ញាតឱ្យភ្ញៀវកុម្មង់ទំនិញទោះអស់ស្តុក (បើក Pre-order)</span>
             <input type="checkbox" id="togglePreorder" style="width: 20px; height: 20px; accent-color: var(--success); cursor: pointer;" onchange="saveAdminSettings()">
         </div>
+        <div style="font-size: 11px; color: var(--text-muted); margin-top: -5px; margin-bottom: 10px; padding: 0 5px;">* បើបិទមុខងារនេះ ភ្ញៀវមិនអាចចុច Add លើសចំនួនស្តុកដែលមានជាក់ស្តែងឡើយ។</div>
     </div>
 
     <!-- 5. Payment QR & Chat Link -->
@@ -213,9 +220,9 @@
                     <option value="fa-brands fa-instagram">🟣 Instagram</option>
                     <option value="fa-brands fa-telegram">🔵 Telegram</option>
                 </select>
-                <input type="text" id="setSocialLabel" class="input-st" placeholder="ឈ្មោះបង្ហាញ..." style="margin-bottom: 0;" onchange="saveAdminSettings()">
+                <input type="text" id="setSocialLabel" class="input-st" placeholder="ឈ្មោះបង្ហាញ (ឧ. YouTube/KouSuke...)" style="margin-bottom: 0;" onchange="saveAdminSettings()">
             </div>
-            <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL (Link)..." onchange="saveAdminSettings()">
+            <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL (Link) ទៅកាន់ទំព័ររបស់អ្នក..." onchange="saveAdminSettings()">
         </div>
 
         <div class="form-group">
@@ -235,67 +242,75 @@
             <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
         </div>
 
-        <!-- ================= BOT ទី១៖ សម្រាប់កុម្មង់ Drink ================= -->
-        <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--brand-cyan); margin-top: 15px;">
-            <label style="color: var(--brand-cyan);"><i class="fa-solid fa-robot"></i> 1. Telegram Bot សម្រាប់ទទួលសារ "កុម្មង់ Drink"</label>
-            <div style="margin-bottom: 10px;">
-                <input type="text" id="setOrderTelegramBotToken" class="input-st" placeholder="Bot Token (Drink Order)..." onchange="saveAdminSettings()">
-            </div>
-            <div style="margin-bottom: 10px;">
-                <input type="text" id="setOrderTelegramChatId" class="input-st" placeholder="Group Chat ID (ឧ. -100xxxxxxxxx)" onchange="saveAdminSettings()">
-            </div>
-            <div>
-                <button type="button" class="input-st" style="background: var(--brand-cyan); color: white; border: none; cursor: pointer; font-weight: bold; text-align: center;" onclick="testOrderTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 Test Bot កុម្មង់ Drink</button>
-            </div>
-        </div>
-
-        <!-- ================= BOT ទី២៖ សម្រាប់សេវាកម្ម / ហៅបុគ្គលិក ================= -->
+        <!-- 🌟 បន្ថែមកន្លែងកំណត់ Telegram Bot នៅទីនេះ (ជួសជុល) -->
         <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-top: 15px;">
-            <label style="color: var(--success);"><i class="fa-solid fa-bell-concierge"></i> 2. Telegram Bot សម្រាប់ "សេវាកម្ម / ហៅបុគ្គលិក"</label>
+            <label style="color: var(--success);"><i class="fa-solid fa-robot"></i> ការកំណត់ Telegram Bot សម្រាប់ទទួលសារ (ហៅបុគ្គលិក / កុម្ម៉ង់)</label>
             <div style="margin-bottom: 10px;">
-                <input type="text" id="setServiceTelegramBotToken" class="input-st" placeholder="Bot Token (Service/Staff)..." onchange="saveAdminSettings()">
-            </div>
-            <div style="margin-bottom: 10px;">
-                <input type="text" id="setServiceTelegramChatId" class="input-st" placeholder="Group Chat ID (ឧ. -100xxxxxxxxx)" onchange="saveAdminSettings()">
+                <input type="text" id="setTelegramBotToken" class="input-st" placeholder="Bot Token (ឧ. 123456:ABC-DEF...)" onchange="saveAdminSettings()">
             </div>
             <div>
-                <button type="button" class="input-st" style="background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold; text-align: center;" onclick="testServiceTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 Test Bot ហៅបុគ្គលិក (Service)</button>
+                <input type="text" id="setTelegramChatId" class="input-st" placeholder="Chat ID (ឧ. -1001234567890)" onchange="saveAdminSettings()">
             </div>
+            <button class="input-st" style="background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold; margin-top: 10px;" onclick="testTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 សាកល្បងផ្ញើសារ (Test Bot)</button>
         </div>
     </div>
 
     <!-- 6. MENU CUSTOM JS MANAGEMENT -->
     <div class="section-box" style="border-color: var(--brand-cyan); background: #ffffff;">
         <div class="section-title" style="color: var(--brand-cyan);"><i class="fa-solid fa-code"></i> 6. គ្រប់គ្រងកូដបន្ថែមអតិថិជន (Menu Custom JS)</div>
-        <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនសម្រាប់ <b>menu.html</b></p>
+        <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>Menu អតិថិជន (menu.html)</b>។ អ្នកអាចជ្រើសរើសច្រើន File ក្នុងពេលតែមួយបាន។</p>
+        
         <div class="action-btn-group">
             <input type="file" id="menuJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadMenuScripts(event)">
             <button class="btn-action btn-upload-menu" onclick="document.getElementById('menuJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
-            <button class="btn-action btn-restore" onclick="document.getElementById('importMenuJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
+            
             <input type="file" id="importMenuJsBackup" accept=".json" style="display: none;" onchange="importMenuScriptsBackup(event)">
+            <button class="btn-action btn-restore" onclick="document.getElementById('importMenuJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
+            
             <button class="btn-action btn-backup" onclick="exportMenuScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
+
+            <!-- ប៊ូតុងបិទ/បើកទាំងអស់ -->
             <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg); border: 1px solid var(--border-color);" onclick="toggleAllMenuScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
+            
+            <!-- ប៊ូតុងលុបទាំងអស់ -->
             <button class="btn-action btn-delete-all" onclick="deleteAllMenuScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
         </div>
+
+        <!-- កន្លែងបង្ហាញប៊ូតុង "បង្ហាញទាំងអស់" (ស្ថិតនៅខាងលើបញ្ជី) -->
         <div id="menuScriptsToggleContainer" style="margin-bottom: 10px;"></div>
-        <div id="menuScriptsListContainer" class="script-list-container"></div>
+
+        <div id="menuScriptsListContainer" class="script-list-container">
+            <!-- Script List will be rendered here -->
+        </div>
     </div>
 
     <!-- 7. POS CUSTOM JS MANAGEMENT -->
     <div class="section-box" style="border-color: #ef4444; background: #ffffff;">
         <div class="section-title" style="color: #ef4444;"><i class="fa-solid fa-terminal"></i> 7. គ្រប់គ្រងកូដបន្ថែមប្រព័ន្ធ (POS Custom JS)</div>
-        <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនសម្រាប់ <b>index.html</b></p>
+        <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>ប្រព័ន្ធគិតលុយរបស់ Admin & Staff (index.html)</b>។ អ្នកអាចជ្រើសរើសច្រើន File ក្នុងពេលតែមួយបាន។</p>
+        
         <div class="action-btn-group">
             <input type="file" id="posJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadPosScripts(event)">
             <button class="btn-action btn-upload-pos" onclick="document.getElementById('posJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
-            <button class="btn-action btn-restore" onclick="document.getElementById('importPosJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
+            
             <input type="file" id="importPosJsBackup" accept=".json" style="display: none;" onchange="importPosScriptsBackup(event)">
+            <button class="btn-action btn-restore" onclick="document.getElementById('importPosJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
+            
             <button class="btn-action btn-backup" onclick="exportPosScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
+
+            <!-- ប៊ូតុងបិទ/បើកទាំងអស់ -->
             <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg); border: 1px solid var(--border-color);" onclick="toggleAllPosScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
+
+            <!-- ប៊ូតុងលុបទាំងអស់ -->
             <button class="btn-action btn-delete-all" onclick="deleteAllPosScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
         </div>
+
+        <!-- កន្លែងបង្ហាញប៊ូតុង "បង្ហាញទាំងអស់" (ស្ថិតនៅខាងលើបញ្ជី) -->
         <div id="posScriptsToggleContainer" style="margin-bottom: 10px;"></div>
-        <div id="posScriptsListContainer" class="script-list-container"></div>
+
+        <div id="posScriptsListContainer" class="script-list-container">
+            <!-- Script List will be rendered here -->
+        </div>
     </div>
 
     <!-- Save Button -->
@@ -305,9 +320,11 @@
 <div id="toast">Saved Successfully!</div>
 
 <script>
+    // Supabase Configuration
     const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
     
+    // បង្ការកុំឱ្យគាំងបើសិនអត់មាន Supabase
     let supabaseClient = null;
     if (window.supabase) {
         try {
@@ -315,13 +332,17 @@
         } catch (err) {
             console.error("Supabase init error:", err);
         }
+    } else {
+        console.error("Supabase library is missing!");
     }
 
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
     let adminBanners = [];
-    let menuScripts = [];
-    let posScripts = [];
+    let menuScripts = []; // Custom JS for Menu
+    let posScripts = [];  // Custom JS for POS
+    
+    // បន្ថែមអថេរសម្រាប់កំណត់ការបង្ហាញ Script ត្រឹម ៣
     let showAllMenuScripts = false;
     let showAllPosScripts = false;
 
@@ -333,58 +354,28 @@
         setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    // 🧪 Test Bot កុម្មង់ Drink
-    async function testOrderTelegramBot() {
-        const token = document.getElementById('setOrderTelegramBotToken').value.trim();
-        const chatId = document.getElementById('setOrderTelegramChatId').value.trim();
+    // 🧪 Test Bot Telegram ធម្មតា
+    async function testTelegramBot() {
+        const token = document.getElementById('setTelegramBotToken').value.trim();
+        const chatId = document.getElementById('setTelegramChatId').value.trim();
         if (!token || !chatId) {
-            showToast('សូមបំពេញ Bot Token និង Chat ID ផ្នែកកុម្មង់ Drink ជាមុនសិន!', true);
+            showToast('សូមបំពេញ Bot Token និង Chat ID ជាមុនសិន!', true);
             return;
         }
-        showToast('កំពុងផ្ញើសារសាកល្បង Drink Bot...');
+        showToast('កំពុងផ្ញើសារសាកល្បង Telegram Bot...');
         try {
             const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     chat_id: chatId,
-                    text: "🔔 [TEST] សារសាកល្បងសម្រាប់ Bot កុម្មង់ Drink ដំណើរការជោគជ័យ!",
+                    text: "🔔 [TEST] សារសាកល្បងសម្រាប់ Telegram Bot ដំណើរការជោគជ័យ!",
                     parse_mode: 'HTML'
                 })
             });
             const data = await res.json();
             if (data.ok) {
-                showToast('✅ ផ្ញើសារ Test Bot កុម្មង់ Drink ជោគជ័យ!');
-            } else {
-                showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
-            }
-        } catch(err) {
-            showToast('❌ Error: ' + err.message, true);
-        }
-    }
-
-    // 🧪 Test Bot ហៅបុគ្គលិក (Service)
-    async function testServiceTelegramBot() {
-        const token = document.getElementById('setServiceTelegramBotToken').value.trim();
-        const chatId = document.getElementById('setServiceTelegramChatId').value.trim();
-        if (!token || !chatId) {
-            showToast('សូមបំពេញ Bot Token និង Chat ID ផ្នែកហៅបុគ្គលិកជាមុនសិន!', true);
-            return;
-        }
-        showToast('កំពុងផ្ញើសារសាកល្បង Service Bot...');
-        try {
-            const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    chat_id: chatId,
-                    text: "🔔 [TEST] សារសាកល្បងសម្រាប់ Bot ហៅបុគ្គលិក (Service) ដំណើរការជោគជ័យ!",
-                    parse_mode: 'HTML'
-                })
-            });
-            const data = await res.json();
-            if (data.ok) {
-                showToast('✅ ផ្ញើសារ Test Bot ហៅបុគ្គលិកជោគជ័យ!');
+                showToast('✅ ផ្ញើសារ Test Bot ជោគជ័យ!');
             } else {
                 showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
             }
@@ -395,6 +386,7 @@
 
     async function initAdmin() {
         try {
+            // Load from LocalStorage first for instant UI (With Try/Catch Protection)
             let localSys = {};
             let localPosScripts = [];
             try {
@@ -410,18 +402,17 @@
             if (localSys.customMenuScripts) menuScripts = localSys.customMenuScripts;
             if (localPosScripts.length > 0) posScripts = localPosScripts;
             
-            // LocalStorage fallback values
-            if (localSys.orderTelegramBotToken) document.getElementById('setOrderTelegramBotToken').value = localSys.orderTelegramBotToken;
-            if (localSys.orderTelegramChatId) document.getElementById('setOrderTelegramChatId').value = localSys.orderTelegramChatId;
-            if (localSys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = localSys.serviceTelegramBotToken;
-            if (localSys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = localSys.serviceTelegramChatId;
+            // 🌟 ទាញយក Telegram ពី LocalStorage (Fallback)
+            if (localSys.telegramBotToken) document.getElementById('setTelegramBotToken').value = localSys.telegramBotToken;
+            if (localSys.telegramChatId) document.getElementById('setTelegramChatId').value = localSys.telegramChatId;
 
             renderMenuScripts();
             renderPosScripts();
 
+            // Fetch from Supabase (Cloud)
             if (supabaseClient) {
                 try {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                    let { data, error } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
                     if (data && data.data_json) {
                         let d = data.data_json;
                         let sys = d.sysSettings || {};
@@ -453,11 +444,11 @@
                         document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
                         document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
 
-                        // Load Cloud Telegram settings
-                        if(sys.orderTelegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken;
-                        if(sys.orderTelegramChatId) document.getElementById('setOrderTelegramChatId').value = sys.orderTelegramChatId;
-                        if(sys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = sys.serviceTelegramBotToken;
-                        if(sys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = sys.serviceTelegramChatId;
+                        // 🌟 Load Cloud Telegram settings យ៉ាងត្រឹមត្រូវ
+                        let cloudToken = sys.telegramBotToken || d.telegramBotToken || '';
+                        let cloudChatId = sys.telegramChatId || d.telegramChatId || '';
+                        if(cloudToken) document.getElementById('setTelegramBotToken').value = cloudToken;
+                        if(cloudChatId) document.getElementById('setTelegramChatId').value = cloudChatId;
 
                         if(sys.customMenuScripts && Array.isArray(sys.customMenuScripts)) {
                             menuScripts = sys.customMenuScripts;
@@ -510,11 +501,14 @@
             d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
             d.sysSettings.preorder = document.getElementById('togglePreorder').checked;
 
-            // Save both bots data
-            d.sysSettings.orderTelegramBotToken = document.getElementById('setOrderTelegramBotToken').value.trim();
-            d.sysSettings.orderTelegramChatId = document.getElementById('setOrderTelegramChatId').value.trim();
-            d.sysSettings.serviceTelegramBotToken = document.getElementById('setServiceTelegramBotToken').value.trim();
-            d.sysSettings.serviceTelegramChatId = document.getElementById('setServiceTelegramChatId').value.trim();
+            // 🌟 Save Telegram Data ទៅកាន់ទាំង ២ កន្លែង (sysSettings និង Root) ដើម្បីកុំអោយមានបញ្ហានៅ menu.html 
+            let botTok = document.getElementById('setTelegramBotToken').value.trim();
+            let botChat = document.getElementById('setTelegramChatId').value.trim();
+            
+            d.sysSettings.telegramBotToken = botTok;
+            d.sysSettings.telegramChatId = botChat;
+            d.telegramBotToken = botTok; 
+            d.telegramChatId = botChat;
 
             d.sysSettings.customMenuScripts = menuScripts;
             d.customPosScripts = posScripts;
@@ -537,11 +531,12 @@
         }
     }
 
+    /* --- Banner Functions --- */
     function renderAdminBanners() {
         const container = document.getElementById('bannerListContainer');
         container.innerHTML = '';
         if (adminBanners.length === 0) {
-            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មាន Banner ទេ។</div>';
+            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មាន Banner ទេ។ សូមចុច + បន្ថែម។</div>';
         }
         adminBanners.forEach((b, index) => {
             container.innerHTML += `
@@ -581,6 +576,7 @@
         reader.readAsDataURL(file);
     }
 
+    /* --- QR Upload --- */
     function uploadQR(e) {
         const file = e.target.files[0]; if(!file) return;
         const reader = new FileReader();
@@ -602,21 +598,34 @@
         reader.readAsDataURL(file);
     }
 
+    /* --- MENU CUSTOM JS MANAGEMENT FUNCTIONS --- */
     function renderMenuScripts() {
         const container = document.getElementById('menuScriptsListContainer');
         const toggleContainer = document.getElementById('menuScriptsToggleContainer');
         container.innerHTML = '';
         toggleContainer.innerHTML = '';
+
         if (menuScripts.length === 0) {
             container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
             return;
         }
+
         let displayScripts = [...menuScripts].reverse();
+        
+        // បង្ហាញប៊ូតុង Show All នៅខាងលើ
         if (menuScripts.length > 3) {
             let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length} ឯកសារ)`;
-            toggleContainer.innerHTML = `<button class="input-st" style="width: 100%; padding: 10px; background:rgba(6, 182, 212, 0.05); border: 1px dashed var(--brand-cyan); color:var(--brand-cyan); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px;" onclick="toggleMenuScriptsView()">${toggleBtnText}</button>`;
+            toggleContainer.innerHTML = `
+                <button class="input-st" style="width: 100%; padding: 10px; background:rgba(6, 182, 212, 0.05); border: 1px dashed var(--brand-cyan); color:var(--brand-cyan); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='rgba(6, 182, 212, 0.1)'" onmouseout="this.style.background='rgba(6, 182, 212, 0.05)'" onclick="toggleMenuScriptsView()">
+                    ${toggleBtnText}
+                </button>
+            `;
         }
-        if (!showAllMenuScripts && menuScripts.length > 3) displayScripts = displayScripts.slice(0, 3);
+
+        if (!showAllMenuScripts && menuScripts.length > 3) {
+            displayScripts = displayScripts.slice(0, 3);
+        }
+
         displayScripts.forEach(s => {
             let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off';
             let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
@@ -631,41 +640,138 @@
             `;
         });
     }
-    function toggleMenuScriptsView() { showAllMenuScripts = !showAllMenuScripts; renderMenuScripts(); }
+
+    function toggleMenuScriptsView() {
+        showAllMenuScripts = !showAllMenuScripts;
+        renderMenuScripts();
+    }
+
     function uploadMenuScripts(e) {
-        const files = e.target.files; if (!files || files.length === 0) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
         let filesProcessed = 0;
+        
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const existingIdx = menuScripts.findIndex(s => s.name === file.name);
-                if (existingIdx !== -1) menuScripts[existingIdx].code = ev.target.result;
-                else menuScripts.push({ id: 'mjs_' + Date.now() + Math.floor(Math.random() * 1000), name: file.name, code: ev.target.result, isActive: true });
+                if (existingIdx !== -1) {
+                    menuScripts[existingIdx].code = ev.target.result;
+                } else {
+                    menuScripts.push({
+                        id: 'mjs_' + Date.now() + Math.floor(Math.random() * 1000),
+                        name: file.name,
+                        code: ev.target.result,
+                        isActive: true
+                    });
+                }
                 filesProcessed++;
-                if (filesProcessed === files.length) { renderMenuScripts(); saveAdminSettings(); showToast(`បាន Upload ចំនួន ${files.length} ជោគជ័យ!`); }
+                
+                if (filesProcessed === files.length) {
+                    renderMenuScripts(); 
+                    saveAdminSettings();
+                    showToast(`បាន Upload ចំនួន ${files.length} Menu Scripts ជោគជ័យ!`);
+                }
             };
             reader.readAsText(file);
         });
         e.target.value = '';
     }
-    function toggleMenuScript(id) { let s = menuScripts.find(x => x.id === id); if (s) { s.isActive = !s.isActive; renderMenuScripts(); saveAdminSettings(); } }
-    function toggleAllMenuScripts() { if (menuScripts.length === 0) return; let targetState = menuScripts.some(s => !s.isActive); menuScripts.forEach(s => s.isActive = targetState); renderMenuScripts(); saveAdminSettings(); }
-    function deleteMenuScript(id) { if (confirm('លុបកូដនេះមែនទេ?')) { menuScripts = menuScripts.filter(x => x.id !== id); renderMenuScripts(); saveAdminSettings(); } }
-    function deleteAllMenuScripts() { if (confirm('លុបទាំងអស់មែនទេ?')) { menuScripts = []; renderMenuScripts(); saveAdminSettings(); } }
-    function exportMenuScriptsBackup() { if(menuScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); a.download = `Menu_JS.json`; a.click(); }
-    function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); }; r.readAsText(file); }
 
+    function toggleMenuScript(id) {
+        let s = menuScripts.find(x => x.id === id);
+        if (s) { 
+            s.isActive = !s.isActive; 
+            renderMenuScripts(); 
+            saveAdminSettings(); 
+        }
+    }
+
+    function toggleAllMenuScripts() {
+        if (menuScripts.length === 0) return;
+        let hasOff = menuScripts.some(s => !s.isActive);
+        let targetState = hasOff ? true : false;
+        menuScripts.forEach(s => s.isActive = targetState);
+        renderMenuScripts();
+        saveAdminSettings();
+    }
+
+    function deleteMenuScript(id) {
+        if (confirm('តើអ្នកពិតជាចង់លុបកូដ Menu នេះមែនទេ?')) {
+            menuScripts = menuScripts.filter(x => x.id !== id);
+            renderMenuScripts(); 
+            saveAdminSettings();
+        }
+    }
+
+    // អនុគមន៍ថ្មីសម្រាប់លុប Menu Script ទាំងអស់
+    function deleteAllMenuScripts() {
+        if (menuScripts.length === 0) {
+            showToast('គ្មានឯកសារត្រូវលុបទេ!', true);
+            return;
+        }
+        if (confirm('⚠️ តើអ្នកពិតជាចង់លុបកូដ Menu ទាំងអស់មែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។')) {
+            menuScripts = [];
+            renderMenuScripts();
+            saveAdminSettings();
+            showToast('បានលុបឯកសារ Menu ទាំងអស់ជោគជ័យ!');
+        }
+    }
+
+    function exportMenuScriptsBackup() {
+        if(menuScripts.length === 0) return showToast("គ្មានកូដសម្រាប់ Backup ទេ!", true);
+        const a = document.createElement("a"); 
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); 
+        a.download = `Menu_CustomJS_Backup_${Date.now()}.json`; 
+        a.click(); 
+    }
+
+    function importMenuScriptsBackup(e) {
+        const file = e.target.files[0]; if (!file) return; 
+        const r = new FileReader();
+        r.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if(Array.isArray(data)) {
+                    menuScripts = data; 
+                    renderMenuScripts(); 
+                    saveAdminSettings();
+                    showToast('Restore ឯកសារ Menu JS បានជោគជ័យ!');
+                } else alert("ទម្រង់ File មិនត្រឹមត្រូវ!");
+            } catch(err) { alert("មិនអាចអាន File បានទេ!"); }
+            e.target.value = '';
+        };
+        r.readAsText(file);
+    }
+
+    /* --- POS CUSTOM JS MANAGEMENT FUNCTIONS --- */
     function renderPosScripts() {
         const container = document.getElementById('posScriptsListContainer');
         const toggleContainer = document.getElementById('posScriptsToggleContainer');
-        container.innerHTML = ''; toggleContainer.innerHTML = '';
-        if (posScripts.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដទេ</div>'; return; }
-        let displayScripts = [...posScripts].reverse();
-        if (posScripts.length > 3) {
-            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${posScripts.length})`;
-            toggleContainer.innerHTML = `<button class="input-st" style="width: 100%; padding: 10px; background:rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); color:var(--danger); cursor:pointer; font-weight: bold; border-radius: 8px;" onclick="togglePosScriptsView()">${toggleBtnText}</button>`;
+        container.innerHTML = '';
+        toggleContainer.innerHTML = '';
+        
+        if (posScripts.length === 0) {
+            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
+            return;
         }
-        if (!showAllPosScripts && posScripts.length > 3) displayScripts = displayScripts.slice(0, 3);
+
+        let displayScripts = [...posScripts].reverse();
+
+        // បង្ហាញប៊ូតុង Show All នៅខាងលើ
+        if (posScripts.length > 3) {
+            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${posScripts.length} ឯកសារ)`;
+            toggleContainer.innerHTML = `
+                <button class="input-st" style="width: 100%; padding: 10px; background:rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); color:var(--danger); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px; transition: 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'" onmouseout="this.style.background='rgba(239, 68, 68, 0.05)'" onclick="togglePosScriptsView()">
+                    ${toggleBtnText}
+                </button>
+            `;
+        }
+
+        if (!showAllPosScripts && posScripts.length > 3) {
+            displayScripts = displayScripts.slice(0, 3);
+        }
+
         displayScripts.forEach(s => {
             let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off';
             let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
@@ -680,30 +786,112 @@
             `;
         });
     }
-    function togglePosScriptsView() { showAllPosScripts = !showAllPosScripts; renderPosScripts(); }
+
+    function togglePosScriptsView() {
+        showAllPosScripts = !showAllPosScripts;
+        renderPosScripts();
+    }
+
     function uploadPosScripts(e) {
-        const files = e.target.files; if (!files || files.length === 0) return;
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
         let filesProcessed = 0;
+        
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = (ev) => {
                 const existingIdx = posScripts.findIndex(s => s.name === file.name);
-                if (existingIdx !== -1) posScripts[existingIdx].code = ev.target.result;
-                else posScripts.push({ id: 'pjs_' + Date.now() + Math.floor(Math.random() * 1000), name: file.name, code: ev.target.result, isActive: true });
+                if (existingIdx !== -1) {
+                    posScripts[existingIdx].code = ev.target.result;
+                } else {
+                    posScripts.push({
+                        id: 'pjs_' + Date.now() + Math.floor(Math.random() * 1000),
+                        name: file.name,
+                        code: ev.target.result,
+                        isActive: true
+                    });
+                }
                 filesProcessed++;
-                if (filesProcessed === files.length) { renderPosScripts(); saveAdminSettings(); showToast(`Upload POS Scripts ជោគជ័យ!`); }
+                
+                if (filesProcessed === files.length) {
+                    renderPosScripts(); 
+                    saveAdminSettings();
+                    showToast(`បាន Upload ចំនួន ${files.length} POS Scripts ជោគជ័យ!`);
+                }
             };
             reader.readAsText(file);
         });
         e.target.value = '';
     }
-    function togglePosScript(id) { let s = posScripts.find(x => x.id === id); if (s) { s.isActive = !s.isActive; renderPosScripts(); saveAdminSettings(); } }
-    function toggleAllPosScripts() { if (posScripts.length === 0) return; let targetState = posScripts.some(s => !s.isActive); posScripts.forEach(s => s.isActive = targetState); renderPosScripts(); saveAdminSettings(); }
-    function deletePosScript(id) { if (confirm('លុបកូដនេះមែនទេ?')) { posScripts = posScripts.filter(x => x.id !== id); renderPosScripts(); saveAdminSettings(); } }
-    function deleteAllPosScripts() { if (confirm('លុបទាំងអស់មែនទេ?')) { posScripts = []; renderPosScripts(); saveAdminSettings(); } }
-    function exportPosScriptsBackup() { if(posScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); a.download = `POS_JS.json`; a.click(); }
-    function importPosScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); }; r.readAsText(file); }
 
+    function togglePosScript(id) {
+        let s = posScripts.find(x => x.id === id);
+        if (s) { 
+            s.isActive = !s.isActive; 
+            renderPosScripts(); 
+            saveAdminSettings(); 
+        }
+    }
+
+    function toggleAllPosScripts() {
+        if (posScripts.length === 0) return;
+        let hasOff = posScripts.some(s => !s.isActive);
+        let targetState = hasOff ? true : false;
+        posScripts.forEach(s => s.isActive = targetState);
+        renderPosScripts();
+        saveAdminSettings();
+    }
+
+    function deletePosScript(id) {
+        if (confirm('តើអ្នកពិតជាចង់លុបកូដ POS នេះមែនទេ?')) {
+            posScripts = posScripts.filter(x => x.id !== id);
+            renderPosScripts(); 
+            saveAdminSettings();
+        }
+    }
+
+    // អនុគមន៍ថ្មីសម្រាប់លុប POS Script ទាំងអស់
+    function deleteAllPosScripts() {
+        if (posScripts.length === 0) {
+            showToast('គ្មានឯកសារត្រូវលុបទេ!', true);
+            return;
+        }
+        if (confirm('⚠️ តើអ្នកពិតជាចង់លុបកូដ POS ទាំងអស់មែនទេ? សកម្មភាពនេះមិនអាចត្រឡប់វិញបានទេ។')) {
+            posScripts = [];
+            renderPosScripts();
+            saveAdminSettings();
+            showToast('បានលុបឯកសារ POS ទាំងអស់ជោគជ័យ!');
+        }
+    }
+
+    function exportPosScriptsBackup() {
+        if(posScripts.length === 0) return showToast("គ្មានកូដសម្រាប់ Backup ទេ!", true);
+        const a = document.createElement("a"); 
+        a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); 
+        a.download = `POS_CustomJS_Backup_${Date.now()}.json`; 
+        a.click(); 
+    }
+
+    function importPosScriptsBackup(e) {
+        const file = e.target.files[0]; if (!file) return; 
+        const r = new FileReader();
+        r.onload = (ev) => {
+            try {
+                const data = JSON.parse(ev.target.result);
+                if(Array.isArray(data)) {
+                    posScripts = data; 
+                    renderPosScripts(); 
+                    saveAdminSettings();
+                    showToast('Restore ឯកសារ POS JS បានជោគជ័យ!');
+                } else alert("ទម្រង់ File មិនត្រឹមត្រូវ!");
+            } catch(err) { alert("មិនអាចអាន File បានទេ!"); }
+            e.target.value = '';
+        };
+        r.readAsText(file);
+    }
+
+    /* --- Utilities & URL Logic --- */
+    
     function getPageUrl(pageName) {
         let path = window.location.pathname;
         let lastSlash = path.lastIndexOf('/');
@@ -711,23 +899,83 @@
         return window.location.origin + newPath + '?branch=' + BRANCH;
     }
 
-    function copyWelcomeLink() { navigator.clipboard.writeText(getPageUrl('welcome.html')); showToast('Copied Welcome Link!'); }
+    // --- Welcome Page Functions ---
+    function copyWelcomeLink() {
+        const welcomeUrl = getPageUrl('welcome.html');
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = welcomeUrl;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        showToast('Copied Welcome Link!');
+    }
+
     function showWelcomeQR() {
         const welcomeUrl = getPageUrl('welcome.html');
         const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(welcomeUrl)}`;
+        
         const win = window.open('', '_blank', 'width=450,height=550');
-        win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>QR Code</h2><img src="${qrApi}"><p>${welcomeUrl}</p></body>`);
+        win.document.write(`
+            <html>
+            <head><title>Welcome QR Code</title></head>
+            <body style="text-align:center; font-family:sans-serif; padding: 20px; background: #f3f4f6;">
+                <h2 style="color: #1e293b; margin-bottom: 5px;">QR Code សម្រាប់អតិថិជន</h2>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">ឱ្យអតិថិជនស្កេន QR នេះដើម្បីចូលទំព័រ Welcome</p>
+                <div style="background: #fff; padding: 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <img src="${qrApi}" alt="QR Code" style="width: 250px; height: 250px;">
+                </div>
+                <br><br>
+                <p style="font-size: 11px; color: #94a3b8; word-break: break-all; max-width: 350px; margin: 0 auto 20px;">${welcomeUrl}</p>
+                <button onclick="window.print()" style="padding: 10px 25px; background: #06b6d4; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">🖨️ បោះពុម្ព (Print)</button>
+            </body>
+            </html>
+        `);
+        win.document.close();
     }
-    function goToWelcome() { window.open(getPageUrl('welcome.html'), '_blank'); }
 
-    function copyMenuLink() { navigator.clipboard.writeText(getPageUrl('menu.html')); showToast('Copied Menu Link!'); }
+    function goToWelcome() {
+        window.open(getPageUrl('welcome.html'), '_blank');
+    }
+
+    // --- Menu Page Functions ---
+    function copyMenuLink() {
+        const menuUrl = getPageUrl('menu.html');
+        const dummy = document.createElement('input');
+        document.body.appendChild(dummy);
+        dummy.value = menuUrl;
+        dummy.select();
+        document.execCommand('copy');
+        document.body.removeChild(dummy);
+        showToast('Copied Menu Link!');
+    }
+
     function showMenuQR() {
         const menuUrl = getPageUrl('menu.html');
         const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(menuUrl)}`;
+        
         const win = window.open('', '_blank', 'width=450,height=550');
-        win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Menu QR</h2><img src="${qrApi}"><p>${menuUrl}</p></body>`);
+        win.document.write(`
+            <html>
+            <head><title>Menu QR Code</title></head>
+            <body style="text-align:center; font-family:sans-serif; padding: 20px; background: #f3f4f6;">
+                <h2 style="color: #1e293b; margin-bottom: 5px;">QR Code សម្រាប់ Menu ផ្ទាល់</h2>
+                <p style="color: #64748b; font-size: 14px; margin-bottom: 20px;">ឱ្យអតិថិជនស្កេន QR នេះដើម្បីចូលមើល Menu តែម្តង</p>
+                <div style="background: #fff; padding: 20px; border-radius: 16px; display: inline-block; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+                    <img src="${qrApi}" alt="QR Code" style="width: 250px; height: 250px;">
+                </div>
+                <br><br>
+                <p style="font-size: 11px; color: #94a3b8; word-break: break-all; max-width: 350px; margin: 0 auto 20px;">${menuUrl}</p>
+                <button onclick="window.print()" style="padding: 10px 25px; background: #22c55e; color: #fff; border: none; border-radius: 8px; cursor: pointer; font-size: 16px; font-weight: bold;">🖨️️ បោះពុម្ព (Print)</button>
+            </body>
+            </html>
+        `);
+        win.document.close();
     }
-    function goToMenu() { window.open(getPageUrl('menu.html'), '_blank'); }
+
+    function goToMenu() {
+        window.open(getPageUrl('menu.html'), '_blank');
+    }
 
     window.onload = initAdmin;
 </script>
