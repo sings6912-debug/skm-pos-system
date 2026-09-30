@@ -763,6 +763,9 @@
                 if (localSys) {
                     sys = localSys;
                     if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
+                    // 🌟 ទាញយក Telegram Bot Token និង Chat ID ពី LocalStorage មកប្រើប្រាស់ភ្លាមៗ
+                    botToken = sys.waiterTelegramBotToken || sys.telegramBotToken || '';
+                    chatId = sys.waiterTelegramChatId || sys.telegramChatId || '';
                 }
                 
                 if (localInv && Array.isArray(localInv)) {
@@ -882,7 +885,14 @@
                         document.getElementById('lpName').innerText = nm;
                         document.getElementById('splashName').innerText = nm;
                         if (d.shopLogo) document.getElementById('lpLogo').src = d.shopLogo;
-                        botToken = d.telegramBotToken || ''; chatId = d.telegramChatId || '';
+                        
+                        // 🌟 ចំណុចកែសម្រួល៖ ទាញយក Token ទាំង ២ ប្រភេទពី Cloud
+                        window.orderBotToken = sys.telegramBotToken || d.telegramBotToken || '';
+                        window.orderChatId = sys.telegramChatId || d.telegramChatId || '';
+                        
+                        // បើអត់មាន Bot ទី២ ទេ វានឹងយក Bot ទី១ មកជំនួសសិន
+                        window.waiterBotToken = sys.waiterTelegramBotToken || window.orderBotToken;
+                        window.waiterChatId = sys.waiterTelegramChatId || window.orderChatId;
                         
                         // Re-build and re-render with fresh cloud data
                         buildCats();
@@ -1111,12 +1121,15 @@
             closeWaiterModal();
             showToast(`កំពុងហៅបុគ្គលិក...`);
 
-            // ផ្ញើសារលោតចូល Telegram ហាងភ្លាមៗ
-            if (botToken && chatId) {
-                let msg = `🛎️ <b>ការហៅសេវាកម្មបន្ទាន់!</b>\n📍 ទីតាំង: <b>តុលេខ ${TABLE_NO}</b>\n🔔 សំណើ: <b>${reqType}</b>`;
-                fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            // 🌟 ចំណុចកែសម្រួល៖ ផ្ញើសារលោតចូល Telegram សេវាកម្ម (Waiter Bot)
+            let tToken = window.waiterBotToken || window.orderBotToken;
+            let cId = window.waiterChatId || window.orderChatId;
+
+            if (tToken && cId) {
+                let msg = `🛎️ <b><big>ការហៅសេវាកម្មបន្ទាន់!</big></b>\n📍 ទីតាំង: <b>តុលេខ ${TABLE_NO}</b>\n🔔 សំណើ: <b>${reqType}</b>`;
+                fetch(`https://api.telegram.org/bot${tToken}/sendMessage`, {
                     method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({chat_id: chatId, text: msg, parse_mode: 'HTML'})
+                    body: JSON.stringify({chat_id: cId, text: msg, parse_mode: 'HTML'})
                 }).then(res => {
                     if(res.ok) {
                         showToast(`បានផ្ញើសំណើ "${reqType}" រួចរាល់!`);
@@ -1207,12 +1220,13 @@
                     document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
                     playDing();
 
-                    if(botToken && chatId) {
+                    // 🌟 ចំណុចកែសម្រួល៖ ផ្ញើសារកុម្មង់ទំនិញ (Order Bot)
+                    if(window.orderBotToken && window.orderChatId) {
                         let itxt = ord.items.map((i,x)=>`${x+1}. ${i.name} [${i.cartVar}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
-                        let msg = `🛒 <b>ការកុម្ម៉ង់ថ្មី (New Order)</b>\n👤 អតិថិជន: ${n}\n📞 លេខទូរស័ព្ទ: ${ph || 'គ្មាន'}\n📝 ចំណាំ: ${ord.note || 'គ្មាន'}\n\n🛍 ទំនិញ:\n${itxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
-                        fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                        let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n👤 អតិថិជន: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
+                        fetch(`https://api.telegram.org/bot${window.orderBotToken}/sendMessage`, {
                             method: 'POST', headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({chat_id: chatId, text: msg, parse_mode: 'HTML'})
+                            body: JSON.stringify({chat_id: window.orderChatId, text: msg, parse_mode: 'HTML'})
                         });
                     }
                     showToast(`Order Success! ID: ${orderId}`);
