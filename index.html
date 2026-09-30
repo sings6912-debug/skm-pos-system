@@ -81,8 +81,8 @@
         <div class="nav-item" id="nav-expenses" onclick="window.switchTab('expenses', '📉 ការចំណាយ (Expenses)', this)"><i>📉</i> ការចំណាយ</div>
         <div class="nav-item" id="nav-history" onclick="window.switchTab('history', '📜 ប្រវត្តិប្រតិបត្តិការ (Activity Logs)', this)"><i>📜</i> ប្រតិបត្តិការ</div>
         
-        <!-- កន្លែងកែប្រែ៖ Link ទៅកាន់ admin_settings.html -->
-        <div class="nav-item" id="nav-settings" onclick="const b = new URLSearchParams(window.location.search).get('branch') || 'branch_1'; window.location.href='admin_settings.html?branch=' + b"><i>⚙️</i> ការកំណត់</div>
+        <!-- រក្សាទុកកូដ Settings ដើមរបស់អ្នក -->
+        <div class="nav-item" id="nav-settings" onclick="window.switchTab('settings', '⚙️ ការកំណត់ប្រព័ន្ធ (Settings)', this)"><i>⚙️</i> ការកំណត់</div>
         
         <div class="nav-item" id="nav-about" onclick="window.switchTab('about', 'ℹ️ អំពីប្រព័ន្ធ (About & Version)', this)"><i>ℹ️</i> អំពីប្រព័ន្ធ</div>
         
@@ -444,7 +444,7 @@
                 </div>
             </div>
 
-            <!-- ផ្ទាំងការកំណត់ (Settings) - ចាស់ -->
+            <!-- ផ្ទាំងការកំណត់ (Settings) រក្សាទុកកូដដើម ១០០% -->
             <div id="tab-settings" class="tab-content">
                 <div style="max-width: 900px; margin: auto; display: flex; flex-direction: column; gap: 25px;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
@@ -547,7 +547,7 @@
                     </div>
 
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border);">
-                        <h2 style="font-size: var(--fs-20); margin-bottom: 20px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px;">⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)</h2>
+                        <h2 style="font-size: var(--fs-20); margin-bottom: 20px; color: var(--primary); border-bottom: 1px solid var(--border); padding-bottom: 10px;">⚙️️ ការកំណត់ប្រព័ន្ធ (System Settings)</h2>
                         <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 25px;">កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។</p>
 
                         <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);"><input type="checkbox" id="setCust" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;"><span><strong style="color:var(--text-main);">អតិថិជន (Customers):</strong> អនុញ្ញាតឲ្យកត់ត្រា និងគ្រប់គ្រងទិន្នន័យអតិថិជន។</span></label>
