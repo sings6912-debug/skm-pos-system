@@ -653,7 +653,9 @@
         } catch(e) { console.warn("Points parse error:", e); }
 
         let sys = {}, curr = 'USD', lang = 'en', exRate = 4000, discount = 0, rateStar = 5;
-        let botToken = '', chatId = '';
+        // 🌟 បំបែក Telegram Bot ជា ២ ផ្នែក
+        let orderBotToken = '', orderChatId = '';
+        let serviceBotToken = '', serviceChatId = '';
         let selCat = 'all', selVar = '', curProd = null;
         let dynamicChatLink = '';
         
@@ -763,9 +765,15 @@
                 if (localSys) {
                     sys = localSys;
                     if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
-                    // 🌟 ទាញយក Telegram Bot Token និង Chat ID ពី LocalStorage មកប្រើប្រាស់ភ្លាមៗ
-                    botToken = sys.waiterTelegramBotToken || sys.telegramBotToken || '';
-                    chatId = sys.waiterTelegramChatId || sys.telegramChatId || '';
+                    
+                    // 🌟 ទាញយក Telegram Bot ទាំង ២ ពី LocalStorage (Fallback)
+                    orderBotToken = sys.orderTelegramBotToken || sys.telegramBotToken || '';
+                    orderChatId = sys.orderTelegramChatId || sys.telegramChatId || '';
+                    serviceBotToken = sys.serviceTelegramBotToken || orderBotToken;
+                    serviceChatId = sys.serviceTelegramChatId || orderChatId;
+                    
+                    window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
+                    window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
                 }
                 
                 if (localInv && Array.isArray(localInv)) {
@@ -886,13 +894,15 @@
                         document.getElementById('splashName').innerText = nm;
                         if (d.shopLogo) document.getElementById('lpLogo').src = d.shopLogo;
                         
-                        // 🌟 ចំណុចកែសម្រួល៖ ទាញយក Token ទាំង ២ ប្រភេទពី Cloud
-                        window.orderBotToken = sys.telegramBotToken || d.telegramBotToken || '';
-                        window.orderChatId = sys.telegramChatId || d.telegramChatId || '';
+                        // 🌟 ទាញយក Telegram Bot ទាំង ២ ពី Cloud
+                        orderBotToken = sys.orderTelegramBotToken || sys.telegramBotToken || d.telegramBotToken || '';
+                        orderChatId = sys.orderTelegramChatId || sys.telegramChatId || d.telegramChatId || '';
+                        serviceBotToken = sys.serviceTelegramBotToken || orderBotToken;
+                        serviceChatId = sys.serviceTelegramChatId || orderChatId;
                         
-                        // បើអត់មាន Bot ទី២ ទេ វានឹងយក Bot ទី១ មកជំនួសសិន
-                        window.waiterBotToken = sys.waiterTelegramBotToken || window.orderBotToken;
-                        window.waiterChatId = sys.waiterTelegramChatId || window.orderChatId;
+                        // បោះទៅកាន់ window ទុកអោយ Custom JS Plugin ស្រូបយកទៅប្រើប្រាស់បាន
+                        window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
+                        window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
                         
                         // Re-build and re-render with fresh cloud data
                         buildCats();
@@ -1121,15 +1131,12 @@
             closeWaiterModal();
             showToast(`កំពុងហៅបុគ្គលិក...`);
 
-            // 🌟 ចំណុចកែសម្រួល៖ ផ្ញើសារលោតចូល Telegram សេវាកម្ម (Waiter Bot)
-            let tToken = window.waiterBotToken || window.orderBotToken;
-            let cId = window.waiterChatId || window.orderChatId;
-
-            if (tToken && cId) {
+            // 🌟 ប្រើប្រាស់ Service Bot Token ដើម្បីបាញ់សារចូល Group ហៅសេវាកម្ម
+            if (serviceBotToken && serviceChatId) {
                 let msg = `🛎️ <b><big>ការហៅសេវាកម្មបន្ទាន់!</big></b>\n📍 ទីតាំង: <b>តុលេខ ${TABLE_NO}</b>\n🔔 សំណើ: <b>${reqType}</b>`;
-                fetch(`https://api.telegram.org/bot${tToken}/sendMessage`, {
+                fetch(`https://api.telegram.org/bot${serviceBotToken}/sendMessage`, {
                     method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({chat_id: cId, text: msg, parse_mode: 'HTML'})
+                    body: JSON.stringify({chat_id: serviceChatId, text: msg, parse_mode: 'HTML'})
                 }).then(res => {
                     if(res.ok) {
                         showToast(`បានផ្ញើសំណើ "${reqType}" រួចរាល់!`);
@@ -1141,8 +1148,7 @@
                     showToast(`បរាជ័យក្នុងការផ្ញើសំណើ!`, true);
                 });
             } else {
-                // Fallback បើមិនទាន់ភ្ជាប់ Telegram
-                showToast(`បានផ្ញើសំណើ "${reqType}" រួចរាល់!`);
+                showToast(`បានផ្ញើសំណើ "${reqType}" រួចរាល់! (Offline)`);
                 playDing();
             }
         }
@@ -1181,7 +1187,6 @@
             const ph = document.getElementById('cPhone').value.trim();
             let note = document.getElementById('cNote').value.trim();
             
-            // 🌟 បញ្ចូលលេខតុទៅក្នុងឈ្មោះអតិថិជន និងចំណាំដោយស្វ័យប្រវត្តិ បើមានលេខតុ
             if (TABLE_NO) {
                 if (!n) n = `តុលេខ ${TABLE_NO}`;
                 note = note ? `[តុលេខ ${TABLE_NO}] ${note}` : `[តុលេខ ${TABLE_NO}]`;
@@ -1212,7 +1217,6 @@
                 if(data && data.data_json) {
                     let d = data.data_json; if(!d.invoices) d.invoices=[];
                     d.invoices.unshift(ord);
-                    // Deduct stock
                     cart.forEach(c=>{ let i=(d.inventory||[]).find(x=>x.id===c.id); if(i) i.qty=Math.max(0, parseFloat(i.qty)-c.qty); });
                     await supabaseClient.from('branch_store').update({data_json: d}).eq('branch_id', BRANCH);
                     
@@ -1220,13 +1224,13 @@
                     document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
                     playDing();
 
-                    // 🌟 ចំណុចកែសម្រួល៖ ផ្ញើសារកុម្មង់ទំនិញ (Order Bot)
-                    if(window.orderBotToken && window.orderChatId) {
+                    // 🌟 ប្រើប្រាស់ Order Bot Token ដើម្បីបាញ់សារចូល Group កុម្មង់
+                    if(orderBotToken && orderChatId) {
                         let itxt = ord.items.map((i,x)=>`${x+1}. ${i.name} [${i.cartVar}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
                         let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n👤 អតិថិជន: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
-                        fetch(`https://api.telegram.org/bot${window.orderBotToken}/sendMessage`, {
+                        fetch(`https://api.telegram.org/bot${orderBotToken}/sendMessage`, {
                             method: 'POST', headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({chat_id: window.orderChatId, text: msg, parse_mode: 'HTML'})
+                            body: JSON.stringify({chat_id: orderChatId, text: msg, parse_mode: 'HTML'})
                         });
                     }
                     showToast(`Order Success! ID: ${orderId}`);
