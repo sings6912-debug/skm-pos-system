@@ -1365,20 +1365,6 @@
                 alert("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។");
             }
         };
-
-        // បញ្ជាឲ្យទាញលេខតុមកបង្ហាញពេលបើកទំព័រ
-        window.addEventListener('DOMContentLoaded', () => {
-            if(typeof window.loadTableSettingsForPOS === 'function') {
-                window.loadTableSettingsForPOS(); 
-            }
-        });
-                    // ៣. បន្តទៅមុខងារគិតលុយដើម
-            if (action === 'unpaid' && typeof window.checkout === 'function') window.checkout('unpaid');
-            else if (action === 'paid' && typeof window.openCheckoutModal === 'function') window.openCheckoutModal();
-            else if (action === 'preorder' && typeof window.openPreorderModal === 'function') window.openPreorderModal();
-            else alert("កំពុងដំណើរការ: " + action + " (Fallback mode)");
-        };
-
         // មុខងារបម្រុង (Fallback Functions) សម្រាប់ឲ្យ UI អាចចុចបានក្នុង Preview (ការពារការលោត Error)
         window.addEventListener('DOMContentLoaded', () => {
             window.loadTableSettingsForPOS(); // ដំណើរការទាញលេខតុពេលបើកទំព័រ
