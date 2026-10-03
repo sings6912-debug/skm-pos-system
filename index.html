@@ -637,7 +637,7 @@
          ======================================================== -->
 
     <!-- Modal: បង្កើត/កែប្រែ គណនី -->
-    <div class="modal-overlay" id="userManageModal" style="z-index: 1005;">
+    <div class="modal-overlay" id="userManageModal" style="z-index: 1005;" onclick="if(event.target === this) window.closeUserModal()">
         <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
                 <h2 id="userModalTitle" style="font-size: var(--fs-20);">👤 បង្កើតគណនីបុគ្គលិកថ្មី</h2>
@@ -682,42 +682,70 @@
         </div>
     </div>
 
-    <!-- Modal: ទូទាត់ប្រាក់ (Checkout) -->
-    <div class="modal-overlay" id="checkoutModal" style="z-index: 1005;">
-        <div class="modal" style="max-width: 450px;">
-            <div class="modal-header">
-                <h2 style="font-size: var(--fs-20);">💵 ទូទាត់ប្រាក់ (Checkout)</h2>
-                <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="document.getElementById('checkoutModal').style.display='none'">✕</button>
+    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) VVIP ថ្មី -->
+    <div class="modal-overlay" id="checkoutModal" style="z-index: 100005; backdrop-filter: blur(5px);" onclick="if(event.target === this) document.getElementById('checkoutModal').style.display='none'">
+        <style>
+            .skm-checkout-glass {
+                background: var(--bg-card, rgba(255, 255, 255, 0.95)); color: var(--text-main, #1e293b);
+                border: 1px solid var(--border, rgba(0, 0, 0, 0.08));
+                border-radius: 24px; padding: 25px; width: 95%; max-width: 480px;
+                backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                box-shadow: 0 20px 50px rgba(0,0,0,0.2); text-align: center;
+                font-family: 'Battambang', sans-serif;
+                animation: skmModalEnter 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            }
+            @media (prefers-color-scheme: dark) {
+                .skm-checkout-glass {
+                    background: var(--bg-card, rgba(15, 23, 42, 0.95)); color: var(--text-main, #f8fafc);
+                    border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
+                    box-shadow: 0 20px 50px rgba(0,0,0,0.6);
+                }
+            }
+            .skm-chk-input {
+                width: 100%; height: 50px; font-size: 22px; font-weight: bold; text-align: center;
+                border-radius: 12px; border: 2px solid var(--border, rgba(128,128,128,0.2));
+                background: var(--bg-input, #f8fafc); color: var(--text-main, inherit);
+                outline: none; transition: 0.2s; font-family: 'Arial';
+            }
+            @media (prefers-color-scheme: dark) { .skm-chk-input { background: rgba(0,0,0,0.3); } }
+            .skm-chk-input:focus { border-color: #10b981; box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15); background: transparent; }
+        </style>
+        
+        <div class="skm-checkout-glass">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+                <h2 style="margin:0; font-size: 20px; font-weight:bold; display:flex; align-items:center; gap:8px;">
+                    <span style="color:#10b981;">💵</span> ទូទាត់ប្រាក់ (Checkout)
+                </h2>
+                <div onclick="document.getElementById('checkoutModal').style.display='none'" style="background:var(--bg-alt, #f1f5f9); border: 1px solid var(--border, rgba(0,0,0,0.05)); color:inherit; width:32px; height:32px; border-radius:50%; display:flex; justify-content:center; align-items:center; cursor:pointer; font-weight:bold; font-size: 14px; transition:0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white';" onmouseout="this.style.background='var(--bg-alt, #f1f5f9)'; this.style.color='inherit';">✕</div>
             </div>
-            <div class="modal-body" style="text-align: center; padding: 25px 20px;">
-                <div style="font-size: var(--fs-15); margin-bottom: 5px; color: var(--text-muted);">សរុបប្រាក់ត្រូវបង់ (Grand Total):</div>
-                <div id="checkoutTotalDisplay" style="font-size: 28px; font-weight: bold; color: var(--success); margin-bottom: 15px; line-height: 1.3;"></div>
 
-                <div style="display: flex; gap: 15px; margin-bottom: 20px; margin-top: 15px;">
-                    <div style="flex: 1; text-align: left;">
-                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់ទទួល ($):</label>
-                        <input type="number" id="checkoutReceivedUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0.00" oninput="window.calculateChange()" autocomplete="off">
-                    </div>
-                    <div style="flex: 1; text-align: left;">
-                        <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់ទទួល (៛):</label>
-                        <input type="number" id="checkoutReceivedRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0" oninput="window.calculateChange()" autocomplete="off">
-                    </div>
+            <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 5px;">សរុបប្រាក់ត្រូវបង់ (Grand Total)</div>
+            <div id="checkoutTotalDisplay" style="font-size: 36px; font-weight: 900; color: #10b981; margin-bottom: 20px; font-family: 'Arial'; text-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);"></div>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <div style="flex: 1; text-align: left;">
+                    <label style="display:block; margin-bottom: 8px; font-size: 13px; font-weight:bold; color: var(--text-muted);">ប្រាក់ទទួល ($):</label>
+                    <input type="number" id="checkoutReceivedUsd" class="skm-chk-input" placeholder="0.00" oninput="window.calculateChange()" autocomplete="off">
                 </div>
-                
-                <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--border); text-align: center;">
-                    <div style="font-size: var(--fs-14); color: var(--text-muted); margin-bottom: 5px;">ប្រាក់អាប់ (Change):</div>
-                    <div id="checkoutChangeDisplay" style="font-size: 24px; font-weight: bold; color: var(--warning);">$0.00 | 0 ៛</div>
+                <div style="flex: 1; text-align: left;">
+                    <label style="display:block; margin-bottom: 8px; font-size: 13px; font-weight:bold; color: var(--text-muted);">ប្រាក់ទទួល (៛):</label>
+                    <input type="number" id="checkoutReceivedRiel" class="skm-chk-input" placeholder="0" oninput="window.calculateChange()" autocomplete="off">
                 </div>
             </div>
-            <div class="modal-footer" style="justify-content: space-between; gap: 15px;">
-                <button class="btn btn-outline" style="flex:1; padding: 12px;" onclick="document.getElementById('checkoutModal').style.display='none'">បោះបង់</button>
-                <button class="btn btn-success" style="flex:2; font-size: var(--fs-16); padding: 12px;" onclick="window.processCheckoutPaid()">✅ បញ្ជាក់ការទូទាត់</button>
+            
+            <div style="background: rgba(245, 158, 11, 0.1); padding: 15px; border-radius: 12px; border: 1px solid rgba(245, 158, 11, 0.2); margin-bottom: 20px;">
+                <div style="font-size: 13px; color: #b45309; font-weight:bold; margin-bottom: 5px;">ប្រាក់អាប់ (Change)</div>
+                <div id="checkoutChangeDisplay" style="font-size: 24px; font-weight: 900; color: #f59e0b; font-family: 'Arial';">$0.00 | 0 ៛</div>
             </div>
+
+            <button style="width:100%; height: 50px; border-radius: 12px; border: none; background: linear-gradient(135deg, #10b981, #059669); color: white; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3); font-family: 'Battambang';" onclick="window.processCheckoutPaid()" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">
+                ✅ បញ្ជាក់ការទូទាត់ (Confirm)
+            </button>
         </div>
     </div>
     
-    <!-- Modal: បញ្ជាក់ការទូទាត់ប្រាក់ (Debt Payment) -->
-    <div class="modal-overlay" id="debtPaymentModal" style="z-index: 1006;">
+    <!-- Modal: បញ្ជាក់ការទូទាត់ប្រាក់ជំពាក់ (Debt Payment) -->
+    <div class="modal-overlay" id="debtPaymentModal" style="z-index: 1006;" onclick="if(event.target === this) document.getElementById('debtPaymentModal').style.display='none'">
         <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
                 <h2 style="font-size: var(--fs-20);">💸 បញ្ជាក់ការទូទាត់ប្រាក់</h2>
@@ -762,7 +790,7 @@
     </div>
     
     <!-- Modal: កក់ប្រាក់ (Pre-order) -->
-    <div class="modal-overlay" id="preorderModal" style="z-index: 1005;">
+    <div class="modal-overlay" id="preorderModal" style="z-index: 1005;" onclick="if(event.target === this) document.getElementById('preorderModal').style.display='none'">
         <div class="modal" style="max-width: 450px;">
             <div class="modal-header">
                 <h2 style="font-size: var(--fs-20);">📝 កក់ប្រាក់ទំនិញ (Pre-order)</h2>
@@ -795,48 +823,7 @@
         </div>
     </div>
 
-    <!-- Modal: កត់ត្រាចំណាយ (Expense Modal) -->
-    <div class="modal-overlay" id="expenseModal">
-        <div class="modal" style="max-width: 400px;">
-            <div class="modal-header">
-                <h2 style="font-size: var(--fs-20);">📉 កត់ត្រាចំណាយថ្មី</h2>
-                <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeExpenseModal()">✕</button>
-            </div>
-            <div class="modal-body">
-                <input type="hidden" id="expId"> <!-- បន្ថែមប្រអប់លាក់សម្រាប់ Edit -->
-                
-                <div style="margin-bottom: 15px;">
-                    <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">កាលបរិច្ឆេទ (Date & Time) *</label>
-                    <input type="datetime-local" id="expDate" class="form-control" style="width: 100%;">
-                </div>
-
-                <div style="margin-bottom: 15px;">
-                    <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ប្រភេទចំណាយ *</label>
-                    <select id="expCategory" class="form-control" style="width: 100%;">
-                        <option value="ថ្លៃទឹក/ភ្លើង">⚡ ថ្លៃទឹក / ភ្លើង</option>
-                        <option value="ឈ្នួលផ្ទះ/ហាង">🏠 ឈ្នួលផ្ទះ / ហាង</option>
-                        <option value="ទិញសម្ភារៈ/ស្តុក">📦 ទិញសម្ភារៈ / ស្តុក</option>
-                        <option value="ប្រាក់ខែបុគ្គលិក">👨‍💼 ប្រាក់ខែបុគ្គលិក</option>
-                        <option value="ចំណាយផ្សេងៗ">🏷️ ចំណាយផ្សេងៗ</option>
-                    </select>
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ទឹកប្រាក់ចំណាយ ($) *</label>
-                    <input type="number" id="expAmount" class="form-control" placeholder="0.00" style="width: 100%;">
-                </div>
-                <div>
-                    <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">បរិយាយ / ចំណាំ</label>
-                    <textarea id="expNote" class="form-control" placeholder="សរសេរចំណាំ..." style="height: 60px; resize:none; width: 100%;"></textarea>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="window.closeExpenseModal()">បោះបង់</button>
-                <button class="btn btn-primary" onclick="window.saveExpense()">រក្សាទុក</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: ប្រអប់សារ (Message Box) -->
+    <!-- Modal: ប្រអប់សារ Alert ជូនដំណឹង (Message Box) (មិនដាក់ onclick ទេ ការពារកុំឱ្យចុចច្រឡំ) -->
     <div class="modal-overlay" id="ksMsgBox" style="z-index: 999999;">
         <div class="modal" style="max-width: 400px; text-align: center; margin: auto;">
             <div class="modal-body">
@@ -848,7 +835,7 @@
     </div>
 
     <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile) -->
-    <div class="modal-overlay" id="shopNameModal" style="z-index: 9000;">
+    <div class="modal-overlay" id="shopNameModal" style="z-index: 9000;" onclick="if(event.target === this) window.closeShopNameModal()">
         <div class="modal" style="max-width: 350px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-18);">✏️ ប្តូរឈ្មោះហាង និង Logo</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeShopNameModal()">✕</button></div>
             <div class="modal-body">
@@ -891,7 +878,7 @@
     </div>
 
     <!-- Modal: បង្កើត/កែប្រែ ទំនិញ (Product) -->
-    <div class="modal-overlay" id="productModal">
+    <div class="modal-overlay" id="productModal" onclick="if(event.target === this) window.closeModal()">
         <div class="modal">
             <div class="modal-header"><h2 id="modalTitle" style="font-size: var(--fs-20);">ទំនិញថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeModal()">✕</button></div>
             <div class="modal-body">
@@ -916,7 +903,6 @@
                     <div><label>ខ្នាត/ឯកតា (Unit)</label><input type="text" id="pUnit" class="form-control" list="unitList" placeholder="ឧ. កេះ, បេ" style="width: 100%;"><datalist id="unitList"></datalist></div>
                 </div>
                 
-                <!-- ស្ថានភាពទំនិញ និងកាលបរិច្ឆេទផុតកំណត់ -->
                 <div class="form-row" style="margin-top: 15px;">
                     <div id="pConditionContainer" style="display: none;">
                         <label>ស្ថានភាពទំនិញ (Condition)</label>
@@ -949,7 +935,7 @@
     </div>
 
     <!-- Modal: បង្កើត/កែប្រែ អតិថិជន (Customer) -->
-    <div class="modal-overlay" id="customerModal">
+    <div class="modal-overlay" id="customerModal" onclick="if(event.target === this) window.closeCustomerModal()">
         <div class="modal" style="max-width: 400px;">
             <div class="modal-header"><h2 id="customerModalTitle" style="font-size: var(--fs-20);">អតិថិជនថ្មី</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeCustomerModal()">✕</button></div>
             <div class="modal-body">
@@ -962,7 +948,7 @@
     </div>
 
     <!-- Modal: ប្រវត្តិអតិថិជន (Customer History) -->
-    <div class="modal-overlay" id="customerHistoryModal" style="z-index: 1001;">
+    <div class="modal-overlay" id="customerHistoryModal" style="z-index: 1001;" onclick="if(event.target === this) window.closeCustomerHistoryModal()">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">🛍️ ប្រវត្តិទិញរបស់: <span id="chCustName" style="color: var(--primary);"></span></h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeCustomerHistoryModal()">✕</button></div>
             <div class="modal-body"><div class="table-responsive"><table style="font-size: var(--fs-13);"><thead><tr><th>កាលបរិច្ឆេទ</th><th>ទំនិញដែលបានទិញ (សង្ខេប)</th><th>សរុប</th><th>ស្ថានភាព</th><th>សកម្មភាព</th></tr></thead><tbody id="customerHistoryTableBody"></tbody></table></div></div>
@@ -971,7 +957,7 @@
     </div>
 
     <!-- Modal: មើលវិក្កយបត្រ (Invoice View/Print) -->
-    <div class="modal-overlay" id="invoiceViewModal" style="z-index: 1002;">
+    <div class="modal-overlay" id="invoiceViewModal" style="z-index: 1002;" onclick="if(event.target === this) window.closeInvoiceViewModal()">
         <div class="modal" style="max-width: 500px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">👁️ លម្អិតវិក្កយបត្រ</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeInvoiceViewModal()">✕</button></div>
             <div class="modal-body" style="background: #e2e8f0;">
@@ -992,7 +978,7 @@
     </div>
 
     <!-- Modal: កែប្រែវិក្កយបត្ររង់ចាំទូទាត់ (Edit Unpaid Invoice) -->
-    <div class="modal-overlay" id="invoiceEditModal">
+    <div class="modal-overlay" id="invoiceEditModal" onclick="if(event.target === this) window.closeInvoiceEditModal()">
         <div class="modal" style="max-width: 700px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-20);">✏️ កែប្រែវិក្កយបត្ររង់ចាំទូទាត់</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeInvoiceEditModal()">✕</button></div>
             <div class="modal-body">

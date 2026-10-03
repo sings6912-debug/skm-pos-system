@@ -115,7 +115,7 @@ window.viewCustomerHistory = function(customerName) {
             <td style="font-size:var(--fs-12);" title="${(inv.items || []).map(i => i.name).join(', ')}">${itemsSummary}</td>
             <td style="font-weight:bold; color:var(--success);">${window.fMoney(inv.totalAmount)}</td>
             <td>${statusBadge}</td>
-            <td><button class="btn btn-outline" style="padding: 4px 8px; font-size: var(--fs-12);" onclick="window.viewInvoice('${inv.id}')">👁️ វិក្កយបត្រ</button></td>
+            <td><button class="btn btn-outline" style="padding: 4px 8px; font-size: var(--fs-12);" onclick="window.closeCustomerHistoryModal(); window.viewInvoiceDetails('${inv.id||inv.invoiceNo}')">👁️ វិក្កយបត្រ</button></td>
         </tr>`; 
     });
     document.getElementById('customerHistoryTableBody').innerHTML = fHtml || '<tr><td colspan="5" style="text-align:center; padding: 20px;">អតិថិជននេះមិនទាន់មានប្រវត្តិទិញទេ</td></tr>'; 

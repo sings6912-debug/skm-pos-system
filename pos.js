@@ -241,7 +241,13 @@ window.renderCart = function() {
     if (cartTotalQtyEl) cartTotalQtyEl.innerText = tQty; 
     
     const cartDiscEl = document.getElementById('cartDiscountAmount');
-    if(cartDiscEl) cartDiscEl.innerText = '-' + window.fMoney(discountAmountUsd); 
+if (cartDiscEl) {
+    if (discountType === '%' && discountValue > 0) {
+        cartDiscEl.innerText = `-${window.fMoney(discountAmountUsd)} (${discountValue}%)`;
+    } else {
+        cartDiscEl.innerText = '-' + window.fMoney(discountAmountUsd);
+    }
+} 
     
     const cartTaxEl = document.getElementById('cartTaxAmount');
     if(cartTaxEl) cartTaxEl.innerText = '+' + window.fMoney(taxAmountUsd);

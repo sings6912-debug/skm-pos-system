@@ -922,6 +922,26 @@
         }
 
         window.onload = loadShopProfile;
+        
+        // 🌟 បន្ថែមមុខងារចុចតាម Keyboard លើផ្ទាំង PIN Pad
+        window.addEventListener('keydown', function(e) {
+            const pinModal = document.getElementById('pinModal');
+            // ពិនិត្យមើលថាតើ Modal PIN កំពុងបើកបង្ហាញដែរឬទេ
+            if (!pinModal || !pinModal.classList.contains('show')) return;
+
+            // បើចុចលេខពី 0 ដល់ 9
+            if (e.key >= '0' && e.key <= '9') {
+                enterPin(parseInt(e.key));
+            }
+            // បើចុច Backspace ឬ Delete សម្រាប់លុបលេខ
+            else if (e.key === 'Backspace' || e.key === 'Delete') {
+                clearPin();
+            }
+            // បើចុច Escape ដើម្បីបិទប្រអប់ PIN
+            else if (e.key === 'Escape') {
+                closePinModal();
+            }
+        });
     </script>
 </body>
 </html>

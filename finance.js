@@ -6,7 +6,6 @@
 // 🌟 ផ្នែកទី ១៖ គ្រប់គ្រងវិក្កយបត្រ (Invoices & Debt)
 // ========================================================
 
-// 🌟 ១. បង្ហាញបញ្ជីវិក្កយបត្រ & ការកុម្ម៉ង់ (Render Invoices Table)
 window.renderUnpaid = function() {
     const tableBody = document.getElementById('unpaidTable') || document.querySelector('#mainUnpaidTable tbody');
     if (!tableBody) return;
@@ -19,7 +18,6 @@ window.renderUnpaid = function() {
         } catch(e) { invoices = []; }
     }
 
-    // 🌟 ដំណោះស្រាយ Blacklist៖ ត្រងចោលវិក្កយបត្រខ្មោច (Zombies)
     const deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
     if (deletedTracker.length > 0) {
         invoices = invoices.filter((inv, idx) => {
@@ -150,7 +148,6 @@ window.renderUnpaid = function() {
     if (unpaidEl) unpaidEl.innerText = `$${totalUnpaid.toFixed(2)}`;
 };
 
-// 🌟 ២. មុខងារប្រាប់ភ្ញៀវថាកម្ម៉ង់រួចរាល់
 window.notifyCustomerOrderDone = async function(invId) {
     let invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     const targetId = String(invId).trim().toLowerCase();
@@ -193,7 +190,6 @@ window.notifyCustomerOrderDone = async function(invId) {
     window.renderUnpaid();
 };
 
-// 🌟 ៣. បើកផ្ទាំងទូទាត់ប្រាក់ជំពាក់
 window.currentPayingInvoiceId = null;
 
 window.openDebtPaymentModal = function(invId) {
@@ -299,7 +295,6 @@ window.processDebtPayment = async function() {
     if(typeof window.renderCustomers === 'function') window.renderCustomers();
 };
 
-// 🌟 ៤. បើកផ្ទាំងកែប្រែវិក្កយបត្រ (Edit Invoice Modal)
 window.currentEditingInvoice = null;
 
 window.openInvoiceEditModal = function(invId) {
@@ -453,9 +448,6 @@ window.saveInvoiceChanges = async function() {
     window.renderUnpaid();
 };
 
-// ========================================================
-// 🌟 មុខងារលុបវិក្កយបត្រ (បំពាក់ Blacklist ការពារស្តុកឡើងទ្វេដង)
-// ========================================================
 window.deleteInvoiceRecord = function(invId) {
     if (!confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រ [${invId}] មែនទេ?`)) return;
 
@@ -520,7 +512,6 @@ window.deleteInvoiceRecord = function(invId) {
     }
 };
 
-// 🌟 មុខងារបង្ហាញលម្អិតវិក្កយបត្រ (រួមទាំង Logo ហាង និងអ៊ុតស្លាកសញ្ញា)
 window.currentActiveInvoiceId = null;
 
 window.viewInvoiceDetails = function(invId) {
@@ -558,9 +549,12 @@ window.viewInvoiceDetails = function(invId) {
 
     let itemsHtml = `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;"><thead><tr style="border-bottom: 1px dashed #000;"><th style="text-align: left; padding: 4px 0;">ទំនិញ</th><th style="text-align: center; padding: 4px 0;">ចំនួន</th><th style="text-align: right; padding: 4px 0;">តម្លៃ</th><th style="text-align: right; padding: 4px 0;">សរុប</th></tr></thead><tbody>`;
 
+    let rawSubtotal = 0; 
+
     (inv.items || []).forEach(it => {
         const p = parseFloat(it.price || 0);
         const q = parseInt(it.cartQty || it.qty || it.quantity || 1);
+        rawSubtotal += (p * q); 
         itemsHtml += `<tr style="border-bottom: 1px dotted #ccc;"><td style="padding: 4px 0;">${it.name || it.title}</td><td style="text-align: center; padding: 4px 0;">${q}</td><td style="text-align: right; padding: 4px 0;">$${p.toFixed(2)}</td><td style="text-align: right; padding: 4px 0;">$${(p * q).toFixed(2)}</td></tr>`;
     });
 
@@ -568,7 +562,25 @@ window.viewInvoiceDetails = function(invId) {
     const paid = parseFloat(inv.paidUsd || inv.paidAmount || 0);
     const remaining = Math.max(0, total - paid);
 
-    itemsHtml += `</tbody></table><div style="border-top: 1px dashed #000; margin-top: 10px; padding-top: 8px; text-align: right;"><div style="font-size: 16px; font-weight: bold;">សរុបប្រាក់៖ $${total.toFixed(2)}</div>`;
+    itemsHtml += `</tbody></table><div style="border-top: 1px dashed #000; margin-top: 10px; padding-top: 8px; text-align: right;">`;
+
+    const discVal = parseFloat(inv.discount || 0);
+    if (discVal > 0) {
+        itemsHtml += `<div style="font-size: 13px; margin-bottom: 4px; color: #555;">សរុបទំនិញ៖ $${rawSubtotal.toFixed(2)}</div>`;
+        let discDisplay = inv.discountType === '%' ? `${discVal}%` : `$${discVal.toFixed(2)}`;
+        itemsHtml += `<div style="font-size: 13px; margin-bottom: 6px; color: var(--danger);">បញ្ចុះតម្លៃ៖ -${discDisplay}</div>`;
+    }
+
+    const taxRate = parseFloat(inv.taxRate || 0);
+    if (taxRate > 0) {
+        itemsHtml += `<div style="font-size: 13px; margin-bottom: 4px;">ពន្ធអាករ (${taxRate}%)៖ បូកបញ្ចូល</div>`;
+    }
+
+    itemsHtml += `<div style="font-size: 16px; font-weight: bold;">សរុបប្រាក់៖ $${total.toFixed(2)}</div>`;
+
+    if (inv.totalRiel > 0) {
+        itemsHtml += `<div style="font-size: 14px; font-weight: bold; color: var(--text-muted);">${Math.round(inv.totalRiel).toLocaleString()} ៛</div>`;
+    }
     
     if (inv.status !== 'paid' && paid > 0) {
         itemsHtml += `<div style="font-size: 13px; margin-top: 4px;">បានទូទាត់៖ $${paid.toFixed(2)}</div><div style="font-size: 13px; font-weight: bold; color: red;">នៅខ្វះ៖ $${remaining.toFixed(2)}</div>`;
@@ -586,7 +598,6 @@ window.closeInvoiceViewModal = function() {
     window.currentActiveInvoiceId = null;
 };
 
-// 🌟 មុខងារបោះពុម្ពវិក្កយបត្រ (Print Receipt)
 window.reprintInvoice = function() {
     if (!window.currentActiveInvoiceId) return alert("❌ រកមិនឃើញវិក្កយបត្រសម្រាប់បោះពុម្ពទេ!");
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
@@ -689,7 +700,56 @@ window.exportInvoicesCSV = function() {
 // 🌟 ផ្នែកទី ២៖ គ្រប់គ្រងការចំណាយ (Expense Management)
 // ========================================================
 
+// ⚡ មុខងារជំនួយ: បង្កើតផ្ទាំងចំណាយដោយស្វ័យប្រវត្តិ (Auto-Inject Modal) បើរកវាមិនឃើញក្នុង HTML
+function injectExpenseModalIfNeeded() {
+    let modal = document.getElementById('expenseModal');
+    if (!modal) {
+        const modalHtml = `
+        <div class="modal-overlay" id="expenseModal" style="z-index: 1005;" onclick="if(event.target === this) window.closeExpenseModal()">
+            <div class="modal" style="max-width: 400px;">
+                <div class="modal-header">
+                    <h2 style="font-size: var(--fs-20);">📉 កត់ត្រាចំណាយ</h2>
+                    <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeExpenseModal()">✕</button>
+                </div>
+                <div class="modal-body" style="text-align: left;">
+                    <input type="hidden" id="expId">
+                    <div style="margin-bottom: 15px;">
+                        <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">កាលបរិច្ឆេទ (Date & Time) *</label>
+                        <input type="datetime-local" id="expDate" class="form-control" style="width: 100%;">
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ប្រភេទចំណាយ *</label>
+                        <select id="expCategory" class="form-control" style="width: 100%;">
+                            <option value="ថ្លៃទឹក/ភ្លើង">⚡ ថ្លៃទឹក / ភ្លើង</option>
+                            <option value="ឈ្នួលផ្ទះ/ហាង">🏠 ឈ្នួលផ្ទះ / ហាង</option>
+                            <option value="ទិញសម្ភារៈ/ស្តុក">📦 ទិញសម្ភារៈ / ស្តុក</option>
+                            <option value="ប្រាក់ខែបុគ្គលិក">👨‍💼 ប្រាក់ខែបុគ្គលិក</option>
+                            <option value="ចំណាយផ្សេងៗ">🏷️ ចំណាយផ្សេងៗ</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 15px;">
+                        <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ទឹកប្រាក់ចំណាយ ($) *</label>
+                        <input type="number" id="expAmount" class="form-control" placeholder="0.00" style="width: 100%;">
+                    </div>
+                    <div>
+                        <label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">បរិយាយ / ចំណាំ</label>
+                        <textarea id="expNote" class="form-control" placeholder="សរសេរចំណាំ..." style="height: 60px; resize:none; width: 100%;"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-outline" onclick="window.closeExpenseModal()">បោះបង់</button>
+                    <button class="btn btn-primary" onclick="window.saveExpense()">រក្សាទុក</button>
+                </div>
+            </div>
+        </div>`;
+        document.body.insertAdjacentHTML('beforeend', modalHtml);
+    }
+}
+
+// ⚡ ធានាថា Function នេះមាននៅក្នុង finance.js ដើម្បីឱ្យប៊ូតុង "កត់ត្រាចំណាយថ្មី" ដំណើរការ
 window.openExpenseModal = function() {
+    injectExpenseModalIfNeeded(); // ហៅមកប្រើ ដើម្បីបញ្ចូលកូដបើវាបាត់
+    
     document.getElementById('expId').value = '';
     document.getElementById('expCategory').value = 'ទិញសម្ភារៈ/ស្តុក';
     document.getElementById('expAmount').value = '';
@@ -704,10 +764,15 @@ window.openExpenseModal = function() {
 };
 
 window.closeExpenseModal = function() {
-    document.getElementById('expenseModal').style.display = 'none';
+    const modal = document.getElementById('expenseModal');
+    if (modal) {
+        modal.style.display = 'none';
+    }
 };
 
 window.editExpense = function(id) {
+    injectExpenseModalIfNeeded(); // ហៅមកប្រើ ដើម្បីបញ្ចូលកូដបើវាបាត់
+    
     let expenses = window.expenses || JSON.parse(localStorage.getItem(window.getBranchKey('expenses_pro'))) || [];
     const exp = expenses.find(e => String(e.id) === String(id));
     
@@ -793,7 +858,6 @@ window.renderExpenses = function() {
 
     let totalExp = 0;
     
-    // 🌟 កាត់ចំណាយខ្មោចចោលចេញពីអេក្រង់
     let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
     let validExpenses = (window.expenses || []).filter(e => !deletedExps.includes(String(e.id)));
     window.expenses = validExpenses;
@@ -852,20 +916,16 @@ window.renderExpenses = function() {
     if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainExpenseTable'), 50);
 };
 
-// 🌟 មុខងារលុបចំណាយ (បំពាក់ Blacklist ការពារកុំឲ្យ Cloud ទាញមកវិញ)
 window.deleteExpense = function(id) {
     if(typeof window.ksMsg === 'function') {
         window.ksMsg('តើអ្នកពិតជាចង់លុបកំណត់ត្រាចំណាយនេះមែនទេ?', 'បញ្ជាក់ការលុប', true, async () => {
             
-            // ⚡ ១. កត់ត្រា ID ចូលបញ្ជីខ្មៅ (Blacklist)
             let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
             deletedExps.push(String(id));
             localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
 
-            // ⚡ ២. លុបចេញពីអេក្រង់
             window.expenses = window.expenses.filter(e => String(e.id) !== String(id));
             
-            // ⚡ ៣. Save និង Refresh
             if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
             window.renderExpenses();
             if(typeof window.renderDashboard === 'function') window.renderDashboard();
