@@ -363,8 +363,8 @@ window.sysI18n = {
         btnUploadQr: '📷 QR Code',
         lblTelegramTitle: '🤖 ការកំណត់ Telegram អតិថិជន:',
         plhTelegramUser: 'Telegram Username (ឧ. Jheng6912)',
-        plhTelegramToken: 'Bot Token សម្រាប់ការលោតសារ',
-        plhTelegramChatId: 'Chat ID សម្រាប់ទទួលសារ',
+        plhTelegramToken: 'Bot Token for notifications',
+        plhTelegramChatId: 'Chat ID to receive alerts',
         btnCancel: 'បោះបង់',
         btnSave: 'រក្សាទុក',
         btnConfirmOk: 'យល់ព្រម',
@@ -1470,12 +1470,19 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
             localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProd));
 
-            // ⚡ ត្រងទំនិញ (Inventory) 
-            (d.inventory || []).forEach(pCloud => {
-                if (pCloud && pCloud.id && !deletedProd.includes(String(pCloud.id)) && !window.inventory.some(pLoc => pLoc.id === pCloud.id)) {
-                    window.inventory.push(pCloud);
-                }
-            });
+            // ⚡ ត្រងទំនិញ (Inventory) និងធ្វើបច្ចុប្បន្នភាពស្តុក (Sync Updates)
+            if (d.inventory) {
+                d.inventory.forEach(pCloud => {
+                    if (!pCloud || !pCloud.id || deletedProd.includes(String(pCloud.id))) return;
+                    let pLoc = window.inventory.find(p => p.id === pCloud.id);
+                    if (pLoc) {
+                        // ធ្វើបច្ចុប្បន្នភាពទិន្នន័យ (ដូចជា ចំនួនស្តុក និងតម្លៃ) ពី Cloud មក Local
+                        Object.assign(pLoc, pCloud);
+                    } else {
+                        window.inventory.push(pCloud);
+                    }
+                });
+            }
             window.inventory = window.inventory.filter(p => !deletedProd.includes(String(p.id)));
             
             // ⚡ ត្រង History ចាស់ៗចោល
@@ -2429,21 +2436,45 @@ window.onload = async () => {
         try {
             if(!window.supabaseClient || !navigator.onLine) return;
             let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).single();
-            if (data && data.data_json && data.data_json.invoices) {
-                let cloudInvoices = data.data_json.invoices;
+            if (data && data.data_json) {
+                let cloudData = data.data_json;
                 let hasNewOrder = false;
+                let shouldRenderInventory = false;
                 
-                // ⚡ ទាញបញ្ជីខ្មៅយកមកពិនិត្យមុននឹងទាញវិក្កយបត្រថ្មីចូលម៉ាស៊ីន
-                let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+                // ⚡ 1. ត្រួតពិនិត្យវិក្កយបត្រថ្មី (Orders)
+                if (cloudData.invoices) {
+                    let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+                    cloudData.invoices.forEach(cInv => {
+                        let cId = String(cInv.id || cInv.invoiceNo).trim().toLowerCase();
+                        if (!deletedTracker.includes(cId) && !window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
+                            window.invoices.push(cInv);
+                            hasNewOrder = true;
+                        }
+                    });
+                }
 
-                cloudInvoices.forEach(cInv => {
-                    let cId = String(cInv.id || cInv.invoiceNo).trim().toLowerCase();
-                    if (!deletedTracker.includes(cId) && !window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
-                        window.invoices.push(cInv);
-                        hasNewOrder = true;
-                    }
-                });
+                // ⚡ 2. ត្រួតពិនិត្យស្តុកទំនិញដែលបានអាប់ដេតពីម៉ាស៊ីនផ្សេង (Real-time Inventory Sync)
+                if (cloudData.inventory) {
+                    let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+                    cloudData.inventory.forEach(pCloud => {
+                        if (!pCloud || !pCloud.id || deletedProd.includes(String(pCloud.id))) return;
+                        let pLoc = window.inventory.find(p => p && p.id === pCloud.id);
+                        if (pLoc) {
+                            // ប្រសិនបើស្តុក តម្លៃ ឬឈ្មោះមានការប្រែប្រួលពីម៉ាស៊ីនផ្សេង ធ្វើបច្ចុប្បន្នភាពវា
+                            if (pLoc.qty !== pCloud.qty || pLoc.price !== pCloud.price || pLoc.name !== pCloud.name) {
+                                Object.assign(pLoc, pCloud);
+                                shouldRenderInventory = true;
+                            }
+                        } else {
+                            window.inventory.push(pCloud);
+                            shouldRenderInventory = true;
+                        }
+                    });
+                    // ត្រូវប្រាកដថាអត់មានទំនិញជាប់ Blacklist
+                    window.inventory = window.inventory.filter(p => !deletedProd.includes(String(p.id)));
+                }
 
+                // ដំណើរការលោតសារបញ្ជាក់មានការកម្ម៉ង់
                 if (hasNewOrder) {
                     window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                     
@@ -2457,6 +2488,15 @@ window.onload = async () => {
                     if (activeTab && activeTab.id === 'tab-unpaid' && typeof window.renderUnpaid === 'function') {
                         window.renderUnpaid();
                     }
+                }
+
+                // ដំណើរការគូរអេក្រង់ឡើងវិញពេលមានការកាត់ស្តុក
+                if (shouldRenderInventory) {
+                    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+                    const activeTab = document.querySelector('.tab-content.active');
+                    if (activeTab && activeTab.id === 'tab-inventory' && typeof window.renderInventory === 'function') window.renderInventory();
+                    if (activeTab && activeTab.id === 'tab-pos' && typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+                    if (activeTab && activeTab.id === 'tab-dashboard' && typeof window.renderDashboard === 'function') window.renderDashboard();
                 }
             }
         } catch(e) {}
