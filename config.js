@@ -168,6 +168,3 @@ window.logAction = function(type, itemName, qty, note, activeUserRef) {
     window.historyLog.unshift({ id: Date.now(), date: window.fDate(), type, itemName, qty, note: `${note} (${executor})` }); 
     if(window.historyLog.length > 500) window.historyLog.pop(); 
 };
-
-// 🌟 ចំណាំ៖ កូដ loadDataFromSupabase ត្រូវបានលុបចេញពីទីនេះទាំងស្រុង
-// ព្រោះយើងបានដំឡើងវានៅក្នុង main.js រួចរាល់ ដើម្បីកុំឱ្យវាដើរជាន់គ្នាជាមួយគ្នា។
