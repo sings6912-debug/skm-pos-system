@@ -287,15 +287,27 @@
 
             <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
 
-            <!-- 🎟️ PROMO CODES MANAGER -->
+            <!-- 🎟️ PROMO CODES MANAGER (Enhanced with Type & Usage Limit) -->
             <div class="section-title" style="color: var(--success);"><i class="fa-solid fa-ticket"></i> កុម្ម៉ង់ និងគ្រប់គ្រងកូដបញ្ចុះតម្លៃ (Promo Codes Manager)</div>
-            <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, VIP50) និងកំណត់ភាគរយបញ្ចុះតម្លៃសម្រាប់ឱ្យអតិថិជនប្រើប្រាស់ពេលគិតប្រាក់។</p>
+            <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, FREESHIP) កំណត់ប្រភេទបញ្ចុះតម្លៃ (% , $ ឬ ដឹកជញ្ជូនឥតគិតថ្លៃ) និងកំណត់ចំនួនដងដែលអាចប្រើប្រាស់បាន។</p>
             
             <div style="background: rgba(34, 197, 94, 0.03); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-bottom: 15px;">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-                    <input type="text" id="newPromoCode" class="input-st" placeholder="ឈ្មោះកូដ (ឧ. SKM20)" style="flex: 2; margin-bottom: 0;">
-                    <input type="number" id="newPromoPercent" class="input-st" placeholder="បញ្ចុះ (%) ឧ. 20" style="flex: 1; margin-bottom: 0;" min="1" max="100">
+                    <input type="text" id="newPromoCode" class="input-st" placeholder="ឈ្មោះកូដ (ឧ. FREESHIP)" style="flex: 2; margin-bottom: 0;">
+                    <select id="newPromoType" class="input-st" style="flex: 1.5; margin-bottom: 0;" onchange="onPromoTypeChange()">
+                        <option value="percent">📉 បញ្ចុះជាភាគរយ (%)</option>
+                        <option value="fixed">💵 បញ្ចុះជាទឹកប្រាក់ ($)</option>
+                        <option value="freeship">🚚 ដឹកជញ្ជូនឥតគិតថ្លៃ (Free Ship)</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <input type="number" id="newPromoValue" class="input-st" placeholder="តម្លៃ (ឧ. 10)" style="flex: 1; margin-bottom: 0;" min="0" step="0.1">
+                    <input type="number" id="newPromoLimit" class="input-st" placeholder="កំណត់ចំនួនដងប្រើ (ទទេ = គ្មានកំណត់)" style="flex: 1; margin-bottom: 0;" min="1">
                     <button class="input-st" style="flex: 1; background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold;" onclick="addNewPromoCode()">+ បន្ថែមរក្សាទុក</button>
+                </div>
+                <div class="toggle-row" style="background: transparent; border: none; padding: 0; margin-top: 10px; margin-bottom: 0;">
+                    <span style="color: var(--text-dark); font-size: 13px;"><i class="fa-solid fa-user-shield"></i> កំណត់ឱ្យអតិថិជនម្នាក់ (មួយលេខទូរស័ព្ទ) ប្រើបានតែ ១ ដងគត់</span>
+                    <input type="checkbox" id="newPromoPerUser" style="width: 18px; height: 18px; accent-color: var(--success); cursor: pointer;">
                 </div>
             </div>
             
@@ -513,7 +525,7 @@
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
     let adminBanners = [];
-    let promoCodesList = []; // 🎟️ ថ្មី៖ បញ្ជីកូដប្រូម៉ូសិន
+    let promoCodesList = []; // 🎟️ បញ្ជីកូដប្រូម៉ូសិន
     let menuScripts = []; 
     let posScripts = [];  
     let showAllMenuScripts = false;
@@ -688,7 +700,20 @@
         } catch(e) { showToast('Save Failed: ' + e.message, true); console.error(e); }
     }
 
-    /* --- Promo Codes Manager Functions --- */
+    /* --- Promo Codes Manager Functions (Enhanced) --- */
+    function onPromoTypeChange() {
+        const type = document.getElementById('newPromoType').value;
+        const valInp = document.getElementById('newPromoValue');
+        if (type === 'freeship') {
+            valInp.value = '0';
+            valInp.disabled = true;
+            valInp.style.opacity = '0.5';
+        } else {
+            valInp.disabled = false;
+            valInp.style.opacity = '1';
+        }
+    }
+
     function renderPromoCodesList() {
         const container = document.getElementById('promoCodesListContainer');
         if(!container) return;
@@ -698,11 +723,21 @@
             return;
         }
         promoCodesList.forEach((promo, idx) => {
+            let desc = '';
+            if(promo.type === 'percent') desc = `(-${promo.value}%)`;
+            else if(promo.type === 'fixed') desc = `(-$${parseFloat(promo.value).toFixed(2)})`;
+            else if(promo.type === 'freeship') desc = `(ដឹកជញ្ជូនឥតគិតថ្លៃ)`;
+
+            let limitDesc = promo.limit > 0 ? `ប្រើបាន: ${promo.usedCount || 0}/${promo.limit} ដង` : `ប្រើបាន: មិនកំណត់`;
+            let userLimitBadge = promo.oneTimePerUser ? `<span style="font-size: 11px; color: #ef4444; margin-left: 5px; background: rgba(239, 68, 68, 0.1); padding: 2px 6px; border-radius: 4px;"><i class="fa-solid fa-user-lock"></i> ១ដង/ម្នាក់</span>` : '';
+
             container.innerHTML += `
                 <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
                     <div>
                         <strong style="color: var(--brand-dark); font-size: 14px;">🏷️ ${promo.code}</strong>
-                        <span style="font-size: 12px; color: var(--success); font-weight: bold; margin-left: 10px;">(-${promo.percent}%)</span>
+                        <span style="font-size: 12px; color: var(--success); font-weight: bold; margin-left: 10px;">${desc}</span>
+                        <span style="font-size: 11px; color: var(--text-muted); margin-left: 10px; background: rgba(0,0,0,0.03); padding: 2px 6px; border-radius: 4px;">${limitDesc}</span>
+                        ${userLimitBadge}
                     </div>
                     <button class="btn-script btn-delete" onclick="deletePromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
                 </div>
@@ -712,24 +747,46 @@
 
     function addNewPromoCode() {
         const codeInp = document.getElementById('newPromoCode');
-        const percentInp = document.getElementById('newPromoPercent');
-        const code = codeInp.value.trim().toUpperCase();
-        const percent = parseInt(percentInp.value);
+        const typeInp = document.getElementById('newPromoType');
+        const valInp = document.getElementById('newPromoValue');
+        const limitInp = document.getElementById('newPromoLimit');
+        const perUserInp = document.getElementById('newPromoPerUser');
 
-        if(!code || isNaN(percent) || percent <= 0 || percent > 100) {
-            return showToast('សូមបញ្ចូលឈ្មោះកូដ និងភាគរយបញ្ចុះតម្លៃ (1-100) ឱ្យបានត្រឹមត្រូវ!', true);
+        const code = codeInp.value.trim().toUpperCase();
+        const type = typeInp.value;
+        const value = parseFloat(valInp.value) || 0;
+        const limit = parseInt(limitInp.value) || 0;
+        const oneTimePerUser = perUserInp.checked;
+
+        if(!code) {
+            return showToast('សូមបំពេញឈ្មោះកូដបញ្ចុះតម្លៃ!', true);
+        }
+
+        if(type !== 'freeship' && (isNaN(value) || value <= 0)) {
+            return showToast('សូមបញ្ចូលតម្លៃបញ្ចុះឱ្យបានត្រឹមត្រូវ!', true);
         }
 
         if(promoCodesList.some(p => p.code === code)) {
             return showToast('កូដនេះមានរួចហើយ!', true);
         }
 
-        promoCodesList.push({ code, percent });
+        promoCodesList.push({ 
+            code, 
+            type,      // 'percent', 'fixed', 'freeship'
+            value,     // percent or dollar amount
+            limit,     // max usage limit (0 = unlimited)
+            usedCount: 0,
+            oneTimePerUser: oneTimePerUser
+        });
+
         codeInp.value = '';
-        percentInp.value = '';
+        valInp.value = '';
+        limitInp.value = '';
+        perUserInp.checked = false;
+        onPromoTypeChange();
         renderPromoCodesList();
         saveAdminSettings();
-        showToast('បានបន្ថែមយកកូដប្រូម៉ូសិនជោគជ័យ!');
+        showToast('បានបន្ថែមរក្សាទុកកូដប្រូម៉ូសិនជោគជ័យ!');
     }
 
     function deletePromoCode(idx) {
@@ -819,8 +876,8 @@
     }
     function toggleMenuScript(id) { let s = menuScripts.find(x => x.id === id); if (s) { s.isActive = !s.isActive; renderMenuScripts(); saveAdminSettings(); } }
     function toggleAllMenuScripts() { if (menuScripts.length === 0) return; let targetState = menuScripts.some(s => !s.isActive); menuScripts.forEach(s => s.isActive = targetState); renderMenuScripts(); saveAdminSettings(); }
-    function deleteMenuScript(id) { if (confirm('លុបកូដ Menu នេះមែនទេ?')) { menuScripts = menuScripts.filter(x => x.id !== id); renderMenuScripts(); saveAdminSettings(); } }
-    function deleteAllMenuScripts() { if (menuScripts.length === 0) return; if (confirm('លុបកូដ Menu ទាំងអស់មែនទេ?')) { menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); } }
+    function deleteMenuScript(id) { menuScripts = menuScripts.filter(x => x.id !== id); renderMenuScripts(); saveAdminSettings(); }
+    function deleteAllMenuScripts() { if (menuScripts.length === 0) return; menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
     function exportMenuScriptsBackup() { if(menuScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); a.download = `Menu_JS.json`; a.click(); }
     function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); } catch(err){ alert("Error"); } e.target.value=''; }; r.readAsText(file); }
 
@@ -855,8 +912,8 @@
     }
     function togglePosScript(id) { let s = posScripts.find(x => x.id === id); if (s) { s.isActive = !s.isActive; renderPosScripts(); saveAdminSettings(); } }
     function toggleAllPosScripts() { if (posScripts.length === 0) return; let targetState = posScripts.some(s => !s.isActive); posScripts.forEach(s => s.isActive = targetState); renderPosScripts(); saveAdminSettings(); }
-    function deletePosScript(id) { if (confirm('លុបកូដ POS នេះមែនទេ?')) { posScripts = posScripts.filter(x => x.id !== id); renderPosScripts(); saveAdminSettings(); } }
-    function deleteAllPosScripts() { if (posScripts.length === 0) return; if (confirm('លុបកូដ POS ទាំងអស់មែនទេ?')) { posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); } }
+    function deletePosScript(id) { posScripts = posScripts.filter(x => x.id !== id); renderPosScripts(); saveAdminSettings(); }
+    function deleteAllPosScripts() { if (posScripts.length === 0) return; posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
     function exportPosScriptsBackup() { if(posScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); a.download = `POS_JS.json`; a.click(); }
     function importPosScriptsBackup(e) { const file = e.target.files[0]; file && (() => { const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); } catch(err) { alert("Error"); } e.target.value=''; }; r.readAsText(file); })(); }
 
