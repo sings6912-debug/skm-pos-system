@@ -35,32 +35,25 @@
            🔮 2. ANIME (GOJO) THEME
            ========================================= */
         [data-admin-theme="anime"] {
-            --brand-dark: #0f172a; /* Deep night sky */
-            --brand-cyan: #8b5cf6; /* Hollow Purple */
-            --store-bg: #e0e7ff; /* Light indigo */
+            --brand-dark: #0f172a;
+            --brand-cyan: #8b5cf6;
+            --store-bg: #e0e7ff;
             --card-bg: rgba(255, 255, 255, 0.95);
             --text-dark: #1e1b4b;
             --text-muted: #6366f1;
             --border-color: #c7d2fe;
-            --success: #0ea5e9; /* Six Eyes Cyan */
+            --success: #0ea5e9;
             --danger: #f43f5e;
             --warning: #f59e0b;
         }
-        [data-admin-theme="anime"] body {
-            background-image: radial-gradient(var(--border-color) 1.5px, transparent 1.5px);
-            background-size: 25px 25px;
-        }
-        [data-admin-theme="anime"] .input-st { border-radius: 16px; }
-        [data-admin-theme="anime"] .section-box { border-radius: 20px; box-shadow: 0 10px 30px rgba(139, 92, 246, 0.05); border: 1px solid rgba(139, 92, 246, 0.2); }
-        [data-admin-theme="anime"] .btn-save { border-radius: 16px; background: linear-gradient(135deg, #8b5cf6, #0ea5e9); }
 
         /* =========================================
            ⚕️ 3. PHARMACY THEME
            ========================================= */
         [data-admin-theme="pharmacy"] {
-            --brand-dark: #0f766e; /* Medical Teal */
-            --brand-cyan: #10b981; /* Health Green */
-            --store-bg: #f0fdf4; /* Mint white */
+            --brand-dark: #0f766e;
+            --brand-cyan: #10b981;
+            --store-bg: #f0fdf4;
             --card-bg: #ffffff;
             --text-dark: #134e4a;
             --text-muted: #64748b;
@@ -69,17 +62,14 @@
             --danger: #ef4444;
             --warning: #f59e0b;
         }
-        [data-admin-theme="pharmacy"] .input-st { border-radius: 9999px; } /* Pill shapes */
-        [data-admin-theme="pharmacy"] .btn-save { border-radius: 9999px; }
-        [data-admin-theme="pharmacy"] .btn-action { border-radius: 9999px; }
 
         /* =========================================
            ☕ 4. CAFE THEME
            ========================================= */
         [data-admin-theme="cafe"] {
-            --brand-dark: #3e2723; /* Dark Coffee */
-            --brand-cyan: #d4a373; /* Latte */
-            --store-bg: #f5f5dc; /* Beige */
+            --brand-dark: #3e2723;
+            --brand-cyan: #d4a373;
+            --store-bg: #f5f5dc;
             --card-bg: #ffffff;
             --text-dark: #4e342e;
             --text-muted: #8d6e63;
@@ -88,26 +78,9 @@
             --danger: #c62828;
             --warning: #f57f17;
         }
-        [data-admin-theme="cafe"] body {
-            background-image: linear-gradient(45deg, rgba(139, 90, 43, 0.03) 25%, transparent 25%, transparent 75%, rgba(139, 90, 43, 0.03) 75%, rgba(139, 90, 43, 0.03)), 
-                              linear-gradient(45deg, rgba(139, 90, 43, 0.03) 25%, transparent 25%, transparent 75%, rgba(139, 90, 43, 0.03) 75%, rgba(139, 90, 43, 0.03));
-            background-size: 20px 20px; background-position: 0 0, 10px 10px;
-        }
-        [data-admin-theme="cafe"] .section-box { border: 2px dashed var(--border-color); }
-        [data-admin-theme="cafe"] .btn-save { border-radius: 8px; font-family: 'Battambang', serif; }
 
-        /* =========================================
-           GENERAL STYLES
-           ========================================= */
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Battambang', sans-serif; }
         body { background-color: var(--store-bg); color: var(--text-dark); min-height: 100vh; padding: 20px; transition: background-color 0.4s ease, color 0.4s ease; }
-
-        .admin-container { 
-            max-width: 850px; margin: 0 auto; background: var(--card-bg); 
-            border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); 
-            border: 1px solid var(--border-color); backdrop-filter: blur(10px);
-            transition: all 0.4s ease;
-        }
 
         .theme-selector {
             display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center;
@@ -120,11 +93,7 @@
         }
         .theme-btn.active { border-color: var(--brand-cyan); color: var(--brand-cyan); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
-        .admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px dashed var(--border-color); padding-bottom: 15px; flex-wrap: wrap; gap: 10px; }
-        .admin-header h2 { font-size: 20px; font-weight: 900; color: var(--brand-dark); width: 100%; display:flex; align-items:center; gap:8px;}
-        
         .section-box { background: rgba(0,0,0,0.015); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 20px; transition: 0.3s; }
-        .section-box:hover { border-color: var(--brand-cyan); box-shadow: 0 4px 15px rgba(0,0,0,0.03); }
         .section-title { font-size: 16px; font-weight: 900; color: var(--brand-cyan); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 10px;}
 
         .form-group { margin-bottom: 15px; }
@@ -156,21 +125,13 @@
             cursor: pointer; display: inline-flex; align-items: center; gap: 6px; 
             transition: all 0.2s; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
-        .btn-upload-menu { background: var(--brand-cyan); color: white; }
-        .btn-upload-pos { background: var(--danger); color: white; }
-        .btn-restore { background: #fffbeb; color: var(--warning); border: 1px solid rgba(245, 158, 11, 0.3); }
-        .btn-backup { background: #f0fdf4; color: var(--success); border: 1px solid rgba(34, 197, 94, 0.3); }
-        .btn-delete-all { background: #fff1f2; color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3); }
-
+        
         .script-list-container { display: flex; flex-direction: column; gap: 10px; }
         .script-item { 
             display: flex; align-items: center; justify-content: space-between; 
             background: #ffffff; padding: 14px 18px; border-radius: 12px; 
             border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .script-item.menu-type { border-left: 5px solid var(--brand-cyan); }
-        .script-item.pos-type { border-left: 5px solid var(--danger); }
-        
         .script-name { font-weight: 800; font-size: 14px; color: var(--brand-dark); word-break: break-all;}
         .script-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0;}
         
@@ -225,7 +186,6 @@
         .tab-pane.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Responsive Mobile */
         .btn-save-mobile { display: none; }
         @media (max-width: 900px) {
             .layout-wrapper { flex-direction: column; gap: 15px; padding-bottom: 80px;}
@@ -235,7 +195,6 @@
             .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px;}
             .tab-btn { white-space: nowrap; width: auto; scroll-snap-align: start; flex-shrink: 0; padding: 10px 14px;}
             .tab-pane { padding: 15px; }
-            
             .sidebar .btn-save { display: none; }
             .btn-save-mobile { 
                 display: block; position: fixed; bottom: 15px; left: 15px; right: 15px; 
@@ -248,13 +207,12 @@
 
 <div class="layout-wrapper">
     
-    <!-- 🗂️ SIDEBAR NAVIGATION (ម៉ឺនុយចំហៀង) -->
+    <!-- 🗂️ SIDEBAR NAVIGATION -->
     <div class="sidebar">
         <h2 style="font-size: 18px; font-weight: 900; color: var(--brand-dark); display:flex; align-items:center; gap:8px; margin-bottom: 15px;">
             <i class="fa-solid fa-gear"></i> Settings
         </h2>
 
-        <!-- ប៊ូតុងត្រឡប់ទៅ POS វិញ -->
         <button onclick="const b = new URLSearchParams(window.location.search).get('branch') || 'branch_1'; window.location.href='index.html?branch=' + b" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 12px; border: 2px solid var(--brand-cyan); background: transparent; color: var(--brand-cyan); font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;" onmouseover="this.style.background='var(--brand-cyan)'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='var(--brand-cyan)';">
             <i class="fa-solid fa-arrow-left"></i> ត្រឡប់ទៅប្រព័ន្ធលក់
         </button>
@@ -271,21 +229,18 @@
         <div class="sidebar-nav">
             <button class="tab-btn active" onclick="switchTab('tab-links')"><i class="fa-solid fa-link"></i> ទំព័រភ្ជាប់ប្រព័ន្ធ</button>
             <button class="tab-btn" onclick="switchTab('tab-theme')"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែកគោល</button>
-            <button class="tab-btn" onclick="switchTab('tab-banner')"><i class="fa-solid fa-images"></i> 2. ផ្ទាំងផ្សាយ (Banner)</button>
+            <button class="tab-btn" onclick="switchTab('tab-banner')"><i class="fa-solid fa-images"></i> 2. ផ្ទាំងផ្សាយ & ប្រូម៉ូសិន</button>
             <button class="tab-btn" onclick="switchTab('tab-ticker')"><i class="fa-solid fa-bullhorn"></i> 3. អត្ថបទរត់ (Ticker)</button>
             <button class="tab-btn" onclick="switchTab('tab-store')"><i class="fa-solid fa-store"></i> 4. ម៉ោងបើក & ស្វាគមន៍</button>
             <button class="tab-btn" onclick="switchTab('tab-social')"><i class="fa-solid fa-share-nodes"></i> 5. បណ្តាញ & បូត</button>
             <button class="tab-btn" onclick="switchTab('tab-customjs')"><i class="fa-solid fa-file-code"></i> 6. កូដបន្ថែម (Custom JS)</button>
-            
-            <!-- 🪑 បន្ថែមម៉ឺនុយ "កំណត់លេខតុ" ថ្មីនៅទីនេះ -->
-            <button class="tab-btn" onclick="switchTab('tab-tables')"><i class="fa-solid fa-chair"></i> 8. កំណត់លេខតុ (Tables)</button>
+            <button class="tab-btn" onclick="switchTab('tab-tables')"><i class="fa-solid fa-chair"></i> 7. កំណត់លេខតុ (Tables)</button>
         </div>
 
-        <!-- Save Button for Desktop -->
         <button class="btn-save" onclick="saveAdminSettings()" style="margin-top: 25px; padding: 14px; font-size: 14px;"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់</button>
     </div>
 
-    <!-- 🗂️ CONTENT AREA (ទីតាំងបង្ហាញទិន្នន័យតាម Tab) -->
+    <!-- 🗂️ CONTENT AREA -->
     <div class="content-area">
         
         <!-- TAB 0: System Links -->
@@ -320,22 +275,31 @@
             </div>
         </div>
 
-        <!-- TAB 2: Banner & Promo -->
+        <!-- TAB 2: Banner & Promo Codes Manager -->
         <div id="tab-banner" class="tab-pane">
-            <div class="section-title"><i class="fa-solid fa-images"></i> 2. ការកំណត់ Banner ពាណិជ្ជកម្ម (Slider Banner)</div>
+            <div class="section-title"><i class="fa-solid fa-images"></i> 2. ផ្ទាំងផ្សាយ (Banner) & កូដប្រូម៉ូសិន (Promo Codes)</div>
+            
             <div class="form-group">
                 <label>បញ្ជីរូបភាព Banner (អាចដាក់បានច្រើនឥតកំណត់)</label>
                 <div id="bannerListContainer"></div>
                 <button class="input-st" style="width: 100%; border-style: dashed; margin-top: 10px; cursor: pointer; color: var(--brand-cyan);" onclick="addAdminBanner()">+ បន្ថែម Banner ថ្មី</button>
             </div>
-            <div class="toggle-row">
-                <span>🏷️ បង្ហាញកូដបញ្ចុះតម្លៃលើ Banner (Promo Code Badge)</span>
-                <input type="checkbox" id="togglePromoBadge" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+
+            <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
+
+            <!-- 🎟️ PROMO CODES MANAGER -->
+            <div class="section-title" style="color: var(--success);"><i class="fa-solid fa-ticket"></i> កុម្ម៉ង់ និងគ្រប់គ្រងកូដបញ្ចុះតម្លៃ (Promo Codes Manager)</div>
+            <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, VIP50) និងកំណត់ភាគរយបញ្ចុះតម្លៃសម្រាប់ឱ្យអតិថិជនប្រើប្រាស់ពេលគិតប្រាក់។</p>
+            
+            <div style="background: rgba(34, 197, 94, 0.03); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-bottom: 15px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
+                    <input type="text" id="newPromoCode" class="input-st" placeholder="ឈ្មោះកូដ (ឧ. SKM20)" style="flex: 2; margin-bottom: 0;">
+                    <input type="number" id="newPromoPercent" class="input-st" placeholder="បញ្ចុះ (%) ឧ. 20" style="flex: 1; margin-bottom: 0;" min="1" max="100">
+                    <button class="input-st" style="flex: 1; background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold;" onclick="addNewPromoCode()">+ បន្ថែមរក្សាទុក</button>
+                </div>
             </div>
-            <div class="form-group">
-                <label>អត្ថបទកូដបញ្ចុះតម្លៃ (ឧ. SKM10):</label>
-                <input type="text" id="setPromoCodeText" class="input-st" placeholder="SKM10" onchange="saveAdminSettings()">
-            </div>
+            
+            <div id="promoCodesListContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
 
         <!-- TAB 3: Ticker -->
@@ -421,7 +385,6 @@
                 <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
             </div>
 
-            <!-- 🤖 BOT ទី១៖ សម្រាប់កុម្មង់ (Order Bot) -->
             <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--brand-cyan); margin-top: 20px;">
                 <label style="color: var(--brand-cyan);"><i class="fa-solid fa-robot"></i> 1. Telegram Bot សម្រាប់ "កុម្ម៉ង់ទំនិញ"</label>
                 <div style="margin-bottom: 10px;">
@@ -435,7 +398,6 @@
                 </div>
             </div>
 
-            <!-- 🤖 BOT ទី២៖ សម្រាប់សេវាកម្ម (Service Bot) -->
             <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-top: 15px;">
                 <label style="color: var(--success);"><i class="fa-solid fa-bell-concierge"></i> 2. Telegram Bot សម្រាប់ "សេវាកម្ម / ហៅបុគ្គលិក"</label>
                 <div style="margin-bottom: 10px;">
@@ -452,51 +414,47 @@
 
         <!-- TAB 6: CUSTOM JS -->
         <div id="tab-customjs" class="tab-pane">
-            
-            <!-- 6.1 Menu Custom JS -->
             <div style="margin-bottom: 30px;">
                 <div class="section-title" style="color: var(--brand-cyan); border-bottom: 2px dashed var(--brand-cyan); padding-bottom: 10px;"><i class="fa-solid fa-code"></i> 6.1 កូដបន្ថែមអតិថិជន (Menu Custom JS)</div>
                 <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>Menu អតិថិជន (menu.html)</b>។</p>
                 
                 <div class="action-btn-group">
                     <input type="file" id="menuJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadMenuScripts(event)">
-                    <button class="btn-action btn-upload-menu" onclick="document.getElementById('menuJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
+                    <button class="btn-action" style="background: var(--brand-cyan); color: white;" onclick="document.getElementById('menuJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
                     <input type="file" id="importMenuJsBackup" accept=".json" style="display: none;" onchange="importMenuScriptsBackup(event)">
-                    <button class="btn-action btn-restore" onclick="document.getElementById('importMenuJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
-                    <button class="btn-action btn-backup" onclick="exportMenuScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
-                    <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg); border: 1px solid var(--border-color);" onclick="toggleAllMenuScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
-                    <button class="btn-action btn-delete-all" onclick="deleteAllMenuScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
+                    <button class="btn-action" style="background: #fffbeb; color: var(--warning);" onclick="document.getElementById('importMenuJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
+                    <button class="btn-action" style="background: #f0fdf4; color: var(--success);" onclick="exportMenuScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
+                    <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="toggleAllMenuScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
+                    <button class="btn-action" style="background: #fff1f2; color: var(--danger);" onclick="deleteAllMenuScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
                 </div>
                 <div id="menuScriptsToggleContainer" style="margin-bottom: 10px;"></div>
                 <div id="menuScriptsListContainer" class="script-list-container"></div>
             </div>
 
-            <!-- Divider -->
             <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
 
-            <!-- 6.2 POS Custom JS -->
             <div>
                 <div class="section-title" style="color: #ef4444; border-bottom: 2px dashed #ef4444; padding-bottom: 10px;"><i class="fa-solid fa-terminal"></i> 6.2 កូដបន្ថែមប្រព័ន្ធ (POS Custom JS)</div>
                 <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>ប្រព័ន្ធគិតលុយកន្លែងលក់ (POS)</b>។</p>
                 
                 <div class="action-btn-group">
                     <input type="file" id="posJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadPosScripts(event)">
-                    <button class="btn-action btn-upload-pos" onclick="document.getElementById('posJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
+                    <button class="btn-action" style="background: var(--danger); color: white;" onclick="document.getElementById('posJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
                     <input type="file" id="importPosJsBackup" accept=".json" style="display: none;" onchange="importPosScriptsBackup(event)">
-                    <button class="btn-action btn-restore" onclick="document.getElementById('importPosJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
-                    <button class="btn-action btn-backup" onclick="exportPosScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
-                    <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg); border: 1px solid var(--border-color);" onclick="toggleAllPosScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
-                    <button class="btn-action btn-delete-all" onclick="deleteAllPosScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
+                    <button class="btn-action" style="background: #fffbeb; color: var(--warning);" onclick="document.getElementById('importPosJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
+                    <button class="btn-action" style="background: #f0fdf4; color: var(--success);" onclick="exportPosScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
+                    <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="toggleAllPosScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
+                    <button class="btn-action" style="background: #fff1f2; color: var(--danger);" onclick="deleteAllPosScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
                 </div>
                 <div id="posScriptsToggleContainer" style="margin-bottom: 10px;"></div>
                 <div id="posScriptsListContainer" class="script-list-container"></div>
             </div>
         </div>
 
-        <!-- 🪑 TAB 8: TABLE SETTINGS (ថ្មី) -->
+        <!-- 🪑 TAB 7: TABLE SETTINGS -->
         <div id="tab-tables" class="tab-pane">
             <div class="section-title" style="color: #8b5cf6; border-bottom: 2px dashed #8b5cf6; padding-bottom: 10px;">
-                <i class="fa-solid fa-chair"></i> 8. ការកំណត់លេខតុ (Table Management)
+                <i class="fa-solid fa-chair"></i> 7. កំណត់លេខតុ (Table Management)
             </div>
             <p class="help-text">បើកមុខងារនេះដើម្បីតម្រូវឲ្យអតិថិជន ឬបុគ្គលិកត្រូវតែជ្រើសរើសលេខតុមុនពេលបញ្ជូនការកុម្ម៉ង់ (Order)។</p>
             
@@ -519,49 +477,30 @@
 
     </div>
     
-    <!-- Floating Save Button for Mobile Only -->
     <button class="btn-save btn-save-mobile" onclick="saveAdminSettings()"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់ទាំងអស់ (Save Changes)</button>
-
 </div>
 
 <div id="toast">Saved Successfully!</div>
 
 <script>
-    // ==========================================
-    // 🗂️ TABS NAVIGATION LOGIC
-    // ==========================================
     function switchTab(tabId) {
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-        
-        if(window.innerWidth <= 768) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+        if(window.innerWidth <= 768) { window.scrollTo({ top: 0, behavior: 'smooth' }); }
     }
 
-    // ==========================================
-    // 🎨 THEME SWITCHER LOGIC
-    // ==========================================
     function setAdminTheme(themeName) {
         document.documentElement.setAttribute('data-admin-theme', themeName);
         localStorage.setItem('skm_admin_theme', themeName);
-        
-        // Update active button
         document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
         const activeBtn = document.getElementById(`theme-btn-${themeName}`);
         if(activeBtn) activeBtn.classList.add('active');
     }
-    
-    // Load saved theme on load
     const savedTheme = localStorage.getItem('skm_admin_theme') || 'standard';
     setAdminTheme(savedTheme);
 
-
-    // ==========================================
-    // ⚙️ CORE SYSTEM LOGIC
-    // ==========================================
     const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
     
@@ -574,6 +513,7 @@
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
     let adminBanners = [];
+    let promoCodesList = []; // 🎟️ ថ្មី៖ បញ្ជីកូដប្រូម៉ូសិន
     let menuScripts = []; 
     let posScripts = [];  
     let showAllMenuScripts = false;
@@ -585,7 +525,6 @@
         t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    // 🧪 Test Order Bot
     async function testOrderTelegramBot() {
         const token = document.getElementById('setOrderTelegramBotToken').value.trim();
         const chatId = document.getElementById('setOrderTelegramChatId').value.trim();
@@ -603,7 +542,6 @@
         } catch(err) { showToast('❌ Error: ' + err.message, true); }
     }
 
-    // 🧪 Test Service Bot
     async function testServiceTelegramBot() {
         const token = document.getElementById('setServiceTelegramBotToken').value.trim();
         const chatId = document.getElementById('setServiceTelegramChatId').value.trim();
@@ -623,12 +561,12 @@
 
     async function initAdmin() {
         try {
-            // LocalStorage Load
             let localSys = {}; let localPosScripts = [];
             try { const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`); if (rawSys) localSys = JSON.parse(rawSys); } catch(e) {}
             try { const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`); if (rawPos) localPosScripts = JSON.parse(rawPos); } catch(e) {}
             
             if (localSys.customMenuScripts) menuScripts = localSys.customMenuScripts;
+            if (localSys.promoCodes) promoCodesList = localSys.promoCodes;
             if (localPosScripts.length > 0) posScripts = localPosScripts;
             
             if (localSys.orderTelegramBotToken) document.getElementById('setOrderTelegramBotToken').value = localSys.orderTelegramBotToken;
@@ -636,14 +574,12 @@
             if (localSys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = localSys.serviceTelegramBotToken;
             if (localSys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = localSys.serviceTelegramChatId;
 
-            // Load Table Settings to UI
             document.getElementById('toggleTableFeature').checked = !!localSys.toggleTableFeature;
             document.getElementById('setTotalTables').value = localSys.totalTables || 20;
             document.getElementById('setTablePrefix').value = localSys.tablePrefix || 'តុលេខ';
 
-            renderMenuScripts(); renderPosScripts();
+            renderMenuScripts(); renderPosScripts(); renderPromoCodesList();
 
-            // Supabase Load
             if (supabaseClient) {
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
                 if (data && data.data_json) {
@@ -653,6 +589,9 @@
                     if(sys.menuBanners && sys.menuBanners.length > 0) adminBanners = sys.menuBanners; else if(sys.menuBanner) adminBanners = [sys.menuBanner];
                     renderAdminBanners();
                     
+                    if(sys.promoCodes && Array.isArray(sys.promoCodes)) promoCodesList = sys.promoCodes;
+                    renderPromoCodesList();
+
                     if(sys.menuQR) {
                         document.getElementById('setMenuQR').value = sys.menuQR;
                         const qp = document.getElementById('menuQRPreview'); qp.src = sys.menuQR; qp.style.display = 'block';
@@ -664,8 +603,6 @@
                     if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
                     if(sys.socialLink) document.getElementById('setSocialLink').value = sys.socialLink;
                     
-                    document.getElementById('togglePromoBadge').checked = !!sys.togglePromoBadge;
-                    document.getElementById('setPromoCodeText').value = sys.promoCodeText || '';
                     document.getElementById('toggleTicker').checked = !!sys.toggleTicker;
                     document.getElementById('setTickerText').value = sys.tickerText || '';
                     document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
@@ -675,12 +612,10 @@
                     document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
                     document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
 
-                    // Load Table Settings from Cloud
                     document.getElementById('toggleTableFeature').checked = !!sys.toggleTableFeature;
                     document.getElementById('setTotalTables').value = sys.totalTables || 20;
                     document.getElementById('setTablePrefix').value = sys.tablePrefix || 'តុលេខ';
 
-                    // Load Both Bots from Cloud
                     if(sys.orderTelegramBotToken || d.telegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken || d.telegramBotToken || '';
                     if(sys.orderTelegramChatId || d.telegramChatId) document.getElementById('setOrderTelegramChatId').value = sys.orderTelegramChatId || d.telegramChatId || '';
                     if(sys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = sys.serviceTelegramBotToken || '';
@@ -706,13 +641,12 @@
             
             d.sysSettings.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
             d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== '');
+            d.sysSettings.promoCodes = promoCodesList; // 🎟️ រក្សាទុកកូដប្រូម៉ូសិន
             d.sysSettings.menuQR = document.getElementById('setMenuQR').value.trim();
             d.sysSettings.chatLink = document.getElementById('setChatLink').value.trim();
             d.sysSettings.socialIcon = document.getElementById('setSocialIcon').value;
             d.sysSettings.socialLabel = document.getElementById('setSocialLabel').value.trim();
             d.sysSettings.socialLink = document.getElementById('setSocialLink').value.trim();
-            d.sysSettings.togglePromoBadge = document.getElementById('togglePromoBadge').checked;
-            d.sysSettings.promoCodeText = document.getElementById('setPromoCodeText').value.trim();
             d.sysSettings.toggleTicker = document.getElementById('toggleTicker').checked;
             d.sysSettings.tickerText = document.getElementById('setTickerText').value.trim();
             d.sysSettings.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
@@ -722,12 +656,10 @@
             d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
             d.sysSettings.preorder = document.getElementById('togglePreorder').checked;
 
-            // Save Table Settings
             d.sysSettings.toggleTableFeature = document.getElementById('toggleTableFeature').checked;
             d.sysSettings.totalTables = parseInt(document.getElementById('setTotalTables').value) || 20;
             d.sysSettings.tablePrefix = document.getElementById('setTablePrefix').value.trim() || 'តុលេខ';
 
-            // Save both bots data properly
             let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim();
             let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
             let servTok = document.getElementById('setServiceTelegramBotToken').value.trim();
@@ -738,7 +670,6 @@
             d.sysSettings.serviceTelegramBotToken = servTok;
             d.sysSettings.serviceTelegramChatId = servChat;
 
-            // Backward compatibility for old menu.html code just in case
             d.telegramBotToken = orderTok; 
             d.telegramChatId = orderChat;  
             d.sysSettings.telegramBotToken = orderTok;
@@ -755,6 +686,57 @@
             }
             showToast('រក្សាទុកបានជោគជ័យ! (Saved!)');
         } catch(e) { showToast('Save Failed: ' + e.message, true); console.error(e); }
+    }
+
+    /* --- Promo Codes Manager Functions --- */
+    function renderPromoCodesList() {
+        const container = document.getElementById('promoCodesListContainer');
+        if(!container) return;
+        container.innerHTML = '';
+        if(promoCodesList.length === 0) {
+            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដបញ្ចុះតម្លៃទេ។ សូមបង្កើតថ្មីខាងលើ។</div>';
+            return;
+        }
+        promoCodesList.forEach((promo, idx) => {
+            container.innerHTML += `
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+                    <div>
+                        <strong style="color: var(--brand-dark); font-size: 14px;">🏷️ ${promo.code}</strong>
+                        <span style="font-size: 12px; color: var(--success); font-weight: bold; margin-left: 10px;">(-${promo.percent}%)</span>
+                    </div>
+                    <button class="btn-script btn-delete" onclick="deletePromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
+                </div>
+            `;
+        });
+    }
+
+    function addNewPromoCode() {
+        const codeInp = document.getElementById('newPromoCode');
+        const percentInp = document.getElementById('newPromoPercent');
+        const code = codeInp.value.trim().toUpperCase();
+        const percent = parseInt(percentInp.value);
+
+        if(!code || isNaN(percent) || percent <= 0 || percent > 100) {
+            return showToast('សូមបញ្ចូលឈ្មោះកូដ និងភាគរយបញ្ចុះតម្លៃ (1-100) ឱ្យបានត្រឹមត្រូវ!', true);
+        }
+
+        if(promoCodesList.some(p => p.code === code)) {
+            return showToast('កូដនេះមានរួចហើយ!', true);
+        }
+
+        promoCodesList.push({ code, percent });
+        codeInp.value = '';
+        percentInp.value = '';
+        renderPromoCodesList();
+        saveAdminSettings();
+        showToast('បានបន្ថែមយកកូដប្រូម៉ូសិនជោគជ័យ!');
+    }
+
+    function deletePromoCode(idx) {
+        promoCodesList.splice(idx, 1);
+        renderPromoCodesList();
+        saveAdminSettings();
+        showToast('បានលុបកូដប្រូម៉ូសិន!');
     }
 
     /* --- Banner Functions --- */
@@ -792,7 +774,6 @@
         }; reader.readAsDataURL(file);
     }
 
-    /* --- QR Upload --- */
     function uploadQR(e) {
         const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
         reader.onload = (ev) => {
@@ -807,20 +788,20 @@
         }; reader.readAsDataURL(file);
     }
 
-    /* --- MENU CUSTOM JS MANAGEMENT FUNCTIONS --- */
+    /* --- MENU CUSTOM JS --- */
     function renderMenuScripts() {
         const container = document.getElementById('menuScriptsListContainer'); const toggleContainer = document.getElementById('menuScriptsToggleContainer');
         container.innerHTML = ''; toggleContainer.innerHTML = '';
         if (menuScripts.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>'; return; }
         let displayScripts = [...menuScripts].reverse();
         if (menuScripts.length > 3) {
-            let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ (Show Less)' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length} ឯកសារ)`;
+            let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length})`;
             toggleContainer.innerHTML = `<button class="input-st" style="width: 100%; padding: 10px; background:rgba(6, 182, 212, 0.05); border: 1px dashed var(--brand-cyan); color:var(--brand-cyan); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px;" onclick="toggleMenuScriptsView()">${toggleBtnText}</button>`;
         }
         if (!showAllMenuScripts && menuScripts.length > 3) displayScripts = displayScripts.slice(0, 3);
         displayScripts.forEach(s => {
             let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off'; let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
-            container.innerHTML += `<div class="script-item menu-type"><div class="script-name">${s.name}</div><div class="script-actions"><button class="btn-script ${btnClass}" onclick="toggleMenuScript('${s.id}')">${btnText}</button><button class="btn-script btn-delete" onclick="deleteMenuScript('${s.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
+            container.innerHTML += `<div class="script-item"><div class="script-name">${s.name}</div><div class="script-actions"><button class="btn-script ${btnClass}" onclick="toggleMenuScript('${s.id}')">${btnText}</button><button class="btn-script btn-delete" onclick="deleteMenuScript('${s.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
         });
     }
     function toggleMenuScriptsView() { showAllMenuScripts = !showAllMenuScripts; renderMenuScripts(); }
@@ -843,20 +824,20 @@
     function exportMenuScriptsBackup() { if(menuScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); a.download = `Menu_JS.json`; a.click(); }
     function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); } catch(err){ alert("Error"); } e.target.value=''; }; r.readAsText(file); }
 
-    /* --- POS CUSTOM JS MANAGEMENT FUNCTIONS --- */
+    /* --- POS CUSTOM JS --- */
     function renderPosScripts() {
         const container = document.getElementById('posScriptsListContainer'); const toggleContainer = document.getElementById('posScriptsToggleContainer');
         container.innerHTML = ''; toggleContainer.innerHTML = '';
         if (posScripts.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>'; return; }
         let displayScripts = [...posScripts].reverse();
         if (posScripts.length > 3) {
-            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${posScripts.length} ឯកសារ)`;
+            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${posScripts.length})`;
             toggleContainer.innerHTML = `<button class="input-st" style="width: 100%; padding: 10px; background:rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); color:var(--danger); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px;" onclick="togglePosScriptsView()">${toggleBtnText}</button>`;
         }
         if (!showAllPosScripts && posScripts.length > 3) displayScripts = displayScripts.slice(0, 3);
         displayScripts.forEach(s => {
             let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off'; let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
-            container.innerHTML += `<div class="script-item pos-type"><div class="script-name">${s.name}</div><div class="script-actions"><button class="btn-script ${btnClass}" onclick="togglePosScript('${s.id}')">${btnText}</button><button class="btn-script btn-delete" onclick="deletePosScript('${s.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
+            container.innerHTML += `<div class="script-item"><div class="script-name">${s.name}</div><div class="script-actions"><button class="btn-script ${btnClass}" onclick="togglePosScript('${s.id}')">${btnText}</button><button class="btn-script btn-delete" onclick="deletePosScript('${s.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
         });
     }
     function togglePosScriptsView() { showAllPosScripts = !showAllPosScripts; renderPosScripts(); }
@@ -877,9 +858,8 @@
     function deletePosScript(id) { if (confirm('លុបកូដ POS នេះមែនទេ?')) { posScripts = posScripts.filter(x => x.id !== id); renderPosScripts(); saveAdminSettings(); } }
     function deleteAllPosScripts() { if (posScripts.length === 0) return; if (confirm('លុបកូដ POS ទាំងអស់មែនទេ?')) { posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); } }
     function exportPosScriptsBackup() { if(posScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); a.download = `POS_JS.json`; a.click(); }
-    function importPosScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); } catch(err) { alert("Error"); } e.target.value=''; }; r.readAsText(file); }
+    function importPosScriptsBackup(e) { const file = e.target.files[0]; file && (() => { const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); } catch(err) { alert("Error"); } e.target.value=''; }; r.readAsText(file); })(); }
 
-    /* --- Utilities & URL Logic --- */
     function getPageUrl(pageName) { let path = window.location.pathname; let lastSlash = path.lastIndexOf('/'); return window.location.origin + path.substring(0, lastSlash + 1) + pageName + '?branch=' + BRANCH; }
     function copyWelcomeLink() { navigator.clipboard.writeText(getPageUrl('welcome.html')); showToast('Copied Welcome Link!'); }
     function showWelcomeQR() { const url = getPageUrl('welcome.html'); const win = window.open('', '_blank', 'width=450,height=550'); win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Welcome QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
