@@ -141,7 +141,8 @@
         .search-wrapper input { flex: 1; border: none; background: transparent; outline: none; padding: 0 10px; font-size: 14px; color: var(--text-dark); }
         .search-wrapper i { color: var(--text-muted); }
 
-        .cat-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 15px 20px; scrollbar-width: none; }
+        .cat-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 15px 20px; scrollbar-width: none; cursor: grab;}
+        .cat-scroll:active { cursor: grabbing; }
         .cat-scroll::-webkit-scrollbar { display: none; }
         .cat-pill {
             background: var(--card-bg); color: var(--text-muted); border: 1px solid var(--border-color);
@@ -231,7 +232,6 @@
         }
         .nav-fab:active { transform: scale(0.95); }
 
-        /* Animation for Cart Badge Pop */
         @keyframes popBounce {
             0% { transform: scale(1); }
             50% { transform: scale(1.4); }
@@ -364,7 +364,7 @@
         </div>
 
         <div class="cat-scroll" id="catTabs">
-            <div class="cat-pill active" onclick="filterCat('all', this)">All</div>
+            <div class="cat-pill active" onclick="filterCat('all', this)">All (0)</div>
         </div>
 
         <!-- Product Grid -->
@@ -666,7 +666,8 @@
 
         const trans = {
             en: { search: "Search...", all: "All" },
-            km: { search: "ស្វែងរក...", all: "ទាំងអស់" }
+            km: { search: "ស្វែងរក...", all: "ទាំងអស់" },
+            zh: { search: "搜索...", all: "全部" }
         };
 
         // --- Core UI Functions ---
@@ -730,7 +731,13 @@
         function toggleTheme() { document.body.setAttribute('data-theme', document.body.getAttribute('data-theme') === 'dark' ? 'light' : 'dark'); }
         function changeSystem(type, val) {
             if(type==='curr') curr = val;
-            if(type==='lang') { lang = val; document.getElementById('searchInput').placeholder = trans[lang].search; buildCats(); }
+            if(type==='lang') { 
+                lang = val; 
+                if(trans[lang]) {
+                    document.getElementById('searchInput').placeholder = trans[lang].search; 
+                    buildCats(); 
+                }
+            }
             renderMenu(); if(cart.length>0) { renderCart(); updateTotal(); }
             closeSidebar();
         }
@@ -888,7 +895,12 @@
                             }
                         }
                         
-                        inventory = (d.inventory || []).filter(p => p && (parseFloat(p.qty) > 0 || sys.preorder));
+                        // Delete Tracker Filtering
+                        let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+                        if (d.deletedProducts) deletedProd = [...new Set([...deletedProd, ...d.deletedProducts])];
+
+                        inventory = (d.inventory || []).filter(p => p && !deletedProd.includes(String(p.id)) && (parseFloat(p.qty) > 0 || sys.preorder));
+                        
                         const nm = d.shopName || 'Shop Name';
                         document.getElementById('lpName').innerText = nm;
                         document.getElementById('splashName').innerText = nm;
@@ -921,15 +933,124 @@
             }, 600);
         }
 
+        // ⚡ បន្ថែមមុខងារ Mouse Drag លើ Category Tabs សម្រាប់កុំព្យូទ័រ
+        let isMenuTabScrollInitialized = false;
+        function initMenuTabScroll() {
+            const slider = document.getElementById('catTabs');
+            if (!slider || isMenuTabScrollInitialized) return;
+
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            let isDragging = false;
+
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                isDragging = false;
+                slider.style.cursor = 'grabbing';
+                startX = e.pageX - slider.offsetLeft;
+                scrollLeft = slider.scrollLeft;
+            });
+
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.style.cursor = 'grab';
+            });
+
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.style.cursor = 'grab';
+            });
+
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return;
+                e.preventDefault();
+                const x = e.pageX - slider.offsetLeft;
+                const walk = (x - startX) * 2; 
+                if (Math.abs(walk) > 5) isDragging = true;
+                slider.scrollLeft = scrollLeft - walk;
+            });
+
+            slider.addEventListener('click', (e) => {
+                if (isDragging) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, true);
+
+            slider.style.cursor = 'grab';
+            isMenuTabScrollInitialized = true;
+        }
+
+        // ⚡ កែប្រែ buildCats ដើម្បីបង្ហាញចំនួនមុខទំនិញ (Count) លើ Menu ອតិថិជន
         function buildCats() {
             const c = [...new Set(inventory.map(p => p.category).filter(Boolean))];
-            let h = `<div class="cat-pill active" onclick="filterCat('all', this)">${trans[lang].all}</div>`;
-            c.forEach(x => h += `<div class="cat-pill" onclick="filterCat('${x}', this)">${x}</div>`);
+            
+            // រាប់ចំនួនទំនិញសរុប
+            let allCount = inventory.length; 
+            let transText = trans[lang] ? trans[lang].all : 'All';
+            let h = `<div class="cat-pill active" onclick="filterCat('all', this)">${transText} (${allCount})</div>`;
+            
+            c.forEach(x => {
+                // រាប់ចំនួនតាមប្រភេទនីមួយៗ
+                let catCount = inventory.filter(p => p.category === x).length;
+                h += `<div class="cat-pill" onclick="filterCat('${x}', this)">${x} (${catCount})</div>`;
+            });
             document.getElementById('catTabs').innerHTML = h;
+            
+            // ដំណើរការមុខងារអូស Mouse
+            initMenuTabScroll();
         }
+
         function filterCat(c, el) {
             selCat = c; document.querySelectorAll('.cat-pill').forEach(t=>t.classList.remove('active'));
             el.classList.add('active'); renderMenu();
+        }
+
+        // ⚡ ជំនួស handleCustomBgUpload ថ្មី សម្រាប់បង្ហាប់រូបភាពធំ (លើស 5MB)
+        function handleCustomBgUpload(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            // ផ្តល់ដំណឹងប្រសិនបើរូបភាពធំជាង 5MB ដើម្បីកុំឱ្យភ្ញៀវគិតថាគាំង
+            if (file.size > 5 * 1024 * 1024) {
+                if(typeof showToast === 'function') {
+                    showToast("កំពុងបង្ហាប់រូបភាពទំហំធំ... សូមរង់ចាំបន្តិច!", false);
+                }
+            }
+            if(typeof playClickSound === 'function') playClickSound();
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = async function() {
+                    const canvas = document.createElement('canvas');
+                    // កំណត់ទំហំអតិបរមា 1920x1080 (HD) ដើម្បីកាត់បន្ថយទំហំ File តែរក្សាភាពច្បាស់
+                    const maxW = 1920;
+                    const maxH = 1080;
+                    let w = img.width, h = img.height;
+                    
+                    if (w > maxW || h > maxH) {
+                        const ratio = Math.min(maxW / w, maxH / h);
+                        w = Math.round(w * ratio);
+                        h = Math.round(h * ratio);
+                    }
+                    
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    
+                    // បង្ហាប់គុណភាពមកត្រឹម 60% (0.6) ដើម្បីធានាថា File តូចជាង 500KB
+                    const compressedBg = `url("${canvas.toDataURL('image/jpeg', 0.6)}")`;
+                    
+                    if(typeof applyAndSaveWallpaper === 'function') {
+                        applyAndSaveWallpaper(compressedBg, null);
+                    }
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
         }
 
         function renderMenu() {
@@ -953,12 +1074,15 @@
                     urgencyHtml = `<div class="p-urgency" style="background:var(--danger)">Out of Stock (Pre-order)</div>`;
                 }
                 
+                let conditionBadge = p.condition ? `<div style="position:absolute; top:8px; left:8px; background:rgba(255,255,255,0.9); color:#000; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; z-index:10;">${p.condition}</div>` : '';
+                
                 return `
                 <div class="p-card" onclick="openDet('${p.id}')">
                     <div class="p-img-box">
                         <div class="p-badge">Sale</div>
                         ${urgencyHtml}
-                        <button style="position:absolute; top:8px; left:8px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:28px; height:28px; color:${isFav?'var(--danger)':'white'}; font-size:12px; z-index:10; cursor:pointer;" onclick="toggleWl('${p.id}', this, event)"><i class="fa-solid fa-heart"></i></button>
+                        ${conditionBadge}
+                        <button style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:28px; height:28px; color:${isFav?'var(--danger)':'white'}; font-size:12px; z-index:10; cursor:pointer;" onclick="toggleWl('${p.id}', this, event)"><i class="fa-solid fa-heart"></i></button>
                         <img src="${p.image||'https://placehold.co/200'}" onerror="this.src='https://placehold.co/200'">
                     </div>
                     <div class="p-info">
@@ -987,11 +1111,12 @@
             let isFav = wishlist.some(w=>w.id===id);
             document.getElementById('dContent').innerHTML = `
                 <div style="position:relative;">
-                    <button style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:32px; height:32px; color:${isFav?'var(--danger)':'white'}; font-size:14px; z-index:10; cursor:pointer;" onclick="toggleWl('${id}', this)"><i class="fa-solid fa-heart"></i></button>
+                    <button style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:32px; height:32px; color:${isFav?'var(--danger)':'white'}; font-size:14px; z-index:10; cursor:pointer;" onclick="toggleWl('${id}', this, event)"><i class="fa-solid fa-heart"></i></button>
                     <img src="${p.image||'https://placehold.co/200'}" style="width:100%; border-radius:16px; margin-bottom:15px; background:#fff; max-height:250px; object-fit:contain; cursor:zoom-in;" onclick="openLightbox(this.src)">
                 </div>
                 <div style="font-size:16px; font-weight:800; margin-bottom:5px;">${p.name}</div>
-                <div style="font-size:20px; font-weight:900; color:var(--text-dark); margin-bottom:15px;">${fmt(getPrc(p))}</div>
+                <div style="font-size:20px; font-weight:900; color:var(--text-dark); margin-bottom:5px;">${fmt(getPrc(p))}</div>
+                <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">${p.desc || ''}</div>
                 <div style="margin-bottom:5px; font-size:12px; font-weight:800; color:var(--text-muted);">Variant:</div>
                 <div style="margin-bottom:20px;">${vHtml}</div>
                 <button class="btn-act btn-green" style="width:100%;" onclick="addCartLogic()">Add to Order</button>
@@ -1131,7 +1256,6 @@
             closeWaiterModal();
             showToast(`កំពុងហៅបុគ្គលិក...`);
 
-            // 🌟 ប្រើប្រាស់ Service Bot Token ដើម្បីបាញ់សារចូល Group ហៅសេវាកម្ម
             if (serviceBotToken && serviceChatId) {
                 let msg = `🛎️ <b><big>ការហៅសេវាកម្មបន្ទាន់!</big></b>\n📍 ទីតាំង: <b>តុលេខ ${TABLE_NO}</b>\n🔔 សំណើ: <b>${reqType}</b>`;
                 fetch(`https://api.telegram.org/bot${serviceBotToken}/sendMessage`, {
