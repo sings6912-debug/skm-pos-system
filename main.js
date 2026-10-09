@@ -363,8 +363,8 @@ window.sysI18n = {
         btnUploadQr: '📷 QR Code',
         lblTelegramTitle: '🤖 ការកំណត់ Telegram អតិថិជន:',
         plhTelegramUser: 'Telegram Username (ឧ. Jheng6912)',
-        plhTelegramToken: 'Bot Token for notifications',
-        plhTelegramChatId: 'Chat ID to receive alerts',
+        plhTelegramToken: 'Bot Token សម្រាប់ការលោតសារ',
+        plhTelegramChatId: 'Chat ID សម្រាប់ទទួលសារ',
         btnCancel: 'បោះបង់',
         btnSave: 'រក្សាទុក',
         btnConfirmOk: 'យល់ព្រម',
@@ -934,6 +934,9 @@ window.sysI18n = {
     }
 };
 
+// ==========================================
+// 3. LANGUAGE SWITCHER LOGIC
+// ==========================================
 window.changeAppLanguage = function(lang) {
     localStorage.setItem('app_lang', lang);
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
@@ -1304,12 +1307,29 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).single();
             let cloudData = (data && data.data_json) ? data.data_json : {};
 
+            // ⚡ ទាញយកបញ្ជីខ្មៅពី LocalStorage
+            let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+            let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+            let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
+            let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+
+            // ⚡ បញ្ចូលគ្នាជាមួយ Cloud ដើម្បីការពារកុំឲ្យបាត់ប្រវត្តិលុប
+            if (cloudData.deletedInvoices) deletedInv = [...new Set([...deletedInv, ...cloudData.deletedInvoices])];
+            if (cloudData.deletedExpenses) deletedExp = [...new Set([...deletedExp, ...cloudData.deletedExpenses])];
+            if (cloudData.deletedCustomers) deletedCust = [...new Set([...deletedCust, ...cloudData.deletedCustomers])];
+            if (cloudData.deletedProducts) deletedProd = [...new Set([...deletedProd, ...cloudData.deletedProducts])];
+
+            // ⚡ Save ចូល LocalStorage វិញភ្លាមៗ
+            localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedInv));
+            localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExp));
+            localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
+            localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProd));
+
             // 🌟 1. Merge Invoices & Prevent Zombies
             if (cloudData.invoices) {
-                let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
                 cloudData.invoices.forEach(cInv => {
                     let cId = String(cInv.id || cInv.invoiceNo).trim().toLowerCase();
-                    if (!deletedTracker.includes(cId) && !window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
+                    if (!deletedInv.includes(cId) && !window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
                         window.invoices.push(cInv);
                     }
                 });
@@ -1319,22 +1339,21 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             // 🌟 2. Merge Customers
             if (cloudData.customers) {
                 cloudData.customers.forEach(cC => {
-                    if (!window.customers.find(lC => String(lC.name).toLowerCase() === String(cC.name).toLowerCase())) window.customers.push(cC);
+                    if (!deletedCust.includes(String(cC.id)) && !window.customers.find(lC => String(lC.name).toLowerCase() === String(cC.name).toLowerCase())) window.customers.push(cC);
                 });
             }
 
             // 🌟 3. Merge Inventory
             if (cloudData.inventory) {
                 cloudData.inventory.forEach(pCloud => {
-                    if (!cleanInventory.find(pLoc => pLoc.id === pCloud.id)) cleanInventory.push(pCloud);
+                    if (!deletedProd.includes(String(pCloud.id)) && !cleanInventory.find(pLoc => pLoc.id === pCloud.id)) cleanInventory.push(pCloud);
                 });
             }
 
-            // ⚡ 4. Merge Expenses & Prevent Zombies (Blacklist ថ្មី)
+            // ⚡ 4. Merge Expenses & Prevent Zombies
             if (cloudData.expenses) {
-                let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
                 cloudData.expenses.forEach(eCloud => {
-                    if (!deletedExps.includes(String(eCloud.id)) && !window.expenses.find(eLoc => eLoc.id === eCloud.id)) {
+                    if (!deletedExp.includes(String(eCloud.id)) && !window.expenses.find(eLoc => eLoc.id === eCloud.id)) {
                         window.expenses.push(eCloud);
                     }
                 });
@@ -1360,11 +1379,14 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 window.sysSettings.customMenuScripts = cloudData.sysSettings.customMenuScripts;
             }
 
-            // អាប់ដេត Memory ម៉ាស៊ីនជាមួយនឹងទិន្នន័យដែលបាន Merge រួច
-            window.inventory = cleanInventory;
+            // ⚡ អាប់ដេត Memory ម៉ាស៊ីនជាមួយនឹងទិន្នន័យដែលបាន Merge និងត្រងចោលទិន្នន័យក្នុងបញ្ជីខ្មៅ
+            window.inventory = cleanInventory.filter(p => !deletedProd.includes(String(p.id)));
+            window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i?.id || i?.invoiceNo).trim().toLowerCase()));
+            window.expenses = window.expenses.filter(e => !deletedExp.includes(String(e.id)));
+            window.customers = window.customers.filter(c => !deletedCust.includes(String(c.id)));
 
             let packageData = {
-                inventory: cleanInventory, 
+                inventory: window.inventory, 
                 historyLog: window.historyLog, 
                 invoices: window.invoices, 
                 expenses: window.expenses,
@@ -1380,7 +1402,13 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 shopTelegram: window.shopTelegram || '', 
                 telegramBotToken: window.telegramBotToken || '', 
                 telegramChatId: window.telegramChatId || '',
-                invoiceCounter: JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) || {seq:0, lastDate:''}
+                invoiceCounter: JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) || {seq:0, lastDate:''},
+                
+                // ⚡ Upload បញ្ជីខ្មៅទៅកាន់ Cloud!
+                deletedInvoices: deletedInv,
+                deletedExpenses: deletedExp,
+                deletedCustomers: deletedCust,
+                deletedProducts: deletedProd
             };
 
             await window.supabaseClient
@@ -1400,8 +1428,8 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         window.setSyncStatus('error', 'Sync បរាជ័យ');
     }
 
-    // រក្សាទុកចូល LocalStorage
-    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(cleanInventory));
+    // រក្សាទុកចូល LocalStorage បន្ទាប់ពីការ Merge រួចរាល់
+    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory || []));
     localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog || []));
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices || []));
     localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses || []));
@@ -1426,9 +1454,29 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
         if (data && data.data_json) {
             let d = data.data_json;
             
+            // ⚡ ទាញយក និងបញ្ចូលគ្នានូវបញ្ជីខ្មៅពី Cloud & Local
+            let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+            let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+            let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
+            let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+
+            if (d.deletedInvoices) deletedInv = [...new Set([...deletedInv, ...d.deletedInvoices])];
+            if (d.deletedExpenses) deletedExp = [...new Set([...deletedExp, ...d.deletedExpenses])];
+            if (d.deletedCustomers) deletedCust = [...new Set([...deletedCust, ...d.deletedCustomers])];
+            if (d.deletedProducts) deletedProd = [...new Set([...deletedProd, ...d.deletedProducts])];
+
+            localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedInv));
+            localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExp));
+            localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
+            localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProd));
+
+            // ⚡ ត្រងទំនិញ (Inventory) 
             (d.inventory || []).forEach(pCloud => {
-                if (pCloud && pCloud.id && !window.inventory.some(pLoc => pLoc.id === pCloud.id)) window.inventory.push(pCloud);
+                if (pCloud && pCloud.id && !deletedProd.includes(String(pCloud.id)) && !window.inventory.some(pLoc => pLoc.id === pCloud.id)) {
+                    window.inventory.push(pCloud);
+                }
             });
+            window.inventory = window.inventory.filter(p => !deletedProd.includes(String(p.id)));
             
             // ⚡ ត្រង History ចាស់ៗចោល
             let clearTime = parseInt(localStorage.getItem('history_cleared_time')) || 0;
@@ -1436,25 +1484,27 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             window.historyLog.splice(0, window.historyLog.length, ...validHistory);
             window.historyLog.sort((a,b) => b.id - a.id);
 
-            let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+            // ⚡ ត្រងវិក្កយបត្រ (Invoices)
             (d.invoices || []).forEach(cInv => {
                 let tempId = String(cInv?.id || cInv?.invoiceNo).trim().toLowerCase();
-                if (!deletedTracker.includes(tempId) && !window.invoices.some(lInv => String(lInv.id) === String(cInv.id))) {
+                if (!deletedInv.includes(tempId) && !window.invoices.some(lInv => String(lInv.id) === String(cInv.id))) {
                     window.invoices.push(cInv);
                 }
             });
+            window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i?.id || i?.invoiceNo).trim().toLowerCase()));
             window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             
-            // ⚡ ត្រងចំណាយខ្មោចចោល
-            let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
-            let validExpenses = (d.expenses || []).filter(e => !deletedExps.includes(String(e.id)));
+            // ⚡ ត្រងការចំណាយ (Expenses)
+            let validExpenses = (d.expenses || []).filter(e => !deletedExp.includes(String(e.id)));
             window.expenses.splice(0, window.expenses.length, ...validExpenses);
             
+            // ⚡ ត្រងអតិថិជន (Customers)
             (d.customers || []).forEach(cCloud => {
-                if (cCloud && cCloud.name && !window.customers.some(cLoc => String(cLoc.name).toLowerCase() === String(cCloud.name).toLowerCase())) {
+                if (cCloud && cCloud.name && !deletedCust.includes(String(cCloud.id)) && !window.customers.some(cLoc => String(cLoc.name).toLowerCase() === String(cCloud.name).toLowerCase())) {
                     window.customers.push(cCloud);
                 }
             });
+            window.customers = window.customers.filter(c => !deletedCust.includes(String(c.id)));
             
             window.shopName = d.shopName || window.shopName;
             window.shopLogo = d.shopLogo || window.shopLogo;
@@ -1473,11 +1523,18 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
                 userAccountsRef.splice(0, userAccountsRef.length, ...d.userAccounts);
             }
 
-            // 💥 អនុវត្តកូដ POS Custom JS ដែលបានទាញពី Supabase (EXECUTE Custom POS Scripts)
+            // 💥 អនុវត្តកូដ POS Custom JS ដែលបានទាញពី Supabase
             if (d.customPosScripts && Array.isArray(d.customPosScripts)) {
                 window.customPosScripts = d.customPosScripts;
-                injectPosScripts(); // Execute scripts immediately
+                injectPosScripts(); 
             }
+
+            // Save to LocalStorage instantly
+            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+            localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog));
+            localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+            localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
+            localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
         }
     } catch(e) {}
 };
@@ -1516,7 +1573,6 @@ window.switchTab = function(tabId, title, elem) {
         if(overlay) overlay.classList.remove('active'); 
     } 
     
-    // ⚡ FIX: Render តែផ្ទាំងណាដែលកំពុងបើក ដើម្បីកុំឲ្យស៊ីម៉ាស៊ីន និងដើរលឿន
     if (tabId === 'dashboard' && typeof window.renderDashboard === 'function') window.renderDashboard();
     if (tabId === 'inventory' && typeof window.renderInventory === 'function') window.renderInventory();
     if (tabId === 'pos' && typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
@@ -2368,7 +2424,7 @@ window.onload = async () => {
     if (header) { header.classList.remove('hidden-header'); } 
     window.lastInvoiceCount = window.invoices ? window.invoices.length : 0; 
     
-    // ⚡ FIX: Auto Real-time Update Sync Listener (ដូរទៅ 30 វិនាទី ដើម្បីឈប់ឲ្យម៉ាស៊ីនគាំង)
+    // ⚡ FIX: Auto Real-time Update Sync Listener
     setInterval(async () => {
         try {
             if(!window.supabaseClient || !navigator.onLine) return;
@@ -2376,6 +2432,8 @@ window.onload = async () => {
             if (data && data.data_json && data.data_json.invoices) {
                 let cloudInvoices = data.data_json.invoices;
                 let hasNewOrder = false;
+                
+                // ⚡ ទាញបញ្ជីខ្មៅយកមកពិនិត្យមុននឹងទាញវិក្កយបត្រថ្មីចូលម៉ាស៊ីន
                 let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
 
                 cloudInvoices.forEach(cInv => {
@@ -2395,7 +2453,6 @@ window.onload = async () => {
                     const msgTitle = lang === 'en' ? '🔔 New Order' : (lang === 'zh' ? '🔔 新订单' : '🔔 កុម្ម៉ង់ថ្មី');
                     if(typeof window.ksMsg === 'function') window.ksMsg(msgText, msgTitle);
                     
-                    // Render តែពេលមានអតិថិជនកម្ម៉ង់ចូល
                     const activeTab = document.querySelector('.tab-content.active');
                     if (activeTab && activeTab.id === 'tab-unpaid' && typeof window.renderUnpaid === 'function') {
                         window.renderUnpaid();
@@ -2403,5 +2460,5 @@ window.onload = async () => {
                 }
             }
         } catch(e) {}
-    }, 30000); // ⚡ កំណត់ 30 វិនាទី ដើរម្តង
+    }, 30000); 
 };

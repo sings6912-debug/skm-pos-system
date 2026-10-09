@@ -111,9 +111,8 @@ window.updateQty = function(id, change) {
         item.qty = Math.max(0, old + change); 
         let diff = item.qty - old; 
         if(diff !== 0) { 
-            window.logAction(diff > 0 ? 'add' : 'update', item.name, Math.abs(diff), diff > 0 ? 'បន្ថែមស្តុក' : 'ដកស្តុកចេញ'); 
+            window.logAction(diff > 0 ? 'add' : 'update', item.name, Math.abs(diff), diff > 0 ? 'បន្ថែមស្តុក' : 'ដកស្តុកចេញ', window.activeUser); 
             window.saveData(window.userAccounts); 
-            // Render ឡើងវិញភ្លាមៗពេលបូក/ដក ដើម្បីលោតលេខថ្មីលើអេក្រង់
             window.renderInventory();
         } 
     } 
@@ -141,22 +140,21 @@ window.openProductModal = function() {
     
     const condContainer = document.getElementById('pConditionContainer');
     const condSelect = document.getElementById('pCondition');
-    if (window.sysSettings.condition) {
-        condContainer.style.display = 'block';
+    if (window.sysSettings && window.sysSettings.condition) {
+        if(condContainer) condContainer.style.display = 'block';
         let opts = `<option value="">-- ជ្រើសរើស --</option>`;
         let cList = (window.sysSettings.conditionList || '').split(',');
         cList.forEach(c => {
             if (c.trim()) opts += `<option value="${c.trim()}">${c.trim()}</option>`;
         });
-        condSelect.innerHTML = opts;
-        condSelect.value = '';
+        if(condSelect) { condSelect.innerHTML = opts; condSelect.value = ''; }
     } else {
-        condContainer.style.display = 'none';
-        condSelect.value = '';
+        if(condContainer) condContainer.style.display = 'none';
+        if(condSelect) condSelect.value = '';
     }
 
     const expiryContainer = document.getElementById('pExpiryContainer');
-    if (window.sysSettings.expiry) {
+    if (window.sysSettings && window.sysSettings.expiry) {
         if(expiryContainer) expiryContainer.style.display = 'block';
         if(document.getElementById('pExpiry')) document.getElementById('pExpiry').value = '';
     } else {
@@ -221,21 +219,20 @@ window.saveProduct = function() {
         qty: parseInt(document.getElementById('pQty').value) || 0, 
         desc: document.getElementById('pDesc').value, 
         image: document.getElementById('pImage').value,
-        condition: document.getElementById('pCondition').value || '',
-        expiry: window.sysSettings.expiry ? expiryVal : ''
+        condition: document.getElementById('pCondition') ? document.getElementById('pCondition').value || '' : '',
+        expiry: (window.sysSettings && window.sysSettings.expiry) ? expiryVal : ''
     }; 
     if(!data.name || (data.price <= 0 && data.riel <= 0)) return window.ksMsg("សូមបញ្ចូលឈ្មោះ និងតម្លៃលក់ (យ៉ាងហោចណាស់ ដុល្លារ ឬ រៀល)!"); 
     if(id) { 
         const idx = window.inventory.findIndex(p => p && p.id === id); 
         if(idx !== -1) window.inventory[idx] = data; 
-        window.logAction('update', data.name, 0, 'កែប្រែព័ត៌មាន'); 
+        window.logAction('update', data.name, 0, 'កែប្រែព័ត៌មាន', window.activeUser); 
     } else { 
         window.inventory.push(data); 
-        window.logAction('add', data.name, data.qty, 'នាំចូលថ្មី'); 
+        window.logAction('add', data.name, data.qty, 'នាំចូលថ្មី', window.activeUser); 
     } 
     window.closeModal(); 
     window.saveData(window.userAccounts); 
-    // Render ឡើងវិញពេល Save ជោគជ័យ
     window.renderInventory();
 };
 
@@ -257,22 +254,21 @@ window.editProduct = function(id) {
     
     const condContainer = document.getElementById('pConditionContainer');
     const condSelect = document.getElementById('pCondition');
-    if (window.sysSettings.condition) {
-        condContainer.style.display = 'block';
+    if (window.sysSettings && window.sysSettings.condition) {
+        if(condContainer) condContainer.style.display = 'block';
         let opts = `<option value="">-- ជ្រើសរើស --</option>`;
         let cList = (window.sysSettings.conditionList || '').split(',');
         cList.forEach(c => {
             if (c.trim()) opts += `<option value="${c.trim()}">${c.trim()}</option>`;
         });
-        condSelect.innerHTML = opts;
-        condSelect.value = p.condition || '';
+        if(condSelect) { condSelect.innerHTML = opts; condSelect.value = p.condition || ''; }
     } else {
-        condContainer.style.display = 'none';
-        condSelect.value = '';
+        if(condContainer) condContainer.style.display = 'none';
+        if(condSelect) condSelect.value = '';
     }
 
     const expiryContainer = document.getElementById('pExpiryContainer');
-    if (window.sysSettings.expiry) {
+    if (window.sysSettings && window.sysSettings.expiry) {
         if(expiryContainer) expiryContainer.style.display = 'block';
         if(document.getElementById('pExpiry')) document.getElementById('pExpiry').value = p.expiry || '';
     } else {
@@ -284,18 +280,49 @@ window.editProduct = function(id) {
     document.getElementById('productModal').style.display = 'flex'; 
 };
 
+// 🌟 នេះគឺជាកន្លែងដែលយើងត្រូវបន្ថែម Deleted Tracker
 window.deleteProduct = function(id) { 
     if(window.currentRole !== 'admin') return window.ksMsg('គ្មានសិទ្ធិ!'); 
     const p = window.inventory.find(i => i && i.id === id); if(!p) return;
-    window.ksMsg(`តើអ្នកពិតជាចង់លុប ${p.name} ចេញពីប្រព័ន្ធមែនទេ?`, "បញ្ជាក់ការលុប", true, () => {
-        const idx = window.inventory.findIndex(i => i && i.id === id);
-        if (idx !== -1) window.inventory.splice(idx, 1);
-        window.logAction('update', p.name, 0, 'លុបចេញពីប្រព័ន្ធ'); 
-        window.saveData(window.userAccounts); 
-        window.renderInventory();
-        window.ksMsg('លុបជោគជ័យ!');
-    });
-};window.exportCSV = function() {
+    
+    if(typeof window.ksMsg === 'function') {
+        window.ksMsg(`តើអ្នកពិតជាចង់លុប ${p.name} ចេញពីប្រព័ន្ធមែនទេ?`, "បញ្ជាក់ការលុប", true, async () => {
+            // ⚡ ១. កត់ត្រា ID ចូលបញ្ជីខ្មៅ (Blacklist) ការពារ Cloud ទាញមកវិញ
+            let deletedProds = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+            if (!deletedProds.includes(String(id))) {
+                deletedProds.push(String(id));
+                localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProds));
+            }
+
+            // ⚡ ២. លុបចេញពីអេក្រង់ និង Local Storage
+            const idx = window.inventory.findIndex(i => i && i.id === id);
+            if (idx !== -1) window.inventory.splice(idx, 1);
+            
+            window.logAction('update', p.name, 0, 'លុបចេញពីប្រព័ន្ធ', window.activeUser); 
+            
+            // ⚡ ៣. Save ទៅ Cloud រួច Refresh UI
+            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+            window.renderInventory();
+            window.ksMsg('លុបជោគជ័យ!', 'ជោគជ័យ');
+        });
+    } else {
+        if(confirm(`តើអ្នកពិតជាចង់លុប ${p.name} ចេញពីប្រព័ន្ធមែនទេ?`)) {
+            let deletedProds = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+            if (!deletedProds.includes(String(id))) {
+                deletedProds.push(String(id));
+                localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProds));
+            }
+
+            const idx = window.inventory.findIndex(i => i && i.id === id);
+            if (idx !== -1) window.inventory.splice(idx, 1);
+            window.logAction('update', p.name, 0, 'លុបចេញពីប្រព័ន្ធ', window.activeUser); 
+            if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
+            window.renderInventory();
+        }
+    }
+};
+
+window.exportCSV = function() {
     if(!window.inventory || window.inventory.length === 0) {
         return window.ksMsg('គ្មានទិន្នន័យទំនិញដើម្បី Export ទេ!');
     }
