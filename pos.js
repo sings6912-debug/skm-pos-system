@@ -12,25 +12,44 @@ window.setPosCategory = function(cat) {
 };
 
 window.updateCategories = function() {
-    const cats = [...new Set((window.inventory || []).filter(p => p && p.category).map(p => p.category))];
+    // ត្រងយកតែទំនិញដែលមានក្នុងស្តុក និងមិនមែនជាទិន្នន័យទទេ
+    let activeItems = (window.inventory || []).filter(p => p !== null && typeof p === 'object');
+    
+    const cats = [...new Set(activeItems.filter(p => p.category).map(p => p.category))];
+    
     const filter = document.getElementById('filterCategory'); 
     if(filter) filter.innerHTML = '<option value="all">គ្រប់ប្រភេទ</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
     
     const catList = document.getElementById('catList');
     if(catList) catList.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
     
-    const units = [...new Set((window.inventory || []).filter(p => p && p.unit).map(p => p.unit))];
+    const units = [...new Set(activeItems.filter(p => p.unit).map(p => p.unit))];
     const unitList = document.getElementById('unitList');
     if(unitList) unitList.innerHTML = units.map(u => `<option value="${u}">${u}</option>`).join('');
     
     const posTabs = document.getElementById('posCategoryTabs');
     if(posTabs) { 
         let activeCat = window.currentPosCategory ? window.currentPosCategory : 'all'; 
-        let tabsHtml = `<button class="pos-tab ${activeCat === 'all' ? 'active' : ''}" onclick="window.setPosCategory('all')">ទាំងអស់ (All)</button>`; 
+        
+        // ទាញយកពាក្យបកប្រែសម្រាប់ Tab "ទាំងអស់"
+        const lang = localStorage.getItem('app_lang') || 'km';
+        const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
+        const allLabel = d.allCategoryTab || 'ទាំងអស់ (All)';
+        
+        let allCount = activeItems.length;
+        let tabsHtml = `<button class="pos-tab ${activeCat === 'all' ? 'active' : ''}" onclick="window.setPosCategory('all')">${allLabel} (${allCount})</button>`; 
+        
         cats.forEach(c => { 
-            tabsHtml += `<button class="pos-tab ${activeCat === c ? 'active' : ''}" onclick="window.setPosCategory('${c}')">${c}</button>`; 
+            // រាប់ចំនួនទំនិញក្នុងប្រភេទនីមួយៗ
+            let catCount = activeItems.filter(p => p.category === c).length;
+            tabsHtml += `<button class="pos-tab ${activeCat === c ? 'active' : ''}" onclick="window.setPosCategory('${c}')">${c} (${catCount})</button>`; 
         }); 
         posTabs.innerHTML = tabsHtml; 
+        
+        // ដំណើរការមុខងារអូសដោយប្រើ Mouse (Drag to scroll)
+        if(typeof window.initPosTabScroll === 'function') {
+            window.initPosTabScroll();
+        }
     }
 };
 
@@ -241,13 +260,13 @@ window.renderCart = function() {
     if (cartTotalQtyEl) cartTotalQtyEl.innerText = tQty; 
     
     const cartDiscEl = document.getElementById('cartDiscountAmount');
-if (cartDiscEl) {
-    if (discountType === '%' && discountValue > 0) {
-        cartDiscEl.innerText = `-${window.fMoney(discountAmountUsd)} (${discountValue}%)`;
-    } else {
-        cartDiscEl.innerText = '-' + window.fMoney(discountAmountUsd);
-    }
-} 
+    if (cartDiscEl) {
+        if (discountType === '%' && discountValue > 0) {
+            cartDiscEl.innerText = `-${window.fMoney(discountAmountUsd)} (${discountValue}%)`;
+        } else {
+            cartDiscEl.innerText = '-' + window.fMoney(discountAmountUsd);
+        }
+    } 
     
     const cartTaxEl = document.getElementById('cartTaxAmount');
     if(cartTaxEl) cartTaxEl.innerText = '+' + window.fMoney(taxAmountUsd);
@@ -400,7 +419,6 @@ window.executePrint = function(htmlContent) {
     }, 500);
 };
 
-// ⚡ កែប្រែ Checkout ដើម្បីដំណើរការលឿនជាងមុន និង Clear Filter ម៉ោងចោលស្វ័យប្រវត្តិ
 window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(!window.cart || window.cart.length === 0) return window.ksMsg('គ្មានទំនិញក្នុងកន្ត្រកទេ!');
     const custNameInput = document.getElementById('posCustomerName').value.trim(); 
@@ -500,7 +518,6 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${window.shopQR}" style="width: 180px; height: 180px; object-fit: contain; filter: grayscale(100%);"></div>`;
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`; 
     
-    // Clear the cart immediately
     window.cart = []; 
     
     const cNameInputEl = document.getElementById('posCustomerName'); if(cNameInputEl) cNameInputEl.value = ''; 
@@ -508,26 +525,21 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     const posDiscEl = document.getElementById('posDiscount'); if (posDiscEl) posDiscEl.value = ''; 
     const mobileContainer = document.getElementById('mobileCartContainer'); if(mobileContainer) mobileContainer.classList.remove('open'); 
     
-    // ⚡ 1. រក្សាទុក LocalStorage ជាមុនដើម្បីអោយលឿន
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
     if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
     
-    // ⚡ 2. Clear Date Range Inputs before rendering Unpaid table
     const dateFromInput = document.getElementById('invoiceDateFrom');
     const dateToInput = document.getElementById('invoiceDateTo');
     if (dateFromInput) dateFromInput.value = '';
     if (dateToInput) dateToInput.value = '';
 
-    // Render ភ្លាមៗ (Instant Feedback)
     window.renderCart(); 
     window.renderPOSProducts(); 
     if(typeof window.renderUnpaid === 'function') window.renderUnpaid();
     if(typeof window.renderCustomers === 'function') window.renderCustomers();
     
-    // Execute Print ភ្លាមៗ
     window.executePrint(receiptHTML);
 
-    // ⚡ 3. បោះទិន្នន័យទៅ Cloud ស្ងាត់ៗ (Background Sync) ដើម្បីកុំអោយគាំង
     setTimeout(() => {
         if (typeof window.saveData === 'function') {
             window.saveData(window.userAccounts); 
@@ -561,4 +573,59 @@ window.handleBarcodeScan = function(e) {
             }
         }
     }
+};
+
+// ==========================================
+// DRAG TO SCROLL FOR POS CATEGORY TABS
+// ==========================================
+let isPosTabScrollInitialized = false;
+
+window.initPosTabScroll = function() {
+    const slider = document.getElementById('posCategoryTabs');
+    if (!slider || isPosTabScrollInitialized) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    let isDragging = false; // ការពារកុំឲ្យចុចប៉ះប៊ូតុងខុសពេលកំពុងអូស
+
+    slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        isDragging = false;
+        slider.style.cursor = 'grabbing';
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+    });
+
+    slider.addEventListener('mouseleave', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+
+    slider.addEventListener('mouseup', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+
+    slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 2; // ល្បឿនពេលអូស
+        if (Math.abs(walk) > 5) isDragging = true; // ប្រសិនបើអូសលើសពី 5px វាចាត់ទុកថាជាការ Drag
+        slider.scrollLeft = scrollLeft - walk;
+    });
+
+    // ការពារការ Click លើ Tab ពេលដែលយើងគ្រាន់តែចង់អូស (Drag)
+    slider.addEventListener('click', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true); 
+
+    // បន្ថែម Cursor ធម្មតាពីដំបូង
+    slider.style.cursor = 'grab';
+    
+    isPosTabScrollInitialized = true;
 };
