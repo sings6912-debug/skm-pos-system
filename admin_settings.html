@@ -303,7 +303,12 @@
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
                     <input type="number" id="newPromoValue" class="input-st" placeholder="តម្លៃ (ឧ. 10)" style="flex: 1; margin-bottom: 0;" min="0" step="0.1">
                     <input type="number" id="newPromoLimit" class="input-st" placeholder="កំណត់ចំនួនដងប្រើ (ទទេ = គ្មានកំណត់)" style="flex: 1; margin-bottom: 0;" min="1">
-                    <button class="input-st" style="flex: 1; background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold;" onclick="addNewPromoCode()">+ បន្ថែមរក្សាទុក</button>
+                    
+                    <!-- កែប្រែប៊ូតុងរក្សាទុកដោយបន្ថែម ID និងបន្ថែមប៊ូតុង Cancel សម្រាប់ពេល Edit -->
+                    <div style="flex: 1; display: flex; gap: 5px;">
+                        <button id="btnSavePromo" class="input-st" style="flex: 1; background: var(--brand-cyan); color: white; border: none; cursor: pointer; font-weight: bold;" onclick="addNewPromoCode()">+ បន្ថែមរក្សាទុក</button>
+                        <button id="btnCancelPromo" class="input-st" style="width: 45px; background: var(--store-bg); color: var(--danger); border: 1px solid var(--border-color); cursor: pointer; display: none; padding: 0;" onclick="cancelPromoEdit()" title="បោះបង់ការកែប្រែ"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                 </div>
                 <div class="toggle-row" style="background: transparent; border: none; padding: 0; margin-top: 10px; margin-bottom: 0;">
                     <span style="color: var(--text-dark); font-size: 13px;"><i class="fa-solid fa-user-shield"></i> កំណត់ឱ្យអតិថិជនម្នាក់ (មួយលេខទូរស័ព្ទ) ប្រើបានតែ ១ ដងគត់</span>
@@ -526,6 +531,7 @@
 
     let adminBanners = [];
     let promoCodesList = []; // 🎟️ បញ្ជីកូដប្រូម៉ូសិន
+    let editPromoIndex = -1; // 📝 កត់ចំណាំទីតាំងពេលកំពុង Edit
     let menuScripts = []; 
     let posScripts = [];  
     let showAllMenuScripts = false;
@@ -732,17 +738,124 @@
             let userLimitBadge = promo.oneTimePerUser ? `<span style="font-size: 11px; color: #ef4444; margin-left: 5px; background: rgba(239, 68, 68, 0.1); padding: 2px 6px; border-radius: 4px;"><i class="fa-solid fa-user-lock"></i> ១ដង/ម្នាក់</span>` : '';
 
             container.innerHTML += `
-                <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); ${editPromoIndex === idx ? 'border-color: var(--warning); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);' : ''}">
                     <div>
                         <strong style="color: var(--brand-dark); font-size: 14px;">🏷️ ${promo.code}</strong>
                         <span style="font-size: 12px; color: var(--success); font-weight: bold; margin-left: 10px;">${desc}</span>
                         <span style="font-size: 11px; color: var(--text-muted); margin-left: 10px; background: rgba(0,0,0,0.03); padding: 2px 6px; border-radius: 4px;">${limitDesc}</span>
                         ${userLimitBadge}
                     </div>
-                    <button class="btn-script btn-delete" onclick="deletePromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
+                    <div style="display: flex; gap: 8px;">
+                        <!-- ប៊ូតុង Edit (កែប្រែ) ពណ៌លឿង -->
+                        <button class="btn-script" onclick="editPromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px; background: var(--warning); color: white; border-radius: 50%; border: none; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-pen"></i></button>
+                        <button class="btn-script btn-delete" onclick="deletePromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
+                    </div>
                 </div>
             `;
         });
+    }
+
+    // 📝 មុខងារទាញទិន្នន័យមកកែប្រែ
+    function editPromoCode(idx) {
+        editPromoIndex = idx;
+        const promo = promoCodesList[idx];
+        
+        document.getElementById('newPromoCode').value = promo.code;
+        document.getElementById('newPromoType').value = promo.type;
+        document.getElementById('newPromoValue').value = promo.value || '';
+        document.getElementById('newPromoLimit').value = promo.limit > 0 ? promo.limit : '';
+        document.getElementById('newPromoPerUser').checked = !!promo.oneTimePerUser;
+        
+        onPromoTypeChange(); // អាប់ដេតប្រអប់តម្លៃ ក្រែងលោជា Free Ship
+        
+        // ប្តូរ UI ប៊ូតុងទៅជា "កែប្រែ"
+        const btnSave = document.getElementById('btnSavePromo');
+        btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកែប្រែ';
+        btnSave.style.background = 'var(--warning)';
+        
+        // បង្ហាញប៊ូតុង Cancel
+        document.getElementById('btnCancelPromo').style.display = 'block';
+        
+        renderPromoCodesList(); // Render ឡើងវិញដើម្បីបង្ហាញ border ពណ៌លឿងលើកូដកំពុងកែ
+    }
+
+    // ❌ មុខងារបោះបង់ការកែប្រែ
+    function cancelPromoEdit() {
+        editPromoIndex = -1;
+        document.getElementById('newPromoCode').value = '';
+        document.getElementById('newPromoType').value = 'percent';
+        document.getElementById('newPromoValue').value = '';
+        document.getElementById('newPromoLimit').value = '';
+        document.getElementById('newPromoPerUser').checked = false;
+        
+        onPromoTypeChange();
+        
+        const btnSave = document.getElementById('btnSavePromo');
+        btnSave.innerHTML = '+ បន្ថែមរក្សាទុក';
+        btnSave.style.background = 'var(--brand-cyan)';
+        
+        document.getElementById('btnCancelPromo').style.display = 'none';
+        
+        renderPromoCodesList();
+    }
+
+    function addNewPromoCode() {
+        const codeInp = document.getElementById('newPromoCode');
+        const typeInp = document.getElementById('newPromoType');
+        const valInp = document.getElementById('newPromoValue');
+        const limitInp = document.getElementById('newPromoLimit');
+        const perUserInp = document.getElementById('newPromoPerUser');
+
+        const code = codeInp.value.trim().toUpperCase();
+        const type = typeInp.value;
+        const value = parseFloat(valInp.value) || 0;
+        const limit = parseInt(limitInp.value) || 0;
+        const oneTimePerUser = perUserInp.checked;
+
+        if(!code) {
+            return showToast('សូមបំពេញឈ្មោះកូដបញ្ចុះតម្លៃ!', true);
+        }
+
+        if(type !== 'freeship' && (isNaN(value) || value <= 0)) {
+            return showToast('សូមបញ្ចូលតម្លៃបញ្ចុះឱ្យបានត្រឹមត្រូវ!', true);
+        }
+
+        if (editPromoIndex === -1) {
+            // កំពុងបន្ថែមថ្មី
+            if(promoCodesList.some(p => p.code === code)) {
+                return showToast('កូដនេះមានរួចហើយ!', true);
+            }
+            promoCodesList.push({ 
+                code, type, value, limit, usedCount: 0, oneTimePerUser
+            });
+            showToast('បានបន្ថែមរក្សាទុកកូដប្រូម៉ូសិនជោគជ័យ!');
+        } else {
+            // កំពុងកែប្រែ (Edit)
+            // ឆែកក្រែងលោប្តូរឈ្មោះកូដទៅជាន់នឹងកូដដែលមានស្រាប់ (លើកលែងតែកូដខ្លួនឯង)
+            if(promoCodesList.some((p, idx) => p.code === code && idx !== editPromoIndex)) {
+                return showToast('កូដនេះជាន់គ្នាជាមួយកូដផ្សេង!', true);
+            }
+            
+            // រក្សាចំនួនដងដែលធ្លាប់ប្រើប្រាស់រួច (usedCount) ដដែល
+            const currentUsedCount = promoCodesList[editPromoIndex].usedCount || 0;
+            promoCodesList[editPromoIndex] = { 
+                code, type, value, limit, usedCount: currentUsedCount, oneTimePerUser
+            };
+            showToast('បានកែប្រែកូដប្រូម៉ូសិនជោគជ័យ!');
+        }
+
+        cancelPromoEdit(); // clear ទាំងប្រអប់បញ្ចូល និងប្តូរប៊ូតុងមកធម្មតាវិញ
+        saveAdminSettings();
+    }
+
+    function deletePromoCode(idx) {
+        if (confirm('តើអ្នកពិតជាចង់លុបកូដប្រូម៉ូសិននេះមែនទេ?')) {
+            promoCodesList.splice(idx, 1);
+            if (editPromoIndex === idx) cancelPromoEdit(); // បើលុបកូដដែលកំពុងកែ ត្រូវ clear ប្រអប់ចោល
+            renderPromoCodesList();
+            saveAdminSettings();
+            showToast('បានលុបកូដប្រូម៉ូសិន!');
+        }
     }
 
     function addNewPromoCode() {
