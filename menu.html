@@ -150,7 +150,14 @@
         }
         .cat-pill.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
 
-        .product-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 0 20px; }
+        /* កែប្រែនៅទីនេះ: ធ្វើឱ្យវា Responsive (តូចល្មមស្រួលមើលទាំងលើទូរស័ព្ទ និងកុំព្យូទ័រ) */
+        .product-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
+            gap: 15px; 
+            padding: 0 20px; 
+        }
+        
         .p-card {
             background: var(--card-bg); border-radius: 16px; overflow: hidden;
             box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--border-color);
