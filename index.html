@@ -131,6 +131,8 @@
                     <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
                     <input type="datetime-local" step="1" id="dashDateTo" class="form-control" style="width: 210px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
+                    <div style="flex-grow: 1;"></div>
+                    <button class="btn btn-primary" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.printZReport()"><i class="fa-solid fa-print"></i> ព្រីនរបាយការណ៍ (Z-Report)</button>
                 </div>
 
                 <div class="stats-grid">
@@ -633,6 +635,16 @@
                             <input type="checkbox" id="setTax" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;">
                             <span><strong style="color:var(--text-main);">ពន្ធអាករ (TAX/VAT):</strong> គិតពន្ធលើការលក់ ចំនួន</span>
                             <input type="number" id="setTaxRate" class="form-control" style="width: 80px; padding: 5px; height: 35px; text-align: center;" value="10" onchange="window.saveSysSettings()"> %
+                        </div>
+
+                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);">
+                            <input type="checkbox" id="setEnableSound" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;" checked>
+                            <span><strong style="color:var(--text-main);">សំឡេងប្រព័ន្ធ (System Sound):</strong> បន្លឺសំឡេងពេលស្កេន ឬមានការកុម្ម៉ង់។</span>
+                        </label>
+                        
+                        <div style="margin-top: 15px;">
+                            <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📝 សារខាងក្រោមវិក្កយបត្រ (Receipt Footer)៖</strong></label>
+                            <textarea id="setReceiptFooter" class="form-control" rows="2" placeholder="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
                         </div>
                     </div>
 

@@ -67,6 +67,7 @@ window.showToast = function(msg, isError = false) {
 };
 
 window.playBeep = function() { 
+    if(window.sysSettings && window.sysSettings.enableSound === false) return;
     try { 
         const AudioContext = window.AudioContext || window.webkitAudioContext; 
         if(!AudioContext) return; 
@@ -84,6 +85,7 @@ window.playBeep = function() {
 };
 
 window.playOrderSound = function() {
+    if(window.sysSettings && window.sysSettings.enableSound === false) return;
     try {
         const AudioContext = window.AudioContext || window.webkitAudioContext;
         if(!AudioContext) return;
@@ -1742,6 +1744,9 @@ window.loadSettingsToUI = function() {
     if(document.getElementById('setTax')) document.getElementById('setTax').checked = window.sysSettings.tax; 
     if(document.getElementById('setTaxRate')) document.getElementById('setTaxRate').value = window.sysSettings.taxRate ? window.sysSettings.taxRate : 10; 
     
+    if(document.getElementById('setEnableSound')) document.getElementById('setEnableSound').checked = window.sysSettings.enableSound !== false; 
+    if(document.getElementById('setReceiptFooter')) document.getElementById('setReceiptFooter').value = window.sysSettings.receiptFooter || 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+    
     if(document.getElementById('setCondition')) document.getElementById('setCondition').checked = window.sysSettings.condition || false;
     if(document.getElementById('conditionListContainer')) document.getElementById('conditionListContainer').style.display = window.sysSettings.condition ? 'block' : 'none';
     if(document.getElementById('setConditionList')) document.getElementById('setConditionList').value = window.sysSettings.conditionList || 'MISB, Loose, New, Used';
@@ -1796,6 +1801,9 @@ window.saveSysSettings = async function() {
     if(document.getElementById('setTax')) window.sysSettings.tax = document.getElementById('setTax').checked; 
     if(document.getElementById('setTaxRate')) window.sysSettings.taxRate = parseFloat(document.getElementById('setTaxRate').value) || 0; 
     
+    if(document.getElementById('setEnableSound')) window.sysSettings.enableSound = document.getElementById('setEnableSound').checked;
+    if(document.getElementById('setReceiptFooter')) window.sysSettings.receiptFooter = document.getElementById('setReceiptFooter').value.trim();
+
     if(document.getElementById('setCondition')) window.sysSettings.condition = document.getElementById('setCondition').checked;
     if(document.getElementById('setConditionList')) window.sysSettings.conditionList = document.getElementById('setConditionList').value || 'MISB, Loose, New, Used';
     if(document.getElementById('setPreorder')) window.sysSettings.preorder = document.getElementById('setPreorder').checked;
@@ -2757,21 +2765,104 @@ window.onload = async () => {
                 }
 
                 // ដំណើរការគូរអេក្រង់ឡើងវិញពេលមានការកាត់ស្តុក
-                if (shouldRenderInventory) {
-                    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
-                    const activeTab = document.querySelector('.tab-content.active');
-                    if (activeTab && activeTab.id === 'tab-inventory' && typeof window.renderInventory === 'function') window.renderInventory();
-                    if (activeTab && activeTab.id === 'tab-pos' && typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
-                    if (activeTab && activeTab.id === 'tab-dashboard' && typeof window.renderDashboard === 'function') window.renderDashboard();
-                }
-            }
-        } catch(e) {}
-    }, 30000); 
-
-    /* 🌟 បន្ថែមថ្មី៖ ដំណើរការប្រព័ន្ធថែទាំទិន្នន័យស្វ័យប្រវត្តិពេលបើកវេបសាយ ៣ វិនាទីក្រោយ */
-    setTimeout(() => {
-        if(typeof window.runSmartDatabaseMaintenance === 'function') {
-            window.runSmartDatabaseMaintenance();
+        if (shouldRenderInventory) {
+            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+            const activeTab = document.querySelector('.tab-content.active');
+            if (activeTab && activeTab.id === 'tab-inventory' && typeof window.renderInventory === 'function') window.renderInventory();
+            if (activeTab && activeTab.id === 'tab-pos' && typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+            if (activeTab && activeTab.id === 'tab-dashboard' && typeof window.renderDashboard === 'function') window.renderDashboard();
         }
-    }, 3000);
+    }
+} catch(e) {}
+}, 30000); 
+
+/* 🌟 បន្ថែមថ្មី៖ ដំណើរការប្រព័ន្ធថែទាំទិន្នន័យស្វ័យប្រវត្តិពេលបើកវេបសាយ ៣ វិនាទីក្រោយ */
+setTimeout(() => {
+    if(typeof window.runSmartDatabaseMaintenance === 'function') {
+        window.runSmartDatabaseMaintenance();
+    }
+}, 3000);
+};
+
+// ==========================================
+// 19. Z-REPORT PRINT (End of Day)
+// ==========================================
+window.printZReport = function() {
+    let totalSalesRevenue = 0, totalUnpaid = 0, totalExpenses = 0, totalDiscount = 0;
+    let invoiceCount = 0;
+    
+    const dateFrom = document.getElementById('dashDateFrom');
+    const dateTo = document.getElementById('dashDateTo'); 
+    
+    const now = new Date();
+    const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+    const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+
+    const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).getTime() : startOfDay; 
+    const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : endOfDay;
+    
+    let reportDateStr = (dateFrom && dateFrom.value) ? `${new Date(fromTime).toLocaleDateString('km-KH')} - ${new Date(toTime).toLocaleDateString('km-KH')}` : window.fDate().split(' ')[0];
+
+    window.invoices.forEach(inv => { 
+        if (!inv) return;
+        let invTime = inv.timestamp || parseInt(String(inv.id).split('_')[1]) || new Date(inv.date || 0).getTime() || 0; 
+        if (invTime >= fromTime && invTime <= toTime) { 
+            invoiceCount++;
+            const st = String(inv.status || 'unpaid').toLowerCase();
+            const totAmt = parseFloat(inv.totalAmount || inv.total || 0);
+            
+            if(st === 'paid') {
+                totalSalesRevenue += totAmt; 
+            } else { 
+                let invPaid = parseFloat(inv.paidUsd || inv.paidAmount || 0); 
+                let remaining = totAmt - invPaid; 
+                if(remaining > 0) totalUnpaid += remaining; 
+                totalSalesRevenue += invPaid; 
+            }
+            totalDiscount += parseFloat(inv.discount || 0);
+        } 
+    });
+
+    window.expenses.forEach(exp => {
+        if (!exp) return;
+        let expTime = exp.timestamp || new Date(exp.date || 0).getTime() || 0;
+        if(expTime >= fromTime && expTime <= toTime) totalExpenses += (parseFloat(exp.amount) || 0);
+    });
+
+    let netProfit = totalSalesRevenue - totalExpenses;
+
+    let html = `<div style="text-align:center; margin-bottom:10px;">`;
+    if(window.shopLogo) html += `<img src="${window.shopLogo}" style="width:60px; height:60px; object-fit:cover; border-radius:50%; margin-bottom:5px; filter:grayscale(100%);">`;
+    html += `<h2 style="margin:0; font-size:16px;">${window.shopName || 'ហាងរបស់យើង'}</h2>
+            <p style="margin:2px 0; font-size:12px;">របាយការណ៍បិទបញ្ជី (Z-Report)</p>
+            <p style="margin:2px 0; font-size:11px;">កាលបរិច្ឆេទ: ${reportDateStr}</p>
+            <p style="margin:2px 0; font-size:11px;">អ្នកព្រីន: ${window.activeUser ? window.activeUser.fullName || window.activeUser.username : 'Admin'}</p>
+            <p style="margin:2px 0; font-size:11px;">ម៉ោងព្រីន: ${new Date().toLocaleTimeString('km-KH')}</p>
+            <div style="border-bottom: 1px dashed #000; margin: 8px 0;"></div></div>
+            
+            <table style="width:100%; font-size: 13px;">
+                <tr><td style="padding:4px 0;">ចំនួនវិក្កយបត្រលក់:</td><td style="text-align:right; font-weight:bold;">${invoiceCount}</td></tr>
+                <tr><td style="padding:4px 0;">សរុបប្រាក់បញ្ចុះតម្លៃ:</td><td style="text-align:right;">${window.fMoney(totalDiscount)}</td></tr>
+                <tr><td style="padding:4px 0;">ប្រាក់ជំពាក់ (Pending):</td><td style="text-align:right; color:#d97706;">${window.fMoney(totalUnpaid)}</td></tr>
+                <tr><td style="padding:4px 0;">ចំណាយសរុប (Expense):</td><td style="text-align:right; color:#dc2626;">-${window.fMoney(totalExpenses)}</td></tr>
+                <tr><td colspan="2"><div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div></td></tr>
+                <tr><td style="padding:4px 0; font-weight:bold; font-size:14px;">ចំណូលលក់បាន:</td><td style="text-align:right; font-weight:bold; font-size:14px;">${window.fMoney(totalSalesRevenue)}</td></tr>
+                <tr><td style="padding:4px 0; font-weight:900; font-size:16px;">សាច់ប្រាក់សុទ្ធ:</td><td style="text-align:right; font-weight:900; font-size:16px;">${window.fMoney(netProfit)}</td></tr>
+            </table>
+            
+            <div style="border-bottom: 1px dashed #000; margin: 10px 0;"></div>
+            <p style="text-align:center; font-size:11px; margin-top: 10px; font-weight:bold;">*** ចុងបញ្ចប់របាយការណ៍ ***</p>`;
+
+    if (typeof window.executePrint === 'function') {
+        window.executePrint(html);
+    } else {
+        const printWindow = window.open('', '', 'width=300,height=600');
+        if(!printWindow) return;
+        printWindow.document.write('<html><head><title>Print Z-Report</title><style>@media print { body { width: 80mm; font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } }</style></head><body><div id="receipt-container">');
+        printWindow.document.write(html);
+        printWindow.document.write('</div></body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => { printWindow.print(); printWindow.close(); }, 500);
+    }
 };

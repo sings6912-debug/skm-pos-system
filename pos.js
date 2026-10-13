@@ -608,8 +608,10 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     }
     receiptHTML += `</table>`;
 
+    let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+    
     if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${window.shopQR}" style="width: 180px; height: 180px; object-fit: contain; filter: grayscale(100%);"></div>`;
-    receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`; 
+    receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">${footerText}</p>`; 
     
     window.cart = []; 
     
