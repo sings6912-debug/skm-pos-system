@@ -1,28 +1,35 @@
-const CACHE_NAME = "pwabuilder-offline-v2";
+// pwabuilder-sw.js
+const CACHE_NAME = "skm-integrate-pos-offline-v3";
 
-// ដាក់បញ្ចូលរាល់ Files សំខាន់ៗទាំងអស់ដែលត្រូវប្រើពេលអត់អ៊ីនធឺណិត (ឈ្មោះដើមត្រឹមត្រូវ)
+// បញ្ជីឯកសារទាំងអស់ក្នុងប្រព័ន្ធដែលត្រូវរក្សាទុកសម្រាប់ប្រើប្រាស់ពេលគ្មានអ៊ីនធឺណិត (Offline Mode)
 const FILES_TO_CACHE = [
-  "/", 
-  "/index.html", 
-  "/welcome.html", 
-  "/menu.html", 
-  "/style.css", 
-  "/print.css", 
-  "/config.js", 
-  "/theme.js", 
-  "/auth.js", 
-  "/inventory.js", 
-  "/pos.js", 
-  "/finance.js", 
-  "/customer.js", 
-  "/main.js", 
-  "/manifest.json"
-]; 
+  "./",
+  "./index.html",
+  "./welcome.html",
+  "./menu.html",
+  "./admin_settings.html",
+  "./skm_ultimate_qr_generator.html",
+  "./skm_pos_52_advanced_themes.html",
+  "./style.css",
+  "./print.css",
+  "./config.js",
+  "./theme.js",
+  "./auth.js",
+  "./inventory.js",
+  "./pos.js",
+  "./finance.js",
+  "./customer.js",
+  "./main.js",
+  "./manifest.json",
+  "./logo.png"
+];
 
 self.addEventListener("install", (evt) => {
   evt.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(FILES_TO_CACHE);
+      return Promise.allSettled(
+        FILES_TO_CACHE.map((url) => cache.add(url))
+      );
     })
   );
   self.skipWaiting();
@@ -40,23 +47,56 @@ self.addEventListener("activate", (evt) => {
       );
     })
   );
-  self.claimClients();
+  self.clients.claim();
 });
 
 self.addEventListener("fetch", (evt) => {
+  // មិនលូកដៃក្នុងការហៅទិន្នន័យទៅកាន់ Supabase ឬ Telegram API ឡើយ
+  const reqUrl = evt.request.url;
+  if (
+    evt.request.method !== "GET" ||
+    reqUrl.includes("supabase.co") ||
+    reqUrl.includes("api.telegram.org")
+  ) {
+    return;
+  }
+
   evt.respondWith(
-    caches.match(evt.request).then((cachedResponse) => {
-      // បើមានក្នុង Cache គឺយកចេញមកប្រើ
+    // ប្រើ ignoreSearch: true ដើម្បីឱ្យទំព័រដែលមានភ្ជាប់ ?branch=... នៅតែអាចបើក Offline បានធម្មតា
+    caches.match(evt.request, { ignoreSearch: true }).then((cachedResponse) => {
       if (cachedResponse) {
+        // ទាញយកកំណែថ្មីពីអ៊ីនធឺណិតនៅខាងក្រោយ (Stale-While-Revalidate) ប្រសិនបើមានអ៊ីនធឺណិត
+        fetch(evt.request)
+          .then((networkResponse) => {
+            if (networkResponse && networkResponse.status === 200) {
+              caches.open(CACHE_NAME).then((cache) => {
+                cache.put(evt.request, networkResponse.clone());
+              });
+            }
+          })
+          .catch(() => {});
         return cachedResponse;
       }
-      // បើគ្មានក្នុង Cache ទើបទៅទាញពី Network
-      return fetch(evt.request).catch(() => {
-        // បើ Offline ហើយរក file អត់ឃើញ ឱ្យវាបង្ហាញ welcome.html ទំព័រ ជំនួសសម្រាប់ Navigation
-        if (evt.request.mode === 'navigate') {
-          return caches.match("/welcome.html");
-        }
-      });
+
+      return fetch(evt.request)
+        .then((networkResponse) => {
+          if (
+            networkResponse &&
+            networkResponse.status === 200 &&
+            networkResponse.type === "basic"
+          ) {
+            const responseToCache = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(evt.request, responseToCache);
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => {
+          if (evt.request.mode === "navigate") {
+            return caches.match("./welcome.html", { ignoreSearch: true });
+          }
+        });
     })
   );
 });

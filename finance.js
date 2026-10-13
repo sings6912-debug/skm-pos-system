@@ -2,6 +2,17 @@
  * finance.js - គ្រប់គ្រងវិក្កយបត្រ ការចំណាយ និងការទូទាត់ប្រាក់ (Invoices, Expenses & Settle Debt)
  */
 
+// ជំនួយការសម្រាប់បង្ហាញសារជូនដំណឹងដោយសុវត្ថិភាព
+function notifyFinanceUser(msg, title = 'ជូនដំណឹង', isError = false) {
+    if (typeof window.ksMsg === 'function') {
+        window.ksMsg(msg, title);
+    } else if (typeof window.showToast === 'function') {
+        window.showToast(msg, isError);
+    } else {
+        console.log(`[${title}] ${msg}`);
+    }
+}
+
 // ========================================================
 // 🌟 ផ្នែកទី ១៖ គ្រប់គ្រងវិក្កយបត្រ (Invoices & Debt)
 // ========================================================
@@ -52,7 +63,7 @@ window.renderUnpaid = function() {
         const custPhone = inv.customerPhone || inv.phone || '';
         const dateStr = inv.date || inv.createdAt || 'N/A';
         const seller = inv.seller || inv.cashier || 'N/A';
-        const status = (inv.status || 'unpaid').toLowerCase();
+        const status = String(inv.status || 'unpaid').toLowerCase();
         
         const totalAmount = parseFloat(inv.totalAmount || inv.total || 0);
         let paidAmount = parseFloat(inv.paidUsd || inv.paidAmount || 0);
@@ -60,19 +71,19 @@ window.renderUnpaid = function() {
         const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
         if (searchVal) {
-            const combinedText = `${invId} ${custName} ${custPhone} ${seller}`.toLowerCase();
+            const combinedText = `${invId} ${custName} ${custPhone} ${seller} ${inv.note || ''}`.toLowerCase();
             if (!combinedText.includes(searchVal)) return;
         }
 
         if (dateFrom) {
             const dFrom = new Date(dateFrom).getTime();
-            const dCurrent = new Date(dateStr.split(' ')[0]).getTime();
+            const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
             if (!isNaN(dCurrent) && dCurrent < dFrom) return;
         }
 
         if (dateTo) {
             const dTo = new Date(dateTo).getTime();
-            const dCurrent = new Date(dateStr.split(' ')[0]).getTime();
+            const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
             if (!isNaN(dCurrent) && dCurrent > dTo) return;
         }
 
@@ -85,7 +96,7 @@ window.renderUnpaid = function() {
 
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
-            itemsSummary = inv.items.map(it => `${it.name || it.title} (x${it.cartQty || it.qty || 1})`).join(', ');
+            itemsSummary = inv.items.map(it => `${it.name || it.title} (x${it.cartQty !== undefined ? it.cartQty : (it.qty || 1)})`).join(', ');
         } else {
             itemsSummary = inv.itemsSummary || 'ទំនិញចម្រុះ';
         }
@@ -123,13 +134,15 @@ window.renderUnpaid = function() {
             </div>
         `;
 
+        const noteTag = inv.note ? `<br><small style="color:#0284c7; font-weight:bold;">📝 ${inv.note}</small>` : '';
+
         const row = document.createElement('tr');
         row.setAttribute('data-paid', paidAmount);
         row.setAttribute('data-unpaid', remainingAmount);
         row.innerHTML = `
             <td style="font-family: monospace; font-weight: bold; color: var(--primary);">${invId}</td>
             <td style="font-size: 12px;">${dateStr}</td>
-            <td><b>${custName}</b><br><small style="color:var(--text-muted);">${custPhone}</small></td>
+            <td><b>${custName}</b><br><small style="color:var(--text-muted);">${custPhone}</small>${noteTag}</td>
             <td style="font-size: 12px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemsSummary}">${itemsSummary}</td>
             <td>
                 <b>$${totalAmount.toFixed(2)}</b>
@@ -154,8 +167,7 @@ window.notifyCustomerOrderDone = async function(invId) {
     const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
     if (invIndex === -1) {
-        alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
-        return;
+        return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
     }
 
     const inv = invoices[invIndex];
@@ -166,26 +178,31 @@ window.notifyCustomerOrderDone = async function(invId) {
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
 
     const shopName = window.shopName || localStorage.getItem(window.getBranchKey('shop_name')) || 'ហាងរបស់យើង';
-    const message = `🎉 សួស្តី ${inv.customerName || inv.customer || 'អតិថិជន'}!\n\nការកុម្ម៉ង់លេខ [${invId}] របស់អ្នកនៅហាង "${shopName}" ត្រូវបានរៀបចំរួចរាល់ហើយ! 🛍️\n\n💵 សរុបទឹកប្រាក់៖ $${parseFloat(inv.totalAmount || inv.total || 0).toFixed(2)}\nសូមអញ្ជើញមកទទួលទំនិញ ឬរង់ចាំការដឹកជញ្ជូន។ អរគុណច្រើន! 🙏`;
+    const noteLine = inv.note ? `\n📝 ចំណាំ៖ ${inv.note}` : '';
+    const message = `🎉 សួស្តី ${inv.customerName || inv.customer || 'អតិថិជន'}!\n\nការកុម្ម៉ង់លេខ [${invId}] របស់អ្នកនៅហាង "${shopName}" ត្រូវបានរៀបចំរួចរាល់ហើយ! 🛍️${noteLine}\n\n💵 សរុបទឹកប្រាក់៖ $${parseFloat(inv.totalAmount || inv.total || 0).toFixed(2)}\nសូមអញ្ជើញមកទទួលទំនិញ ឬរង់ចាំការដឹកជញ្ជូន។ អរគុណច្រើន! 🙏`;
 
+    // ⚡ FIX (ចំណុចទី ២): ទាញយក Telegram Bot Token និង Chat ID តាមឈ្មោះ متغير ត្រឹមត្រូវក្នុងប្រព័ន្ធ
     try {
         const sysSettings = window.sysSettings || JSON.parse(localStorage.getItem(window.getBranchKey('sys_settings'))) || {};
-        const botToken = sysSettings.botToken || window.telegramBotToken || '';
-        const chatId = inv.telegramChatId || window.telegramChatId || sysSettings.chatId || '';
+        const botToken = sysSettings.orderTelegramBotToken || sysSettings.telegramBotToken || window.telegramBotToken || sysSettings.botToken || '';
+        const chatId = inv.telegramChatId || sysSettings.orderTelegramChatId || sysSettings.telegramChatId || window.telegramChatId || sysSettings.chatId || '';
 
         if (botToken && chatId) {
             fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ chat_id: chatId, text: message })
-            });
+            }).catch(err => console.warn("Telegram fetch warning:", err));
         }
     } catch(e) { console.warn("Telegram error:", e); }
 
     setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
 
-    if (typeof window.showToast === 'function') window.showToast(`✅ ការកុម្មង់ ${invId} បានរៀបចំរួចរាល់!`);
-    else alert(`✅ ការកុម្មង់ ${invId} បានរៀបចំរួចរាល់!`);
+    if (typeof window.showToast === 'function') {
+        window.showToast(`✅ ការកុម្ម៉ង់ ${invId} បានរៀបចំរួចរាល់!`);
+    } else {
+        notifyFinanceUser(`✅ ការកុម្ម៉ង់ ${invId} បានរៀបចំរួចរាល់!`, "ជោគជ័យ");
+    }
 
     window.renderUnpaid();
 };
@@ -197,11 +214,11 @@ window.openDebtPaymentModal = function(invId) {
     const targetId = String(invId).trim().toLowerCase();
     const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-    if (!inv) return alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
+    if (!inv) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
 
     window.currentPayingInvoiceId = invId;
     const modal = document.getElementById('debtPaymentModal');
-    if (!modal) return alert("❌ រកមិនឃើញផ្ទាំង Modal ទូទាត់ប្រាក់!");
+    if (!modal) return notifyFinanceUser("❌ រកមិនឃើញផ្ទាំង Modal ទូទាត់ប្រាក់!", "បរាជ័យ", true);
 
     const total = parseFloat(inv.totalAmount || inv.total || 0);
     const paid = parseFloat(inv.paidUsd || inv.paidAmount || (inv.status === 'paid' ? total : 0));
@@ -238,7 +255,7 @@ window.calculateDebtChange = function() {
     if (changeDisplay) {
         if (changeUsd >= 0) {
             changeDisplay.style.color = 'var(--primary)';
-            changeDisplay.innerText = `$${changeUsd.toFixed(2)} | ${(changeUsd * rate).toLocaleString()} ៛`;
+            changeDisplay.innerText = `$${changeUsd.toFixed(2)} | ${Math.round(changeUsd * rate).toLocaleString()} ៛`;
         } else {
             changeDisplay.style.color = 'var(--danger)';
             changeDisplay.innerText = `នៅខ្វះ $${Math.abs(changeUsd).toFixed(2)}`;
@@ -256,6 +273,7 @@ window.processDebtPayment = async function() {
     if (invIndex === -1) return;
 
     const inv = invoices[invIndex];
+    const wasPreorder = String(inv.status || '').toLowerCase() === 'preorder';
     const total = parseFloat(inv.totalAmount || inv.total || 0);
     const prevPaid = parseFloat(inv.paidUsd || inv.paidAmount || 0);
     
@@ -268,46 +286,63 @@ window.processDebtPayment = async function() {
     if (!payUsdText && !payRielText) payUsd = Math.max(0, total - prevPaid);
 
     const totalPaidNow = payUsd + (payRiel / rate);
-    if (totalPaidNow <= 0) return alert("⚠️ សូមបញ្ចូលចំនួនប្រាក់ដែលត្រូវទូទាត់!");
+    if (totalPaidNow <= 0) return notifyFinanceUser("⚠️ សូមបញ្ចូលចំនួនប្រាក់ដែលត្រូវទូទាត់!", "ជូនដំណឹង", true);
 
     const newPaid = prevPaid + totalPaidNow;
     inv.paidUsd = newPaid >= total ? total : newPaid;
     inv.paidAmount = inv.paidUsd;
     inv.remainingAmount = Math.max(0, total - inv.paidUsd);
 
-    if (inv.paidUsd >= (total - 0.01)) inv.status = 'paid';
+    if (inv.paidUsd >= (total - 0.01)) {
+        inv.status = 'paid';
+        // ប្រសិនបើវិក្កយបត្រមុនជា Pre-order (មិនទាន់កាត់ស្តុកពេលកក់) ពេលបង់ផ្តាច់ត្រូវកាត់ស្តុកចេញ
+        if (wasPreorder && Array.isArray(inv.items) && window.inventory) {
+            inv.items.forEach(item => {
+                if (!item || !item.id) return;
+                const realItem = window.inventory.find(p => p && String(p.id) === String(item.id));
+                if (realItem) {
+                    const q = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 1;
+                    realItem.qty = Math.max(0, (parseFloat(realItem.qty) || 0) - q);
+                }
+            });
+            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+        }
+    }
 
     invoices[invIndex] = inv;
     window.invoices = invoices;
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
 
     if (typeof window.logAction === 'function') {
-        window.logAction('update', inv.customer || inv.customerName, 0, `បានទូទាត់ប្រាក់ ${totalPaidNow.toFixed(2)}$ សម្រាប់វិក្កយបត្រ ${inv.id || inv.invoiceNo || 'ចាស់'}`, window.activeUser);
+        window.logAction('update', inv.customer || inv.customerName, 0, `បានទូទាត់ប្រាក់ $${totalPaidNow.toFixed(2)} សម្រាប់វិក្កយបត្រ ${inv.id || inv.invoiceNo || 'ចាស់'}`, window.activeUser);
     }
 
     setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
 
     document.getElementById('debtPaymentModal').style.display = 'none';
-    if(typeof window.ksMsg === 'function') window.ksMsg("✅ បានកត់ត្រាការទូទាត់ប្រាក់ជោគជ័យ!", "ជោគជ័យ");
-    else alert("✅ បានកត់ត្រាការទូទាត់ប្រាក់ជោគជ័យ!");
+    notifyFinanceUser("✅ បានកត់ត្រាការទូទាត់ប្រាក់ជោគជ័យ!", "ជោគជ័យ");
     
     window.renderUnpaid();
     if(typeof window.renderCustomers === 'function') window.renderCustomers();
+    if(typeof window.renderDashboard === 'function') window.renderDashboard();
 };
 
 window.currentEditingInvoice = null;
+window.originalEditingInvoiceItems = [];
 
 window.openInvoiceEditModal = function(invId) {
     let invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     const targetId = String(invId).trim().toLowerCase();
     const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-    if (!inv) return alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
+    if (!inv) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
 
     window.currentEditingInvoice = JSON.parse(JSON.stringify(inv));
+    // រក្សាទុកបញ្ជីទំនិញដើម ដើម្បីគណនាភាពខុសគ្នានៃស្តុកពេលរក្សាទុក (ចំណុចទី ១)
+    window.originalEditingInvoiceItems = JSON.parse(JSON.stringify(inv.items || []));
 
     const modal = document.getElementById('invoiceEditModal');
-    if (!modal) return alert("❌ រកមិនឃើញផ្ទាំង Modal កែប្រែ!");
+    if (!modal) return notifyFinanceUser("❌ រកមិនឃើញផ្ទាំង Modal កែប្រែ!", "បរាជ័យ", true);
 
     document.getElementById('editInvId').value = invId;
     document.getElementById('editInvName').value = inv.customer || inv.customerName || '';
@@ -317,8 +352,12 @@ window.openInvoiceEditModal = function(invId) {
     if (addSelect) {
         let products = window.inventory || JSON.parse(localStorage.getItem(window.getBranchKey('inv_pro'))) || [];
         addSelect.innerHTML = '<option value="">-- ជ្រើសរើសទំនិញបន្ថែម --</option>';
+        const rate = parseFloat(document.getElementById('globalExchangeRate')?.value) || inv.rate || window.cartRate || 4000;
         products.forEach(p => {
-            if (p && p.qty > 0) addSelect.innerHTML += `<option value="${p.id}">${p.name} ($${parseFloat(p.price || 0).toFixed(2)} | ស្តុក: ${p.qty})</option>`;
+            if (p && (parseFloat(p.qty) > 0 || (window.sysSettings && window.sysSettings.preorder))) {
+                const unitUsd = parseFloat(p.price) > 0 ? parseFloat(p.price) : ((parseFloat(p.riel) || 0) / rate);
+                addSelect.innerHTML += `<option value="${p.id}">${p.name} ($${unitUsd.toFixed(2)} | ស្តុក: ${p.qty})</option>`;
+            }
         });
     }
 
@@ -334,12 +373,16 @@ window.renderEditingInvoiceItems = function() {
     listBody.innerHTML = '';
     let grandTotal = 0;
     const items = window.currentEditingInvoice.items || [];
+    const rate = parseFloat(document.getElementById('globalExchangeRate')?.value) || window.currentEditingInvoice.rate || window.cartRate || 4000;
 
-    if (items.length === 0) listBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">មិនមានទំនិញទេ</td></tr>';
+    if (items.length === 0) {
+        listBody.innerHTML = '<tr><td colspan="5" style="text-align:center; padding: 20px;">មិនមានទំនិញទេ</td></tr>';
+    }
 
     items.forEach((it, idx) => {
-        const price = parseFloat(it.price || 0);
-        const qty = parseInt(it.cartQty || it.qty || it.quantity || 1);
+        const price = parseFloat(it.price) > 0 ? parseFloat(it.price) : ((parseFloat(it.riel) || 0) / rate);
+        it.price = price;
+        const qty = parseInt(it.cartQty !== undefined ? it.cartQty : (it.qty || it.quantity || 1));
         const subtotal = price * qty;
         grandTotal += subtotal;
 
@@ -358,18 +401,26 @@ window.renderEditingInvoiceItems = function() {
 
     window.currentEditingInvoice.totalAmount = grandTotal;
     window.currentEditingInvoice.total = grandTotal;
+    window.currentEditingInvoice.totalRiel = Math.round(grandTotal * rate);
     if (totalPreview) totalPreview.innerText = `$${grandTotal.toFixed(2)}`;
 };
 
 window.updateEditInvoiceItemQty = function(idx, newQty) {
     if (!window.currentEditingInvoice || !window.currentEditingInvoice.items[idx]) return;
     const val = parseInt(newQty) || 1;
-    
-    if (window.inventory) {
-        const item = window.currentEditingInvoice.items[idx];
-        const realItem = window.inventory.find(i => i.id === item.id);
-        if (realItem && val > realItem.qty) {
-            alert('⚠️ ស្តុកមិនគ្រប់គ្រាន់ទេ!');
+    const item = window.currentEditingInvoice.items[idx];
+    const isPreorderInv = String(window.currentEditingInvoice.status || '').toLowerCase() === 'preorder';
+
+    if (window.inventory && !isPreorderInv && !(window.sysSettings && window.sysSettings.preorder)) {
+        const realItem = window.inventory.find(i => i && String(i.id) === String(item.id));
+        // គណនាចំនួនដើមដែលមានក្នុងវិក្កយបត្រមុនពេលកែ
+        const origQtyInInv = (window.originalEditingInvoiceItems || [])
+            .filter(orig => orig && String(orig.id) === String(item.id))
+            .reduce((sum, orig) => sum + (parseInt(orig.cartQty !== undefined ? orig.cartQty : orig.qty) || 1), 0);
+
+        const maxAllowed = (realItem ? (parseFloat(realItem.qty) || 0) : 0) + origQtyInInv;
+        if (realItem && val > maxAllowed) {
+            notifyFinanceUser(`⚠️ ស្តុកមិនគ្រប់គ្រាន់ទេ! (អាចដាក់បានច្រើនបំផុតត្រឹម ${maxAllowed})`, 'ស្តុកមិនគ្រប់', true);
             window.renderEditingInvoiceItems();
             return;
         }
@@ -391,17 +442,31 @@ window.addItemToEditingInvoice = function() {
     if (!select || !select.value) return;
 
     let products = window.inventory || JSON.parse(localStorage.getItem(window.getBranchKey('inv_pro'))) || [];
-    const p = products.find(prod => String(prod.id) === String(select.value));
-    if (!p || p.qty <= 0) return alert("⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!");
+    const p = products.find(prod => prod && String(prod.id) === String(select.value));
+    if (!p) return;
+
+    const isPreorderInv = String(window.currentEditingInvoice.status || '').toLowerCase() === 'preorder';
+    const origQtyInInv = (window.originalEditingInvoiceItems || [])
+        .filter(orig => orig && String(orig.id) === String(p.id))
+        .reduce((sum, orig) => sum + (parseInt(orig.cartQty !== undefined ? orig.cartQty : orig.qty) || 1), 0);
+    const maxAllowed = (parseFloat(p.qty) || 0) + origQtyInInv;
 
     if (!window.currentEditingInvoice.items) window.currentEditingInvoice.items = [];
-    
-    const existing = window.currentEditingInvoice.items.find(i => String(i.id) === String(p.id));
+    const existing = window.currentEditingInvoice.items.find(i => i && String(i.id) === String(p.id));
+    const currentNewQty = existing ? (parseInt(existing.cartQty !== undefined ? existing.cartQty : existing.qty) || 1) : 0;
+
+    if (!isPreorderInv && !(window.sysSettings && window.sysSettings.preorder) && (currentNewQty + 1) > maxAllowed) {
+        return notifyFinanceUser("⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!", "អស់ស្តុក", true);
+    }
+
+    const rate = parseFloat(document.getElementById('globalExchangeRate')?.value) || window.currentEditingInvoice.rate || window.cartRate || 4000;
+    const unitUsd = parseFloat(p.price) > 0 ? parseFloat(p.price) : ((parseFloat(p.riel) || 0) / rate);
+
     if (existing) {
-        existing.cartQty = (parseInt(existing.cartQty || existing.qty) || 1) + 1;
+        existing.cartQty = currentNewQty + 1;
         existing.qty = existing.cartQty;
     } else {
-        window.currentEditingInvoice.items.push({ ...p, cartQty: 1, qty: 1 });
+        window.currentEditingInvoice.items.push({ ...p, price: unitUsd, cartQty: 1, qty: 1 });
     }
 
     select.value = '';
@@ -412,18 +477,68 @@ window.closeInvoiceEditModal = function() {
     const modal = document.getElementById('invoiceEditModal');
     if (modal) modal.style.display = 'none';
     window.currentEditingInvoice = null;
+    window.originalEditingInvoiceItems = [];
 };
 
+// ⚡ FIX (ចំណុចទី ១): គណនាភាពខុសគ្នានៃចំនួនទំនិញចាស់ និងថ្មី ដើម្បីកាត់ ឬបង្វិលស្តុកក្នុង window.inventory ដោយស្វ័យប្រវត្តិ
 window.saveInvoiceChanges = async function() {
     if (!window.currentEditingInvoice) return;
-    if (window.currentEditingInvoice.items.length === 0) return alert("⚠️ វិក្កយបត្រត្រូវតែមានទំនិញយ៉ាងហោចណាស់១!");
+    if (!window.currentEditingInvoice.items || window.currentEditingInvoice.items.length === 0) {
+        return notifyFinanceUser("⚠️ វិក្កយបត្រត្រូវតែមានទំនិញយ៉ាងហោចណាស់ ១ មុខ!", "ជូនដំណឹង", true);
+    }
 
     let invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     const invId = document.getElementById('editInvId').value;
     const targetId = String(invId).trim().toLowerCase();
     const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-    if (invIndex === -1) return alert("❌ រកមិនឃើញវិក្កយបត្រដើម!");
+    if (invIndex === -1) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រដើម!", "បរាជ័យ", true);
+
+    const origInv = invoices[invIndex];
+    const isPreorder = String(origInv.status || '').toLowerCase() === 'preorder';
+
+    // គណនាការកាត់ ឬបង្វិលស្តុក (ប្រសិនបើវិក្កយបត្រមិនមែនជា Pre-order)
+    if (!isPreorder && window.inventory && Array.isArray(window.inventory)) {
+        const oldQtyMap = {};
+        (origInv.items || []).forEach(it => {
+            if (!it || !it.id) return;
+            const q = parseInt(it.cartQty !== undefined ? it.cartQty : (it.qty || 1)) || 0;
+            oldQtyMap[it.id] = (oldQtyMap[it.id] || 0) + q;
+        });
+
+        const newQtyMap = {};
+        (window.currentEditingInvoice.items || []).forEach(it => {
+            if (!it || !it.id) return;
+            const q = parseInt(it.cartQty !== undefined ? it.cartQty : (it.qty || 1)) || 0;
+            newQtyMap[it.id] = (newQtyMap[it.id] || 0) + q;
+        });
+
+        const allItemIds = new Set([...Object.keys(oldQtyMap), ...Object.keys(newQtyMap)]);
+        allItemIds.forEach(itemId => {
+            const oldQ = oldQtyMap[itemId] || 0;
+            const newQ = newQtyMap[itemId] || 0;
+            const diff = newQ - oldQ; // diff > 0 បានន័យថាថែមទំនិញ (ត្រូវកាត់ស្តុក), diff < 0 បានន័យថាដកទំនិញ (ត្រូវបង្វិលស្តុកចូលវិញ)
+            if (diff !== 0) {
+                const realItem = window.inventory.find(p => p && String(p.id) === String(itemId));
+                if (realItem) {
+                    realItem.qty = Math.max(0, (parseFloat(realItem.qty) || 0) - diff);
+                    if (typeof window.logAction === 'function') {
+                        window.logAction(
+                            'update',
+                            realItem.name,
+                            Math.abs(diff),
+                            diff > 0 ? `កាត់ស្តុកបន្ថែមពីការកែវិក្កយបត្រ ${invId}` : `បង្វិលស្តុកពីការកែវិក្កយបត្រ ${invId}`,
+                            window.activeUser
+                        );
+                    }
+                }
+            }
+        });
+
+        if (typeof window.getBranchKey === 'function') {
+            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+        }
+    }
 
     const newName = document.getElementById('editInvName').value.trim() || 'អតិថិជនទូទៅ';
     const newPhone = document.getElementById('editInvPhone').value.trim() || '';
@@ -441,92 +556,100 @@ window.saveInvoiceChanges = async function() {
     if (typeof window.setAutoRegisterCustomer === 'function') window.setAutoRegisterCustomer(newName, newPhone);
     setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
 
-    if(typeof window.ksMsg === 'function') window.ksMsg("✅ វិក្កយបត្រត្រូវបានកែប្រែជោគជ័យ!", "ជោគជ័យ");
-    else alert("✅ វិក្កយបត្រត្រូវបានកែប្រែជោគជ័យ!");
+    notifyFinanceUser("✅ វិក្កយបត្រ និងចំនួនស្តុកត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!", "ជោគជ័យ");
     
     window.closeInvoiceEditModal();
     window.renderUnpaid();
+    if (typeof window.renderInventory === 'function') window.renderInventory();
+    if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+    if (typeof window.renderDashboard === 'function') window.renderDashboard();
 };
 
+// ⚡ FIX (ចំណុចទី ១): ការពារកុំឱ្យបូកស្តុកលើសចំនួនពិត នៅពេលលុបវិក្កយបត្រកក់ប្រាក់ (Pre-order)
 window.deleteInvoiceRecord = function(invId) {
-    if (!confirm(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រ [${invId}] មែនទេ?`)) return;
+    const executeDeleteInvoice = () => {
+        try {
+            const targetId = String(invId).trim().toLowerCase();
+            let branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('invoices_pro') : 'invoices_pro';
+            
+            let invoices = JSON.parse(localStorage.getItem(branchKey)) || window.invoices || [];
+            let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+            
+            const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-    try {
-        const targetId = String(invId).trim().toLowerCase();
-        let branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('invoices_pro') : 'invoices_pro';
-        
-        let invoices = JSON.parse(localStorage.getItem(branchKey)) || window.invoices || [];
-        let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
-        
-        const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
+            if (!deletedTracker.includes(targetId)) {
+                if (invIndex !== -1) {
+                    const inv = invoices[invIndex];
+                    const isPreorder = String(inv?.status || '').toLowerCase() === 'preorder';
 
-        if (!deletedTracker.includes(targetId)) {
-            if (invIndex !== -1) {
-                const inv = invoices[invIndex];
-                if (inv && inv.items && Array.isArray(inv.items) && window.inventory) {
-                    inv.items.forEach(item => {
-                        if (item && item.id) {
-                            const realItem = window.inventory.find(p => p.id === item.id);
-                            if (realItem) realItem.qty += (parseInt(item.cartQty || item.qty) || 1);
+                    // បង្វិលស្តុកចូលវិញតែវិក្កយបត្រណាដែលមិនមែនជា Pre-order ប៉ុណ្ណោះ
+                    if (!isPreorder && inv && Array.isArray(inv.items) && window.inventory) {
+                        inv.items.forEach(item => {
+                            if (item && item.id) {
+                                const realItem = window.inventory.find(p => p && String(p.id) === String(item.id));
+                                const returnQty = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 1;
+                                if (realItem) {
+                                    realItem.qty = (parseFloat(realItem.qty) || 0) + returnQty;
+                                    if (typeof window.logAction === 'function') {
+                                        window.logAction('update', realItem.name, returnQty, `បង្វិលស្តុកពីការលុបវិក្កយបត្រ ${invId}`, window.activeUser);
+                                    }
+                                }
+                            }
+                        });
+                        if (typeof window.getBranchKey === 'function') {
+                            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
                         }
-                    });
-                    if (typeof window.getBranchKey === 'function') {
-                        localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
                     }
                 }
+                deletedTracker.push(targetId);
+                localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedTracker));
             }
-            deletedTracker.push(targetId);
-            localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedTracker));
+
+            invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
+            window.invoices = invoices;
+            localStorage.setItem(branchKey, JSON.stringify(invoices));
+
+            window.renderUnpaid();
+            if (typeof window.renderInventory === 'function') window.renderInventory();
+            if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+            if (typeof window.renderDashboard === 'function') window.renderDashboard();
+
+            setTimeout(async () => {
+                if (typeof window.saveData === 'function') {
+                    window.saveData(window.userAccounts);
+                }
+            }, 100);
+
+            notifyFinanceUser("✅ បានលុបវិក្កយបត្រដោយជោគជ័យ!", "ជោគជ័យ");
+        } catch (error) {
+            console.error("Error deleting invoice:", error);
+            notifyFinanceUser("❌ មានបញ្ហាក្នុងការលុប៖ " + error.message, "បរាជ័យ", true);
         }
+    };
 
-        invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
-        window.invoices = invoices;
-        localStorage.setItem(branchKey, JSON.stringify(invoices));
-
-        window.renderUnpaid();
-        if (typeof window.renderInventory === 'function') window.renderInventory();
-
-        setTimeout(async () => {
-            try {
-                if (window.supabase) {
-                    await window.supabase.from('invoices').delete().eq('id', String(invId));
-                }
-            } catch (e) { console.log("Supabase error silently caught:", e); }
-            
-            if (typeof window.saveData === 'function') {
-                if (window.userAccounts && Array.isArray(window.userAccounts)) {
-                    window.userAccounts.forEach(acc => {
-                        if (acc[branchKey] !== undefined) acc[branchKey] = window.invoices;
-                    });
-                }
-                window.saveData(window.userAccounts);
-            }
-        }, 100);
-
-        if (typeof window.ksMsg === 'function') window.ksMsg("✅ បានលុបដោយជោគជ័យ!", "ជោគជ័យ");
-        else alert("✅ បានលុបដោយជោគជ័យ!");
-
-    } catch (error) {
-        console.error("Error deleting invoice:", error);
-        alert("❌ មានបញ្ហាក្នុងការលុប៖ " + error.message);
+    if (typeof window.ksMsg === 'function') {
+        window.ksMsg(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រ [${invId}] មែនទេ?`, 'បញ្ជាក់ការលុប', true, executeDeleteInvoice);
+    } else {
+        executeDeleteInvoice();
     }
 };
 
 window.currentActiveInvoiceId = null;
 
+// ⚡ FIX (ចំណុចទី ២): បង្ហាញប្រអប់ ចំណាំ / លេខតុ (inv.note) នៅលើវិក្កយបត្រពេលចុចមើល
 window.viewInvoiceDetails = function(invId) {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     const targetId = String(invId).trim().toLowerCase();
     const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-    if (!inv) return alert("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!");
+    if (!inv) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
 
     window.currentActiveInvoiceId = invId;
 
     const modal = document.getElementById('invoiceViewModal');
     const captureArea = document.getElementById('invoiceViewContent');
     const logoImg = document.getElementById('viewInvoiceLogo');
-    if (!modal || !captureArea) return alert("❌ រកមិនឃើញផ្ទាំង Modal មើលវិក្កយបត្រ!");
+    if (!modal || !captureArea) return notifyFinanceUser("❌ រកមិនឃើញផ្ទាំង Modal មើលវិក្កយបត្រ!", "បរាជ័យ", true);
 
     const currentLogo = window.shopLogo || localStorage.getItem(window.getBranchKey('shop_logo')) || '';
     if (logoImg) {
@@ -550,10 +673,11 @@ window.viewInvoiceDetails = function(invId) {
     let itemsHtml = `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;"><thead><tr style="border-bottom: 1px dashed #000;"><th style="text-align: left; padding: 4px 0;">ទំនិញ</th><th style="text-align: center; padding: 4px 0;">ចំនួន</th><th style="text-align: right; padding: 4px 0;">តម្លៃ</th><th style="text-align: right; padding: 4px 0;">សរុប</th></tr></thead><tbody>`;
 
     let rawSubtotal = 0; 
+    const rate = parseFloat(inv.rate) || window.cartRate || 4000;
 
     (inv.items || []).forEach(it => {
-        const p = parseFloat(it.price || 0);
-        const q = parseInt(it.cartQty || it.qty || it.quantity || 1);
+        const p = parseFloat(it.price) > 0 ? parseFloat(it.price) : ((parseFloat(it.riel) || 0) / rate);
+        const q = parseInt(it.cartQty !== undefined ? it.cartQty : (it.qty || it.quantity || 1));
         rawSubtotal += (p * q); 
         itemsHtml += `<tr style="border-bottom: 1px dotted #ccc;"><td style="padding: 4px 0;">${it.name || it.title}</td><td style="text-align: center; padding: 4px 0;">${q}</td><td style="text-align: right; padding: 4px 0;">$${p.toFixed(2)}</td><td style="text-align: right; padding: 4px 0;">$${(p * q).toFixed(2)}</td></tr>`;
     });
@@ -586,7 +710,11 @@ window.viewInvoiceDetails = function(invId) {
         itemsHtml += `<div style="font-size: 13px; margin-top: 4px;">បានទូទាត់៖ $${paid.toFixed(2)}</div><div style="font-size: 13px; font-weight: bold; color: red;">នៅខ្វះ៖ $${remaining.toFixed(2)}</div>`;
     }
 
-    itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 8px; text-align: left;">អតិថិជន៖ ${inv.customerName || inv.customer || 'ទូទៅ'} (${inv.customerPhone || inv.phone || '-'})</div><div style="font-size: 12px; color: #555; text-align: left;">អ្នកលក់៖ ${inv.seller || inv.cashier || 'N/A'}</div></div>`;
+    itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 8px; text-align: left;">អតិថិជន៖ <b>${inv.customerName || inv.customer || 'ទូទៅ'}</b> (${inv.customerPhone || inv.phone || '-'})</div>`;
+    if (inv.note) {
+        itemsHtml += `<div style="font-size: 12px; color: #000; background: #f1f5f9; border-left: 3px solid #0284c7; padding: 5px 8px; margin-top: 5px; text-align: left; font-weight: bold;">📝 ចំណាំ៖ ${inv.note}</div>`;
+    }
+    itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 4px; text-align: left;">អ្នកលក់៖ ${inv.seller || inv.cashier || 'N/A'}</div></div>`;
 
     captureArea.innerHTML = itemsHtml;
     modal.style.display = 'flex';
@@ -599,7 +727,7 @@ window.closeInvoiceViewModal = function() {
 };
 
 window.reprintInvoice = function() {
-    if (!window.currentActiveInvoiceId) return alert("❌ រកមិនឃើញវិក្កយបត្រសម្រាប់បោះពុម្ពទេ!");
+    if (!window.currentActiveInvoiceId) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រសម្រាប់បោះពុម្ពទេ!", "បរាជ័យ", true);
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     const targetId = String(window.currentActiveInvoiceId).trim().toLowerCase();
     const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
@@ -618,13 +746,17 @@ window.reprintInvoice = function() {
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${inv.date || inv.createdAt || 'N/A'}</p>`;
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">លេខវិក្កយបត្រ: ${inv.id || inv.invoiceNo || window.currentActiveInvoiceId}</p>`;
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${inv.customerName || inv.customer || 'ទូទៅ'}</b> ${inv.phone || inv.customerPhone ? '('+(inv.phone || inv.customerPhone)+')':''}</p>`;
+    if (inv.note) {
+        receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left; font-weight:bold;">ចំណាំ: ${inv.note}</p>`;
+    }
     receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div></div>`;
 
     receiptHTML += `<table style="width:100%; text-align:left; font-size: 12px; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
 
+    const rate = parseFloat(inv.rate) || window.cartRate || 4000;
     (inv.items || []).forEach((item, index) => {
-        let p = parseFloat(item.price || 0);
-        let q = parseInt(item.cartQty || item.qty || 1);
+        let p = parseFloat(item.price) > 0 ? parseFloat(item.price) : ((parseFloat(item.riel) || 0) / rate);
+        let q = parseInt(item.cartQty !== undefined ? item.cartQty : (item.qty || 1));
         let lineTotal = p * q;
         receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${item.name || item.title}</td></tr>`;
         receiptHTML += `<tr><td style="padding-bottom: 4px; font-size: 11px;">$${p.toFixed(2)}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${q}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">$${lineTotal.toFixed(2)}</td></tr>`;
@@ -654,10 +786,10 @@ window.reprintInvoice = function() {
 
 window.downloadInvoicePNG = function() {
     const captureArea = document.getElementById('invoiceCaptureArea');
-    if (!captureArea) return alert("❌ រកមិនឃើញតំបន់សម្រាប់ទាញយករូបភាពទេ!");
+    if (!captureArea) return notifyFinanceUser("❌ រកមិនឃើញតំបន់សម្រាប់ទាញយករូបភាពទេ!", "បរាជ័យ", true);
 
     if (typeof html2canvas === 'undefined') {
-        return alert("❌ បណ្ណាល័យ html2canvas មិនទាន់បានផ្ទុកទេ!");
+        return notifyFinanceUser("❌ បណ្ណាល័យ html2canvas មិនទាន់បានផ្ទុកទេ!", "បរាជ័យ", true);
     }
 
     html2canvas(captureArea, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
@@ -666,24 +798,25 @@ window.downloadInvoicePNG = function() {
         link.href = canvas.toDataURL('image/png');
         link.click();
     }).catch(err => {
-        alert("❌ មានបញ្ហាក្នុងការទាញយករូបភាព: " + err.message);
+        notifyFinanceUser("❌ មានបញ្ហាក្នុងការទាញយករូបភាព: " + err.message, "បរាជ័យ", true);
     });
 };
 
 window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
-    if (invoices.length === 0) return alert("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!");
+    if (invoices.length === 0) return notifyFinanceUser("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!", "ជូនដំណឹង", true);
 
-    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,សរុបទឹកប្រាក់,ស្ថានភាព,អ្នកលក់\n";
+    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ចំណាំ,សរុបទឹកប្រាក់,ស្ថានភាព,អ្នកលក់\n";
     invoices.forEach((inv, idx) => {
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         const d = inv.date || inv.createdAt || '';
         const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
         const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
+        const n = `"${(inv.note || '').replace(/"/g, '""')}"`;
         const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
         const st = inv.status || 'unpaid';
         const s = `"${(inv.seller || inv.cashier || '').replace(/"/g, '""')}"`;
-        csvContent += `${id},${d},${c},${p},${tot},${st},${s}\n`;
+        csvContent += `${id},${d},${c},${p},${n},${tot},${st},${s}\n`;
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -700,7 +833,6 @@ window.exportInvoicesCSV = function() {
 // 🌟 ផ្នែកទី ២៖ គ្រប់គ្រងការចំណាយ (Expense Management)
 // ========================================================
 
-// ⚡ មុខងារជំនួយ: បង្កើតផ្ទាំងចំណាយដោយស្វ័យប្រវត្តិ (Auto-Inject Modal) បើរកវាមិនឃើញក្នុង HTML
 function injectExpenseModalIfNeeded() {
     let modal = document.getElementById('expenseModal');
     if (!modal) {
@@ -746,9 +878,8 @@ function injectExpenseModalIfNeeded() {
     }
 }
 
-// ⚡ ធានាថា Function នេះមាននៅក្នុង finance.js ដើម្បីឱ្យប៊ូតុង "កត់ត្រាចំណាយថ្មី" ដំណើរការ
 window.openExpenseModal = function() {
-    injectExpenseModalIfNeeded(); // ហៅមកប្រើ ដើម្បីបញ្ចូលកូដបើវាបាត់
+    injectExpenseModalIfNeeded();
     
     document.getElementById('expId').value = '';
     document.getElementById('expCategory').value = 'ទិញសម្ភារៈ/ស្តុក';
@@ -771,12 +902,12 @@ window.closeExpenseModal = function() {
 };
 
 window.editExpense = function(id) {
-    injectExpenseModalIfNeeded(); // ហៅមកប្រើ ដើម្បីបញ្ចូលកូដបើវាបាត់
+    injectExpenseModalIfNeeded();
     
     let expenses = window.expenses || JSON.parse(localStorage.getItem(window.getBranchKey('expenses_pro'))) || [];
     const exp = expenses.find(e => String(e.id) === String(id));
     
-    if (!exp) return alert("❌ រកមិនឃើញទិន្នន័យចំណាយនេះទេ!");
+    if (!exp) return notifyFinanceUser("❌ រកមិនឃើញទិន្នន័យចំណាយនេះទេ!", "បរាជ័យ", true);
 
     document.getElementById('expId').value = exp.id;
     document.getElementById('expCategory').value = exp.category || 'ទិញសម្ភារៈ/ស្តុក';
@@ -801,9 +932,7 @@ window.saveExpense = async function() {
     const dateVal = document.getElementById('expDate') ? document.getElementById('expDate').value : '';
 
     if (!amount || amount <= 0) {
-        if(typeof window.ksMsg === 'function') window.ksMsg('សូមបញ្ចូលទឹកប្រាក់ចំណាយអោយបានត្រឹមត្រូវ!', 'បរាជ័យ');
-        else alert('សូមបញ្ចូលទឹកប្រាក់ចំណាយអោយបានត្រឹមត្រូវ!');
-        return;
+        return notifyFinanceUser('សូមបញ្ចូលទឹកប្រាក់ចំណាយឱ្យបានត្រឹមត្រូវ!', 'បរាជ័យ', true);
     }
 
     let finalDate = '';
@@ -839,9 +968,7 @@ window.saveExpense = async function() {
         await window.saveData(window.userAccounts);
     }
     
-    if (typeof window.ksMsg === 'function') {
-        window.ksMsg(id ? 'បានកែប្រែចំណាយជោគជ័យ!' : 'កត់ត្រាចំណាយបានជោគជ័យ!', 'ជោគជ័យ');
-    }
+    notifyFinanceUser(id ? 'បានកែប្រែចំណាយជោគជ័យ!' : 'កត់ត្រាចំណាយបានជោគជ័យ!', 'ជោគជ័យ');
     
     window.closeExpenseModal();
     window.renderExpenses();
@@ -917,32 +1044,24 @@ window.renderExpenses = function() {
 };
 
 window.deleteExpense = function(id) {
+    const executeDeleteExp = async () => {
+        let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+        deletedExps.push(String(id));
+        localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
+
+        window.expenses = window.expenses.filter(e => String(e.id) !== String(id));
+        
+        if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
+        window.renderExpenses();
+        if(typeof window.renderDashboard === 'function') window.renderDashboard();
+        
+        notifyFinanceUser('លុបជោគជ័យ!', 'ជោគជ័យ');
+    };
+
     if(typeof window.ksMsg === 'function') {
-        window.ksMsg('តើអ្នកពិតជាចង់លុបកំណត់ត្រាចំណាយនេះមែនទេ?', 'បញ្ជាក់ការលុប', true, async () => {
-            
-            let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
-            deletedExps.push(String(id));
-            localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
-
-            window.expenses = window.expenses.filter(e => String(e.id) !== String(id));
-            
-            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
-            window.renderExpenses();
-            if(typeof window.renderDashboard === 'function') window.renderDashboard();
-            
-            window.ksMsg('លុបជោគជ័យ!', 'ជោគជ័យ');
-        });
+        window.ksMsg('តើអ្នកពិតជាចង់លុបកំណត់ត្រាចំណាយនេះមែនទេ?', 'បញ្ជាក់ការលុប', true, executeDeleteExp);
     } else {
-        if(confirm('តើអ្នកពិតជាចង់លុបកំណត់ត្រាចំណាយនេះមែនទេ?')) {
-            let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
-            deletedExps.push(String(id));
-            localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
-
-            window.expenses = window.expenses.filter(e => String(e.id) !== String(id));
-            if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
-            window.renderExpenses();
-            if(typeof window.renderDashboard === 'function') window.renderDashboard();
-        }
+        executeDeleteExp();
     }
 };
 

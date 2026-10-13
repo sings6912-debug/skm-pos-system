@@ -478,6 +478,13 @@
     </div>
 
     <script>
+        // ចុះឈ្មោះ Service Worker សម្រាប់មុខងារ PWA Offline
+        if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
+            navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' }).catch(function(err) {
+                console.log('Service Worker registration skipped: ', err);
+            });
+        }
+
         const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
         
@@ -492,6 +499,7 @@
         const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
         let currentLang = localStorage.getItem('app_lang') || 'km';
         let storePinCode = '1234'; 
+        let branchSysSettings = {};
 
         // 🌐 វចនានុក្រមបកប្រែពាក្យ ៣ ភាសា (ខ្មែរ / អង់គ្លេស / ចិន)
         const i18n = {
@@ -607,9 +615,7 @@
 
         function openPinModal() {
             playClickSound();
-            
             sessionStorage.setItem('ks2_auth_passed', 'false');
-
             document.getElementById('pinModal').classList.add('show');
             pinCode = '';
             isProcessing = false;
@@ -817,8 +823,11 @@
             try {
                 const localSettings = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`));
                 if (localSettings) {
+                    branchSysSettings = localSettings;
                     if (localSettings.storePin) storePinCode = String(localSettings.storePin);
-                    if (localSettings.tickerNews) document.getElementById('tickerText').innerText = localSettings.tickerNews;
+                    // ⚡ គាំទ្រទាំង tickerNews និង tickerText (ចំណុចទី ៦)
+                    const localTicker = localSettings.tickerNews || localSettings.tickerText || '';
+                    if (localTicker) document.getElementById('tickerText').innerText = localTicker;
                 }
             } catch(e) {}
 
@@ -847,11 +856,13 @@
                         }
 
                         if (data.data_json.sysSettings) {
-                            if (data.data_json.sysSettings.storePin) storePinCode = String(data.data_json.sysSettings.storePin);
-                            if (data.data_json.sysSettings.tickerNews) {
-                                document.getElementById('tickerText').innerText = data.data_json.sysSettings.tickerNews;
+                            branchSysSettings = data.data_json.sysSettings;
+                            if (branchSysSettings.storePin) storePinCode = String(branchSysSettings.storePin);
+                            const cloudTicker = branchSysSettings.tickerNews || branchSysSettings.tickerText || '';
+                            if (cloudTicker) {
+                                document.getElementById('tickerText').innerText = cloudTicker;
                             }
-                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`, JSON.stringify(data.data_json.sysSettings));
+                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`, JSON.stringify(branchSysSettings));
                         }
 
                         localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_shop_name`, shopName);
@@ -875,12 +886,22 @@
             }
         }
 
+        // ⚡ គាំទ្រម៉ោងបើក-បិទហាងដែលបានកំណត់ក្នុង admin_settings.html ដោយស្វ័យប្រវត្តិ
         function updateStoreStatus() {
-            const hour = new Date().getHours();
+            const now = new Date();
             const statusEl = document.getElementById('displayStoreStatus');
             const langDict = i18n[currentLang] || i18n.km;
 
-            if (hour >= 8 && hour < 21) {
+            let isOpen = true;
+            if (branchSysSettings && branchSysSettings.toggleStoreHours && branchSysSettings.openTime && branchSysSettings.closeTime) {
+                const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+                isOpen = (currentTime >= branchSysSettings.openTime && currentTime <= branchSysSettings.closeTime);
+            } else {
+                const hour = now.getHours();
+                isOpen = (hour >= 8 && hour < 21);
+            }
+
+            if (isOpen) {
                 statusEl.innerText = langDict.open;
                 statusEl.style.background = 'rgba(52, 211, 153, 0.15)';
                 statusEl.style.color = '#34d399';
@@ -926,19 +947,13 @@
         // 🌟 បន្ថែមមុខងារចុចតាម Keyboard លើផ្ទាំង PIN Pad
         window.addEventListener('keydown', function(e) {
             const pinModal = document.getElementById('pinModal');
-            // ពិនិត្យមើលថាតើ Modal PIN កំពុងបើកបង្ហាញដែរឬទេ
             if (!pinModal || !pinModal.classList.contains('show')) return;
 
-            // បើចុចលេខពី 0 ដល់ 9
             if (e.key >= '0' && e.key <= '9') {
                 enterPin(parseInt(e.key));
-            }
-            // បើចុច Backspace ឬ Delete សម្រាប់លុបលេខ
-            else if (e.key === 'Backspace' || e.key === 'Delete') {
+            } else if (e.key === 'Backspace' || e.key === 'Delete') {
                 clearPin();
-            }
-            // បើចុច Escape ដើម្បីបិទប្រអប់ PIN
-            else if (e.key === 'Escape') {
+            } else if (e.key === 'Escape') {
                 closePinModal();
             }
         });

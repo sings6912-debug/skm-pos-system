@@ -150,7 +150,6 @@
         }
         .cat-pill.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
 
-        /* កែប្រែនៅទីនេះ: ធ្វើឱ្យវា Responsive (តូចល្មមស្រួលមើលទាំងលើទូរស័ព្ទ និងកុំព្យូទ័រ) */
         .product-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
@@ -254,7 +253,7 @@
         }
         .floating-chat:active { transform: scale(0.95); }
 
-        /* 🛎️ Floating Waiter Button */
+        /* 🛎️ Floating Call Waiter Button */
         .floating-waiter {
             position: fixed; bottom: 95px; left: 20px; width: 50px; height: 50px;
             background: #f59e0b; color: white; border-radius: 50%; display: flex;
@@ -489,6 +488,7 @@
                     <input type="text" id="cPromo" class="input-st" style="background:var(--card-bg); margin-bottom:0;" placeholder="Promo Code">
                     <button class="btn-act btn-outline" style="padding: 10px;" onclick="applyPromo()">Apply</button>
                 </div>
+                <div id="promoAppliedStatus" style="display:none; font-size: 12px; font-weight: 800; color: var(--success); margin-top: 8px;"></div>
             </div>
 
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; border-top: 1px solid var(--border-color); padding-top: 15px;">
@@ -600,8 +600,6 @@
 
     <script>
         // 💥 Menu Custom Script Loader (ទាញកូដ JS ពី Admin មកឲ្យដើរលើ Menu)
-        
-        // ⚡ 1. Load Local Scripts First for instant UI rendering
         try {
             const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             let localSys = JSON.parse(localStorage.getItem(`ks2_${branchId}_sys_settings`));
@@ -620,7 +618,6 @@
                         if (existingScript) existingScript.remove();
 
                         const scriptEl = document.createElement('script');
-                        // 🔒 ប្រើ textContent ដើម្បីធានាថា Browser អនុញ្ញាតឱ្យកូដដំណើរការ ១០០% គ្មានបញ្ហា Security
                         scriptEl.textContent = scriptObj.code;
                         scriptEl.id = scriptObj.id;
                         document.body.appendChild(scriptEl);
@@ -644,8 +641,6 @@
         }
         
         const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        
-        // 🌟 ចាប់យកលេខតុពី URL បើមាន
         const TABLE_NO = new URLSearchParams(window.location.search).get('table') || '';
 
         // State Systems
@@ -659,8 +654,7 @@
             points = parseInt(localStorage.getItem('skm_pts')) || 0;
         } catch(e) { console.warn("Points parse error:", e); }
 
-        let sys = {}, curr = 'USD', lang = 'en', exRate = 4000, discount = 0, rateStar = 5;
-        // 🌟 បំបែក Telegram Bot ជា ២ ផ្នែក
+        let sys = {}, curr = 'USD', lang = 'en', exRate = 4000, discount = 0, appliedPromo = null, rateStar = 5;
         let orderBotToken = '', orderChatId = '';
         let serviceBotToken = '', serviceChatId = '';
         let selCat = 'all', selVar = '', curProd = null;
@@ -697,7 +691,6 @@
         }
 
         function enterStore() {
-            // Store Hours Check on Entry
             if (sys.toggleStoreHours && sys.openTime && sys.closeTime) {
                 const now = new Date();
                 const currentTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
@@ -755,7 +748,6 @@
         async function init() {
             document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
             
-            // 🌟 បង្ហាញលេខតុ ប្រសិនបើភ្ញៀវស្កេនពីតុមក
             if (TABLE_NO) {
                 const tbBadge = document.getElementById('tableBadgeDisplay');
                 if(tbBadge) {
@@ -763,7 +755,6 @@
                     tbBadge.style.display = 'inline-block';
                 }
                 
-                // លាក់ប្រអប់បញ្ចូលឈ្មោះ ព្រោះយើងនឹងយកលេខតុធ្វើជាឈ្មោះអតិថិជន
                 const cNameInput = document.getElementById('cName');
                 if(cNameInput) {
                     cNameInput.value = `តុលេខ ${TABLE_NO}`;
@@ -771,7 +762,7 @@
                 }
             }
             
-            // ⚡ 2. Load Inventory & UI from LocalStorage First (Instant UI Loading / Offline mode)
+            // ⚡ 1. Load Inventory & UI from LocalStorage First (Instant UI Loading / Offline mode)
             try {
                 let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`));
                 let localSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`));
@@ -780,7 +771,6 @@
                     sys = localSys;
                     if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
                     
-                    // 🌟 ទាញយក Telegram Bot ទាំង ២ ពី LocalStorage (Fallback)
                     orderBotToken = sys.orderTelegramBotToken || sys.telegramBotToken || '';
                     orderChatId = sys.orderTelegramChatId || sys.telegramChatId || '';
                     serviceBotToken = sys.serviceTelegramBotToken || orderBotToken;
@@ -788,6 +778,13 @@
                     
                     window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
                     window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
+
+                    // ភ្ជាប់អក្សររត់ (News Ticker) ទាំង tickerText និង tickerNews
+                    const localTicker = sys.tickerText || sys.tickerNews || '';
+                    if ((sys.toggleTicker || sys.tickerNews) && localTicker) {
+                        document.getElementById('tickerContentText').innerText = localTicker;
+                        document.getElementById('marqueeTickerBar').style.display = 'block';
+                    }
                 }
                 
                 if (localInv && Array.isArray(localInv)) {
@@ -797,7 +794,7 @@
                 }
             } catch(e) { console.warn("Local storage parse error:", e); }
 
-            // ⚡ 3. Fetch from Cloud (Supabase) in Background
+            // ⚡ 2. Fetch from Cloud (Supabase) in Background
             try {
                 if (supabaseClient) {
                     let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
@@ -832,16 +829,26 @@
                                 } else dotsContainer.innerHTML = '';
                             } else promoBanner.style.display = 'none';
                             
-                            // Promo Badge on Banner
-                            if (sys.togglePromoBadge && sys.promoCodeText) {
+                            // Promo Badge on Banner (Supports new sys.promoCodes and legacy sys.promoCodeText)
+                            if (sys.promoCodes && Array.isArray(sys.promoCodes) && sys.promoCodes.length > 0) {
+                                const activePromo = sys.promoCodes.find(p => !p.limit || (p.usedCount || 0) < p.limit) || sys.promoCodes[0];
+                                if (activePromo) {
+                                    let pDesc = activePromo.type === 'percent' ? `-${activePromo.value}%` : (activePromo.type === 'fixed' ? `-$${activePromo.value}` : 'Free Ship');
+                                    document.getElementById('bannerBadgeText').innerText = `Code: ${activePromo.code} (${pDesc})`;
+                                    document.getElementById('bannerBadge').style.display = 'flex';
+                                }
+                            } else if (sys.togglePromoBadge && sys.promoCodeText) {
                                 document.getElementById('bannerBadgeText').innerText = `Code: ${sys.promoCodeText}`;
                                 document.getElementById('bannerBadge').style.display = 'flex';
                             }
                             
-                            // Marquee Ticker
-                            if (sys.toggleTicker && sys.tickerText) {
-                                document.getElementById('tickerContentText').innerText = sys.tickerText;
+                            // Marquee Ticker (Supports both tickerText & tickerNews)
+                            const cloudTicker = sys.tickerText || sys.tickerNews || '';
+                            if ((sys.toggleTicker || sys.tickerNews) && cloudTicker) {
+                                document.getElementById('tickerContentText').innerText = cloudTicker;
                                 document.getElementById('marqueeTickerBar').style.display = 'block';
+                            } else {
+                                document.getElementById('marqueeTickerBar').style.display = 'none';
                             }
                             
                             // Welcome Popup
@@ -866,8 +873,9 @@
                             
                             // QR Code
                             const shopQr = document.getElementById('shopQrImg');
-                            if (shopQr && sys.menuQR) {
-                                shopQr.src = sys.menuQR;
+                            const qrSrc = sys.menuQR || d.shopQR || '';
+                            if (shopQr && qrSrc) {
+                                shopQr.src = qrSrc;
                                 document.getElementById('qrBoxContainer').style.display = 'block';
                             } else {
                                 document.getElementById('qrBoxContainer').style.display = 'none';
@@ -889,8 +897,7 @@
                                 const iconEl = document.getElementById('lpSocialIcon');
                                 iconEl.className = sys.socialIcon || 'fa-brands fa-youtube';
                                 
-                                // Auto color based on network
-                                let iconColor = '#ef4444'; // Red default
+                                let iconColor = '#ef4444';
                                 if (sys.socialIcon === 'fa-brands fa-facebook' || sys.socialIcon === 'fa-brands fa-telegram') iconColor = '#3b82f6';
                                 else if (sys.socialIcon === 'fa-brands fa-tiktok') iconColor = '#ffffff';
                                 else if (sys.socialIcon === 'fa-brands fa-instagram') iconColor = '#e1306c';
@@ -913,21 +920,17 @@
                         document.getElementById('splashName').innerText = nm;
                         if (d.shopLogo) document.getElementById('lpLogo').src = d.shopLogo;
                         
-                        // 🌟 ទាញយក Telegram Bot ទាំង ២ ពី Cloud
                         orderBotToken = sys.orderTelegramBotToken || sys.telegramBotToken || d.telegramBotToken || '';
                         orderChatId = sys.orderTelegramChatId || sys.telegramChatId || d.telegramChatId || '';
                         serviceBotToken = sys.serviceTelegramBotToken || orderBotToken;
                         serviceChatId = sys.serviceTelegramChatId || orderChatId;
                         
-                        // បោះទៅកាន់ window ទុកអោយ Custom JS Plugin ស្រូបយកទៅប្រើប្រាស់បាន
                         window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
                         window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
                         
-                        // Re-build and re-render with fresh cloud data
                         buildCats();
                         renderMenu();
                         
-                        // Save fresh inventory & settings to local for next time
                         localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
                         if(sys) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sys));
                     }
@@ -940,7 +943,6 @@
             }, 600);
         }
 
-        // ⚡ បន្ថែមមុខងារ Mouse Drag លើ Category Tabs សម្រាប់កុំព្យូទ័រ
         let isMenuTabScrollInitialized = false;
         function initMenuTabScroll() {
             const slider = document.getElementById('catTabs');
@@ -989,23 +991,17 @@
             isMenuTabScrollInitialized = true;
         }
 
-        // ⚡ កែប្រែ buildCats ដើម្បីបង្ហាញចំនួនមុខទំនិញ (Count) លើ Menu ອតិថិជន
         function buildCats() {
             const c = [...new Set(inventory.map(p => p.category).filter(Boolean))];
-            
-            // រាប់ចំនួនទំនិញសរុប
             let allCount = inventory.length; 
             let transText = trans[lang] ? trans[lang].all : 'All';
             let h = `<div class="cat-pill active" onclick="filterCat('all', this)">${transText} (${allCount})</div>`;
             
             c.forEach(x => {
-                // រាប់ចំនួនតាមប្រភេទនីមួយៗ
                 let catCount = inventory.filter(p => p.category === x).length;
                 h += `<div class="cat-pill" onclick="filterCat('${x}', this)">${x} (${catCount})</div>`;
             });
             document.getElementById('catTabs').innerHTML = h;
-            
-            // ដំណើរការមុខងារអូស Mouse
             initMenuTabScroll();
         }
 
@@ -1014,12 +1010,10 @@
             el.classList.add('active'); renderMenu();
         }
 
-        // ⚡ ជំនួស handleCustomBgUpload ថ្មី សម្រាប់បង្ហាប់រូបភាពធំ (លើស 5MB)
         function handleCustomBgUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
             
-            // ផ្តល់ដំណឹងប្រសិនបើរូបភាពធំជាង 5MB ដើម្បីកុំឱ្យភ្ញៀវគិតថាគាំង
             if (file.size > 5 * 1024 * 1024) {
                 if(typeof showToast === 'function') {
                     showToast("កំពុងបង្ហាប់រូបភាពទំហំធំ... សូមរង់ចាំបន្តិច!", false);
@@ -1032,7 +1026,6 @@
                 const img = new Image();
                 img.onload = async function() {
                     const canvas = document.createElement('canvas');
-                    // កំណត់ទំហំអតិបរមា 1920x1080 (HD) ដើម្បីកាត់បន្ថយទំហំ File តែរក្សាភាពច្បាស់
                     const maxW = 1920;
                     const maxH = 1080;
                     let w = img.width, h = img.height;
@@ -1048,7 +1041,6 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
                     
-                    // បង្ហាប់គុណភាពមកត្រឹម 60% (0.6) ដើម្បីធានាថា File តូចជាង 500KB
                     const compressedBg = `url("${canvas.toDataURL('image/jpeg', 0.6)}")`;
                     
                     if(typeof applyAndSaveWallpaper === 'function') {
@@ -1074,7 +1066,6 @@
                 let pQty = parseFloat(p.qty) || 0;
                 let urgencyHtml = '';
                 
-                // Urgency/Stock badges
                 if (pQty <= 3 && pQty > 0) {
                     urgencyHtml = `<div class="p-urgency">Only ${pQty} left!</div>`;
                 } else if (pQty <= 0) {
@@ -1135,36 +1126,36 @@
         
         function updateCartBadges() {
             const totalQty = cart.reduce((s,i)=>s+i.qty, 0);
-            
-            // Update Top Badge
             document.getElementById('cartBadge').innerText = totalQty;
             
-            // Update Bottom Badge
             const botBadge = document.getElementById('cartBadgeBottom');
             if(botBadge) botBadge.innerText = totalQty;
             
-            // Add Bounce Animation to Bottom FAB
             const fab = document.getElementById('bottomCartFab');
             if(fab) {
                 fab.classList.remove('pop-anim');
-                void fab.offsetWidth; // Trigger reflow to restart animation
+                void fab.offsetWidth;
                 fab.classList.add('pop-anim');
             }
         }
 
-        // STRICT STOCK CHECK LOGIC
+        // STRICT STOCK CHECK LOGIC (Synchronized cartQty & qty for POS)
         function addCartLogic(silent=false) {
             const cid = curProd.id + '_' + selVar;
             const ex = cart.find(c=>c.cartId === cid);
             const stockLimit = parseFloat(curProd.qty) || 0;
             
             if(ex) { 
-                if(ex.qty < stockLimit || sys.preorder) ex.qty++; 
-                else return showToast('⚠️ មិនអាចថែមបានទេ! (អស់ស្តុក)', true); 
+                if(ex.qty < stockLimit || sys.preorder) {
+                    ex.qty++;
+                    ex.cartQty = ex.qty;
+                } else {
+                    return showToast('⚠️ មិនអាចថែមបានទេ! (អស់ស្តុក)', true); 
+                }
             } 
             else { 
                 if(stockLimit <= 0 && !sys.preorder) return showToast('⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!', true); 
-                cart.push({...curProd, cartId: cid, cartVar: selVar, qty: 1}); 
+                cart.push({...curProd, cartId: cid, cartVar: selVar, qty: 1, cartQty: 1}); 
             }
             
             updateCartBadges();
@@ -1298,19 +1289,109 @@
             document.getElementById('qaInp').value=''; renderQA();
         }
 
+        // 🎟️ ប្រព័ន្ធគណនា Promo Codes ភ្ជាប់ជាមួយ admin_settings.html (sys.promoCodes)
         function applyPromo() {
             const c = document.getElementById('cPromo').value.trim().toUpperCase();
-            if(sys.promoCodeText && c === sys.promoCodeText.toUpperCase()) { discount = 0.1; showToast('Code Applied!'); }
-            else if(c==='SKM10') { discount = 0.1; showToast('10% Off Applied!'); } 
-            else { discount = 0; showToast('Invalid Promo Code', true); }
+            const statusEl = document.getElementById('promoAppliedStatus');
+            if (!c) {
+                appliedPromo = null;
+                discount = 0;
+                if (statusEl) statusEl.style.display = 'none';
+                updateTotal();
+                return showToast('សូមបញ្ចូលកូដបញ្ចុះតម្លៃ!', true);
+            }
+
+            const promoList = (sys && Array.isArray(sys.promoCodes)) ? sys.promoCodes : [];
+            const foundPromo = promoList.find(p => p && String(p.code).toUpperCase() === c);
+
+            if (foundPromo) {
+                if (foundPromo.limit > 0 && (foundPromo.usedCount || 0) >= foundPromo.limit) {
+                    appliedPromo = null;
+                    discount = 0;
+                    if (statusEl) statusEl.style.display = 'none';
+                    updateTotal();
+                    return showToast('⚠️ កូដប្រូម៉ូសិននេះត្រូវបានប្រើប្រាស់អស់ចំនួនកំណត់ហើយ!', true);
+                }
+
+                if (foundPromo.oneTimePerUser) {
+                    const usedPromos = JSON.parse(localStorage.getItem(`skm_used_promos_${BRANCH}`) || '[]');
+                    if (usedPromos.includes(c)) {
+                        appliedPromo = null;
+                        discount = 0;
+                        if (statusEl) statusEl.style.display = 'none';
+                        updateTotal();
+                        return showToast('⚠️ កូដនេះអាចប្រើបានតែ ១ ដងប៉ុណ្ណោះសម្រាប់អតិថិជនម្នាក់!', true);
+                    }
+                }
+
+                appliedPromo = foundPromo;
+                if (foundPromo.type === 'percent') {
+                    discount = (parseFloat(foundPromo.value) || 0) / 100;
+                    if (statusEl) {
+                        statusEl.innerText = `✅ បានបញ្ចុះតម្លៃ ${foundPromo.value}% (${foundPromo.code})`;
+                        statusEl.style.display = 'block';
+                    }
+                    showToast(`🎉 បញ្ចុះតម្លៃ ${foundPromo.value}% ត្រូវបានអនុវត្ត!`);
+                } else if (foundPromo.type === 'fixed') {
+                    discount = 0;
+                    if (statusEl) {
+                        statusEl.innerText = `✅ បានបញ្ចុះតម្លៃ $${parseFloat(foundPromo.value).toFixed(2)} (${foundPromo.code})`;
+                        statusEl.style.display = 'block';
+                    }
+                    showToast(`🎉 បញ្ចុះតម្លៃ $${parseFloat(foundPromo.value).toFixed(2)} ត្រូវបានអនុវត្ត!`);
+                } else if (foundPromo.type === 'freeship') {
+                    discount = 0;
+                    if (statusEl) {
+                        statusEl.innerText = `🚚 ទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ (${foundPromo.code})`;
+                        statusEl.style.display = 'block';
+                    }
+                    showToast(`🚚 ទទួលបានការដឹកជញ្ជូនឥតគិតថ្លៃ (Free Shipping)!`);
+                }
+            } else if (sys.promoCodeText && c === sys.promoCodeText.toUpperCase()) {
+                appliedPromo = { code: c, type: 'percent', value: 10 };
+                discount = 0.1;
+                if (statusEl) {
+                    statusEl.innerText = `✅ បានបញ្ចុះតម្លៃ 10% (${c})`;
+                    statusEl.style.display = 'block';
+                }
+                showToast('Code Applied!');
+            } else if (c === 'SKM10') {
+                appliedPromo = { code: 'SKM10', type: 'percent', value: 10 };
+                discount = 0.1;
+                if (statusEl) {
+                    statusEl.innerText = `✅ បានបញ្ចុះតម្លៃ 10% (SKM10)`;
+                    statusEl.style.display = 'block';
+                }
+                showToast('10% Off Applied!');
+            } else {
+                appliedPromo = null;
+                discount = 0;
+                if (statusEl) statusEl.style.display = 'none';
+                showToast('Invalid Promo Code', true);
+            }
             updateTotal();
+        }
+
+        function calculateOrderBreakdown() {
+            let rawSub = cart.reduce((s,c)=>s+(getPrc(c)*c.qty), 0);
+            let discUsd = 0;
+            if (appliedPromo) {
+                if (appliedPromo.type === 'percent') {
+                    discUsd = rawSub * ((parseFloat(appliedPromo.value) || 0) / 100);
+                } else if (appliedPromo.type === 'fixed') {
+                    discUsd = Math.min(rawSub, parseFloat(appliedPromo.value) || 0);
+                }
+            } else if (discount > 0) {
+                discUsd = rawSub * discount;
+            }
+            let giftFee = document.getElementById('cGift').checked ? 2 : 0;
+            let finalTotal = Math.max(0, rawSub - discUsd) + giftFee;
+            return { rawSub, discUsd, giftFee, finalTotal };
         }
         
         function updateTotal() {
-            let sub = cart.reduce((s,c)=>s+(getPrc(c)*c.qty), 0);
-            sub = sub - (sub*discount);
-            if(document.getElementById('cGift').checked) sub += 2;
-            document.getElementById('cTotal').innerText = fmt(sub);
+            const { finalTotal } = calculateOrderBreakdown();
+            document.getElementById('cTotal').innerText = fmt(finalTotal);
         }
 
         async function submitOrder() {
@@ -1326,14 +1407,51 @@
             if(!n) return showToast('Please enter your name!', true);
             if(cart.length===0) return showToast('Cart is empty!', true);
 
-            let sub = cart.reduce((s,c)=>s+(getPrc(c)*c.qty), 0);
-            let tot = sub - (sub*discount) + (document.getElementById('cGift').checked ? 2 : 0);
-            let orderId = 'ORD-'+Date.now().toString().slice(-5);
-            
+            const { rawSub, discUsd, giftFee, finalTotal: tot } = calculateOrderBreakdown();
+
+            if (appliedPromo && appliedPromo.type === 'freeship') {
+                note = note ? `${note} [🚚 Free Shipping: ${appliedPromo.code}]` : `[🚚 Free Shipping: ${appliedPromo.code}]`;
+            } else if (appliedPromo) {
+                note = note ? `${note} [🏷️ Promo: ${appliedPromo.code} (-$${discUsd.toFixed(2)})]` : `[🏷️ Promo: ${appliedPromo.code} (-$${discUsd.toFixed(2)})]`;
+            }
+            if (giftFee > 0) {
+                note = note ? `${note} [🎁 Gift Order +$2.00]` : `[🎁 Gift Order +$2.00]`;
+            }
+
+            let orderId = 'ORD-' + Date.now().toString().slice(-6);
+            let nowDateStr = new Date().toLocaleDateString('km-KH') + ' ' + new Date().toLocaleTimeString('km-KH');
+
+            // បម្លែងទិន្នន័យទំនិញឱ្យមានទាំង qty និង cartQty ដើម្បីឱ្យ POS គណនាចំណូល-ចំណេញ និងទំនិញលក់ដាច់បាន ១០០%
+            const normalizedItems = cart.map(c => ({
+                ...c,
+                price: getPrc(c),
+                qty: c.qty,
+                cartQty: c.qty
+            }));
+
+            // ប្រើ status: 'unpaid' ដើម្បីឱ្យ POS បង្ហាញក្នុងតារាងវិក្កយបត្រ និងគណនាប្រាក់រង់ចាំទូទាត់បានត្រឹមត្រូវ
             const ord = {
-                id: orderId, date: new Date().toLocaleString(),
-                customer: n, phone: ph, note: note,
-                items: [...cart], totalAmount: tot, status: 'Processing'
+                id: orderId,
+                invoiceNo: orderId,
+                timestamp: Date.now(),
+                date: nowDateStr,
+                customer: n,
+                customerName: n,
+                phone: ph,
+                customerPhone: ph,
+                note: note,
+                items: normalizedItems,
+                rate: exRate,
+                discount: discUsd,
+                discountType: '$',
+                promoCode: appliedPromo ? appliedPromo.code : '',
+                totalAmount: tot,
+                total: tot,
+                totalRiel: Math.round(tot * exRate),
+                paidUsd: 0,
+                paidAmount: 0,
+                status: 'unpaid',
+                seller: 'Digital Menu'
             };
 
             document.getElementById('checkoutBtn').innerText = 'Processing...';
@@ -1346,26 +1464,87 @@
                 }
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
                 if(data && data.data_json) {
-                    let d = data.data_json; if(!d.invoices) d.invoices=[];
+                    let d = data.data_json;
+                    if(!d.invoices) d.invoices = [];
+
+                    // ឆែកមើលសិទ្ធិប្រើកូដប្រូម៉ូសិន ១ដង/១លេខទូរស័ព្ទ
+                    if (appliedPromo && appliedPromo.oneTimePerUser && ph) {
+                        const alreadyUsedByPhone = d.invoices.some(inv => inv && inv.phone === ph && String(inv.promoCode).toUpperCase() === String(appliedPromo.code).toUpperCase());
+                        if (alreadyUsedByPhone) {
+                            showToast('⚠️ លេខទូរស័ព្ទនេះធ្លាប់បានប្រើប្រាស់កូដប្រូម៉ូសិននេះរួចហើយ!', true);
+                            document.getElementById('checkoutBtn').innerText = 'Checkout';
+                            return;
+                        }
+                    }
+
                     d.invoices.unshift(ord);
-                    cart.forEach(c=>{ let i=(d.inventory||[]).find(x=>x.id===c.id); if(i) i.qty=Math.max(0, parseFloat(i.qty)-c.qty); });
-                    await supabaseClient.from('branch_store').update({data_json: d}).eq('branch_id', BRANCH);
+
+                    // កាត់ស្តុកទំនិញដោយស្វ័យប្រវត្តិ
+                    cart.forEach(c => {
+                        let i = (d.inventory || []).find(x => x && x.id === c.id);
+                        if(i) i.qty = Math.max(0, (parseFloat(i.qty) || 0) - c.qty);
+                    });
+
+                    // បន្ថែមឈ្មោះអតិថិជនចូលបញ្ជីអតិថិជនស្វ័យប្រវត្តិ (បើមិនមែនជាឈ្មោះតុ)
+                    if (!TABLE_NO && n && n !== 'អតិថិជនទូទៅ') {
+                        if (!d.customers) d.customers = [];
+                        const existingCust = d.customers.find(c => c && String(c.name).toLowerCase() === n.toLowerCase());
+                        if (!existingCust) {
+                            d.customers.push({ id: 'C_' + Date.now(), name: n, phone: ph || '' });
+                        } else if (!existingCust.phone && ph) {
+                            existingCust.phone = ph;
+                        }
+                    }
+
+                    // បូកចំនួនដងប្រើប្រាស់ (usedCount) នៃ Promo Code
+                    if (appliedPromo && d.sysSettings && Array.isArray(d.sysSettings.promoCodes)) {
+                        const pIdx = d.sysSettings.promoCodes.findIndex(p => p && String(p.code).toUpperCase() === String(appliedPromo.code).toUpperCase());
+                        if (pIdx !== -1) {
+                            d.sysSettings.promoCodes[pIdx].usedCount = (d.sysSettings.promoCodes[pIdx].usedCount || 0) + 1;
+                            sys.promoCodes = d.sysSettings.promoCodes;
+                        }
+                        if (appliedPromo.oneTimePerUser) {
+                            const usedPromos = JSON.parse(localStorage.getItem(`skm_used_promos_${BRANCH}`) || '[]');
+                            if (!usedPromos.includes(appliedPromo.code)) {
+                                usedPromos.push(appliedPromo.code);
+                                localStorage.setItem(`skm_used_promos_${BRANCH}`, JSON.stringify(usedPromos));
+                            }
+                        }
+                    }
+
+                    await supabaseClient.from('branch_store').update({
+                        data_json: d,
+                        updated_at: new Date().toISOString()
+                    }).eq('branch_id', BRANCH);
+
+                    // Sync ចូល LocalStorage ដើម្បីឱ្យ POS លើឧបករណ៍ដូចគ្នាទទួលបានភ្លាមៗ
+                    localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(d.invoices));
+                    localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
+                    if (d.customers) localStorage.setItem(`ks2_${BRANCH}_customers_pro`, JSON.stringify(d.customers));
+                    if (d.sysSettings) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
                     
                     points += Math.floor(tot); localStorage.setItem('skm_pts', points);
                     document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
                     playDing();
 
-                    // 🌟 ប្រើប្រាស់ Order Bot Token ដើម្បីបាញ់សារចូល Group កុម្មង់
+                    // 🌟 ប្រើប្រាស់ Order Bot Token ដើម្បីបាញ់សារចូល Group កុម្ម៉ង់
                     if(orderBotToken && orderChatId) {
                         let itxt = ord.items.map((i,x)=>`${x+1}. ${i.name} [${i.cartVar}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
-                        let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n👤 អតិថិជន: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
+                        let discTxt = discUsd > 0 ? `\n🏷️ បញ្ចុះតម្លៃ: <b>-$${discUsd.toFixed(2)}</b>` : '';
+                        let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n🧾 លេខកូដ: <code>${orderId}</code>\n👤 អតិថិជន: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}${discTxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
                         fetch(`https://api.telegram.org/bot${orderBotToken}/sendMessage`, {
                             method: 'POST', headers: {'Content-Type':'application/json'},
                             body: JSON.stringify({chat_id: orderChatId, text: msg, parse_mode: 'HTML'})
                         });
                     }
                     showToast(`Order Success! ID: ${orderId}`);
-                    cart = []; updateCartBadges(); 
+                    cart = [];
+                    appliedPromo = null;
+                    discount = 0;
+                    document.getElementById('cPromo').value = '';
+                    const statusEl = document.getElementById('promoAppliedStatus');
+                    if (statusEl) statusEl.style.display = 'none';
+                    updateCartBadges(); 
                     document.getElementById('checkoutBtn').innerText = 'Checkout';
                     closeModal('cartModal'); init();
                 }
@@ -1387,15 +1566,21 @@
                 }
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
                 if(data && data.data_json && data.data_json.invoices) {
-                    let uOrds = data.data_json.invoices.filter(i=>i.phone===ph);
+                    let uOrds = data.data_json.invoices.filter(i => i && (i.phone === ph || i.customerPhone === ph));
                     if(uOrds.length===0) return res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">No orders found.</div>';
-                    res.innerHTML = uOrds.map(o=>`
+                    res.innerHTML = uOrds.map(o => {
+                        const st = String(o.status || 'unpaid').toLowerCase();
+                        let statusHtml = '<span style="color:#f59e0b;">កំពុងរៀបចំ / រង់ចាំទូទាត់ (Processing) 🚚</span>';
+                        if (st === 'paid') statusHtml = '<span style="color:var(--success);">ទូទាត់រួចរាល់ (Completed) ✅</span>';
+                        else if (st === 'ready') statusHtml = '<span style="color:var(--brand-cyan);">រៀបចំរួចរាល់ហើយ! (Ready for Pickup/Delivery) 🎉</span>';
+
+                        return `
                         <div style="background:var(--store-bg); padding:12px; border-radius:12px; margin-bottom:10px; border:1px solid var(--border-color);">
-                            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px;"><span>${o.id}</span> <span style="color:var(--brand-cyan);">$${o.totalAmount.toFixed(2)}</span></div>
+                            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px;"><span>${o.id}</span> <span style="color:var(--brand-cyan);">$${parseFloat(o.totalAmount || 0).toFixed(2)}</span></div>
                             <div style="font-size:11px; color:var(--text-muted); margin:4px 0;">${o.date}</div>
-                            <div style="font-size:12px; font-weight:800;">Status: <span style="color:var(--success);">Processing 🚚</span></div>
+                            <div style="font-size:12px; font-weight:800;">Status: ${statusHtml}</div>
                         </div>
-                    `).join('');
+                    `}).join('');
                 } else res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">No orders found.</div>';
             } catch(e) { res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--danger);">Error searching.</div>'; }
         }

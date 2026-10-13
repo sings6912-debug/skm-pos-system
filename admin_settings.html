@@ -204,7 +204,6 @@
     </style>
 </head>
 <body>
-
 <div class="layout-wrapper">
     
     <!-- 🗂️ SIDEBAR NAVIGATION -->
@@ -213,7 +212,8 @@
             <i class="fa-solid fa-gear"></i> Settings
         </h2>
 
-        <button onclick="const b = new URLSearchParams(window.location.search).get('branch') || 'branch_1'; window.location.href='index.html?branch=' + b" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 12px; border: 2px solid var(--brand-cyan); background: transparent; color: var(--brand-cyan); font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;" onmouseover="this.style.background='var(--brand-cyan)'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='var(--brand-cyan)';">
+        <!-- ⚡ ជួសជុលបញ្ហាការចុច Back បណ្តាលឱ្យគាំង (Prevent Error in Blob Preview) -->
+        <button onclick="const b = new URLSearchParams(window.location.search).get('branch') || 'branch_1'; if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') { alert('មុខងារតំណភ្ជាប់ត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។'); } else { window.location.href='index.html?branch=' + encodeURIComponent(b); }" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 12px; border: 2px solid var(--brand-cyan); background: transparent; color: var(--brand-cyan); font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;" onmouseover="this.style.background='var(--brand-cyan)'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='var(--brand-cyan)';">
             <i class="fa-solid fa-arrow-left"></i> ត្រឡប់ទៅប្រព័ន្ធលក់
         </button>
         
@@ -239,7 +239,7 @@
 
         <button class="btn-save" onclick="saveAdminSettings()" style="margin-top: 25px; padding: 14px; font-size: 14px;"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់</button>
     </div>
-
+    
     <!-- 🗂️ CONTENT AREA -->
     <div class="content-area">
         
@@ -248,17 +248,18 @@
             <div class="section-title"><i class="fa-solid fa-link"></i> 🏠 ទំព័រភ្ជាប់ប្រព័ន្ធ (System Links)</div>
             <div style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color);">
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                    <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 120px;">🏠 ទំព័រ Welcome:</span>
+                    <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 140px;">🏠 ទំព័រ Welcome:</span>
                     <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToWelcome()"><i class="fa-solid fa-eye"></i> មើល</button>
                     <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyWelcomeLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
                     <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="showWelcomeQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
                 </div>
                 <div style="width: 100%; height: 1px; background: var(--border-color);"></div>
                 <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                    <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 120px;">🍔 ទំព័រ Menu ផ្ទាល់:</span>
+                    <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 140px;">🍔 ទំព័រ Menu ផ្ទាល់:</span>
                     <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToMenu()"><i class="fa-solid fa-eye"></i> មើល</button>
                     <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyMenuLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
                     <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--success); color: white; border: none;" onclick="showMenuQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
+                    <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: #8b5cf6; color: white; border: none;" onclick="window.open('skm_ultimate_qr_generator.html?branch=' + encodeURIComponent(BRANCH), '_blank')"><i class="fa-solid fa-wand-magic-sparkles"></i> រចនាកាត QR តាមតុ</button>
                 </div>
             </div>
         </div>
@@ -287,7 +288,7 @@
 
             <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
 
-            <!-- 🎟️ PROMO CODES MANAGER (Enhanced with Type & Usage Limit) -->
+            <!-- 🎟️ PROMO CODES MANAGER -->
             <div class="section-title" style="color: var(--success);"><i class="fa-solid fa-ticket"></i> កុម្ម៉ង់ និងគ្រប់គ្រងកូដបញ្ចុះតម្លៃ (Promo Codes Manager)</div>
             <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, FREESHIP) កំណត់ប្រភេទបញ្ចុះតម្លៃ (% , $ ឬ ដឹកជញ្ជូនឥតគិតថ្លៃ) និងកំណត់ចំនួនដងដែលអាចប្រើប្រាស់បាន។</p>
             
@@ -304,7 +305,6 @@
                     <input type="number" id="newPromoValue" class="input-st" placeholder="តម្លៃ (ឧ. 10)" style="flex: 1; margin-bottom: 0;" min="0" step="0.1">
                     <input type="number" id="newPromoLimit" class="input-st" placeholder="កំណត់ចំនួនដងប្រើ (ទទេ = គ្មានកំណត់)" style="flex: 1; margin-bottom: 0;" min="1">
                     
-                    <!-- កែប្រែប៊ូតុងរក្សាទុកដោយបន្ថែម ID និងបន្ថែមប៊ូតុង Cancel សម្រាប់ពេល Edit -->
                     <div style="flex: 1; display: flex; gap: 5px;">
                         <button id="btnSavePromo" class="input-st" style="flex: 1; background: var(--brand-cyan); color: white; border: none; cursor: pointer; font-weight: bold;" onclick="addNewPromoCode()">+ បន្ថែមរក្សាទុក</button>
                         <button id="btnCancelPromo" class="input-st" style="width: 45px; background: var(--store-bg); color: var(--danger); border: 1px solid var(--border-color); cursor: pointer; display: none; padding: 0;" onclick="cancelPromoEdit()" title="បោះបង់ការកែប្រែ"><i class="fa-solid fa-xmark"></i></button>
@@ -318,7 +318,7 @@
             
             <div id="promoCodesListContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
         </div>
-
+        
         <!-- TAB 3: Ticker -->
         <div id="tab-ticker" class="tab-pane">
             <div class="section-title"><i class="fa-solid fa-bullhorn"></i> 3. របារប្រអប់អត្ថបទរត់ (Marquee Ticker)</div>
@@ -327,7 +327,7 @@
                 <input type="checkbox" id="toggleTicker" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
             </div>
             <div class="form-group">
-                <label>អត្ថបទជូនដំណឹងរត់៖</label>
+                <label>អត្ថបទជូនដំណឹងរត់ (បង្ហាញទាំងលើ Digital Menu និងទំព័រស្វាគមន៍)៖</label>
                 <input type="text" id="setTickerText" class="input-st" placeholder="ឧ. ទិញទំនិញគ្រប់ ២០$ ថែមជូនការដឹកជញ្ជូនឥតគិតថ្លៃ..." onchange="saveAdminSettings()">
             </div>
         </div>
@@ -361,7 +361,7 @@
             </div>
 
             <div class="toggle-row" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3);">
-                <span style="color: var(--success);">📦 អនុញ្ញាតឱ្យភ្ញៀវកុម្មង់ទំនិញទោះអស់ស្តុក (បើក Pre-order)</span>
+                <span style="color: var(--success);">📦 អនុញ្ញាតឱ្យភ្ញៀវកុម្ម៉ង់ទំនិញទោះអស់ស្តុក (បើក Pre-order)</span>
                 <input type="checkbox" id="togglePreorder" style="width: 20px; height: 20px; accent-color: var(--success); cursor: pointer;" onchange="saveAdminSettings()">
             </div>
         </div>
@@ -428,7 +428,7 @@
                 </div>
             </div>
         </div>
-
+        
         <!-- TAB 6: CUSTOM JS -->
         <div id="tab-customjs" class="tab-pane">
             <div style="margin-bottom: 30px;">
@@ -500,6 +500,25 @@
 <div id="toast">Saved Successfully!</div>
 
 <script>
+    const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+
+    // 🔒 FIX (ចំណុចទី ៤): ត្រួតពិនិត្យសុវត្ថិភាព ការពារមិនឱ្យអ្នកក្រៅចូលកែការកំណត់ហាងដោយគ្មានការអនុញ្ញាត
+    // រំលងការ Redirect នៅពេលដែលកូដដំណើរការក្នុងផ្ទាំង Preview របស់ AI (blob: ឬ data:)
+    (function verifyAdminAccess() {
+        const authPassed = sessionStorage.getItem('ks2_auth_passed');
+        let activeUser = null;
+        try {
+            activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`));
+        } catch(e) {}
+        if (authPassed !== 'true' && (!activeUser || String(activeUser.role).toLowerCase() !== 'admin')) {
+            if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
+                console.warn("Preview Environment Detected: Authentication redirect to welcome.html bypassed.");
+            } else {
+                window.location.href = `welcome.html?branch=${encodeURIComponent(BRANCH)}`;
+            }
+        }
+    })();
+
     function switchTab(tabId) {
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
@@ -527,11 +546,9 @@
         catch (err) { console.error("Supabase init error:", err); }
     }
 
-    const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-
     let adminBanners = [];
-    let promoCodesList = []; // 🎟️ បញ្ជីកូដប្រូម៉ូសិន
-    let editPromoIndex = -1; // 📝 កត់ចំណាំទីតាំងពេលកំពុង Edit
+    let promoCodesList = [];
+    let editPromoIndex = -1;
     let menuScripts = []; 
     let posScripts = [];  
     let showAllMenuScripts = false;
@@ -552,14 +569,13 @@
         try {
             const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
                 method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, text: "🛒 [TEST] សារសាកល្បងសម្រាប់ Bot កុម្មង់ទំនិញ ដំណើរការជោគជ័យ!", parse_mode: 'HTML' })
+                body: JSON.stringify({ chat_id: chatId, text: "🛒 [TEST] សារសាកល្បងសម្រាប់ Bot កុម្ម៉ង់ទំនិញ ដំណើរការជោគជ័យ!", parse_mode: 'HTML' })
             });
             const data = await res.json();
             if (data.ok) showToast('✅ ផ្ញើសារ Test Order Bot ជោគជ័យ!');
             else showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
         } catch(err) { showToast('❌ Error: ' + err.message, true); }
     }
-
     async function testServiceTelegramBot() {
         const token = document.getElementById('setServiceTelegramBotToken').value.trim();
         const chatId = document.getElementById('setServiceTelegramChatId').value.trim();
@@ -592,6 +608,8 @@
             if (localSys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = localSys.serviceTelegramBotToken;
             if (localSys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = localSys.serviceTelegramChatId;
 
+            document.getElementById('toggleTicker').checked = !!(localSys.toggleTicker || localSys.tickerText || localSys.tickerNews);
+            document.getElementById('setTickerText').value = localSys.tickerText || localSys.tickerNews || '';
             document.getElementById('toggleTableFeature').checked = !!localSys.toggleTableFeature;
             document.getElementById('setTotalTables').value = localSys.totalTables || 20;
             document.getElementById('setTablePrefix').value = localSys.tablePrefix || 'តុលេខ';
@@ -621,8 +639,9 @@
                     if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
                     if(sys.socialLink) document.getElementById('setSocialLink').value = sys.socialLink;
                     
-                    document.getElementById('toggleTicker').checked = !!sys.toggleTicker;
-                    document.getElementById('setTickerText').value = sys.tickerText || '';
+                    const cloudTicker = sys.tickerText || sys.tickerNews || '';
+                    document.getElementById('toggleTicker').checked = !!(sys.toggleTicker || cloudTicker);
+                    document.getElementById('setTickerText').value = cloudTicker;
                     document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
                     document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
                     document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
@@ -655,18 +674,26 @@
             if (supabaseClient) {
                 try { let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle(); if (data && data.data_json) d = data.data_json; } catch(err) {}
             }
-            if(!d.sysSettings) d.sysSettings = {};
+            if(!d.sysSettings) {
+                try {
+                    d.sysSettings = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`)) || {};
+                } catch(e) { d.sysSettings = {}; }
+            }
             
             d.sysSettings.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
             d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== '');
-            d.sysSettings.promoCodes = promoCodesList; // 🎟️ រក្សាទុកកូដប្រូម៉ូសិន
+            d.sysSettings.promoCodes = promoCodesList;
             d.sysSettings.menuQR = document.getElementById('setMenuQR').value.trim();
             d.sysSettings.chatLink = document.getElementById('setChatLink').value.trim();
             d.sysSettings.socialIcon = document.getElementById('setSocialIcon').value;
             d.sysSettings.socialLabel = document.getElementById('setSocialLabel').value.trim();
             d.sysSettings.socialLink = document.getElementById('setSocialLink').value.trim();
             d.sysSettings.toggleTicker = document.getElementById('toggleTicker').checked;
-            d.sysSettings.tickerText = document.getElementById('setTickerText').value.trim();
+
+            const tickerVal = document.getElementById('setTickerText').value.trim();
+            d.sysSettings.tickerText = tickerVal;
+            d.sysSettings.tickerNews = tickerVal;
+
             d.sysSettings.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
             d.sysSettings.welcomeImg = document.getElementById('setWelcomeImg').value.trim();
             d.sysSettings.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
@@ -697,6 +724,8 @@
             d.customPosScripts = posScripts;
 
             localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
+            if (orderTok) localStorage.setItem(`ks2_${BRANCH}_telegram_bot_token`, orderTok);
+            if (orderChat) localStorage.setItem(`ks2_${BRANCH}_telegram_chat_id`, orderChat);
 
             if (supabaseClient) {
                 let { error } = await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
@@ -706,7 +735,7 @@
         } catch(e) { showToast('Save Failed: ' + e.message, true); console.error(e); }
     }
 
-    /* --- Promo Codes Manager Functions (Enhanced) --- */
+    /* --- Promo Codes Manager Functions --- */
     function onPromoTypeChange() {
         const type = document.getElementById('newPromoType').value;
         const valInp = document.getElementById('newPromoValue');
@@ -746,7 +775,6 @@
                         ${userLimitBadge}
                     </div>
                     <div style="display: flex; gap: 8px;">
-                        <!-- ប៊ូតុង Edit (កែប្រែ) ពណ៌លឿង -->
                         <button class="btn-script" onclick="editPromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px; background: var(--warning); color: white; border-radius: 50%; border: none; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-pen"></i></button>
                         <button class="btn-script btn-delete" onclick="deletePromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
                     </div>
@@ -755,7 +783,6 @@
         });
     }
 
-    // 📝 មុខងារទាញទិន្នន័យមកកែប្រែ
     function editPromoCode(idx) {
         editPromoIndex = idx;
         const promo = promoCodesList[idx];
@@ -766,20 +793,16 @@
         document.getElementById('newPromoLimit').value = promo.limit > 0 ? promo.limit : '';
         document.getElementById('newPromoPerUser').checked = !!promo.oneTimePerUser;
         
-        onPromoTypeChange(); // អាប់ដេតប្រអប់តម្លៃ ក្រែងលោជា Free Ship
+        onPromoTypeChange();
         
-        // ប្តូរ UI ប៊ូតុងទៅជា "កែប្រែ"
         const btnSave = document.getElementById('btnSavePromo');
         btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកែប្រែ';
         btnSave.style.background = 'var(--warning)';
         
-        // បង្ហាញប៊ូតុង Cancel
         document.getElementById('btnCancelPromo').style.display = 'block';
-        
-        renderPromoCodesList(); // Render ឡើងវិញដើម្បីបង្ហាញ border ពណ៌លឿងលើកូដកំពុងកែ
+        renderPromoCodesList();
     }
 
-    // ❌ មុខងារបោះបង់ការកែប្រែ
     function cancelPromoEdit() {
         editPromoIndex = -1;
         document.getElementById('newPromoCode').value = '';
@@ -795,7 +818,6 @@
         btnSave.style.background = 'var(--brand-cyan)';
         
         document.getElementById('btnCancelPromo').style.display = 'none';
-        
         renderPromoCodesList();
     }
 
@@ -821,7 +843,6 @@
         }
 
         if (editPromoIndex === -1) {
-            // កំពុងបន្ថែមថ្មី
             if(promoCodesList.some(p => p.code === code)) {
                 return showToast('កូដនេះមានរួចហើយ!', true);
             }
@@ -830,13 +851,9 @@
             });
             showToast('បានបន្ថែមរក្សាទុកកូដប្រូម៉ូសិនជោគជ័យ!');
         } else {
-            // កំពុងកែប្រែ (Edit)
-            // ឆែកក្រែងលោប្តូរឈ្មោះកូដទៅជាន់នឹងកូដដែលមានស្រាប់ (លើកលែងតែកូដខ្លួនឯង)
             if(promoCodesList.some((p, idx) => p.code === code && idx !== editPromoIndex)) {
                 return showToast('កូដនេះជាន់គ្នាជាមួយកូដផ្សេង!', true);
             }
-            
-            // រក្សាចំនួនដងដែលធ្លាប់ប្រើប្រាស់រួច (usedCount) ដដែល
             const currentUsedCount = promoCodesList[editPromoIndex].usedCount || 0;
             promoCodesList[editPromoIndex] = { 
                 code, type, value, limit, usedCount: currentUsedCount, oneTimePerUser
@@ -844,18 +861,16 @@
             showToast('បានកែប្រែកូដប្រូម៉ូសិនជោគជ័យ!');
         }
 
-        cancelPromoEdit(); // clear ទាំងប្រអប់បញ្ចូល និងប្តូរប៊ូតុងមកធម្មតាវិញ
+        cancelPromoEdit();
         saveAdminSettings();
     }
 
     function deletePromoCode(idx) {
-        if (confirm('តើអ្នកពិតជាចង់លុបកូដប្រូម៉ូសិននេះមែនទេ?')) {
-            promoCodesList.splice(idx, 1);
-            if (editPromoIndex === idx) cancelPromoEdit(); // បើលុបកូដដែលកំពុងកែ ត្រូវ clear ប្រអប់ចោល
-            renderPromoCodesList();
-            saveAdminSettings();
-            showToast('បានលុបកូដប្រូម៉ូសិន!');
-        }
+        promoCodesList.splice(idx, 1);
+        if (editPromoIndex === idx) cancelPromoEdit();
+        renderPromoCodesList();
+        saveAdminSettings();
+        showToast('បានលុបកូដប្រូម៉ូសិន!');
     }
 
     /* --- Banner Functions --- */
@@ -879,7 +894,7 @@
     }
     function addAdminBanner() { adminBanners.push(''); renderAdminBanners(); }
     function removeAdminBanner(index) { adminBanners.splice(index, 1); renderAdminBanners(); saveAdminSettings(); }
-    function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); }
+    function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); saveAdminSettings(); }
     
     function uploadAdminBanner(e, index) {
         const file = e.target.files[0]; if(!file) return; 
@@ -960,7 +975,7 @@
     function deleteMenuScript(id) { menuScripts = menuScripts.filter(x => x.id !== id); renderMenuScripts(); saveAdminSettings(); }
     function deleteAllMenuScripts() { if (menuScripts.length === 0) return; menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
     function exportMenuScriptsBackup() { if(menuScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); a.download = `Menu_JS.json`; a.click(); }
-    function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); } catch(err){ alert("Error"); } e.target.value=''; }; r.readAsText(file); }
+    function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err){ showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
 
     /* --- POS CUSTOM JS --- */
     function renderPosScripts() {
@@ -996,15 +1011,32 @@
     function deletePosScript(id) { posScripts = posScripts.filter(x => x.id !== id); renderPosScripts(); saveAdminSettings(); }
     function deleteAllPosScripts() { if (posScripts.length === 0) return; posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
     function exportPosScriptsBackup() { if(posScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); a.download = `POS_JS.json`; a.click(); }
-    function importPosScriptsBackup(e) { const file = e.target.files[0]; file && (() => { const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); } catch(err) { alert("Error"); } e.target.value=''; }; r.readAsText(file); })(); }
+    function importPosScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err) { showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
 
-    function getPageUrl(pageName) { let path = window.location.pathname; let lastSlash = path.lastIndexOf('/'); return window.location.origin + path.substring(0, lastSlash + 1) + pageName + '?branch=' + BRANCH; }
+    function getPageUrl(pageName) { let path = window.location.pathname; let lastSlash = path.lastIndexOf('/'); return window.location.origin + path.substring(0, lastSlash + 1) + pageName + '?branch=' + encodeURIComponent(BRANCH); }
     function copyWelcomeLink() { navigator.clipboard.writeText(getPageUrl('welcome.html')); showToast('Copied Welcome Link!'); }
-    function showWelcomeQR() { const url = getPageUrl('welcome.html'); const win = window.open('', '_blank', 'width=450,height=550'); win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Welcome QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
-    function goToWelcome() { window.open(getPageUrl('welcome.html'), '_blank'); }
+    function showWelcomeQR() { const url = getPageUrl('welcome.html'); const win = window.open('', '_blank', 'width=450,height=550'); if(!win) return; win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Welcome QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
+    
+    // បង្កើតមុខងារថ្មីសម្រាប់ទប់ស្កាត់ការ Redirect ក្នុង Preview Mode
+    function goToWelcome() { 
+        if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
+            alert('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។ \nតំណភ្ជាប់គោលដៅ: ' + getPageUrl('welcome.html'));
+        } else {
+            window.open(getPageUrl('welcome.html'), '_blank'); 
+        }
+    }
+    
     function copyMenuLink() { navigator.clipboard.writeText(getPageUrl('menu.html')); showToast('Copied Menu Link!'); }
-    function showMenuQR() { const url = getPageUrl('menu.html'); const win = window.open('', '_blank', 'width=450,height=550'); win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Menu QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
-    function goToMenu() { window.open(getPageUrl('menu.html'), '_blank'); }
+    function showMenuQR() { const url = getPageUrl('menu.html'); const win = window.open('', '_blank', 'width=450,height=550'); if(!win) return; win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Menu QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
+    
+    // បង្កើតមុខងារថ្មីសម្រាប់ទប់ស្កាត់ការ Redirect ក្នុង Preview Mode
+    function goToMenu() { 
+        if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
+            alert('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។ \nតំណភ្ជាប់គោលដៅ: ' + getPageUrl('menu.html'));
+        } else {
+            window.open(getPageUrl('menu.html'), '_blank'); 
+        }
+    }
 
     window.onload = initAdmin;
 </script>

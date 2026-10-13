@@ -1,9 +1,23 @@
-// pos.js
+/**
+ * pos.js - គ្រប់គ្រងប្រព័ន្ធលក់ កន្ត្រកទំនិញ ការស្កេនបាកូដ និងការបោះពុម្ពវិក្កយបត្រ (Point of Sale)
+ */
+
 window.currentPOSView = 'grid';
 window.currentPosCategory = 'all';
 window.cartFinalUsd = 0;
 window.cartFinalRiel = 0;
 window.cartRate = 4000;
+
+// អនុគមន៍ជំនួយសម្រាប់បង្ហាញសារជូនដំណឹងដោយសុវត្ថិភាព
+function notifyPosUser(msg, title = 'ជូនដំណឹង', isError = false) {
+    if (typeof window.ksMsg === 'function') {
+        window.ksMsg(msg, title);
+    } else if (typeof window.showToast === 'function') {
+        window.showToast(msg, isError);
+    } else {
+        console.log(`[${title}] ${msg}`);
+    }
+}
 
 window.setPosCategory = function(cat) { 
     window.currentPosCategory = cat; 
@@ -105,8 +119,8 @@ window.renderPOSProducts = function() {
                 if (pQty <= 0) stockBadge = `<div class="badge-cat" style="background: var(--danger); color: #fff; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">❌ អស់ស្តុក</div>`;
                 else stockBadge = `<div class="badge-cat" style="background: ${pQty<=5?'var(--warning)':'var(--primary)'}; color: ${pQty<=5?'#000':'#fff'}; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">📦 សល់: ${pQty}</div>`;
 
-                let conditionBadge = (window.sysSettings.condition && p.condition) ? `<div class="badge-cat" style="background: #38bdf8; color: #fff; top: 8px; right: 8px; padding: 3px 6px; font-size: 10px; border-radius: 4px;">${p.condition}</div>` : '';
-                let expiryBadge = (window.sysSettings.expiry && p.expiry) ? `<div style="font-size:10px; color:var(--warning); margin-top:2px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</div>` : '';
+                let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<div class="badge-cat" style="background: #38bdf8; color: #fff; top: 8px; right: 8px; padding: 3px 6px; font-size: 10px; border-radius: 4px;">${p.condition}</div>` : '';
+                let expiryBadge = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<div style="font-size:10px; color:var(--warning); margin-top:2px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</div>` : '';
 
                 let cItem = (window.cart || []).find(c => c && c.id === p.id); 
                 let qtyInCart = cItem ? cItem.cartQty : 0;
@@ -126,8 +140,8 @@ window.renderPOSProducts = function() {
                 let stockText = pQty <= 0 ? `<span style="color:var(--danger); font-weight:bold;">អស់ស្តុក</span>` : `<span style="color:${pQty<=5?'var(--warning)':'var(--success)'}">${pQty}</span> ${p.unit||''}`;
                 let rielHtml = (parseFloat(p.riel)||0) > 0 ? `<br><span style="font-size:var(--fs-11); color:var(--text-muted);">${parseFloat(p.riel).toLocaleString()} ៛</span>` : '';
                 let itemOpacity = pQty <= 0 ? 'opacity: 0.6;' : '';
-                let conditionBadge = (window.sysSettings.condition && p.condition) ? `<span style="font-size:10px; background:#38bdf8; color:#fff; padding:2px 4px; border-radius:4px; margin-left:4px;">${p.condition}</span>` : '';
-                let expiryDisplay = (window.sysSettings.expiry && p.expiry) ? `<br><span style="color:var(--warning); font-size:10px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</span>` : '';
+                let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<span style="font-size:10px; background:#38bdf8; color:#fff; padding:2px 4px; border-radius:4px; margin-left:4px;">${p.condition}</span>` : '';
+                let expiryDisplay = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<br><span style="color:var(--warning); font-size:10px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</span>` : '';
 
                 tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${p.price}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">➕ បន្ថែម</button></td></tr>`;
             });
@@ -139,34 +153,57 @@ window.renderPOSProducts = function() {
 };
 
 window.addToCart = function(id) { 
-    window.playBeep(); 
+    if (typeof window.playBeep === 'function') window.playBeep(); 
     const p = (window.inventory || []).find(i => i && i.id === id); 
     if (!p) return; 
     if (!window.cart) window.cart = [];
     const cItem = window.cart.find(c => c && c.id === id); 
     let stockQty = parseInt(p.qty) || 0;
+
+    const executeAddToCart = () => {
+        let globalRateEl = document.getElementById('globalExchangeRate'); 
+        let currentRate = parseFloat(globalRateEl ? globalRateEl.value : window.cartRate) || 4000;
+        // ⚡ FIX (ចំណុចទី ៣): គណនាតម្លៃដុល្លារស្វ័យប្រវត្តិប្រសិនបើទំនិញដាក់តែតម្លៃរៀល (៛)
+        let effectiveUsdPrice = parseFloat(p.price) > 0 ? parseFloat(p.price) : ((parseFloat(p.riel) || 0) / currentRate);
+
+        if (cItem) { 
+            if (cItem.cartQty < stockQty || (window.sysSettings && window.sysSettings.preorder)) { 
+                cItem.cartQty++; 
+                cItem.qty = cItem.cartQty;
+                if (effectiveUsdPrice > 0 && !(parseFloat(cItem.price) > 0)) cItem.price = effectiveUsdPrice;
+            } else { 
+                notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+            } 
+        } else { 
+            window.cart.push({
+                ...p,
+                price: effectiveUsdPrice,
+                cartQty: 1,
+                qty: 1
+            }); 
+        } 
+        window.renderCart(); 
+        window.renderPOSProducts();
+    };
     
     if (stockQty <= 0 && window.sysSettings && window.sysSettings.preorder) {
-        if (!confirm(`ទំនិញ "${p.name}" អស់ពីស្តុកហើយ! តើអ្នកចង់កត់ត្រាវាជាការកុម្ម៉ង់ទុកមុន (Pre-order) មែនទេ?`)) return;
+        if (cItem) {
+            executeAddToCart();
+        } else if (typeof window.ksMsg === 'function') {
+            window.ksMsg(`ទំនិញ "${p.name}" អស់ពីស្តុកហើយ! តើអ្នកចង់កត់ត្រាវាជាការកុម្ម៉ង់ទុកមុន (Pre-order) មែនទេ?`, 'បញ្ជាក់ Pre-order', true, executeAddToCart);
+        } else {
+            executeAddToCart();
+        }
+        return;
     } else if (stockQty <= 0) {
-        return window.ksMsg('ទំនិញនេះអស់ពីស្តុកហើយ!');
+        return notifyPosUser('ទំនិញនេះអស់ពីស្តុកហើយ!');
     }
 
-    if(cItem) { 
-        if(cItem.cartQty < stockQty || (window.sysSettings && window.sysSettings.preorder)) { 
-            cItem.cartQty++; 
-        } else { 
-            window.ksMsg(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
-        } 
-    } else { 
-        window.cart.push({...p, cartQty: 1}); 
-    } 
-    window.renderCart(); 
-    window.renderPOSProducts();
+    executeAddToCart();
 };
 
 window.updateCartQty = function(id, change) { 
-    if(change > 0) window.playBeep(); 
+    if(change > 0 && typeof window.playBeep === 'function') window.playBeep(); 
     const cItem = (window.cart || []).find(c => c && c.id === id); 
     const p = (window.inventory || []).find(i => i && i.id === id); 
     if (!p || !cItem) return;
@@ -175,9 +212,11 @@ window.updateCartQty = function(id, change) {
     
     if(cItem.cartQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
         cItem.cartQty = stockQty; 
-        window.ksMsg(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+        notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
     } 
     
+    cItem.qty = cItem.cartQty;
+
     if(cItem.cartQty <= 0) {
         window.cart = window.cart.filter(c => c && c.id !== id);
     }
@@ -198,10 +237,11 @@ window.setCartQtyManually = function(id, val) {
         
         if(newQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
             cItem.cartQty = stockQty; 
-            window.ksMsg(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+            notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
         } else {
             cItem.cartQty = newQty;
         }
+        cItem.qty = cItem.cartQty;
     }
     window.renderCart(); 
     window.renderPOSProducts();
@@ -221,11 +261,19 @@ window.renderCart = function() {
         window.cart.forEach(c => {
             if(!c) return; 
             tQty += c.cartQty; 
-            let pUsd = parseFloat(c.price) || 0; 
+            let origProd = (window.inventory || []).find(i => i && i.id === c.id);
+            let origUsd = origProd ? (parseFloat(origProd.price) || 0) : (parseFloat(c.price) || 0);
             let pRiel = parseFloat(c.riel) || 0;
-            if (pUsd > 0) tUsdOnly += pUsd * c.cartQty; else if (pRiel > 0) tRielOnly += pRiel * c.cartQty;
-            let priceDisplay = pUsd > 0 ? window.fMoney(pUsd) : (pRiel ? pRiel.toLocaleString()+' ៛' : '$0.00'); 
-            let totalDisplay = pUsd > 0 ? window.fMoney(pUsd * c.cartQty) : (pRiel ? (pRiel * c.cartQty).toLocaleString()+' ៛' : '$0.00');
+            let pUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / window.cartRate) : (parseFloat(c.price) || 0));
+            c.price = pUsd;
+            c.qty = c.cartQty;
+
+            if (origUsd > 0) tUsdOnly += origUsd * c.cartQty; 
+            else if (pRiel > 0) tRielOnly += pRiel * c.cartQty;
+            else tUsdOnly += pUsd * c.cartQty;
+
+            let priceDisplay = origUsd > 0 ? window.fMoney(origUsd) : (pRiel > 0 ? pRiel.toLocaleString()+' ៛' : window.fMoney(pUsd)); 
+            let totalDisplay = origUsd > 0 ? window.fMoney(origUsd * c.cartQty) : (pRiel > 0 ? (pRiel * c.cartQty).toLocaleString()+' ៛' : window.fMoney(pUsd * c.cartQty));
             finalCartHtml += `<div class="cart-item"><img src="${c.image||'https://placehold.co/100?text=Img'}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 10px; border: 1px solid var(--border);"><div style="flex:1;"><div style="font-weight:bold; font-size:var(--fs-14); margin-bottom:2px; line-height: 1.2; color: var(--text-main);">${c.name}</div><div style="color:var(--success); font-size:var(--fs-12);">${priceDisplay} <small style="color:var(--text-muted);">/ ${c.unit||'ឯកតា'}</small></div></div><div style="display:flex; align-items:center; gap:4px; background:var(--bg-dark); padding:2px; border-radius:6px; border:1px solid var(--border);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-14);"> - </button><input type="number" class="cart-qty-input" value="${c.cartQty}" onchange="window.setCartQtyManually('${c.id}', this.value)" style="width: 35px; height:22px; text-align: center; background: transparent; border: none; font-weight: bold; color: var(--text-main); outline:none; font-size: var(--fs-13);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-14);"> + </button></div><div style="width:70px; text-align:right; font-weight:bold; font-size:var(--fs-14); margin-left: 10px; color: var(--text-main);">${totalDisplay}</div></div>`;
         });
         cHTML.innerHTML = finalCartHtml;
@@ -291,11 +339,17 @@ window.renderCart = function() {
 
 window.clearCart = function() { 
     if(!window.cart || window.cart.length === 0) return; 
-    window.ksMsg('តើអ្នកពិតជាចង់លុបទំនិញទាំងអស់ចេញពីកន្ត្រកមែនទេ?', 'បញ្ជាក់ការលុប', true, () => { 
+    if (typeof window.ksMsg === 'function') {
+        window.ksMsg('តើអ្នកពិតជាចង់លុបទំនិញទាំងអស់ចេញពីកន្ត្រកមែនទេ?', 'បញ្ជាក់ការលុប', true, () => { 
+            window.cart = []; 
+            window.renderCart(); 
+            window.renderPOSProducts(); 
+        }); 
+    } else {
         window.cart = []; 
         window.renderCart(); 
         window.renderPOSProducts(); 
-    }); 
+    }
 };
 
 window.toggleCartSummary = function() { 
@@ -317,7 +371,7 @@ window.toggleCartSummary = function() {
 };
 
 window.openCheckoutModal = function() { 
-    if(!window.cart || window.cart.length === 0) return window.ksMsg('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); 
+    if(!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); 
     let displayHtml = `${window.fMoney(window.cartFinalUsd)}`; 
     if(window.cartFinalRiel > 0) displayHtml += ` <br><span style="font-size: 18px; color: var(--text-muted);">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</span>`; 
     
@@ -365,10 +419,10 @@ window.processCheckoutPaid = function() {
 };
 
 window.openPreorderModal = function() { 
-    if(!window.cart || window.cart.length === 0) return window.ksMsg('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); 
+    if(!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); 
     
     const custNameInput = document.getElementById('posCustomerName').value.trim();
-    if(!custNameInput) return window.ksMsg('សុំបញ្ចូលឈ្មោះអតិថិជនសិន មុននឹងចុចកក់ប្រាក់!');
+    if(!custNameInput) return notifyPosUser('សុំបញ្ចូលឈ្មោះអតិថិជនសិន មុននឹងចុចកក់ប្រាក់!');
 
     let displayHtml = `${window.fMoney(window.cartFinalUsd)}`; 
     if(window.cartFinalRiel > 0) displayHtml += ` <br><span style="font-size: 18px; color: var(--text-muted);">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</span>`; 
@@ -420,10 +474,13 @@ window.executePrint = function(htmlContent) {
 };
 
 window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
-    if(!window.cart || window.cart.length === 0) return window.ksMsg('គ្មានទំនិញក្នុងកន្ត្រកទេ!');
+    if(!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!');
     const custNameInput = document.getElementById('posCustomerName').value.trim(); 
     const custPhoneInput = document.getElementById('posCustomerPhone').value.trim();
-    if((status === 'unpaid' || status === 'preorder') && !custNameInput) return window.ksMsg('សុំបញ្ចូលឈ្មោះអតិថិជនសិន!');
+    const tableSelectEl = document.getElementById('posTableSelect');
+    const selectedTable = (tableSelectEl && tableSelectEl.value) ? tableSelectEl.value.trim() : '';
+
+    if((status === 'unpaid' || status === 'preorder') && !custNameInput) return notifyPosUser('សុំបញ្ចូលឈ្មោះអតិថិជនសិន!');
     
     let discountValue = parseFloat(document.getElementById('posDiscount') ? document.getElementById('posDiscount').value : 0) || 0; 
     let discountType = document.getElementById('posDiscountType') ? document.getElementById('posDiscountType').value : '%'; 
@@ -441,22 +498,38 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(window.shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${window.shopAddress}</p>`; 
     receiptHTML += `<div class="print-dashed-line"></div><p style="margin:4px 0; font-size:14px; font-weight:bold;">${docType}</p><p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${window.fDate()}</p><p style="margin:2px 0; font-size:11px; text-align:left;">លេខវិក្កយបត្រ: ${newInvId}</p><p style="margin:2px 0; font-size:11px; text-align:left;">អ្នកលក់: ${currentSellerName}</p>`;
     if(custNameInput) receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${custNameInput}</b> ${custPhoneInput?`(${custPhoneInput})`:''}</p>`;
+    if(selectedTable && selectedTable !== custNameInput) receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left; font-weight:bold;">តុ: ${selectedTable}</p>`;
     receiptHTML += `<div class="print-dashed-line"></div></div><table style="width:100%; text-align:left; font-size: 12px; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
+
+    const normalizedCartItems = [];
 
     window.cart.forEach((c, index) => {
         if(!c) return; 
         const idx = (window.inventory || []).findIndex(p => p && p.id === c.id);
+        let origUsd = (idx !== -1 && parseFloat(window.inventory[idx].price) > 0) ? parseFloat(window.inventory[idx].price) : (parseFloat(c.price) || 0);
+        let pRiel = parseFloat(c.riel) || 0;
+        // ⚡ FIX (ចំណុចទី ៣): ធានាថា item.price តែងតែមានតម្លៃជាដុល្លារ (បម្លែងពីរៀលបើដាក់តែតម្លៃរៀល)
+        let effectiveUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / window.cartRate) : 0);
+
+        normalizedCartItems.push({
+            ...c,
+            price: effectiveUsd,
+            cartQty: c.cartQty,
+            qty: c.cartQty
+        });
+
         if(idx !== -1) {
             if (status !== 'preorder') {
-                window.inventory[idx].qty -= c.cartQty; 
+                window.inventory[idx].qty = Math.max(0, (parseFloat(window.inventory[idx].qty) || 0) - c.cartQty); 
             }
             if (typeof window.logAction === 'function') window.logAction('sale', c.name, c.cartQty, status === 'paid' ? 'លក់ចេញ (ទូទាត់រួច)' : (status === 'preorder' ? `កក់ប្រាក់ (Pre-order ដោយ ${custNameInput})` : `លក់ចេញ (រង់ចាំទូទាត់ ដោយ ${custNameInput})`), window.activeUser);
-            let lineStr = '', uPriceStr = '';
-            if(c.price > 0) { lineStr = window.fMoney(c.price * c.cartQty); uPriceStr = window.fMoney(c.price); } 
-            else if(c.riel > 0) { lineStr = ((c.riel||0) * c.cartQty).toLocaleString() + '៛'; uPriceStr = c.riel.toLocaleString() + '៛'; } 
-            else { lineStr = '$0.00'; uPriceStr = '$0.00'; } 
-            receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${c.name}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
         }
+
+        let lineStr = '', uPriceStr = '';
+        if(origUsd > 0) { lineStr = window.fMoney(origUsd * c.cartQty); uPriceStr = window.fMoney(origUsd); } 
+        else if(pRiel > 0) { lineStr = (pRiel * c.cartQty).toLocaleString() + '៛'; uPriceStr = pRiel.toLocaleString() + '៛'; } 
+        else { lineStr = window.fMoney(effectiveUsd * c.cartQty); uPriceStr = window.fMoney(effectiveUsd); } 
+        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${c.name}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
     });
     receiptHTML += `</tbody></table><div class="print-dashed-line"></div>`;
 
@@ -464,15 +537,23 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if (status === 'paid') paidUsdAmount = window.cartFinalUsd;
     else if (status === 'preorder') paidUsdAmount = rUsd + (rRiel / window.cartRate);
 
+    const finalCustomerName = custNameInput || selectedTable || 'អតិថិជនទូទៅ';
+    const invoiceNote = (selectedTable && selectedTable !== finalCustomerName) ? `[${selectedTable}]` : '';
+
     const newInvoice = { 
         id: newInvId, 
+        invoiceNo: newInvId,
         timestamp: timestampNow, 
         date: window.fDate(), 
-        customer: custNameInput || 'អតិថិជនទូទៅ', 
+        customer: finalCustomerName, 
+        customerName: finalCustomerName,
         phone: custPhoneInput, 
-        items: [...window.cart], 
+        customerPhone: custPhoneInput,
+        note: invoiceNote,
+        items: normalizedCartItems, 
         rate: window.cartRate, 
         totalAmount: window.cartFinalUsd, 
+        total: window.cartFinalUsd,
         totalRiel: Math.round(window.cartFinalRiel), 
         discount: discountValue, 
         discountType: discountType, 
@@ -483,13 +564,14 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         changeRiel: cRiel, 
         status: status, 
         seller: currentSellerName, 
-        paidUsd: paidUsdAmount 
+        paidUsd: paidUsdAmount,
+        paidAmount: paidUsdAmount
     }; 
     
     if(!window.invoices) window.invoices = [];
     window.invoices.unshift(newInvoice); 
     
-    if(custNameInput && typeof window.setAutoRegisterCustomer === 'function') {
+    if(custNameInput && custNameInput !== selectedTable && typeof window.setAutoRegisterCustomer === 'function') {
         window.setAutoRegisterCustomer(custNameInput, custPhoneInput);
     }
 
@@ -520,8 +602,13 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     
     window.cart = []; 
     
-    const cNameInputEl = document.getElementById('posCustomerName'); if(cNameInputEl) cNameInputEl.value = ''; 
+    const cNameInputEl = document.getElementById('posCustomerName'); 
+    if(cNameInputEl) {
+        cNameInputEl.value = ''; 
+        cNameInputEl.style.borderLeft = '1px solid var(--border)';
+    }
     const cPhoneInputEl = document.getElementById('posCustomerPhone'); if(cPhoneInputEl) cPhoneInputEl.value = ''; 
+    if(tableSelectEl) tableSelectEl.value = '';
     const posDiscEl = document.getElementById('posDiscount'); if (posDiscEl) posDiscEl.value = ''; 
     const mobileContainer = document.getElementById('mobileCartContainer'); if(mobileContainer) mobileContainer.classList.remove('open'); 
     
@@ -537,6 +624,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     window.renderPOSProducts(); 
     if(typeof window.renderUnpaid === 'function') window.renderUnpaid();
     if(typeof window.renderCustomers === 'function') window.renderCustomers();
+    if(typeof window.renderDashboard === 'function') window.renderDashboard();
     
     window.executePrint(receiptHTML);
 
@@ -566,11 +654,7 @@ window.handleBarcodeScan = function(e) {
             input.value = '';
             window.renderPOSProducts();
         } else {
-            if (typeof window.ksMsg === 'function') {
-                window.ksMsg('រកមិនឃើញទំនិញដែលមានបាកូដនេះទេ!', 'មិនមានទំនិញ');
-            } else {
-                alert('រកមិនឃើញទំនិញដែលមានបាកូដនេះទេ!');
-            }
+            notifyPosUser('រកមិនឃើញទំនិញដែលមានបាកូដនេះទេ!', 'មិនមានទំនិញ', true);
         }
     }
 };
@@ -587,7 +671,7 @@ window.initPosTabScroll = function() {
     let isDown = false;
     let startX;
     let scrollLeft;
-    let isDragging = false; // ការពារកុំឲ្យចុចប៉ះប៊ូតុងខុសពេលកំពុងអូស
+    let isDragging = false;
 
     slider.addEventListener('mousedown', (e) => {
         isDown = true;
@@ -611,12 +695,11 @@ window.initPosTabScroll = function() {
         if (!isDown) return;
         e.preventDefault();
         const x = e.pageX - slider.offsetLeft;
-        const walk = (x - startX) * 2; // ល្បឿនពេលអូស
-        if (Math.abs(walk) > 5) isDragging = true; // ប្រសិនបើអូសលើសពី 5px វាចាត់ទុកថាជាការ Drag
+        const walk = (x - startX) * 2;
+        if (Math.abs(walk) > 5) isDragging = true;
         slider.scrollLeft = scrollLeft - walk;
     });
 
-    // ការពារការ Click លើ Tab ពេលដែលយើងគ្រាន់តែចង់អូស (Drag)
     slider.addEventListener('click', (e) => {
         if (isDragging) {
             e.preventDefault();
@@ -624,8 +707,6 @@ window.initPosTabScroll = function() {
         }
     }, true); 
 
-    // បន្ថែម Cursor ធម្មតាពីដំបូង
     slider.style.cursor = 'grab';
-    
     isPosTabScrollInitialized = true;
 };

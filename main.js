@@ -168,7 +168,7 @@ window.sysI18n = {
         lblDashProfit: 'ប្រាក់ចំណេញសុទ្ធ (Net Profit)',
         dashLowStockTitle: 'ជិតអស់ពីស្តុក (Low Stock Alert)',
         dashTopSellTitle: '🏆 ទំនិញលក់ដាច់ជាងគេ (Top Selling Items)',
-        dashExpiryAlertTitle: '🚨 ថ្នាំជិតផុតកំណត់ (Expired / Near Expiry Alert)',
+        dashExpiryAlertTitle: '🚨 ថ្នាំ/ទំនិញជិតផុតកំណត់ (Expired / Near Expiry Alert)',
         btnToggleSection: '🔽 បិទ/បើក',
         btnViewItem: 'មើល',
         thRank: 'ចំណាត់ថ្នាក់',
@@ -185,6 +185,9 @@ window.sysI18n = {
         thLowCat: 'ប្រភេទ',
         thLowQty: 'ស្តុកនៅសល់',
         thLowAction: 'សកម្មភាព',
+        statusExpired: '❌ ផុតកំណត់ហើយ',
+        statusNearExpiry: '⚠️ សល់ ',
+        daysUnit: ' ថ្ងៃទៀត',
 
         searchInvPlh: '🔍 ស្វែងរកទូទៅ (លេខកូដ, ឈ្មោះ)...',
         allCats: 'គ្រប់ប្រភេទ',
@@ -454,6 +457,9 @@ window.sysI18n = {
         thLowCat: 'Category',
         thLowQty: 'Stock Left',
         thLowAction: 'Action',
+        statusExpired: '❌ Expired',
+        statusNearExpiry: '⚠️ ',
+        daysUnit: ' days left',
 
         searchInvPlh: '🔍 Search product name, SKU...',
         allCats: 'All Categories',
@@ -723,6 +729,9 @@ window.sysI18n = {
         thLowCat: '分类',
         thLowQty: '剩余库存',
         thLowAction: '操作',
+        statusExpired: '❌ 已过期',
+        statusNearExpiry: '⚠️ 剩余 ',
+        daysUnit: ' 天',
 
         searchInvPlh: '🔍 搜索商品名称、条形码...',
         allCats: '全部分类',
@@ -962,7 +971,7 @@ window.changeAppLanguage = function(lang) {
     if (userAccTitleEl) userAccTitleEl.innerText = d.currAccTitle || 'គណនីបច្ចុប្បន្ន';
 
     const userDisplayEl = document.getElementById('currentUserDisplay');
-    if (userDisplayEl) userDisplayEl.innerHTML = d.adminUserText || '👤 អ្នកគ្រប់គ្រងប្រព័ន្ធ';
+    if (userDisplayEl && !window.activeUser) userDisplayEl.innerHTML = d.adminUserText || '👤 អ្នកគ្រប់គ្រងប្រព័ន្ធ';
 
     const activeTab = document.querySelector('.tab-content.active');
     if (activeTab) {
@@ -1004,6 +1013,9 @@ window.changeAppLanguage = function(lang) {
         const btnShowAll = dashToolbar.querySelector('button');
         if (btnShowAll) btnShowAll.innerText = d.btnDashShowAll || 'បង្ហាញទាំងអស់';
     }
+
+    const expiryH3 = document.querySelector('#expiryAlertSection h3');
+    if (expiryH3) expiryH3.innerText = d.dashExpiryAlertTitle || '🚨 ថ្នាំជិតផុតកំណត់ (Expired / Near Expiry Alert)';
 
     const lowStockH3 = document.querySelector('#tab-dashboard h3[style*="color: var(--primary)"]');
     if (lowStockH3) lowStockH3.innerText = d.dashLowStockTitle || 'ជិតអស់ពីស្តុក (Low Stock Alert)';
@@ -1370,13 +1382,19 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 window.historyLog.sort((a, b) => b.id - a.id);
             }
 
-            // ⚡ 6. Preserve Custom Scripts (CRITICAL FIX)
+            // ⚡ 6. Preserve Custom Scripts & Admin Menu Settings (CRITICAL FIX)
             if (cloudData.customPosScripts && (!window.customPosScripts || window.customPosScripts.length === 0)) {
                 window.customPosScripts = cloudData.customPosScripts;
             }
-            if (cloudData.sysSettings && cloudData.sysSettings.customMenuScripts) {
+            if (cloudData.sysSettings) {
                 if (!window.sysSettings) window.sysSettings = {};
-                window.sysSettings.customMenuScripts = cloudData.sysSettings.customMenuScripts;
+                // រក្សាទុកការកំណត់ពិសេសរបស់ admin_settings.html ដូចជា Promo Codes, Menu Scripts, Banners
+                const preserveKeys = ['customMenuScripts', 'promoCodes', 'menuBanners', 'menuBanner', 'menuThemeColor', 'menuQR', 'chatLink', 'socialIcon', 'socialLabel', 'socialLink', 'toggleWelcomePopup', 'welcomeImg', 'toggleStoreHours', 'openTime', 'closeTime', 'toggleTableFeature', 'totalTables', 'tablePrefix', 'orderTelegramBotToken', 'orderTelegramChatId', 'serviceTelegramBotToken', 'serviceTelegramChatId'];
+                preserveKeys.forEach(k => {
+                    if (window.sysSettings[k] === undefined && cloudData.sysSettings[k] !== undefined) {
+                        window.sysSettings[k] = cloudData.sysSettings[k];
+                    }
+                });
             }
 
             // ⚡ អាប់ដេត Memory ម៉ាស៊ីនជាមួយនឹងទិន្នន័យដែលបាន Merge និងត្រងចោលទិន្នន័យក្នុងបញ្ជីខ្មៅ
@@ -1396,7 +1414,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 customers: window.customers, 
                 sysSettings: window.sysSettings, 
                 userAccounts: window.userAccounts,
-                customPosScripts: window.customPosScripts || [], // Preserve Custom Scripts!
+                customPosScripts: window.customPosScripts || [],
                 shopPhone: window.shopPhone || '', 
                 shopAddress: window.shopAddress || '', 
                 shopTelegram: window.shopTelegram || '', 
@@ -1428,7 +1446,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         window.setSyncStatus('error', 'Sync បរាជ័យ');
     }
 
-    // រក្សាទុកចូល LocalStorage បន្ទាប់ពីការ Merge រួចរាល់
+    // ⚡ រក្សាទុកគ្រប់ព័ត៌មានហាងចូល LocalStorage បន្ទាប់ពីការ Merge រួចរាល់ (ចំណុចទី ៧)
     localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory || []));
     localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog || []));
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices || []));
@@ -1436,8 +1454,16 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
     localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
     localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
+    localStorage.setItem(window.getBranchKey('shop_phone'), window.shopPhone || '');
+    localStorage.setItem(window.getBranchKey('shop_address'), window.shopAddress || '');
+    localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram || '');
+    localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken || '');
+    localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId || '');
     localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers || []));
     localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings || {}));
+    if (window.customPosScripts) {
+        localStorage.setItem(window.getBranchKey('pos_scripts'), JSON.stringify(window.customPosScripts));
+    }
 
     if(typeof renderAllCallback === 'function') renderAllCallback();
 };
@@ -1476,7 +1502,6 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
                     if (!pCloud || !pCloud.id || deletedProd.includes(String(pCloud.id))) return;
                     let pLoc = window.inventory.find(p => p.id === pCloud.id);
                     if (pLoc) {
-                        // ធ្វើបច្ចុប្បន្នភាពទិន្នន័យ (ដូចជា ចំនួនស្តុក និងតម្លៃ) ពី Cloud មក Local
                         Object.assign(pLoc, pCloud);
                     } else {
                         window.inventory.push(pCloud);
@@ -1525,6 +1550,12 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             if(d.sysSettings) {
                 if(!window.sysSettings) window.sysSettings = {};
                 Object.assign(window.sysSettings, d.sysSettings);
+                // ភ្ជាប់ tickerNews និង tickerText ឱ្យស្គាល់គ្នា
+                const syncedTicker = window.sysSettings.tickerNews || window.sysSettings.tickerText || '';
+                if (syncedTicker) {
+                    window.sysSettings.tickerNews = syncedTicker;
+                    window.sysSettings.tickerText = syncedTicker;
+                }
             }
             if(d.userAccounts && userAccountsRef) {
                 userAccountsRef.splice(0, userAccountsRef.length, ...d.userAccounts);
@@ -1542,6 +1573,18 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
             localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
             localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
+            localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
+            localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
+            localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
+            localStorage.setItem(window.getBranchKey('shop_phone'), window.shopPhone || '');
+            localStorage.setItem(window.getBranchKey('shop_address'), window.shopAddress || '');
+            localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram || '');
+            localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken || '');
+            localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId || '');
+            localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings || {}));
+            if (window.userAccounts) localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts));
+            if (window.customPosScripts) localStorage.setItem(window.getBranchKey('pos_scripts'), JSON.stringify(window.customPosScripts));
+            if (typeof window.loadTableSettingsForPOS === 'function') window.loadTableSettingsForPOS();
         }
     } catch(e) {}
 };
@@ -1582,7 +1625,10 @@ window.switchTab = function(tabId, title, elem) {
     
     if (tabId === 'dashboard' && typeof window.renderDashboard === 'function') window.renderDashboard();
     if (tabId === 'inventory' && typeof window.renderInventory === 'function') window.renderInventory();
-    if (tabId === 'pos' && typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+    if (tabId === 'pos' && typeof window.renderPOSProducts === 'function') {
+        if (typeof window.loadTableSettingsForPOS === 'function') window.loadTableSettingsForPOS();
+        window.renderPOSProducts();
+    }
     if (tabId === 'customers' && typeof window.renderCustomers === 'function') window.renderCustomers();
     if (tabId === 'unpaid' && typeof window.renderUnpaid === 'function') window.renderUnpaid();
     if (tabId === 'expenses' && typeof window.renderExpenses === 'function') window.renderExpenses();
@@ -1590,13 +1636,20 @@ window.switchTab = function(tabId, title, elem) {
     if (tabId === 'about' && typeof window.displayLicenseInfo === 'function') window.displayLicenseInfo();
 };
 
+// ⚡ FIX (ចំណុចទី ៨): ទាញសិទ្ធិអ្នកប្រើប្រាស់ពី window.activeUser និង active_user_obj ឱ្យស៊ីគ្នាជាមួយ auth.js
 window.applyPermissions = function() {
     try {
-        const rawSession = localStorage.getItem(window.getBranchKey('auth_session_user')) || localStorage.getItem('auth_session_user');
-        if (rawSession) {
-            const sess = JSON.parse(rawSession);
-            if (sess && sess.role) {
-                window.currentRole = String(sess.role).toLowerCase().trim();
+        if (window.activeUser && window.activeUser.role) {
+            window.currentRole = String(window.activeUser.role).toLowerCase().trim();
+        } else {
+            const rawSession = localStorage.getItem(window.getBranchKey('active_user_obj')) 
+                            || localStorage.getItem(window.getBranchKey('auth_session_user')) 
+                            || localStorage.getItem('auth_session_user');
+            if (rawSession) {
+                const sess = JSON.parse(rawSession);
+                if (sess && sess.role) {
+                    window.currentRole = String(sess.role).toLowerCase().trim();
+                }
             }
         }
     } catch(e) {}
@@ -1677,6 +1730,7 @@ window.applyPermissions = function() {
     }
 };
 
+// ⚡ FIX (ចំណុចទី ៦): ភ្ជាប់អក្សររត់ទាំង tickerNews និង tickerText
 window.loadSettingsToUI = function() { 
     if(!window.sysSettings) return;
     if(document.getElementById('setCust')) document.getElementById('setCust').checked = window.sysSettings.cust; 
@@ -1701,7 +1755,7 @@ window.loadSettingsToUI = function() {
     }
     
     if(document.getElementById('setTickerText')) {
-        document.getElementById('setTickerText').value = window.sysSettings.tickerNews || '';
+        document.getElementById('setTickerText').value = window.sysSettings.tickerNews || window.sysSettings.tickerText || '';
     }
 };
 
@@ -1725,8 +1779,12 @@ window.saveSysSettings = async function() {
     if(!window.sysSettings) window.sysSettings = {};
     window.sysSettings.storePin = newStorePin || '1234';
 
+    // ⚡ ភ្ជាប់អក្សររត់ទាំង tickerNews និង tickerText ឱ្យដូចគ្នា ១០០%
     if(document.getElementById('setTickerText')) {
-        window.sysSettings.tickerNews = document.getElementById('setTickerText').value.trim();
+        const tickerVal = document.getElementById('setTickerText').value.trim();
+        window.sysSettings.tickerNews = tickerVal;
+        window.sysSettings.tickerText = tickerVal;
+        if (tickerVal) window.sysSettings.toggleTicker = true;
     }
 
     if(document.getElementById('setCust')) window.sysSettings.cust = document.getElementById('setCust').checked; 
@@ -1749,6 +1807,7 @@ window.saveSysSettings = async function() {
     
     if(typeof window.updateCategories === 'function') window.updateCategories(); 
     if(typeof window.applyPermissions === 'function') window.applyPermissions(); 
+    if(typeof window.renderDashboard === 'function') window.renderDashboard();
     if(typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
     if(typeof window.ksMsg==='function') window.ksMsg(d.msgShopSaved || "ការកំណត់ និងសេចក្តីជូនដំណឹងត្រូវបានរក្សាទុក!", d.successTitle || "ជោគជ័យ"); 
 };
@@ -1862,7 +1921,7 @@ window.verifyAndSaveLicense = async function() {
         if(typeof window.loadSettingsToUI==='function') window.loadSettingsToUI(); 
         if(typeof window.applyPermissions==='function') window.applyPermissions(); 
         if(typeof window.updateCategories==='function') window.updateCategories();
-        if(typeof window.renderAll==='function') window.renderAll(); 
+        if(typeof window.renderDashboard==='function') window.renderDashboard(); 
 
         if(typeof window.showToast==='function') window.showToast("✅ សិទ្ធិប្រើប្រាស់ត្រូវបានបើកដំណើរការជោគជ័យ!");
 
@@ -2084,6 +2143,23 @@ window.saveShopName = async function() {
             window.shopName = newName;
             if(globalThis.shopLogo !== undefined) window.shopLogo = globalThis.shopLogo;
             if(globalThis.shopQR !== undefined) window.shopQR = globalThis.shopQR;
+            window.shopPhone = newPhone;
+            window.shopAddress = newAddress;
+            window.shopTelegram = newTelegram;
+            window.telegramBotToken = newBotToken;
+            window.telegramChatId = newChatId;
+        }
+
+        // Sync QR & Telegram Settings with sysSettings for Digital Menu compatibility
+        if (!window.sysSettings) window.sysSettings = {};
+        if (window.shopQR && !window.sysSettings.menuQR) window.sysSettings.menuQR = window.shopQR;
+        if (newBotToken) {
+            window.sysSettings.telegramBotToken = newBotToken;
+            if (!window.sysSettings.orderTelegramBotToken) window.sysSettings.orderTelegramBotToken = newBotToken;
+        }
+        if (newChatId) {
+            window.sysSettings.telegramChatId = newChatId;
+            if (!window.sysSettings.orderTelegramChatId) window.sysSettings.orderTelegramChatId = newChatId;
         }
         
         const dispName = document.getElementById('displayShopName');
@@ -2113,41 +2189,77 @@ window.resetDashboardDate = function() {
 };
 
 // ==========================================
-// 16. DASHBOARD & REPORTING
+// 16. DASHBOARD & REPORTING (WITH EXPIRY ALERT FIX)
 // ==========================================
 window.renderDashboard = function() {
     try {
-        let tItems = window.inventory.length; let tQty = 0, estRev = 0, lowItems = []; 
+        let tItems = window.inventory.length;
+        let tQty = 0, estRev = 0, lowItems = [], expItems = []; 
+        const nowMs = Date.now();
+
         window.inventory.forEach(p => { 
             if(!p) return; 
-            let q = parseInt(p.qty) || 0; tQty += q; let priceVal = parseFloat(p.price) || 0; estRev += (priceVal * q); 
+            let q = parseInt(p.qty) || 0;
+            tQty += q;
+            let priceVal = parseFloat(p.price) || 0;
+            estRev += (priceVal * q); 
             if(q <= 5) lowItems.push(p); 
+
+            // 🚨 ពិនិត្យថ្ងៃផុតកំណត់ទំនិញ (Expiry Date Alert - ចំណុចទី ៥)
+            if (window.sysSettings && window.sysSettings.expiry !== false && p.expiry) {
+                const expDateObj = new Date(p.expiry);
+                if (!isNaN(expDateObj.getTime())) {
+                    const expEndMs = new Date(p.expiry + 'T23:59:59').getTime();
+                    const diffDays = Math.ceil((expEndMs - nowMs) / (1000 * 60 * 60 * 24));
+                    if (diffDays <= 30) {
+                        expItems.push({ ...p, diffDays });
+                    }
+                }
+            }
         });
         
-        const dateFrom = document.getElementById('dashDateFrom'); const dateTo = document.getElementById('dashDateTo'); 
+        const dateFrom = document.getElementById('dashDateFrom');
+        const dateTo = document.getElementById('dashDateTo'); 
         const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).getTime() : 0; 
         const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity;
         let totalSalesRevenue = 0, totalUnpaid = 0, totalExpenses = 0, totalCOGS = 0, salesMap = {};
         
         window.invoices.forEach(inv => { 
-            let invTime = inv.timestamp || parseInt(String(inv.id).split('_')[1]) || 0; 
+            if (!inv) return;
+            let invTime = inv.timestamp || parseInt(String(inv.id).split('_')[1]) || new Date(inv.date || 0).getTime() || 0; 
             if (invTime >= fromTime && invTime <= toTime) { 
-                if(inv.status === 'paid') totalSalesRevenue += (parseFloat(inv.totalAmount) || 0); 
-                if(inv.status === 'unpaid' || inv.status === 'preorder') { 
-                    let invPaid = parseFloat(inv.paidUsd) || 0; 
-                    let remaining = (parseFloat(inv.totalAmount) || 0) - invPaid; 
+                const st = String(inv.status || 'unpaid').toLowerCase();
+                const totAmt = parseFloat(inv.totalAmount || inv.total || 0);
+                if(st === 'paid') {
+                    totalSalesRevenue += totAmt; 
+                } else { 
+                    let invPaid = parseFloat(inv.paidUsd || inv.paidAmount || 0); 
+                    let remaining = totAmt - invPaid; 
                     if(remaining > 0) totalUnpaid += remaining; 
                     totalSalesRevenue += invPaid; 
                 }
-                if(inv.items) inv.items.forEach(item => { 
-                    if(!item) return; let pId = item.id ? String(item.id) : 'unknown';
-                    if(!salesMap[pId]) salesMap[pId] = { name: item.name, qty: 0, revenue: 0 }; 
-                    let qty = parseInt(item.cartQty) || 0; let price = parseFloat(item.price) || 0; let cost = parseFloat(item.cost) || 0;
-                    salesMap[pId].qty += qty; salesMap[pId].revenue += (price * qty); totalCOGS += (cost * qty);
-                }); 
+                if(inv.items && Array.isArray(inv.items)) {
+                    inv.items.forEach(item => { 
+                        if(!item) return;
+                        let pId = item.id ? String(item.id) : (item.name || 'unknown');
+                        if(!salesMap[pId]) salesMap[pId] = { name: item.name || item.title || 'ទំនិញ', qty: 0, revenue: 0 }; 
+                        // ⚡ គាំទ្រទាំង cartQty (POS) និង qty (Digital Menu)
+                        let qty = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 0;
+                        let price = parseFloat(item.price) || 0;
+                        let cost = parseFloat(item.cost) || 0;
+                        salesMap[pId].qty += qty;
+                        salesMap[pId].revenue += (price * qty);
+                        totalCOGS += (cost * qty);
+                    }); 
+                }
             } 
         });
-        window.expenses.forEach(exp => { let expTime = exp.timestamp || 0; if(expTime >= fromTime && expTime <= toTime) totalExpenses += (parseFloat(exp.amount) || 0); });
+
+        window.expenses.forEach(exp => {
+            if (!exp) return;
+            let expTime = exp.timestamp || new Date(exp.date || 0).getTime() || 0;
+            if(expTime >= fromTime && expTime <= toTime) totalExpenses += (parseFloat(exp.amount) || 0);
+        });
 
         let netProfit = totalSalesRevenue - totalCOGS - totalExpenses;
         
@@ -2158,10 +2270,41 @@ window.renderDashboard = function() {
         if(document.getElementById('dashTotalExpenses')) document.getElementById('dashTotalExpenses').innerText = typeof window.fMoney==='function'?window.fMoney(totalExpenses):`$${totalExpenses}`;
         if(document.getElementById('dashTotalUnpaid')) document.getElementById('dashTotalUnpaid').innerText = typeof window.fMoney==='function'?window.fMoney(totalUnpaid):`$${totalUnpaid}`;
         let netProfitEl = document.getElementById('dashNetProfit');
-        if(netProfitEl) { netProfitEl.innerText = typeof window.fMoney==='function'?window.fMoney(netProfit):`$${netProfit}`; netProfitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)'; }
+        if(netProfitEl) {
+            netProfitEl.innerText = typeof window.fMoney==='function'?window.fMoney(netProfit):`$${netProfit}`;
+            netProfitEl.style.color = netProfit >= 0 ? 'var(--success)' : 'var(--danger)';
+        }
         
         const lang = localStorage.getItem('app_lang') || 'km';
         const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
+
+        // 🚨 គូរតារាងជូនដំណឹងទំនិញជិតផុតកំណត់ ឬផុតកំណត់ (Expiry Alert Table)
+        const expSection = document.getElementById('expiryAlertSection');
+        const expTbody = document.getElementById('expiryAlertTable');
+        if (expSection && expTbody) {
+            if (window.sysSettings && window.sysSettings.expiry !== false && expItems.length > 0) {
+                expItems.sort((a, b) => a.diffDays - b.diffDays);
+                expSection.style.display = 'block';
+                expTbody.innerHTML = expItems.map(p => {
+                    let catStr = p.category ? p.category : '-';
+                    let nameStr = p.name ? String(p.name).replace(/'/g, "\\'") : '';
+                    let expDateFormatted = new Date(p.expiry).toLocaleDateString(lang === 'km' ? 'km-KH' : (lang === 'zh' ? 'zh-CN' : 'en-US'));
+                    let statusBadge = p.diffDays < 0 
+                        ? `<span class="badge" style="background:rgba(225,29,72,0.15); color:var(--danger); border:1px solid var(--danger);">${d.statusExpired || '❌ ផុតកំណត់ហើយ'} (${Math.abs(p.diffDays)}${d.daysUnit || ' ថ្ងៃ'})</span>`
+                        : `<span class="badge" style="background:rgba(245,158,11,0.15); color:var(--warning); border:1px solid var(--warning);">${d.statusNearExpiry || '⚠️ សល់ '}${p.diffDays}${d.daysUnit || ' ថ្ងៃទៀត'}</span>`;
+                    return `<tr>
+                        <td style="font-weight:bold;">${p.name}</td>
+                        <td>${catStr}</td>
+                        <td style="font-weight:bold; color:${p.diffDays < 0 ? 'var(--danger)' : 'var(--warning)'};">${expDateFormatted}</td>
+                        <td>${statusBadge}</td>
+                        <td><button class="btn btn-outline" style="padding:4px 8px; font-size:var(--fs-12);" onclick="window.switchTab('inventory','📦 Inventory', document.getElementById('nav-inventory')); document.getElementById('searchInput').value='${nameStr}'; window.renderInventory();">${d.btnViewItem || 'មើល'}</button></td>
+                    </tr>`;
+                }).join('');
+            } else {
+                expSection.style.display = 'none';
+                expTbody.innerHTML = '';
+            }
+        }
 
         const tbody = document.getElementById('lowStockTable'); 
         if(tbody) { 
@@ -2181,7 +2324,9 @@ window.renderDashboard = function() {
                 return `<tr><td style="font-weight:bold; color:var(--primary);">${rankLabel}</td><td>${item.name}</td><td style="font-weight:bold;">${item.qty}</td><td style="color:var(--success); font-weight:bold;">${typeof window.fMoney==='function'?window.fMoney(item.revenue):`$${item.revenue}`}</td></tr>`;
             }).join(''); 
         }
-    } catch(e) {}
+    } catch(e) {
+        console.error("Dashboard render error:", e);
+    }
 };
 
 window.renderHistory = function() {
@@ -2301,13 +2446,17 @@ window.exportData = function() {
         shopQR: window.shopQR, 
         shopPhone: window.shopPhone, 
         shopAddress: window.shopAddress, 
+        shopTelegram: window.shopTelegram,
+        telegramBotToken: window.telegramBotToken,
+        telegramChatId: window.telegramChatId,
         customers: window.customers, 
         sysSettings: window.sysSettings, 
         userAccounts: window.userAccounts, 
+        customPosScripts: window.customPosScripts || [],
         invoiceCounter: JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) 
     }; 
     const a = document.createElement("a"); 
-    a.href = URL.createObjectURL(new Blob([JSON.stringify(dataToBackup)], { type: "application/json" })); 
+    a.href = URL.createObjectURL(new Blob([JSON.stringify(dataToBackup, null, 2)], { type: "application/json" })); 
     a.download = `SKM_INTEGRATE_${window.SHOP_BRANCH_ID}_Backup.json`; 
     a.click(); 
 };
@@ -2330,9 +2479,13 @@ window.importData = function(e) {
                 if(data.shopQR) globalThis.shopQR = data.shopQR; 
                 if(data.shopPhone) globalThis.shopPhone = data.shopPhone; 
                 if(data.shopAddress) globalThis.shopAddress = data.shopAddress;
+                if(data.shopTelegram) globalThis.shopTelegram = data.shopTelegram;
+                if(data.telegramBotToken) globalThis.telegramBotToken = data.telegramBotToken;
+                if(data.telegramChatId) globalThis.telegramChatId = data.telegramChatId;
                 
                 if(data.sysSettings) Object.assign(window.sysSettings, data.sysSettings); 
                 if(data.userAccounts) window.userAccounts.splice(0, window.userAccounts.length, ...data.userAccounts); 
+                if(data.customPosScripts) window.customPosScripts = data.customPosScripts;
                 
                 if(data.invoiceCounter) localStorage.setItem(window.getBranchKey('invoice_counter'), JSON.stringify(data.invoiceCounter));
             } else if(Array.isArray(data)) {
@@ -2353,6 +2506,7 @@ window.importData = function(e) {
             
             if(typeof window.loadSettingsToUI==='function') window.loadSettingsToUI(); 
             if(typeof window.applyPermissions==='function') window.applyPermissions(); 
+            if(typeof window.renderDashboard==='function') window.renderDashboard();
             if(typeof window.ksMsg==='function') window.ksMsg('ទិន្នន័យទាំងអស់ត្រូវបាន Restore ជោគជ័យ!', 'ជោគជ័យ');
         } catch(err) { 
             if(typeof window.ksMsg==='function') window.ksMsg('ឯកសារមិនត្រឹមត្រូវតាមទម្រង់ទេ!', 'បរាជ័យ'); 
@@ -2460,7 +2614,6 @@ window.onload = async () => {
                         if (!pCloud || !pCloud.id || deletedProd.includes(String(pCloud.id))) return;
                         let pLoc = window.inventory.find(p => p && p.id === pCloud.id);
                         if (pLoc) {
-                            // ប្រសិនបើស្តុក តម្លៃ ឬឈ្មោះមានការប្រែប្រួលពីម៉ាស៊ីនផ្សេង ធ្វើបច្ចុប្បន្នភាពវា
                             if (pLoc.qty !== pCloud.qty || pLoc.price !== pCloud.price || pLoc.name !== pCloud.name) {
                                 Object.assign(pLoc, pCloud);
                                 shouldRenderInventory = true;
@@ -2470,13 +2623,13 @@ window.onload = async () => {
                             shouldRenderInventory = true;
                         }
                     });
-                    // ត្រូវប្រាកដថាអត់មានទំនិញជាប់ Blacklist
                     window.inventory = window.inventory.filter(p => !deletedProd.includes(String(p.id)));
                 }
 
                 // ដំណើរការលោតសារបញ្ជាក់មានការកម្ម៉ង់
                 if (hasNewOrder) {
                     window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
                     
                     if(typeof window.playOrderSound === 'function') window.playOrderSound();
                     const lang = localStorage.getItem('app_lang') || 'km';
@@ -2487,6 +2640,9 @@ window.onload = async () => {
                     const activeTab = document.querySelector('.tab-content.active');
                     if (activeTab && activeTab.id === 'tab-unpaid' && typeof window.renderUnpaid === 'function') {
                         window.renderUnpaid();
+                    }
+                    if (activeTab && activeTab.id === 'tab-dashboard' && typeof window.renderDashboard === 'function') {
+                        window.renderDashboard();
                     }
                 }
 

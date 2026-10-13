@@ -80,14 +80,11 @@
         <div class="nav-item" id="nav-unpaid" onclick="window.switchTab('unpaid', '📝 វិក្កយបត្រ & ទូទាត់ (Invoices)', this)"><i>📝</i> វិក្កយបត្រ & ទូទាត់</div>
         <div class="nav-item" id="nav-expenses" onclick="window.switchTab('expenses', '📉 ការចំណាយ (Expenses)', this)"><i>📉</i> ការចំណាយ</div>
         <div class="nav-item" id="nav-history" onclick="window.switchTab('history', '📜 ប្រវត្តិប្រតិបត្តិការ (Activity Logs)', this)"><i>📜</i> ប្រតិបត្តិការ</div>
-        
-        <!-- រក្សាទុកកូដ Settings ដើមរបស់អ្នក -->
         <div class="nav-item" id="nav-settings" onclick="window.switchTab('settings', '⚙️ ការកំណត់ប្រព័ន្ធ (Settings)', this)"><i>⚙️</i> ការកំណត់</div>
-        
         <div class="nav-item" id="nav-about" onclick="window.switchTab('about', 'ℹ️ អំពីប្រព័ន្ធ (About & Version)', this)"><i>ℹ️</i> អំពីប្រព័ន្ធ</div>
         
         <div style="flex-grow: 1;"></div>
-        <div class="nav-item" style="color: var(--danger); border-top: 1px solid var(--border); margin-top: 10px;" onclick="window.handleLogout()"><i>🚪</i> ចាកចេញ (Logout)</div>
+        <div class="nav-item" id="nav-logout" style="color: var(--danger); border-top: 1px solid var(--border); margin-top: 10px;" onclick="window.handleLogout()"><i>🚪</i> ចាកចេញ (Logout)</div>
     </div>
 
     <!-- ផ្នែកបង្ហាញខាងស្តាំ (Main Content) -->
@@ -102,8 +99,6 @@
             </div>
             
             <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
-                
-                <!-- 🌟 ប្រអប់ជ្រើសរើសភាសាដែលបានបន្ថែមថ្មី (Language Switcher) -->
                 <select id="globalLangSelect" onchange="if(typeof window.changeAppLanguage === 'function') window.changeAppLanguage(this.value)" style="background: rgba(0,0,0,0.25); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: bold; cursor: pointer; outline: none;">
                     <option value="km" style="color: #000;">🇰🇭 ខ្មែរ</option>
                     <option value="en" style="color: #000;">🇬🇧 English</option>
@@ -139,12 +134,12 @@
                 </div>
 
                 <div class="stats-grid">
-                    <div class="stat-card"><span>មុខទំនិញសរុប (Items)</span><h3 id="dashTotalItems">0</h3></div>
-                    <div class="stat-card"><span>ស្តុកសរុប (Total Qty)</span><h3 id="dashTotalQty">0</h3></div>
-                    <div class="stat-card success"><span>ចំណូលលក់បាន (Revenue)</span><h3 id="dashTotalRevenue">$0.00</h3></div>
-                    <div class="stat-card danger"><span>ចំណាយសរុប (Expenses)</span><h3 id="dashTotalExpenses">$0.00</h3></div>
-                    <div class="stat-card warning"><span>ប្រាក់រង់ចាំទូទាត់ (Pending)</span><h3 id="dashTotalUnpaid">$0.00</h3></div>
-                    <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><span>ប្រាក់ចំណេញសុទ្ធ (Net Profit)</span><h3 id="dashNetProfit" style="font-weight: 900; color: #a78bfa;">$0.00</h3></div>
+                    <div class="stat-card"><span id="lblDashItems">មុខទំនិញសរុប (Items)</span><h3 id="dashTotalItems">0</h3></div>
+                    <div class="stat-card"><span id="lblDashQty">ស្តុកសរុប (Total Qty)</span><h3 id="dashTotalQty">0</h3></div>
+                    <div class="stat-card success"><span id="lblDashRev">ចំណូលលក់បាន (Revenue)</span><h3 id="dashTotalRevenue">$0.00</h3></div>
+                    <div class="stat-card danger"><span id="lblDashExp">ចំណាយសរុប (Expenses)</span><h3 id="dashTotalExpenses">$0.00</h3></div>
+                    <div class="stat-card warning"><span id="lblDashPending">ប្រាក់រង់ចាំទូទាត់ (Pending)</span><h3 id="dashTotalUnpaid">$0.00</h3></div>
+                    <div class="stat-card" style="border-left: 4px solid #8b5cf6;"><span id="lblDashProfit">ប្រាក់ចំណេញសុទ្ធ (Net Profit)</span><h3 id="dashNetProfit" style="font-weight: 900; color: #a78bfa;">$0.00</h3></div>
                 </div>
                 
                 <!-- ផ្ទាំងជូនដំណឹងថ្ងៃផុតកំណត់ទំនិញ (Expiry Alert Section) -->
@@ -234,7 +229,7 @@
                     </div>
                     
                     <div class="pos-cart" id="mobileCartContainer">
-                        <div class="cart-header">🛒 កន្ត្រកទំនិញ <button class="btn-outline" style="border:none; padding:4px 8px; font-size:var(--fs-13);" onclick="window.clearCart()" title="លុបទំនិញទាំងអស់ចេញពីកន្ត្រក">🗑️ បោះបង់</button></div>
+                        <div class="cart-header"><span id="lblCartHeaderTitle">🛒 កន្ត្រកទំនិញ</span> <button id="btnClearCartBtn" class="btn-outline" style="border:none; padding:4px 8px; font-size:var(--fs-13);" onclick="window.clearCart()" title="លុបទំនិញទាំងអស់ចេញពីកន្ត្រក">🗑️ បោះបង់</button></div>
                         <div class="cart-items" id="cartItems"><div style="text-align: center; color: var(--text-muted); margin-top: 50px; font-size: var(--fs-14);">មិនទាន់មានទំនិញទេ</div></div>
                         
                         <div class="cart-summary-toggle" id="toggleCartBtn" onclick="window.toggleCartSummary()">
@@ -243,19 +238,19 @@
                         
                         <div class="cart-summary" id="cartSummaryBody">
                             <div class="summary-row" id="posSellerRowContainer" style="align-items: center; border-bottom: 1px dashed var(--border); padding-bottom: 8px; margin-bottom: 10px;">
-                                <span style="font-size: var(--fs-13); color: var(--text-muted);">អ្នកលក់ (Seller):</span>
+                                <span id="lblSellerText" style="font-size: var(--fs-13); color: var(--text-muted);">អ្នកលក់ (Seller):</span>
                                 <span id="posCurrentSellerDisplay" style="font-weight: bold; color: var(--primary); font-size: var(--fs-14);">Admin</span>
                             </div>
 
                             <div class="summary-row" style="align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
-                                <span style="font-size: var(--fs-13); color: var(--text-muted);">អត្រាប្តូរប្រាក់ (Rate):</span>
+                                <span id="lblRateText" style="font-size: var(--fs-13); color: var(--text-muted);">អត្រាប្តូរប្រាក់ (Rate):</span>
                                 <span style="display:flex; align-items:center; gap:5px;"><input type="number" id="globalExchangeRate" class="form-control" style="width: 80px; padding: 2px 5px; height: 28px; text-align: center;" value="4000" oninput="window.renderCart()"> ៛</span>
                             </div>
-                            <div class="summary-row" style="margin-top: 10px;"><span>សរុបចំនួន (Qty):</span><span id="cartTotalQty" style="font-weight:bold;">0</span></div>
+                            <div class="summary-row" style="margin-top: 10px;"><span id="lblQtyText">សរុបចំនួន (Qty):</span><span id="cartTotalQty" style="font-weight:bold;">0</span></div>
                             
                             <div class="summary-row" id="posDiscountContainer" style="align-items: center;">
                                 <span style="display:flex; align-items:center; gap:5px;">
-                                    បញ្ចុះតម្លៃ: 
+                                    <span id="lblDiscountText">បញ្ចុះតម្លៃ:</span> 
                                     <input type="number" id="posDiscount" class="form-control" style="width: 60px; padding: 2px 5px; height: 28px; text-align: center;" placeholder="0" oninput="window.renderCart()" min="0">
                                     <select id="posDiscountType" class="form-control" style="width: 50px; padding: 2px; height: 28px; font-size: var(--fs-13);" onchange="window.renderCart()">
                                         <option value="%">%</option>
@@ -265,32 +260,32 @@
                                 <span id="cartDiscountAmount" style="color: var(--danger);">-$0.00</span>
                             </div>
                             <div class="summary-row" id="posTaxContainer" style="align-items: center; display: none;">
-                                <span>ពន្ធអាករ (VAT <span id="cartTaxRateDisplay">0</span>%):</span>
+                                <span><span id="lblTaxText">ពន្ធអាករ</span> (VAT <span id="cartTaxRateDisplay">0</span>%):</span>
                                 <span id="cartTaxAmount" style="color: var(--warning);">+$0.00</span>
                             </div>
 
-                            <div class="summary-row summary-total"><span>សរុបទឹកប្រាក់:</span><span style="text-align:right;"><div id="cartTotalAmount">$0.00</div><div id="cartTotalAmountRiel" style="font-size: var(--fs-14); color: var(--text-muted); font-weight: normal; margin-top: 4px;"></div></span></div>
+                            <div class="summary-row summary-total"><span id="lblTotalText">សរុបទឹកប្រាក់:</span><span style="text-align:right;"><div id="cartTotalAmount">$0.00</div><div id="cartTotalAmountRiel" style="font-size: var(--fs-14); color: var(--text-muted); font-weight: normal; margin-top: 4px;"></div></span></div>
                             
-                            <!-- 🌟 ប្រអប់បញ្ចូលឈ្មោះអតិថិជន 🌟 -->
+                            <!-- ប្រអប់បញ្ចូលឈ្មោះអតិថិជន -->
                             <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); transition: 0.3s;">
-    <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%; transition: 0.3s;">
-    <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
-    <datalist id="customerDatalist"></datalist>
-</div>
+                                <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%; transition: 0.3s;">
+                                <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
+                                <datalist id="customerDatalist"></datalist>
+                            </div>
 
-<!-- 🌟 ប្រអប់ជ្រើសរើសលេខតុ (Table Management) 🌟 -->
-<div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--brand-cyan); display: none;">
-    <label style="font-size: var(--fs-13); font-weight: bold; color: var(--brand-dark); display: block; margin-bottom: 5px;">🪑 ជ្រើសរើសលេខតុ (Table):</label>
-    <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--brand-cyan);" onchange="window.handleTableSelectionChange()">
-        <option value="">-- សូមជ្រើសរើសតុ --</option>
-    </select>
-</div>
+                            <!-- ប្រអប់ជ្រើសរើសលេខតុ (Table Management) -->
+                            <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--brand-cyan); display: none;">
+                                <label style="font-size: var(--fs-13); font-weight: bold; color: var(--brand-dark); display: block; margin-bottom: 5px;">🪑 ជ្រើសរើសលេខតុ (Table):</label>
+                                <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--brand-cyan);" onchange="window.handleTableSelectionChange()">
+                                    <option value="">-- សូមជ្រើសរើសតុ --</option>
+                                </select>
+                            </div>
 
-<!-- 🌟 ប៊ូតុងគិតលុយ ឆ្លងកាត់ការត្រួតពិនិត្យ 🌟 -->
-<div style="display: flex; gap: 10px; flex-shrink: 0;">
-    <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
-    <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
-    <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('paid')">💰 ទូទាត់រួច</button>
+                            <!-- ប៊ូតុងគិតលុយ -->
+                            <div style="display: flex; gap: 10px; flex-shrink: 0;">
+                                <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
+                                <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
+                                <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('paid')">💰 ទូទាត់រួច</button>
                             </div>
                         </div>
                     </div>
@@ -456,7 +451,7 @@
                 </div>
             </div>
 
-            <!-- ផ្ទាំងការកំណត់ (Settings) រក្សាទុកកូដដើម ១០០% -->
+            <!-- ផ្ទាំងការកំណត់ (Settings) -->
             <div id="tab-settings" class="tab-content">
                 <div style="max-width: 900px; margin: auto; display: flex; flex-direction: column; gap: 25px;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
@@ -588,6 +583,18 @@
                             <button class="btn btn-warning" onclick="window.handleChangePassword()">🔄 ផ្លាស់ប្តូរលេខកូដ</button>
                         </div>
                     </div>
+
+                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (Quick Tools & Digital Menu Panel) -->
+                    <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #06b6d4;">
+                        <h2 style="font-size: var(--fs-20); margin-bottom: 10px; color: #06b6d4; border-bottom: 1px solid var(--border); padding-bottom: 10px;">🛠️ ឧបករណ៍ជំនួយពិសេស & ម៉ឺនុយឌីជីថល (Quick Tools)</h2>
+                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 20px;">ចុចប៊ូតុងខាងក្រោមដើម្បីបើកផ្ទាំងគ្រប់គ្រងម៉ឺនុយអតិថិជន កាត QR តាមតុ និងផ្ទាំងរចនា Poster ផ្សព្វផ្សាយ៖</p>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                            <button type="button" class="btn" style="background: #06b6d4; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('admin_settings.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">⚙️ គ្រប់គ្រង Digital Menu</button>
+                            <button type="button" class="btn" style="background: #0284c7; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('menu.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">🍔 បើកមើល Digital Menu</button>
+                            <button type="button" class="btn" style="background: #8b5cf6; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('skm_ultimate_qr_generator.html', '_blank')">🔳 បង្កើតកាត QR ម៉ឺនុយ & តុ</button>
+                            <button type="button" class="btn" style="background: #f59e0b; color: #000; padding: 14px; justify-content: center;" onclick="window.open('skm_pos_52_advanced_themes.html', '_blank')">🎨 រចនា Poster (52 Themes)</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -682,7 +689,7 @@
         </div>
     </div>
 
-    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) VVIP ថ្មី -->
+    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) -->
     <div class="modal-overlay" id="checkoutModal" style="z-index: 100005; backdrop-filter: blur(5px);" onclick="if(event.target === this) document.getElementById('checkoutModal').style.display='none'">
         <style>
             .skm-checkout-glass {
@@ -823,7 +830,7 @@
         </div>
     </div>
 
-    <!-- Modal: ប្រអប់សារ Alert ជូនដំណឹង (Message Box) (មិនដាក់ onclick ទេ ការពារកុំឱ្យចុចច្រឡំ) -->
+    <!-- Modal: ប្រអប់សារ Alert ជូនដំណឹង (Message Box) -->
     <div class="modal-overlay" id="ksMsgBox" style="z-index: 999999;">
         <div class="modal" style="max-width: 400px; text-align: center; margin: auto;">
             <div class="modal-body">
@@ -997,7 +1004,7 @@
     <!-- កន្លែងសម្រាប់ព្រីន (Print Area) -->
     <div id="printReceiptArea" style="display: none;"></div>
 
-    <!-- ភ្ជាប់ឯកសារ JavaScript Module ទាំងអស់ -->
+    <!-- ភ្ជាប់ឯកសារ JavaScript Module ទាំងអស់ (បានលុប script.js ដែលគ្មានពិតចេញ) -->
     <script src="config.js"></script>
     <script src="theme.js"></script>
     <script src="auth.js"></script>
@@ -1006,18 +1013,15 @@
     <script src="finance.js"></script>
     <script src="customer.js"></script>
     <script src="main.js"></script>
-    <script src="script.js"></script>
 
     <!-- កូដចុះឈ្មោះ Service Worker និងមុខងារ Helper Globals -->
     <script>
-        // កែប្រែកន្លែង PWA ដើម្បីកុំឲ្យលោត Error ពេល Preview
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
             navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' }).catch(function(err) {
                 console.log('Service Worker registration skipped or failed in preview: ', err);
             });
         }
         
-        // មុខងារបិទ/បើក ផ្នែកផ្ទាំងទិន្នន័យ
         window.toggleSection = function(id) {
             const el = document.getElementById(id);
             if(el) el.style.display = (el.style.display === 'none') ? 'block' : 'none';
@@ -1239,31 +1243,33 @@
             });
         };
 
-        // មុខងារបើក/បិទផ្ទាំងកត់ត្រាចំណាយ (Fallback JS ដើម្បីធានាថាវាដើរ)
-        window.openExpenseModal = function() {
-            const modal = document.getElementById('expenseModal');
-            if (modal) {
-                document.getElementById('expId').value = '';
-                document.getElementById('expAmount').value = '';
-                document.getElementById('expNote').value = '';
-                
-                // កំណត់ថ្ងៃខែបច្ចុប្បន្នស្វ័យប្រវត្តិ
-                const now = new Date();
-                now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-                const dateInput = document.getElementById('expDate');
-                if(dateInput) dateInput.value = now.toISOString().slice(0, 16);
-                
-                modal.style.display = 'flex';
-            }
-        };
+        // ⚡ FIX: កំណត់កុំឱ្យសរសេរជាន់ពីលើមុខងារ openExpenseModal របស់ finance.js
+        if (typeof window.openExpenseModal !== 'function') {
+            window.openExpenseModal = function() {
+                const modal = document.getElementById('expenseModal');
+                if (modal) {
+                    document.getElementById('expId').value = '';
+                    document.getElementById('expAmount').value = '';
+                    document.getElementById('expNote').value = '';
+                    const now = new Date();
+                    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+                    const dateInput = document.getElementById('expDate');
+                    if(dateInput) dateInput.value = now.toISOString().slice(0, 16);
+                    modal.style.display = 'flex';
+                }
+            };
+        }
 
-        window.closeExpenseModal = function() {
-            const modal = document.getElementById('expenseModal');
-            if (modal) {
-                modal.style.display = 'none';
-            }
-        };
-// 🪑 មុខងារទាញយកលេខតុមកបង្ហាញ
+        if (typeof window.closeExpenseModal !== 'function') {
+            window.closeExpenseModal = function() {
+                const modal = document.getElementById('expenseModal');
+                if (modal) {
+                    modal.style.display = 'none';
+                }
+            };
+        }
+
+        // 🪑 មុខងារទាញយកលេខតុមកបង្ហាញ
         window.loadTableSettingsForPOS = function() {
             const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             let sysSettings = {};
@@ -1276,7 +1282,7 @@
             const tableSelect = document.getElementById('posTableSelect');
             
             if (sysSettings.toggleTableFeature && tableContainer && tableSelect) {
-                tableContainer.style.display = 'block'; // បង្ហាញប្រអប់លេខតុ
+                tableContainer.style.display = 'block';
                 let totalTables = parseInt(sysSettings.totalTables) || 20;
                 let prefix = sysSettings.tablePrefix || 'តុលេខ';
                 
@@ -1286,11 +1292,10 @@
                     tableSelect.innerHTML += `<option value="${tableName}">${tableName}</option>`;
                 }
             } else if (tableContainer) {
-                tableContainer.style.display = 'none'; // លាក់ប្រអប់លេខតុ បើបិទមុខងារ
+                tableContainer.style.display = 'none';
             }
         };
 
-        // 🌟 មុខងារថ្មី៖ ចាប់យកលេខតុ ទៅដាក់ចូលឈ្មោះអតិថិជនស្វ័យប្រវត្តិ
         window.handleTableSelectionChange = function() {
             const tableSelect = document.getElementById('posTableSelect');
             const custNameInput = document.getElementById('posCustomerName');
@@ -1298,9 +1303,8 @@
             if (!custNameInput) return;
 
             if (tableSelect && tableSelect.value) {
-                // លោតឈ្មោះតុចូលប្រអប់ឈ្មោះអតិថិជនស្វ័យប្រវត្តិ
                 custNameInput.value = tableSelect.value;
-                custNameInput.style.borderLeft = "4px solid var(--success)"; // ដាក់ពណ៌បៃតង
+                custNameInput.style.borderLeft = "4px solid var(--success)";
             } else {
                 custNameInput.value = "";
                 custNameInput.placeholder = "ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)";
@@ -1308,13 +1312,11 @@
             }
         };
 
-        // 🛑 មុខងារត្រួតពិនិត្យ មុនពេលគិតលុយ
         window.validateTableAndProceed = function(action) {
             const tableContainer = document.getElementById('posTableInputContainer');
             const tableSelect = document.getElementById('posTableSelect');
             const custNameInput = document.getElementById('posCustomerName');
             
-            // ១. បើបើកមុខងារតុ ត្រូវឆែកមើលលេខតុ
             if (tableContainer && tableContainer.style.display !== 'none') {
                 if (!tableSelect.value) {
                     if (typeof window.showToast === 'function') {
@@ -1323,16 +1325,14 @@
                         alert("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!");
                     }
                     tableSelect.focus();
-                    return; // បញ្ឈប់មិនឲ្យគិតលុយ
+                    return;
                 }
                 
-                // បញ្ជាក់ម្តងទៀត ក្រែងលោអ្នកប្រើលុបឈ្មោះចោល
                 if (custNameInput && custNameInput.value.trim() === '') {
                     custNameInput.value = tableSelect.value;
                 }
             }
             
-            // ២. បន្តទៅមុខងារគិតលុយដើម (ប្រើ Try/Catch ការពារកុំឲ្យគាំង)
             try {
                 if (action === 'unpaid') {
                     if (typeof window.checkout === 'function') window.checkout('unpaid');
@@ -1351,9 +1351,9 @@
                 alert("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។");
             }
         };
-        // មុខងារបម្រុង (Fallback Functions) សម្រាប់ឲ្យ UI អាចចុចបានក្នុង Preview (ការពារការលោត Error)
+
         window.addEventListener('DOMContentLoaded', () => {
-            window.loadTableSettingsForPOS(); // ដំណើរការទាញលេខតុពេលបើកទំព័រ
+            window.loadTableSettingsForPOS();
             
             if (typeof window.handleLogin !== 'function') window.handleLogin = () => { document.getElementById('authScreen').style.display = 'none'; };
             if (typeof window.handleLogout !== 'function') window.handleLogout = () => { document.getElementById('authScreen').style.display = 'flex'; };
