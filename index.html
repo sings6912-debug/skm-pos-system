@@ -310,14 +310,23 @@
 
             <!-- ផ្ទាំងវិក្កយបត្ររង់ចាំទូទាត់ (Unpaid/Invoices) -->
             <div id="tab-unpaid" class="tab-content">
-                <div class="toolbar">
-                    <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderUnpaid()" style="width: 200px;">
-                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
+                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderUnpaid()" style="flex: 1; min-width: 180px;">
+                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
                         <input type="datetime-local" step="1" id="invoiceDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
                         <input type="datetime-local" step="1" id="invoiceDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     </div>
-                    <div style="flex-grow: 1;"></div>
+                    
+                    <!-- បន្ថែម Pagination Select សម្រាប់ Invoices -->
+                    <select id="invoiceItemsPerPageSelect" class="form-control" onchange="window.changeInvoiceItemsPerPage(this.value)" style="width: 120px;">
+                        <option value="10">បង្ហាញ 10</option>
+                        <option value="20" selected>បង្ហាញ 20</option>
+                        <option value="50">បង្ហាញ 50</option>
+                        <option value="100">បង្ហាញ 100</option>
+                        <option value="all">ទាំងអស់</option>
+                    </select>
+                    
                     <button class="btn btn-outline" style="color: var(--success); border-color: var(--success);" onclick="window.exportInvoicesCSV()">📥 ទាញយក (Excel)</button>
                 </div>
                 
@@ -349,24 +358,35 @@
                     </table>
                 </div>
                 
+                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) សម្រាប់ Invoices -->
+                <div id="invoicePagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
+                
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 20px;">
-                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួចក្នុងតារាង: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
-                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់ក្នុងតារាង: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួច: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
                 </div>
             </div>
 
             <!-- ផ្ទាំងការចំណាយ (Expenses) -->
             <div id="tab-expenses" class="tab-content">
-                <div class="toolbar">
-                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.renderExpenses()" style="width: 200px;">
+                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.renderExpenses()" style="flex: 1; min-width: 180px;">
                     
-                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
+                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
                         <input type="datetime-local" step="1" id="expenseDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderExpenses()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
                         <input type="datetime-local" step="1" id="expenseDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderExpenses()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     </div>
 
-                    <div style="flex-grow: 1;"></div>
+                    <!-- បន្ថែម Pagination Select សម្រាប់ Expenses -->
+                    <select id="expenseItemsPerPageSelect" class="form-control" onchange="window.changeExpenseItemsPerPage(this.value)" style="width: 120px;">
+                        <option value="10">បង្ហាញ 10</option>
+                        <option value="20" selected>បង្ហាញ 20</option>
+                        <option value="50">បង្ហាញ 50</option>
+                        <option value="100">បង្ហាញ 100</option>
+                        <option value="all">ទាំងអស់</option>
+                    </select>
+
                     <button class="btn btn-primary" onclick="window.openExpenseModal()">➕ កត់ត្រាចំណាយថ្មី</button>
                 </div>
                 
@@ -391,21 +411,35 @@
                         <tbody id="expenseTableBody"></tbody>
                     </table>
                 </div>
+                
+                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) សម្រាប់ Expenses -->
+                <div id="expensePagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់ក្នុងតារាង: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
+                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
                 </div>
             </div>
 
             <!-- ផ្ទាំងអតិថិជន (Customers) -->
             <div id="tab-customers" class="tab-content">
-                <div class="toolbar">
-                    <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderCustomers()" style="width: 300px;">
-                    <div style="flex-grow: 1;"></div>
-                    <input type="file" id="importCustomerFile" accept=".json" style="display: none;" onchange="window.importCustomers(event)">
-                    <button class="btn btn-outline" onclick="window.exportCustomers()">📤 Export JSON</button>
-                    <button class="btn btn-outline" onclick="document.getElementById('importCustomerFile').click()">📥 Import JSON</button>
-                    <button class="btn btn-primary" onclick="window.openCustomerModal()">➕ បន្ថែមអតិថិជន</button>
+                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderCustomers()" style="flex: 1; min-width: 200px;">
+                    
+                    <!-- បន្ថែម Pagination Select សម្រាប់ Customers -->
+                    <select id="customerItemsPerPageSelect" class="form-control" onchange="window.changeCustomerItemsPerPage(this.value)" style="width: 120px;">
+                        <option value="10">បង្ហាញ 10</option>
+                        <option value="20" selected>បង្ហាញ 20</option>
+                        <option value="50">បង្ហាញ 50</option>
+                        <option value="100">បង្ហាញ 100</option>
+                        <option value="all">ទាំងអស់</option>
+                    </select>
+
+                    <div style="display: flex; gap: 5px; flex-wrap: wrap;">
+                        <input type="file" id="importCustomerFile" accept=".json" style="display: none;" onchange="window.importCustomers(event)">
+                        <button class="btn btn-outline" onclick="window.exportCustomers()">📤 Export JSON</button>
+                        <button class="btn btn-outline" onclick="document.getElementById('importCustomerFile').click()">📥 Import JSON</button>
+                        <button class="btn btn-primary" onclick="window.openCustomerModal()">➕ បន្ថែមអតិថិជន</button>
+                    </div>
                 </div>
                 <div class="table-responsive">
                     <table id="mainCustomerTable">
@@ -428,18 +462,30 @@
                         <tbody id="customerTable"></tbody>
                     </table>
                 </div>
+                
+                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) សម្រាប់ Customers -->
+                <div id="customerPagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
             </div>
 
             <!-- ផ្ទាំងប្រវត្តិប្រតិបត្តិការ (History Log) -->
             <div id="tab-history" class="tab-content">
-                <div class="toolbar">
-                    <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderHistory()" style="width: 250px;">
-                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border);">
+                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
+                    <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderHistory()" style="flex: 1; min-width: 180px;">
+                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
                         <input type="datetime-local" step="1" id="historyDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
                         <input type="datetime-local" step="1" id="historyDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
                     </div>
-                    <div style="flex-grow: 1;"></div>
+                    
+                    <!-- បន្ថែម Pagination Select សម្រាប់ History Log -->
+                    <select id="historyItemsPerPageSelect" class="form-control" onchange="window.changeHistoryItemsPerPage(this.value)" style="width: 120px;">
+                        <option value="10">បង្ហាញ 10</option>
+                        <option value="20" selected>បង្ហាញ 20</option>
+                        <option value="50">បង្ហាញ 50</option>
+                        <option value="100">បង្ហាញ 100</option>
+                        <option value="all">ទាំងអស់</option>
+                    </select>
+                    
                     <button class="btn btn-outline" onclick="window.clearHistory()">🗑️ លុបប្រវត្តិទាំងអស់</button>
                 </div>
                 <div class="table-responsive">
@@ -465,6 +511,9 @@
                         <tbody id="historyTable"></tbody>
                     </table>
                 </div>
+                
+                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) សម្រាប់ History Log -->
+                <div id="historyPagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
             </div>
 
             <!-- ផ្ទាំងការកំណត់ (Settings) -->
@@ -1047,6 +1096,7 @@
             window.toggleSection('lowStockCardContainer');
         };
 
+        // 💾 មុខងារ Backup ទិន្នន័យ (Export JSON)
         window.triggerAppBackup = function() {
             try {
                 if (typeof window.exportData === 'function') {
@@ -1084,6 +1134,7 @@
             }
         };
 
+        // 📂 មុខងារ Restore ទិន្នន័យ (Import JSON)
         window.triggerAppRestore = function() {
             const fileInput2 = document.getElementById('importBackupFile2');
             if (fileInput2) {

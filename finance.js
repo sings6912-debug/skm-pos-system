@@ -13,12 +13,33 @@ function notifyFinanceUser(msg, title = 'ជូនដំណឹង', isError = fa
     }
 }
 
+// អថេរសម្រាប់កំណត់ការបែងចែកទំព័រ (Pagination) សម្រាប់ Invoices និង Expenses
+window.invListCurrentPage = 1;
+window.invListItemsPerPage = 20; 
+
+window.expCurrentPage = 1;
+window.expItemsPerPage = 20;
+
 // ========================================================
 // 🌟 ផ្នែកទី ១៖ គ្រប់គ្រងវិក្កយបត្រ (Invoices & Debt)
 // ========================================================
 
+window.changeInvoiceItemsPerPage = function(val) {
+    window.invListItemsPerPage = val === 'all' ? 'all' : parseInt(val);
+    window.invListCurrentPage = 1; 
+    window.renderUnpaid();
+};
+
+window.changeInvoicePage = function(page) {
+    window.invListCurrentPage = page;
+    window.renderUnpaid();
+    const container = document.getElementById('mainScroller');
+    if(container) container.scrollTo({top: 0, behavior: 'smooth'});
+};
+
 window.renderUnpaid = function() {
     const tableBody = document.getElementById('unpaidTable') || document.querySelector('#mainUnpaidTable tbody');
+    const pageContainer = document.getElementById('invoicePagination');
     if (!tableBody) return;
 
     let invoices = window.invoices || [];
@@ -36,9 +57,6 @@ window.renderUnpaid = function() {
             return !deletedTracker.includes(tempId);
         });
         window.invoices = invoices;
-        if (typeof window.getBranchKey === 'function') {
-            localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
-        }
     }
 
     invoices.sort((a, b) => {
@@ -51,13 +69,82 @@ window.renderUnpaid = function() {
     const dateFrom = document.getElementById('invoiceDateFrom')?.value;
     const dateTo = document.getElementById('invoiceDateTo')?.value;
 
-    tableBody.innerHTML = '';
     let totalPaid = 0;
     let totalUnpaid = 0;
 
-    invoices.forEach((inv, index) => {
-        if (!inv) return;
+    let filtered = invoices.filter((inv, index) => {
+        if (!inv) return false;
         
+        const invId = String(inv.id || inv.invoiceNo || `ORD-${index}`);
+        const custName = inv.customerName || inv.customer || 'អតិថិជនទូទៅ';
+        const custPhone = inv.customerPhone || inv.phone || '';
+        const dateStr = inv.date || inv.createdAt || 'N/A';
+        const seller = inv.seller || inv.cashier || 'N/A';
+        
+        if (searchVal) {
+            const combinedText = `${invId} ${custName} ${custPhone} ${seller} ${inv.note || ''}`.toLowerCase();
+            if (!combinedText.includes(searchVal)) return false;
+        }
+
+        if (dateFrom) {
+            const dFrom = new Date(dateFrom).getTime();
+            const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
+            if (!isNaN(dCurrent) && dCurrent < dFrom) return false;
+        }
+
+        if (dateTo) {
+            const dTo = new Date(dateTo).getTime();
+            const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
+            if (!isNaN(dCurrent) && dCurrent > dTo) return false;
+        }
+
+        return true;
+    });
+
+    // គណនាលុយសរុបទាំងអស់តាមអ្វីដែល Filter ឃើញ មុនកាត់ទំព័រ
+    filtered.forEach(inv => {
+        const status = String(inv.status || 'unpaid').toLowerCase();
+        const totalAmount = parseFloat(inv.totalAmount || inv.total || 0);
+        let paidAmount = parseFloat(inv.paidUsd || inv.paidAmount || 0);
+        if (status === 'paid') paidAmount = totalAmount;
+        const remainingAmount = Math.max(0, totalAmount - paidAmount);
+
+        if (status === 'paid') {
+            totalPaid += totalAmount;
+        } else {
+            totalPaid += paidAmount;
+            totalUnpaid += remainingAmount;
+        }
+    });
+
+    if (filtered.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">មិនមានទិន្នន័យវិក្កយបត្រទេ</td></tr>`;
+        if(pageContainer) pageContainer.innerHTML = '';
+        const paidEl = document.getElementById('summaryInvoicePaid');
+        const unpaidEl = document.getElementById('summaryInvoiceUnpaid');
+        if (paidEl) paidEl.innerText = `$0.00`;
+        if (unpaidEl) unpaidEl.innerText = `$0.00`;
+        return;
+    }
+
+    // ការគណនា Pagination
+    let totalItems = filtered.length;
+    let totalPages = 1;
+    let displayItems = filtered;
+
+    if (window.invListItemsPerPage !== 'all') {
+        totalPages = Math.ceil(totalItems / window.invListItemsPerPage) || 1;
+        if (window.invListCurrentPage > totalPages) window.invListCurrentPage = totalPages;
+        if (window.invListCurrentPage < 1) window.invListCurrentPage = 1;
+
+        let startIndex = (window.invListCurrentPage - 1) * window.invListItemsPerPage;
+        let endIndex = startIndex + window.invListItemsPerPage;
+        displayItems = filtered.slice(startIndex, endIndex);
+    }
+
+    tableBody.innerHTML = '';
+    displayItems.forEach((inv, index) => {
+        // ... (កូដបង្ហាញជួរតារាងនីមួយៗគឺរក្សាទុកដូចដើមទាំងអស់ គ្រាន់តែប្តូរពី invoices ទៅ displayItems)
         const invId = String(inv.id || inv.invoiceNo || `ORD-${index}`);
         const custName = inv.customerName || inv.customer || 'អតិថិជនទូទៅ';
         const custPhone = inv.customerPhone || inv.phone || '';
@@ -69,30 +156,6 @@ window.renderUnpaid = function() {
         let paidAmount = parseFloat(inv.paidUsd || inv.paidAmount || 0);
         if (status === 'paid') paidAmount = totalAmount;
         const remainingAmount = Math.max(0, totalAmount - paidAmount);
-
-        if (searchVal) {
-            const combinedText = `${invId} ${custName} ${custPhone} ${seller} ${inv.note || ''}`.toLowerCase();
-            if (!combinedText.includes(searchVal)) return;
-        }
-
-        if (dateFrom) {
-            const dFrom = new Date(dateFrom).getTime();
-            const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
-            if (!isNaN(dCurrent) && dCurrent < dFrom) return;
-        }
-
-        if (dateTo) {
-            const dTo = new Date(dateTo).getTime();
-            const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
-            if (!isNaN(dCurrent) && dCurrent > dTo) return;
-        }
-
-        if (status === 'paid') {
-            totalPaid += totalAmount;
-        } else {
-            totalPaid += paidAmount;
-            totalUnpaid += remainingAmount;
-        }
 
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
@@ -154,11 +217,25 @@ window.renderUnpaid = function() {
         `;
         tableBody.appendChild(row);
     });
+    
+    // Render ប៊ូតុង Pagination ខាងក្រោមតារាង
+    if (pageContainer) {
+        if (window.invListItemsPerPage === 'all' || totalItems <= window.invListItemsPerPage) {
+            pageContainer.innerHTML = '';
+        } else {
+            let pageHtml = `<button class="btn btn-outline" ${window.invListCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvoicePage(${window.invListCurrentPage - 1})"`}>◀ មុន</button>`;
+            pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.invListCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} វិក្កយបត្រ)</small></span>`;
+            pageHtml += `<button class="btn btn-outline" ${window.invListCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvoicePage(${window.invListCurrentPage + 1})"`}>បន្ទាប់ ▶</button>`;
+            pageContainer.innerHTML = pageHtml;
+        }
+    }
 
     const paidEl = document.getElementById('summaryInvoicePaid');
     const unpaidEl = document.getElementById('summaryInvoiceUnpaid');
     if (paidEl) paidEl.innerText = `$${totalPaid.toFixed(2)}`;
     if (unpaidEl) unpaidEl.innerText = `$${totalUnpaid.toFixed(2)}`;
+    
+    if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainUnpaidTable'), 50);
 };
 
 window.notifyCustomerOrderDone = async function(invId) {
@@ -181,7 +258,6 @@ window.notifyCustomerOrderDone = async function(invId) {
     const noteLine = inv.note ? `\n📝 ចំណាំ៖ ${inv.note}` : '';
     const message = `🎉 សួស្តី ${inv.customerName || inv.customer || 'អតិថិជន'}!\n\nការកុម្ម៉ង់លេខ [${invId}] របស់អ្នកនៅហាង "${shopName}" ត្រូវបានរៀបចំរួចរាល់ហើយ! 🛍️${noteLine}\n\n💵 សរុបទឹកប្រាក់៖ $${parseFloat(inv.totalAmount || inv.total || 0).toFixed(2)}\nសូមអញ្ជើញមកទទួលទំនិញ ឬរង់ចាំការដឹកជញ្ជូន។ អរគុណច្រើន! 🙏`;
 
-    // ⚡ FIX (ចំណុចទី ២): ទាញយក Telegram Bot Token និង Chat ID តាមឈ្មោះ متغير ត្រឹមត្រូវក្នុងប្រព័ន្ធ
     try {
         const sysSettings = window.sysSettings || JSON.parse(localStorage.getItem(window.getBranchKey('sys_settings'))) || {};
         const botToken = sysSettings.orderTelegramBotToken || sysSettings.telegramBotToken || window.telegramBotToken || sysSettings.botToken || '';
@@ -295,7 +371,6 @@ window.processDebtPayment = async function() {
 
     if (inv.paidUsd >= (total - 0.01)) {
         inv.status = 'paid';
-        // ប្រសិនបើវិក្កយបត្រមុនជា Pre-order (មិនទាន់កាត់ស្តុកពេលកក់) ពេលបង់ផ្តាច់ត្រូវកាត់ស្តុកចេញ
         if (wasPreorder && Array.isArray(inv.items) && window.inventory) {
             inv.items.forEach(item => {
                 if (!item || !item.id) return;
@@ -338,7 +413,6 @@ window.openInvoiceEditModal = function(invId) {
     if (!inv) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
 
     window.currentEditingInvoice = JSON.parse(JSON.stringify(inv));
-    // រក្សាទុកបញ្ជីទំនិញដើម ដើម្បីគណនាភាពខុសគ្នានៃស្តុកពេលរក្សាទុក (ចំណុចទី ១)
     window.originalEditingInvoiceItems = JSON.parse(JSON.stringify(inv.items || []));
 
     const modal = document.getElementById('invoiceEditModal');
@@ -413,7 +487,6 @@ window.updateEditInvoiceItemQty = function(idx, newQty) {
 
     if (window.inventory && !isPreorderInv && !(window.sysSettings && window.sysSettings.preorder)) {
         const realItem = window.inventory.find(i => i && String(i.id) === String(item.id));
-        // គណនាចំនួនដើមដែលមានក្នុងវិក្កយបត្រមុនពេលកែ
         const origQtyInInv = (window.originalEditingInvoiceItems || [])
             .filter(orig => orig && String(orig.id) === String(item.id))
             .reduce((sum, orig) => sum + (parseInt(orig.cartQty !== undefined ? orig.cartQty : orig.qty) || 1), 0);
@@ -480,7 +553,6 @@ window.closeInvoiceEditModal = function() {
     window.originalEditingInvoiceItems = [];
 };
 
-// ⚡ FIX (ចំណុចទី ១): គណនាភាពខុសគ្នានៃចំនួនទំនិញចាស់ និងថ្មី ដើម្បីកាត់ ឬបង្វិលស្តុកក្នុង window.inventory ដោយស្វ័យប្រវត្តិ
 window.saveInvoiceChanges = async function() {
     if (!window.currentEditingInvoice) return;
     if (!window.currentEditingInvoice.items || window.currentEditingInvoice.items.length === 0) {
@@ -497,7 +569,6 @@ window.saveInvoiceChanges = async function() {
     const origInv = invoices[invIndex];
     const isPreorder = String(origInv.status || '').toLowerCase() === 'preorder';
 
-    // គណនាការកាត់ ឬបង្វិលស្តុក (ប្រសិនបើវិក្កយបត្រមិនមែនជា Pre-order)
     if (!isPreorder && window.inventory && Array.isArray(window.inventory)) {
         const oldQtyMap = {};
         (origInv.items || []).forEach(it => {
@@ -517,7 +588,7 @@ window.saveInvoiceChanges = async function() {
         allItemIds.forEach(itemId => {
             const oldQ = oldQtyMap[itemId] || 0;
             const newQ = newQtyMap[itemId] || 0;
-            const diff = newQ - oldQ; // diff > 0 បានន័យថាថែមទំនិញ (ត្រូវកាត់ស្តុក), diff < 0 បានន័យថាដកទំនិញ (ត្រូវបង្វិលស្តុកចូលវិញ)
+            const diff = newQ - oldQ; 
             if (diff !== 0) {
                 const realItem = window.inventory.find(p => p && String(p.id) === String(itemId));
                 if (realItem) {
@@ -565,7 +636,6 @@ window.saveInvoiceChanges = async function() {
     if (typeof window.renderDashboard === 'function') window.renderDashboard();
 };
 
-// ⚡ FIX (ចំណុចទី ១): ការពារកុំឱ្យបូកស្តុកលើសចំនួនពិត នៅពេលលុបវិក្កយបត្រកក់ប្រាក់ (Pre-order)
 window.deleteInvoiceRecord = function(invId) {
     const executeDeleteInvoice = () => {
         try {
@@ -582,7 +652,6 @@ window.deleteInvoiceRecord = function(invId) {
                     const inv = invoices[invIndex];
                     const isPreorder = String(inv?.status || '').toLowerCase() === 'preorder';
 
-                    // បង្វិលស្តុកចូលវិញតែវិក្កយបត្រណាដែលមិនមែនជា Pre-order ប៉ុណ្ណោះ
                     if (!isPreorder && inv && Array.isArray(inv.items) && window.inventory) {
                         inv.items.forEach(item => {
                             if (item && item.id) {
@@ -636,7 +705,6 @@ window.deleteInvoiceRecord = function(invId) {
 
 window.currentActiveInvoiceId = null;
 
-// ⚡ FIX (ចំណុចទី ២): បង្ហាញប្រអប់ ចំណាំ / លេខតុ (inv.note) នៅលើវិក្កយបត្រពេលចុចមើល
 window.viewInvoiceDetails = function(invId) {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     const targetId = String(invId).trim().toLowerCase();
@@ -833,6 +901,19 @@ window.exportInvoicesCSV = function() {
 // 🌟 ផ្នែកទី ២៖ គ្រប់គ្រងការចំណាយ (Expense Management)
 // ========================================================
 
+window.changeExpenseItemsPerPage = function(val) {
+    window.expItemsPerPage = val === 'all' ? 'all' : parseInt(val);
+    window.expCurrentPage = 1; 
+    window.renderExpenses();
+};
+
+window.changeExpensePage = function(page) {
+    window.expCurrentPage = page;
+    window.renderExpenses();
+    const container = document.getElementById('mainScroller');
+    if(container) container.scrollTo({top: 0, behavior: 'smooth'});
+};
+
 function injectExpenseModalIfNeeded() {
     let modal = document.getElementById('expenseModal');
     if (!modal) {
@@ -979,12 +1060,11 @@ window.renderExpenses = function() {
     const searchVal = document.getElementById('searchExpense') ? document.getElementById('searchExpense').value.toLowerCase() : '';
     const dateFrom = document.getElementById('expenseDateFrom')?.value;
     const dateTo = document.getElementById('expenseDateTo')?.value;
+    const pageContainer = document.getElementById('expensePagination');
     
     const tbody = document.getElementById('expenseTableBody') || document.querySelector('#mainExpenseTable tbody');
     if (!tbody) return;
 
-    let totalExp = 0;
-    
     let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
     let validExpenses = (window.expenses || []).filter(e => !deletedExps.includes(String(e.id)));
     window.expenses = validExpenses;
@@ -1011,16 +1091,36 @@ window.renderExpenses = function() {
 
     filtered.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
 
+    let totalExp = 0;
+    filtered.forEach(e => {
+        totalExp += parseFloat(e.amount || 0);
+    });
+
     if (filtered.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">មិនមានទិន្នន័យចំណាយទេ</td></tr>`;
         const sumDisplay = document.querySelector('td[style*="color: var(--danger)"] b') || document.getElementById('sumExpenseDisplay') || document.getElementById('summaryTotalExpense');
         if (sumDisplay) sumDisplay.innerText = '$0.00';
+        if (pageContainer) pageContainer.innerHTML = '';
         return;
     }
 
-    tbody.innerHTML = filtered.map(e => {
+    // ការគណនា Pagination
+    let totalItems = filtered.length;
+    let totalPages = 1;
+    let displayItems = filtered;
+
+    if (window.expItemsPerPage !== 'all') {
+        totalPages = Math.ceil(totalItems / window.expItemsPerPage) || 1;
+        if (window.expCurrentPage > totalPages) window.expCurrentPage = totalPages;
+        if (window.expCurrentPage < 1) window.expCurrentPage = 1;
+
+        let startIndex = (window.expCurrentPage - 1) * window.expItemsPerPage;
+        let endIndex = startIndex + window.expItemsPerPage;
+        displayItems = filtered.slice(startIndex, endIndex);
+    }
+
+    tbody.innerHTML = displayItems.map(e => {
         let amt = parseFloat(e.amount || 0);
-        totalExp += amt;
         return `
         <tr>
             <td style="font-size: 13px; color: var(--text-muted);" data-sort="${e.timestamp || 0}">${e.date}</td>
@@ -1036,6 +1136,18 @@ window.renderExpenses = function() {
         </tr>
         `;
     }).join('');
+
+    // Render ប៊ូតុង Pagination ខាងក្រោមតារាង
+    if (pageContainer) {
+        if (window.expItemsPerPage === 'all' || totalItems <= window.expItemsPerPage) {
+            pageContainer.innerHTML = '';
+        } else {
+            let pageHtml = `<button class="btn btn-outline" ${window.expCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeExpensePage(${window.expCurrentPage - 1})"`}>◀ មុន</button>`;
+            pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.expCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} វិក្កយបត្រ)</small></span>`;
+            pageHtml += `<button class="btn btn-outline" ${window.expCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeExpensePage(${window.expCurrentPage + 1})"`}>បន្ទាប់ ▶</button>`;
+            pageContainer.innerHTML = pageHtml;
+        }
+    }
 
     const sumDisplay = document.querySelector('td[style*="color: var(--danger)"] b') || document.getElementById('sumExpenseDisplay') || document.getElementById('summaryTotalExpense');
     if (sumDisplay) sumDisplay.innerText = '$' + totalExp.toFixed(2);

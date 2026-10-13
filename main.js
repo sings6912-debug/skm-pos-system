@@ -2205,7 +2205,7 @@ window.renderDashboard = function() {
             estRev += (priceVal * q); 
             if(q <= 5) lowItems.push(p); 
 
-            // 🚨 ពិនិត្យថ្ងៃផុតកំណត់ទំនិញ (Expiry Date Alert - ចំណុចទី ៥)
+            // 🚨 ពិនិត្យថ្ងៃផុតកំណត់ទំនិញ (Expiry Date Alert)
             if (window.sysSettings && window.sysSettings.expiry !== false && p.expiry) {
                 const expDateObj = new Date(p.expiry);
                 if (!isNaN(expDateObj.getTime())) {
@@ -2329,18 +2329,68 @@ window.renderDashboard = function() {
     }
 };
 
+// ==========================================
+// 16.5 HISTORY LOG WITH PAGINATION
+// ==========================================
+
+window.histCurrentPage = 1;
+window.histItemsPerPage = 20;
+
+window.changeHistoryItemsPerPage = function(val) {
+    window.histItemsPerPage = val === 'all' ? 'all' : parseInt(val);
+    window.histCurrentPage = 1; 
+    window.renderHistory();
+};
+
+window.changeHistoryPage = function(page) {
+    window.histCurrentPage = page;
+    window.renderHistory();
+    const container = document.getElementById('mainScroller');
+    if(container) container.scrollTo({top: 0, behavior: 'smooth'});
+};
+
 window.renderHistory = function() {
     const searchVal = document.getElementById('historySearch') ? document.getElementById('historySearch').value.toLowerCase() : ''; 
     const dateFrom = document.getElementById('historyDateFrom'); 
     const dateTo = document.getElementById('historyDateTo'); 
+    const pageContainer = document.getElementById('historyPagination');
     const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).getTime() : 0; 
     const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity; 
-    let fHtml = '';
     
     const lang = localStorage.getItem('app_lang') || 'km';
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
 
-    window.historyLog.filter(h => (String(h.itemName).toLowerCase().includes(searchVal) || (h.note && String(h.note).toLowerCase().includes(searchVal))) && (h.id >= fromTime && h.id <= toTime)).forEach(h => { 
+    let filtered = window.historyLog.filter(h => 
+        (String(h.itemName).toLowerCase().includes(searchVal) || (h.note && String(h.note).toLowerCase().includes(searchVal))) && 
+        (h.id >= fromTime && h.id <= toTime)
+    );
+
+    const hTable = document.getElementById('historyTable');
+    if (!hTable) return;
+
+    if (filtered.length === 0) {
+        hTable.innerHTML = `<tr><td colspan="6" style="text-align:center; padding:20px; color:var(--text-muted);">${d.noHistData || 'មិនមានទិន្នន័យទេ'}</td></tr>`;
+        if (pageContainer) pageContainer.innerHTML = '';
+        return;
+    }
+
+    // ការគណនា Pagination សម្រាប់ History
+    let totalItems = filtered.length;
+    let totalPages = 1;
+    let displayItems = filtered;
+
+    if (window.histItemsPerPage !== 'all') {
+        totalPages = Math.ceil(totalItems / window.histItemsPerPage) || 1;
+        if (window.histCurrentPage > totalPages) window.histCurrentPage = totalPages;
+        if (window.histCurrentPage < 1) window.histCurrentPage = 1;
+
+        let startIndex = (window.histCurrentPage - 1) * window.histItemsPerPage;
+        let endIndex = startIndex + window.histItemsPerPage;
+        displayItems = filtered.slice(startIndex, endIndex);
+    }
+
+    let fHtml = '';
+    displayItems.forEach(h => { 
         let tName = h.type === 'sale' ? (d.logSale||'លក់ចេញ') : (h.type === 'add' ? (d.logAdd||'នាំចូលថ្មី') : (d.logUpdate||'កែប្រែទិន្នន័យ')); 
         let bClass = h.type === 'sale' ? 'badge-sale' : (h.type === 'add' ? 'badge-add' : 'badge-update'); 
         let catStr = '-', unitStr = ''; 
@@ -2351,8 +2401,20 @@ window.renderHistory = function() {
         fHtml += `<tr><td data-sort="${h.id}" style="font-size:var(--fs-12); color:var(--text-muted);">${h.date}</td><td data-sort="${tName}"><span class="badge ${bClass}">${tName}</span></td><td data-sort="${h.itemName}" style="font-weight:bold; color:var(--text-main);">${h.itemName}</td><td data-sort="${catStr}" style="font-size:var(--fs-12); color:var(--text-muted);">${catStr}</td><td data-sort="${h.qty}" style="font-weight:bold; color:${h.type === 'sale' ? 'var(--warning)' : (h.qty > 0 ? 'var(--success)' : 'var(--text-main)')};">${qtyDisplay}</td><td data-sort="${h.note||''}" style="font-size:var(--fs-12);">${h.note||''}</td></tr>`; 
     });
     
-    const hTable = document.getElementById('historyTable');
-    if(hTable) hTable.innerHTML = fHtml || `<tr><td colspan="6" style="text-align:center;">${d.noHistData || 'មិនមានទិន្នន័យទេ'}</td></tr>`; 
+    hTable.innerHTML = fHtml;
+    
+    // Render ប៊ូតុង Pagination ខាងក្រោមតារាង History
+    if (pageContainer) {
+        if (window.histItemsPerPage === 'all' || totalItems <= window.histItemsPerPage) {
+            pageContainer.innerHTML = '';
+        } else {
+            let pageHtml = `<button class="btn btn-outline" ${window.histCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeHistoryPage(${window.histCurrentPage - 1})"`}>◀ មុន</button>`;
+            pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.histCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} កំណត់ត្រា)</small></span>`;
+            pageHtml += `<button class="btn btn-outline" ${window.histCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeHistoryPage(${window.histCurrentPage + 1})"`}>បន្ទាប់ ▶</button>`;
+            pageContainer.innerHTML = pageHtml;
+        }
+    }
+
     if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainHistoryTable'), 50);
 };
 
