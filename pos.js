@@ -163,7 +163,7 @@ window.addToCart = function(id) {
     const executeAddToCart = () => {
         let globalRateEl = document.getElementById('globalExchangeRate'); 
         let currentRate = parseFloat(globalRateEl ? globalRateEl.value : window.cartRate) || 4000;
-        // ⚡ FIX (ចំណុចទី ៣): គណនាតម្លៃដុល្លារស្វ័យប្រវត្តិប្រសិនបើទំនិញដាក់តែតម្លៃរៀល (៛)
+        // ⚡ FIX: គណនាតម្លៃដុល្លារស្វ័យប្រវត្តិប្រសិនបើទំនិញដាក់តែតម្លៃរៀល (៛)
         let effectiveUsdPrice = parseFloat(p.price) > 0 ? parseFloat(p.price) : ((parseFloat(p.riel) || 0) / currentRate);
 
         if (cItem) { 
@@ -376,6 +376,17 @@ window.openCheckoutModal = function() {
     if(window.cartFinalRiel > 0) displayHtml += ` <br><span style="font-size: 18px; color: var(--text-muted);">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</span>`; 
     
     document.getElementById('checkoutTotalDisplay').innerHTML = displayHtml; 
+
+    /* 🌟 បន្ថែមថ្មី៖ បង្ហាញ QR Code ក្នុងផ្ទាំងគិតលុយពេលចុច Checkout */
+    const qrContainer = document.getElementById('checkoutQrContainer');
+    const qrImage = document.getElementById('checkoutQrImage');
+    if (window.shopQR && qrContainer && qrImage) {
+        qrImage.src = window.shopQR;
+        qrContainer.style.display = 'block';
+    } else if (qrContainer) {
+        qrContainer.style.display = 'none';
+    }
+    
     document.getElementById('checkoutReceivedUsd').value = ''; 
     document.getElementById('checkoutReceivedRiel').value = ''; 
     document.getElementById('checkoutChangeDisplay').innerText = '$0.00 | 0 ៛'; 
@@ -508,7 +519,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         const idx = (window.inventory || []).findIndex(p => p && p.id === c.id);
         let origUsd = (idx !== -1 && parseFloat(window.inventory[idx].price) > 0) ? parseFloat(window.inventory[idx].price) : (parseFloat(c.price) || 0);
         let pRiel = parseFloat(c.riel) || 0;
-        // ⚡ FIX (ចំណុចទី ៣): ធានាថា item.price តែងតែមានតម្លៃជាដុល្លារ (បម្លែងពីរៀលបើដាក់តែតម្លៃរៀល)
+        // ⚡ FIX: ធានាថា item.price តែងតែមានតម្លៃជាដុល្លារ (បម្លែងពីរៀលបើដាក់តែតម្លៃរៀល)
         let effectiveUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / window.cartRate) : 0);
 
         normalizedCartItems.push({

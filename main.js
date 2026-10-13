@@ -295,8 +295,8 @@ window.sysI18n = {
         cantDeleteAdmin: 'មិនអាចលុប',
         setSysTitle: '⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)',
         setSysSub: 'កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។',
-        setStorePinLabel: '🔐 លេខសម្ងាត់ហាង (Store PIN ៤ ខ្ទង់)៖',
-        setTickerNewsLabel: '📢 សេចក្តីជូនដំណឹងរត់ខាងក្រោម (News Ticker)៖',
+        setStorePinLabel: '🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖',
+        setTickerNewsLabel: '📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖',
         setCustLabel: 'អតិថិជន (Customers): អនុញ្ញាតឲ្យកត់ត្រា និងគ្រប់គ្រងទិន្នន័យអតិថិជន។',
         setUnpaidLabel: 'រង់ចាំទូទាត់ (Unpaid Invoices): អនុញ្ញាតឲ្យរក្សាទុកវិក្កយបត្រមិនទាន់ទូទាត់។',
         setLogsLabel: 'ប្រវត្តិប្រតិបត្តិការ (Logs): កត់ត្រារាល់សកម្មភាព។',
@@ -795,8 +795,8 @@ window.sysI18n = {
 
         searchCustPlh: '🔍 搜索客户姓名或电话...',
         btnAddCust: '➕ 添加新客户',
-        btnExportJson: '📤 导出 JSON',
-        btnImportJson: '📥 导入 JSON',
+        btnExport JSON: '📤 导出 JSON',
+        btnImport Json: '📥 导入 JSON',
         thCustName: '客户姓名',
         thCustPhone: '联系电话',
         thCustPaid: '累计消费 (已付)',
@@ -2205,7 +2205,7 @@ window.renderDashboard = function() {
             estRev += (priceVal * q); 
             if(q <= 5) lowItems.push(p); 
 
-            // 🚨 ពិនិត្យថ្ងៃផុតកំណត់ទំនិញ (Expiry Date Alert)
+            // 🚨 ពិនិត្យថ្ងៃផុតកំណត់ទំនិញ (Expiry Date Alert - ចំណុចទី ៥)
             if (window.sysSettings && window.sysSettings.expiry !== false && p.expiry) {
                 const expDateObj = new Date(p.expiry);
                 if (!isNaN(expDateObj.getTime())) {
@@ -2588,6 +2588,54 @@ window.toggleLowStockSection = function() {
     }
 };
 
+/* 🌟 បន្ថែមថ្មី៖ ប្រព័ន្ធថែទាំទិន្នន័យស្វ័យប្រវត្តិ (Auto Backup & DB Cleanup) */
+window.runSmartDatabaseMaintenance = function() {
+    try {
+        // ១. ធ្វើការ Backup ទិន្នន័យដោយស្វ័យប្រវត្តិជារៀងរាល់ថ្ងៃ
+        const today = new Date().toISOString().split('T')[0];
+        const lastBackup = localStorage.getItem('skm_last_auto_backup_date');
+        
+        if (lastBackup !== today) {
+            const backupData = {
+                inventory: window.inventory || [],
+                invoices: window.invoices || [],
+                customers: window.customers || [],
+                expenses: window.expenses || [],
+                historyLog: window.historyLog || [],
+                date: today
+            };
+            localStorage.setItem(`skm_auto_backup_${today}`, JSON.stringify(backupData));
+            localStorage.setItem('skm_last_auto_backup_date', today);
+            
+            // លុប Backup ចាស់ៗដែលលើសពី ៧ ថ្ងៃ ដើម្បីកុំឱ្យធ្ងន់ម៉ាស៊ីន (រក្សាទុកតែ ៧ ថ្ងៃចុងក្រោយ)
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i);
+                if (key && key.startsWith('skm_auto_backup_')) {
+                    const bDateStr = key.replace('skm_auto_backup_', '');
+                    const bDate = new Date(bDateStr);
+                    const now = new Date();
+                    const diffDays = Math.ceil((now - bDate) / (1000 * 60 * 60 * 24));
+                    if (diffDays > 7) localStorage.removeItem(key);
+                }
+            }
+            console.log("✅ Daily Auto-Backup Completed.");
+        }
+
+        // ២. ជូនដំណឹងឱ្យ Admin សម្អាតទិន្នន័យ ពេលវិក្កយបត្រកើនឡើងច្រើនពេក (>3000)
+        if (window.invoices && window.invoices.length > 3000) {
+            if (window.currentRole === 'admin') {
+                setTimeout(() => {
+                    const lang = localStorage.getItem('app_lang') || 'km';
+                    const msg = lang === 'en' ? "⚠️ Database is getting large (>3000 invoices). Please go to Settings > Backup & Restore to Archive old data and speed up the system." : "⚠️ ទិន្នន័យវិក្កយបត្រកើនឡើងដល់ជាង ៣០០០ កំណត់ត្រាហើយ! សូមចូលទៅកាន់ផ្ទាំង Settings > Backup & Restore ដើម្បី Archive (សម្អាត) ទិន្នន័យចាស់ៗចេញ ដើម្បីឱ្យប្រព័ន្ធដើរលឿន។";
+                    if(typeof window.ksMsg === 'function') window.ksMsg(msg, "ប្រព័ន្ធជូនដំណឹង (Database Alert)");
+                }, 5000);
+            }
+        }
+    } catch (e) {
+        console.warn("Auto Maintenance Error:", e);
+    }
+};
+
 // ==========================================
 // 18. APP ENTRY POINT (Window.onload)
 // ==========================================
@@ -2719,4 +2767,11 @@ window.onload = async () => {
             }
         } catch(e) {}
     }, 30000); 
+
+    /* 🌟 បន្ថែមថ្មី៖ ដំណើរការប្រព័ន្ធថែទាំទិន្នន័យស្វ័យប្រវត្តិពេលបើកវេបសាយ ៣ វិនាទីក្រោយ */
+    setTimeout(() => {
+        if(typeof window.runSmartDatabaseMaintenance === 'function') {
+            window.runSmartDatabaseMaintenance();
+        }
+    }, 3000);
 };

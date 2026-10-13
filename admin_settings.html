@@ -234,7 +234,7 @@
             <button class="tab-btn" onclick="switchTab('tab-store')"><i class="fa-solid fa-store"></i> 4. ម៉ោងបើក & ស្វាគមន៍</button>
             <button class="tab-btn" onclick="switchTab('tab-social')"><i class="fa-solid fa-share-nodes"></i> 5. បណ្តាញ & បូត</button>
             <button class="tab-btn" onclick="switchTab('tab-customjs')"><i class="fa-solid fa-file-code"></i> 6. កូដបន្ថែម (Custom JS)</button>
-            <button class="tab-btn" onclick="switchTab('tab-tables')"><i class="fa-solid fa-chair"></i> 7. កំណត់លេខតុ (Tables)</button>
+            <button class="tab-btn" onclick="switchTab('tab-tables')"><i class="fa-solid fa-chair"></i> 7. លេខតុ & ទិន្នន័យ</button>
         </div>
 
         <button class="btn-save" onclick="saveAdminSettings()" style="margin-top: 25px; padding: 14px; font-size: 14px;"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់</button>
@@ -468,7 +468,7 @@
             </div>
         </div>
 
-        <!-- 🪑 TAB 7: TABLE SETTINGS -->
+        <!-- 🪑 TAB 7: TABLE SETTINGS & ARCHIVE -->
         <div id="tab-tables" class="tab-pane">
             <div class="section-title" style="color: #8b5cf6; border-bottom: 2px dashed #8b5cf6; padding-bottom: 10px;">
                 <i class="fa-solid fa-chair"></i> 7. កំណត់លេខតុ (Table Management)
@@ -490,6 +490,18 @@
                     <input type="text" id="setTablePrefix" class="input-st" placeholder="ឧ. តុលេខ ឬ Table" value="តុលេខ" onchange="saveAdminSettings()">
                 </div>
             </div>
+
+            <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
+
+            <!-- 🌟 បន្ថែមថ្មី៖ មុខងារ Archive សម្អាតទិន្នន័យចាស់ -->
+            <div class="section-title" style="color: var(--danger); border-bottom: 2px dashed var(--danger); padding-bottom: 10px;">
+                <i class="fa-solid fa-database"></i> ការគ្រប់គ្រងទិន្នន័យ (Data Management)
+            </div>
+            <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--danger);">
+                <h3 style="font-size: 16px; color: var(--danger); margin-bottom: 8px;"><i class="fa-solid fa-broom"></i> សម្អាតទិន្នន័យចាស់ៗ (Data Archive)</h3>
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">ទាញយក និងលុបវិក្កយបត្រចាស់ៗ (ដែលមានអាយុកាលលើសពី ៣ ខែ) ចេញពីប្រព័ន្ធ ដើម្បីឱ្យ App ដំណើរការបានលឿនជានិច្ច និងកាត់បន្ថយទំហំ Database។</p>
+                <button type="button" class="btn" style="background: var(--danger); color: white; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none;" onclick="archiveOldData()"><i class="fa-solid fa-box-archive"></i> Archive វិក្កយបត្រចាស់ (> ៣ខែ)</button>
+            </div>
         </div>
 
     </div>
@@ -502,8 +514,7 @@
 <script>
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
-    // 🔒 FIX (ចំណុចទី ៤): ត្រួតពិនិត្យសុវត្ថិភាព ការពារមិនឱ្យអ្នកក្រៅចូលកែការកំណត់ហាងដោយគ្មានការអនុញ្ញាត
-    // រំលងការ Redirect នៅពេលដែលកូដដំណើរការក្នុងផ្ទាំង Preview របស់ AI (blob: ឬ data:)
+    // 🔒 FIX: រំលងការ Redirect នៅពេលកូដដំណើរការក្នុងផ្ទាំង Preview របស់ AI (blob: ឬ data:)
     (function verifyAdminAccess() {
         const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
@@ -576,6 +587,7 @@
             else showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
         } catch(err) { showToast('❌ Error: ' + err.message, true); }
     }
+
     async function testServiceTelegramBot() {
         const token = document.getElementById('setServiceTelegramBotToken').value.trim();
         const chatId = document.getElementById('setServiceTelegramChatId').value.trim();
@@ -1017,7 +1029,7 @@
     function copyWelcomeLink() { navigator.clipboard.writeText(getPageUrl('welcome.html')); showToast('Copied Welcome Link!'); }
     function showWelcomeQR() { const url = getPageUrl('welcome.html'); const win = window.open('', '_blank', 'width=450,height=550'); if(!win) return; win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Welcome QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
     
-    // បង្កើតមុខងារថ្មីសម្រាប់ទប់ស្កាត់ការ Redirect ក្នុង Preview Mode
+    // មុខងារបើកទំព័រថ្មី ទប់ស្កាត់បញ្ហាក្នុង Preview Mode
     function goToWelcome() { 
         if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
             alert('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។ \nតំណភ្ជាប់គោលដៅ: ' + getPageUrl('welcome.html'));
@@ -1029,12 +1041,68 @@
     function copyMenuLink() { navigator.clipboard.writeText(getPageUrl('menu.html')); showToast('Copied Menu Link!'); }
     function showMenuQR() { const url = getPageUrl('menu.html'); const win = window.open('', '_blank', 'width=450,height=550'); if(!win) return; win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Menu QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
     
-    // បង្កើតមុខងារថ្មីសម្រាប់ទប់ស្កាត់ការ Redirect ក្នុង Preview Mode
+    // មុខងារបើកទំព័រថ្មី ទប់ស្កាត់បញ្ហាក្នុង Preview Mode
     function goToMenu() { 
         if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
             alert('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។ \nតំណភ្ជាប់គោលដៅ: ' + getPageUrl('menu.html'));
         } else {
             window.open(getPageUrl('menu.html'), '_blank'); 
+        }
+    }
+
+    /* 🌟 បន្ថែមថ្មី៖ អនុគមន៍ Archive Data ពេលអ្នកចុចប៊ូតុង */
+    async function archiveOldData() {
+        try {
+            let invoices = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`)) || [];
+            if (invoices.length === 0) return showToast("មិនមានវិក្កយបត្រដើម្បី Archive ទេ!", true);
+
+            // កំណត់រកវិក្កយបត្រដែលមានអាយុកាលលើសពី ៩០ ថ្ងៃ (៣ ខែ)
+            const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
+            
+            let oldInvoices = [];
+            let newInvoices = [];
+
+            invoices.forEach(inv => {
+                const invTime = inv.timestamp || new Date(inv.date || inv.createdAt).getTime();
+                if (invTime < ninetyDaysAgo) {
+                    oldInvoices.push(inv);
+                } else {
+                    newInvoices.push(inv);
+                }
+            });
+
+            if (oldInvoices.length === 0) {
+                return showToast("មិនមានវិក្កយបត្រចាស់ជាង ៣ខែ ដែលត្រូវ Archive ទេ!");
+            }
+
+            if (confirm(`រកឃើញវិក្កយបត្រចាស់ចំនួន ${oldInvoices.length} វិក្កយបត្រ។\nតើអ្នកពិតជាចង់ទាញយកវាទុកជាឯកសារ Backup ហើយលុបវាចេញពីប្រព័ន្ធមែនទេ?`)) {
+                // 1. Download Backup of Old Invoices
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(oldInvoices, null, 2));
+                const downloadAnchor = document.createElement('a');
+                downloadAnchor.setAttribute("href", dataStr);
+                downloadAnchor.setAttribute("download", `Archive_${BRANCH}_Invoices_${new Date().toISOString().slice(0, 10)}.json`);
+                document.body.appendChild(downloadAnchor);
+                downloadAnchor.click();
+                downloadAnchor.remove();
+
+                // 2. Save new (active) invoices back to localStorage
+                localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(newInvoices));
+
+                // 3. Sync to Supabase
+                if (supabaseClient) {
+                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                    if (data && data.data_json) {
+                        let d = data.data_json;
+                        d.invoices = newInvoices;
+                        await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
+                    }
+                }
+
+                showToast(`✅ បាន Archive និងសម្អាតវិក្កយបត្រចំនួន ${oldInvoices.length} ចេញពីប្រព័ន្ធដោយជោគជ័យ!`);
+            }
+        } catch (e) {
+            console.error(e);
+            showToast("❌ មានបញ្ហាក្នុងការ Archive: " + e.message, true);
         }
     }
 

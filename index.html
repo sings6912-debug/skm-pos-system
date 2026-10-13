@@ -362,8 +362,8 @@
                 <div id="invoicePagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
                 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 20px;">
-                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួច: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
-                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួចក្នុងតារាង: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់ក្នុងតារាង: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
                 </div>
             </div>
 
@@ -416,7 +416,7 @@
                 <div id="expensePagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
+                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់ក្នុងតារាង: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
                 </div>
             </div>
 
@@ -649,53 +649,55 @@
                         </div>
                     </div>
 
-                   <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (លាក់ទុក និងការពារដោយ Password) -->
-<div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #06b6d4;">
-    
-    <!-- ចំណងជើងអាចចុចដោះសោ -->
-    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
-        <h2 style="font-size: var(--fs-20); color: #06b6d4; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="unlockQuickTools()" title="ចុចទីនេះដើម្បីដោះសោ">
-            🛠️ ឧបករណ៍ជំនួយពិសេស & ម៉ឺនុយឌីជីថល (Quick Tools) <span style="font-size: 14px;">🔒</span>
-        </h2>
-        <button type="button" class="btn btn-outline" style="font-size: 11px; padding: 4px 10px;" onclick="unlockQuickTools()">🔓 ដោះសោ</button>
-    </div>
-    
-    <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 10px;">ផ្នែកនេះត្រូវបានចាក់សោរជាពិសេស។ សូមចុចប៊ូតុងដោះសោខាងលើដើម្បីបង្ហាញប៊ូតុងគ្រប់គ្រង។</p>
-    
-    <!-- ផ្នែកប៊ូតុងដែលត្រូវលាក់ (Display: None) -->
-    <div id="protectedQuickToolsPanel" style="display: none; margin-top: 15px;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-            <button type="button" class="btn" style="background: #06b6d4; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('admin_settings.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">⚙️ គ្រប់គ្រង Digital Menu</button>
-            <button type="button" class="btn" style="background: #0284c7; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('menu.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">🍔 បើកមើល Digital Menu</button>
-            <button type="button" class="btn" style="background: #8b5cf6; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('skm_ultimate_qr_generator.html', '_blank')">🔳 បង្កើតកាត QR ម៉ឺនុយ & តុ</button>
-            <button type="button" class="btn" style="background: #f59e0b; color: #000; padding: 14px; justify-content: center;" onclick="window.open('skm_pos_52_advanced_themes.html', '_blank')">🎨 រចនា Poster (52 Themes)</button>
-        </div>
-    </div>
-</div>
+                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (លាក់ទុក និងការពារដោយ Password) -->
+                    <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #06b6d4;">
+                        
+                        <!-- ចំណងជើងអាចចុចដោះសោ -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
+                            <h2 style="font-size: var(--fs-20); color: #06b6d4; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="unlockQuickTools()" title="ចុចទីនេះដើម្បីដោះសោ">
+                                🛠️ ឧបករណ៍ជំនួយពិសេស & ម៉ឺនុយឌីជីថល (Quick Tools) <span style="font-size: 14px;">🔒</span>
+                            </h2>
+                            <button type="button" class="btn btn-outline" style="font-size: 11px; padding: 4px 10px;" onclick="unlockQuickTools()">🔓 ដោះសោ</button>
+                        </div>
+                        
+                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 10px;">ផ្នែកនេះត្រូវបានចាក់សោរជាពិសេស។ សូមចុចប៊ូតុងដោះសោខាងលើដើម្បីបង្ហាញប៊ូតុងគ្រប់គ្រង។</p>
+                        
+                        <!-- ផ្នែកប៊ូតុងដែលត្រូវលាក់ (Display: None) -->
+                        <div id="protectedQuickToolsPanel" style="display: none; margin-top: 15px;">
+                            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+                                <button type="button" class="btn" style="background: #06b6d4; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('admin_settings.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">⚙️ គ្រប់គ្រង Digital Menu</button>
+                                <button type="button" class="btn" style="background: #0284c7; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('menu.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">🍔 បើកមើល Digital Menu</button>
+                                <button type="button" class="btn" style="background: #8b5cf6; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('skm_ultimate_qr_generator.html', '_blank')">🔳 បង្កើតកាត QR ម៉ឺនុយ & តុ</button>
+                                <button type="button" class="btn" style="background: #f59e0b; color: #000; padding: 14px; justify-content: center;" onclick="window.open('skm_pos_52_advanced_themes.html', '_blank')">🎨 រចនា Poster (52 Themes)</button>
+                            </div>
+                        </div>
+                    </div>
 
-<script>
-    // មុខងារដោះសោដោយប្រើពាក្យសម្ងាត់ "tang sopheng"
-    function unlockQuickTools() {
-        let inputPass = prompt("🔐 សូមបញ្ចូលលេខកូដសម្ងាត់ពិសេស (Master Password):");
-        if (inputPass === "tang sopheng") {
-            const panel = document.getElementById('protectedQuickToolsPanel');
-            if (panel) {
-                panel.style.display = 'block';
-                if (typeof window.showToast === 'function') {
-                    window.showToast("🔓 ដោះសោជោគជ័យ!");
-                } else {
-                    alert("🔓 ដោះសោជោគជ័យ!");
-                }
-            }
-        } else if (inputPass !== null) {
-            if (typeof window.showToast === 'function') {
-                window.showToast("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!", true);
-            } else {
-                alert("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!");
-            }
-        }
-    }
-</script>
+                    <script>
+                        // មុខងារដោះសោដោយប្រើពាក្យសម្ងាត់ "tang sopheng"
+                        function unlockQuickTools() {
+                            let inputPass = prompt("🔐 សូមបញ្ចូលលេខកូដសម្ងាត់ពិសេស (Master Password):");
+                            if (inputPass === "tang sopheng") {
+                                const panel = document.getElementById('protectedQuickToolsPanel');
+                                if (panel) {
+                                    panel.style.display = 'block';
+                                    if (typeof window.ksMsg === 'function') {
+                                        window.ksMsg("🔓 ដោះសោជោគជ័យ!", "ជោគជ័យ");
+                                    } else {
+                                        alert("🔓 ដោះសោជោគជ័យ!");
+                                    }
+                                }
+                            } else if (inputPass !== null) {
+                                if (typeof window.ksMsg === 'function') {
+                                    window.ksMsg("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!", "បរាជ័យ", true);
+                                } else {
+                                    alert("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!");
+                                }
+                            }
+                        }
+                    </script>
+                </div>
+            </div>
 
             <!-- ផ្ទាំងអំពីប្រព័ន្ធ និងការ Backup/Restore ទិន្នន័យ (About & Version) -->
             <div id="tab-about" class="tab-content">
@@ -827,6 +829,12 @@
 
             <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 5px;">សរុបប្រាក់ត្រូវបង់ (Grand Total)</div>
             <div id="checkoutTotalDisplay" style="font-size: 36px; font-weight: 900; color: #10b981; margin-bottom: 20px; font-family: 'Arial'; text-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);"></div>
+
+            <!-- 🌟 បន្ថែមថ្មី៖ បង្ហាញ QR Code ទូទាត់ប្រាក់ចំកណ្តាលផ្ទាំងគិតលុយ -->
+            <div id="checkoutQrContainer" style="display: none; margin-bottom: 20px; padding: 10px; background: rgba(6, 182, 212, 0.05); border-radius: 12px; border: 1px dashed #06b6d4;">
+                <div style="font-size: 12px; font-weight: bold; color: var(--text-main); margin-bottom: 8px;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</div>
+                <img id="checkoutQrImage" src="" style="width: 150px; height: 150px; object-fit: contain; border-radius: 8px; background: #fff; padding: 5px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            </div>
 
             <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                 <div style="flex: 1; text-align: left;">
@@ -1163,7 +1171,7 @@
                 }
             } catch (e) {
                 if (typeof window.ksMsg === 'function') {
-                    window.ksMsg("❌ មានបញ្ហាក្នុងការ Backup: " + e.message, "បរាជ័យ");
+                    window.ksMsg("❌ មានបញ្ហាក្នុងការ Backup: " + e.message, "បរាជ័យ", true);
                 }
             }
         };
@@ -1189,7 +1197,9 @@
                         processRestore(file);
                     });
                 } else {
-                    processRestore(file);
+                    if(confirm("⚠️ តើអ្នកពិតជាចង់ Restore ទិន្នន័យនេះមែនទេ? ទិន្នន័យចាស់ទាំងអស់នឹងត្រូវជំនួសដោយទិន្នន័យពី File នេះ!")) {
+                        processRestore(file);
+                    }
                 }
             };
 
@@ -1230,11 +1240,12 @@
                                 window.location.reload();
                             });
                         } else {
+                            alert("✅ Restore ទិន្នន័យបានជោគជ័យ! ប្រព័ន្ធនឹងដំណើរការឡើងវិញ។");
                             window.location.reload();
                         }
                     } catch (err) {
                         if (typeof window.ksMsg === 'function') {
-                            window.ksMsg("❌ ឯកសារ Backup មិនត្រឹមត្រូវ (Invalid JSON): " + err.message, "បរាជ័យ");
+                            window.ksMsg("❌ ឯកសារ Backup មិនត្រឹមត្រូវ (Invalid JSON): " + err.message, "បរាជ័យ", true);
                         }
                     }
                 };
@@ -1432,7 +1443,7 @@
                     if (typeof window.showToast === 'function') {
                         window.showToast("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន ទើបអាចបន្តបាន!", true);
                     } else if (typeof window.ksMsg === 'function') {
-                        window.ksMsg("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!", "បរាជ័យ");
+                        window.ksMsg("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!", "បរាជ័យ", true);
                     }
                     tableSelect.focus();
                     return; 
@@ -1458,7 +1469,7 @@
                 }
             } catch (err) {
                 console.error("កំហុសពេលចុចគិតលុយ:", err);
-                if (typeof window.ksMsg === 'function') window.ksMsg("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។", "បរាជ័យ");
+                if (typeof window.ksMsg === 'function') window.ksMsg("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។", "បរាជ័យ", true);
             }
         };
 
