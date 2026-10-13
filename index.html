@@ -195,7 +195,19 @@
                     <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap;">
                         <select id="filterCategory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ប្រភេទ</option></select>
                         <select id="filterStatus" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ស្ថានភាពស្តុក</option><option value="in_stock">✅ នៅមានស្តុក (>0)</option><option value="out_stock">❌ អស់ស្តុក (0)</option></select>
-                        <select id="sortInventory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="newest">ថ្មីបំផុត</option><option value="qty_asc">ស្តុកតិចទៅច្រើន</option><option value="qty_desc">ស្តុកច្រើនទៅតិច</option></select>
+                        <select id="sortInventory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;">
+                            <option value="newest">ថ្មីបំផុត</option>
+                            <option value="qty_asc">ស្តុកតិចទៅច្រើន</option>
+                            <option value="qty_desc">ស្តុកច្រើនទៅតិច</option>
+                        </select>
+                        <!-- បន្ថែមប្រអប់រើសចំនួនទំព័រ Pagination -->
+                        <select id="itemsPerPageSelect" class="form-control" onchange="window.changeItemsPerPage(this.value)" style="flex: 1; min-width: 100px; height: 50px;">
+                            <option value="10">បង្ហាញ 10</option>
+                            <option value="20" selected>បង្ហាញ 20</option>
+                            <option value="50">បង្ហាញ 50</option>
+                            <option value="100">បង្ហាញ 100</option>
+                            <option value="all">ទាំងអស់</option>
+                        </select>
                     </div>
 
                     <div style="display: flex; gap: 8px; width: 100%; align-items: center; justify-content: flex-end; flex-wrap: wrap;" id="inventoryActionButtonsGroup">
@@ -207,7 +219,11 @@
                         <button class="btn btn-primary" onclick="window.openProductModal()" id="btnAddNewProduct">➕ បន្ថែមទំនិញ</button>
                     </div>
                 </div>
+                
                 <div id="productGridContainer"></div>
+                
+                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) -->
+                <div id="inventoryPagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; padding-bottom: 20px;"></div>
             </div>
 
             <!-- ផ្ទាំងលក់ (POS) -->
@@ -584,7 +600,7 @@
                         </div>
                     </div>
 
-                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (Quick Tools & Digital Menu Panel) -->
+                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (Quick Tools) -->
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #06b6d4;">
                         <h2 style="font-size: var(--fs-20); margin-bottom: 10px; color: #06b6d4; border-bottom: 1px solid var(--border); padding-bottom: 10px;">🛠️ ឧបករណ៍ជំនួយពិសេស & ម៉ឺនុយឌីជីថល (Quick Tools)</h2>
                         <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 20px;">ចុចប៊ូតុងខាងក្រោមដើម្បីបើកផ្ទាំងគ្រប់គ្រងម៉ឺនុយអតិថិជន កាត QR តាមតុ និងផ្ទាំងរចនា Poster ផ្សព្វផ្សាយ៖</p>
@@ -689,7 +705,7 @@
         </div>
     </div>
 
-    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) -->
+    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) VVIP ថ្មី -->
     <div class="modal-overlay" id="checkoutModal" style="z-index: 100005; backdrop-filter: blur(5px);" onclick="if(event.target === this) document.getElementById('checkoutModal').style.display='none'">
         <style>
             .skm-checkout-glass {
@@ -830,7 +846,7 @@
         </div>
     </div>
 
-    <!-- Modal: ប្រអប់សារ Alert ជូនដំណឹង (Message Box) -->
+    <!-- Modal: ប្រអប់សារ Alert ជូនដំណឹង (Message Box) (មិនដាក់ onclick ទេ ការពារកុំឱ្យចុចច្រឡំ) -->
     <div class="modal-overlay" id="ksMsgBox" style="z-index: 999999;">
         <div class="modal" style="max-width: 400px; text-align: center; margin: auto;">
             <div class="modal-body">
@@ -1004,7 +1020,7 @@
     <!-- កន្លែងសម្រាប់ព្រីន (Print Area) -->
     <div id="printReceiptArea" style="display: none;"></div>
 
-    <!-- ភ្ជាប់ឯកសារ JavaScript Module ទាំងអស់ (បានលុប script.js ដែលគ្មានពិតចេញ) -->
+    <!-- ភ្ជាប់ឯកសារ JavaScript Module ទាំងអស់ -->
     <script src="config.js"></script>
     <script src="theme.js"></script>
     <script src="auth.js"></script>
@@ -1031,7 +1047,6 @@
             window.toggleSection('lowStockCardContainer');
         };
 
-        // 💾 មុខងារ Backup ទិន្នន័យ (Export JSON)
         window.triggerAppBackup = function() {
             try {
                 if (typeof window.exportData === 'function') {
@@ -1057,17 +1072,18 @@
                 downloadAnchor.click();
                 downloadAnchor.remove();
 
-                if (typeof window.showToast === 'function') {
+                if (typeof window.ksMsg === 'function') {
+                    window.ksMsg("✅ Backup ទិន្នន័យបានជោគជ័យ!", "ជោគជ័យ");
+                } else if (typeof window.showToast === 'function') {
                     window.showToast("✅ Backup ទិន្នន័យបានជោគជ័យ!");
-                } else {
-                    alert("✅ Backup ទិន្នន័យបានជោគជ័យ!");
                 }
             } catch (e) {
-                alert("❌ មានបញ្ហាក្នុងការ Backup: " + e.message);
+                if (typeof window.ksMsg === 'function') {
+                    window.ksMsg("❌ មានបញ្ហាក្នុងការ Backup: " + e.message, "បរាជ័យ");
+                }
             }
         };
 
-        // 📂 មុខងារ Restore ទិន្នន័យ (Import JSON)
         window.triggerAppRestore = function() {
             const fileInput2 = document.getElementById('importBackupFile2');
             if (fileInput2) {
@@ -1083,10 +1099,18 @@
                 const file = e.target.files[0];
                 if (!file) return;
 
-                if (!confirm("⚠️ តើអ្នកពិតជាចង់ Restore ទិន្នន័យនេះមែនទេ? ទិន្នន័យចាស់ទាំងអស់នឹងត្រូវជំនួសដោយទិន្នន័យពី File នេះ!")) {
-                    return;
+                if (typeof window.ksMsg === 'function') {
+                    window.ksMsg("⚠️ តើអ្នកពិតជាចង់ Restore ទិន្នន័យនេះមែនទេ? ទិន្នន័យចាស់ទាំងអស់នឹងត្រូវជំនួសដោយទិន្នន័យពី File នេះ!", "បញ្ជាក់ការ Restore", true, () => {
+                        processRestore(file);
+                    });
+                } else {
+                    processRestore(file);
                 }
+            };
 
+            input.click();
+
+            function processRestore(file) {
                 const reader = new FileReader();
                 reader.onload = async function(event) {
                     try {
@@ -1116,19 +1140,23 @@
                             }
                         }
 
-                        alert("✅ Restore ទិន្នន័យបានជោគជ័យ! ប្រព័ន្ធនឹងដំណើរការឡើងវិញ។");
-                        window.location.reload();
+                        if (typeof window.ksMsg === 'function') {
+                            window.ksMsg("✅ Restore ទិន្នន័យបានជោគជ័យ! ប្រព័ន្ធនឹងដំណើរការឡើងវិញ។", "ជោគជ័យ", false, () => {
+                                window.location.reload();
+                            });
+                        } else {
+                            window.location.reload();
+                        }
                     } catch (err) {
-                        alert("❌ ឯកសារ Backup មិនត្រឹមត្រូវ (Invalid JSON): " + err.message);
+                        if (typeof window.ksMsg === 'function') {
+                            window.ksMsg("❌ ឯកសារ Backup មិនត្រឹមត្រូវ (Invalid JSON): " + err.message, "បរាជ័យ");
+                        }
                     }
                 };
                 reader.readAsText(file);
-            };
-
-            input.click();
+            }
         };
 
-        // Global filter function សម្រាប់តារាងទាំងអស់ (Per-Column Filter)
         window.filterTable = function(tableId) {
             const table = document.getElementById(tableId);
             if (!table) return;
@@ -1197,7 +1225,6 @@
             }
         }
 
-        // Global Sort Function សម្រាប់តារាង
         window.sortDirection = {};
         window.sortTable = function(tableId, n, type = 'string') {
             const table = document.getElementById(tableId);
@@ -1243,7 +1270,6 @@
             });
         };
 
-        // ⚡ FIX: កំណត់កុំឱ្យសរសេរជាន់ពីលើមុខងារ openExpenseModal របស់ finance.js
         if (typeof window.openExpenseModal !== 'function') {
             window.openExpenseModal = function() {
                 const modal = document.getElementById('expenseModal');
@@ -1269,7 +1295,6 @@
             };
         }
 
-        // 🪑 មុខងារទាញយកលេខតុមកបង្ហាញ
         window.loadTableSettingsForPOS = function() {
             const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             let sysSettings = {};
@@ -1282,7 +1307,7 @@
             const tableSelect = document.getElementById('posTableSelect');
             
             if (sysSettings.toggleTableFeature && tableContainer && tableSelect) {
-                tableContainer.style.display = 'block';
+                tableContainer.style.display = 'block'; 
                 let totalTables = parseInt(sysSettings.totalTables) || 20;
                 let prefix = sysSettings.tablePrefix || 'តុលេខ';
                 
@@ -1292,7 +1317,7 @@
                     tableSelect.innerHTML += `<option value="${tableName}">${tableName}</option>`;
                 }
             } else if (tableContainer) {
-                tableContainer.style.display = 'none';
+                tableContainer.style.display = 'none'; 
             }
         };
 
@@ -1304,7 +1329,7 @@
 
             if (tableSelect && tableSelect.value) {
                 custNameInput.value = tableSelect.value;
-                custNameInput.style.borderLeft = "4px solid var(--success)";
+                custNameInput.style.borderLeft = "4px solid var(--success)"; 
             } else {
                 custNameInput.value = "";
                 custNameInput.placeholder = "ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)";
@@ -1321,11 +1346,11 @@
                 if (!tableSelect.value) {
                     if (typeof window.showToast === 'function') {
                         window.showToast("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន ទើបអាចបន្តបាន!", true);
-                    } else {
-                        alert("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!");
+                    } else if (typeof window.ksMsg === 'function') {
+                        window.ksMsg("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!", "បរាជ័យ");
                     }
                     tableSelect.focus();
-                    return;
+                    return; 
                 }
                 
                 if (custNameInput && custNameInput.value.trim() === '') {
@@ -1336,24 +1361,24 @@
             try {
                 if (action === 'unpaid') {
                     if (typeof window.checkout === 'function') window.checkout('unpaid');
-                    else alert("ប៊ូតុងរង់ចាំទូទាត់ត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)");
+                    else if (typeof window.ksMsg === 'function') window.ksMsg("ប៊ូតុងរង់ចាំទូទាត់ត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)", "ជូនដំណឹង");
                 } 
                 else if (action === 'paid') {
                     if (typeof window.openCheckoutModal === 'function') window.openCheckoutModal();
-                    else alert("ប៊ូតុងទូទាត់រួចត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)");
+                    else if (typeof window.ksMsg === 'function') window.ksMsg("ប៊ូតុងទូទាត់រួចត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)", "ជូនដំណឹង");
                 } 
                 else if (action === 'preorder') {
                     if (typeof window.openPreorderModal === 'function') window.openPreorderModal();
-                    else alert("ប៊ូតុងកក់ប្រាក់ត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)");
+                    else if (typeof window.ksMsg === 'function') window.ksMsg("ប៊ូតុងកក់ប្រាក់ត្រូវបានចុច! (Function ដើមមិនទាន់ភ្ជាប់)", "ជូនដំណឹង");
                 }
             } catch (err) {
                 console.error("កំហុសពេលចុចគិតលុយ:", err);
-                alert("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។");
+                if (typeof window.ksMsg === 'function') window.ksMsg("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។", "បរាជ័យ");
             }
         };
 
         window.addEventListener('DOMContentLoaded', () => {
-            window.loadTableSettingsForPOS();
+            window.loadTableSettingsForPOS(); 
             
             if (typeof window.handleLogin !== 'function') window.handleLogin = () => { document.getElementById('authScreen').style.display = 'none'; };
             if (typeof window.handleLogout !== 'function') window.handleLogout = () => { document.getElementById('authScreen').style.display = 'flex'; };

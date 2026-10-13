@@ -95,7 +95,7 @@
             border: 2px solid var(--brand-dark);
         }
 
-        /* Slider Banner (Multiple Images) */
+        /* Slider Banner (Multiple Images) - FIXED FOR ASPECT RATIO */
         .promo-banner {
             margin: 15px 20px 10px 20px;
             border-radius: 16px;
@@ -103,7 +103,14 @@
             position: relative;
             background: var(--brand-dark);
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            height: 160px;
+            aspect-ratio: 16 / 7; /* Responsive height for mobile */
+            max-height: 250px;
+        }
+        @media (min-width: 768px) {
+            .promo-banner {
+                aspect-ratio: 21 / 9; /* Wider banner for desktop */
+                max-height: 350px;
+            }
         }
         #bannerSlider {
             display: flex;
@@ -111,16 +118,21 @@
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
         #bannerSlider img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; }
+        
         .slider-dots {
-            position: absolute; bottom: 8px; left: 50%; transform: translateX(-50%);
+            position: absolute; bottom: 10px; right: 15px; /* Moved to right */
             display: flex; gap: 6px; z-index: 10;
         }
         .slider-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: 0.3s; }
         .slider-dot.active { background: #fff; transform: scale(1.4); }
 
         .banner-overlay-badge {
-            position: absolute; bottom: 10px; left: 10px; background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
-            color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; display: flex; gap: 6px; align-items: center;
+            position: absolute; bottom: 10px; left: 10px; right: 80px; /* leave space for dots */
+            display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-end; z-index: 10;
+        }
+        .promo-tag {
+            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;
         }
 
         /* Marquee Ticker */
@@ -150,6 +162,7 @@
         }
         .cat-pill.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
 
+        /* កែប្រែនៅទីនេះ: ធ្វើឱ្យវា Responsive (តូចល្មមស្រួលមើលទាំងលើទូរស័ព្ទ និងកុំព្យូទ័រ) */
         .product-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
@@ -253,15 +266,6 @@
         }
         .floating-chat:active { transform: scale(0.95); }
 
-        /* 🛎️ Floating Call Waiter Button */
-        .floating-waiter {
-            position: fixed; bottom: 95px; left: 20px; width: 50px; height: 50px;
-            background: #f59e0b; color: white; border-radius: 50%; display: flex;
-            align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4);
-            z-index: 850; cursor: pointer; transition: transform 0.2s;
-        }
-        .floating-waiter:active { transform: scale(0.95); }
-
         /* Welcome Popup & Store Closed Banner */
         #storeClosedBanner {
             position: fixed; top: 0; left: 0; width: 100%; background: var(--danger); color: white;
@@ -348,12 +352,12 @@
             </div>
         </div>
 
-        <!-- Slider Banner (Multiple Images) -->
+        <!-- Slider Banner (Multiple Images) - FIXED FOR ASPECT RATIO -->
         <div class="promo-banner" id="promoBannerWrapper" style="display: none;">
             <div id="bannerSlider"></div>
             <div class="slider-dots" id="bannerDots"></div>
-            <div class="banner-overlay-badge" id="bannerBadge" style="display: none;">
-                <i class="fa-solid fa-tags"></i> <span id="bannerBadgeText"></span>
+            <div class="banner-overlay-badge" id="bannerBadgeContainer" style="display: none;">
+                <!-- Badges will be injected here -->
             </div>
         </div>
 
@@ -379,11 +383,6 @@
         <!-- Floating Chat Button -->
         <div class="floating-chat" onclick="openChat()">
             <i class="fa-solid fa-comment-dots"></i>
-        </div>
-
-        <!-- 🛎️ Floating Call Waiter Button -->
-        <div class="floating-waiter" onclick="openWaiterModal()">
-            <i class="fa-solid fa-bell"></i>
         </div>
 
         <!-- Bottom Navigation Bar -->
@@ -558,35 +557,6 @@
             <input type="text" id="rName" class="input-st" placeholder="Name...">
             <textarea id="rCom" class="input-st" placeholder="Comment..." style="height: 60px; resize:none;"></textarea>
             <button class="btn-act btn-green" style="width: 100%;" onclick="submitReview()">Submit</button>
-        </div>
-    </div>
-
-    <!-- 6. CALL WAITER MODAL (Cafe Theme) -->
-    <div class="modal-bg" id="waiterModal" onclick="checkClose(event, 'waiterModal')">
-        <div style="background: #FAF6F0; color: #4A3B32; padding: 25px; border-radius: 24px; width: 90%; max-width: 360px; text-align: center; border: 2px solid #E8D8C8; box-shadow: 0 15px 35px rgba(0,0,0,0.3); transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); z-index: 2001;" id="waiterModalContent">
-            <div style="font-size: 40px; margin-bottom: 10px;">🛎️</div>
-            <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #6F4E37;">សេវាកម្ម / ហៅបុគ្គលិក</h3>
-            <p style="font-size: 13px; color: #8C7A6B; margin-bottom: 20px; font-weight: bold;">ទីតាំងបច្ចុប្បន្ន: <span id="waiterTableDisplay" style="color:#ef4444;">មិនមានលេខតុទេ</span></p>
-
-            <div style="display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px;">
-                <button onclick="sendWaiterRequest('សុំទឹកស / ទឹកកកបន្ថែម')" style="background: #F3EBE1; color: #4A3B32; border: 1px solid #E8D8C8; padding: 14px 15px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; display:flex; align-items:center; gap:12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                    <i class="fa-solid fa-droplet" style="color:#38bdf8; font-size: 18px; width: 20px;"></i> សុំទឹកស / ទឹកកកបន្ថែម
-                </button>
-                
-                <button onclick="sendWaiterRequest('សុំគិតលុយ (Request Bill)')" style="background: #E8D8C8; color: #6F4E37; border: 1px solid #D4B89F; padding: 14px 15px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; display:flex; align-items:center; gap:12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                    <i class="fa-solid fa-file-invoice-dollar" style="color:#8b5cf6; font-size: 18px; width: 20px;"></i> សុំគិតលុយ (Request Bill)
-                </button>
-                
-                <button onclick="sendWaiterRequest('សម្អាតតុ (Clean Table)')" style="background: #EAF0E6; color: #4A5D23; border: 1px solid #C5D4B5; padding: 14px 15px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; display:flex; align-items:center; gap:12px; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
-                    <i class="fa-solid fa-broom" style="color:#ef4444; font-size: 18px; width: 20px;"></i> សម្អាតតុ (Clean Table)
-                </button>
-                
-                <button onclick="sendWaiterRequest('ហៅបុគ្គលិកមកជួយផ្ទាល់')" style="background: #6F4E37; color: #fff; border: 1px solid #4A3B32; padding: 14px 15px; border-radius: 12px; font-size: 14px; font-weight: 800; cursor: pointer; text-align: left; display:flex; align-items:center; gap:12px; box-shadow: 0 4px 10px rgba(111, 78, 55, 0.3);">
-                    <i class="fa-solid fa-person-rays" style="color:#facc15; font-size: 18px; width: 20px;"></i> ហៅបុគ្គលិកមកជួយផ្ទាល់
-                </button>
-            </div>
-
-            <button style="width: 100%; background: transparent; color: #8C7A6B; border: 1px solid #E8D8C8; border-radius: 12px; padding: 12px; font-weight: bold; cursor: pointer; font-family: 'Battambang';" onclick="closeWaiterModal()">បិទ</button>
         </div>
     </div>
 
@@ -830,16 +800,23 @@
                             } else promoBanner.style.display = 'none';
                             
                             // Promo Badge on Banner (Supports new sys.promoCodes and legacy sys.promoCodeText)
+                            const badgeContainer = document.getElementById('bannerBadgeContainer');
                             if (sys.promoCodes && Array.isArray(sys.promoCodes) && sys.promoCodes.length > 0) {
-                                const activePromo = sys.promoCodes.find(p => !p.limit || (p.usedCount || 0) < p.limit) || sys.promoCodes[0];
-                                if (activePromo) {
-                                    let pDesc = activePromo.type === 'percent' ? `-${activePromo.value}%` : (activePromo.type === 'fixed' ? `-$${activePromo.value}` : 'Free Ship');
-                                    document.getElementById('bannerBadgeText').innerText = `Code: ${activePromo.code} (${pDesc})`;
-                                    document.getElementById('bannerBadge').style.display = 'flex';
+                                const activePromos = sys.promoCodes.filter(p => !p.limit || (p.usedCount || 0) < p.limit);
+                                if (activePromos.length > 0) {
+                                    let badgeHtml = '';
+                                    activePromos.forEach(p => {
+                                        let pDesc = p.type === 'percent' ? `-${p.value}%` : (p.type === 'fixed' ? `-$${p.value}` : 'Free Ship');
+                                        badgeHtml += `<span class="promo-tag"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} (${pDesc})</span>`;
+                                    });
+                                    badgeContainer.innerHTML = badgeHtml;
+                                    badgeContainer.style.display = 'flex';
                                 }
                             } else if (sys.togglePromoBadge && sys.promoCodeText) {
-                                document.getElementById('bannerBadgeText').innerText = `Code: ${sys.promoCodeText}`;
-                                document.getElementById('bannerBadge').style.display = 'flex';
+                                badgeContainer.innerHTML = `<span class="promo-tag"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${sys.promoCodeText}</span>`;
+                                badgeContainer.style.display = 'flex';
+                            } else {
+                                badgeContainer.style.display = 'none';
                             }
                             
                             // Marquee Ticker (Supports both tickerText & tickerNews)
@@ -1224,55 +1201,6 @@
         function openChat() {
             if(dynamicChatLink) window.open(dynamicChatLink, '_blank');
             else showToast("មុខងារ Chat មិនទាន់មានតំណភ្ជាប់នៅឡើយទេ", true);
-        }
-
-        // --- Call Waiter Logic ---
-        function openWaiterModal() {
-            const tableText = TABLE_NO ? `តុលេខ ${TABLE_NO}` : 'មិនមានលេខតុ (មិនអាចហៅបានទេ)';
-            document.getElementById('waiterTableDisplay').innerText = tableText;
-            document.getElementById('waiterTableDisplay').style.color = TABLE_NO ? '#d97706' : '#ef4444';
-            
-            const m = document.getElementById('waiterModal'); 
-            m.style.display = 'flex'; 
-            setTimeout(() => m.classList.add('show'), 10);
-            setTimeout(() => document.getElementById('waiterModalContent').style.transform = 'translateY(0)', 10);
-        }
-
-        function closeWaiterModal() {
-            document.getElementById('waiterModalContent').style.transform = 'translateY(100%)';
-            const m = document.getElementById('waiterModal'); 
-            m.classList.remove('show'); 
-            setTimeout(() => m.style.display = 'none', 400); 
-        }
-
-        function sendWaiterRequest(reqType) {
-            if (!TABLE_NO) {
-                showToast('សុំទោស! លោកអ្នកមិនទាន់បានស្កេន QR លើតុទេ។', true);
-                return;
-            }
-
-            closeWaiterModal();
-            showToast(`កំពុងហៅបុគ្គលិក...`);
-
-            if (serviceBotToken && serviceChatId) {
-                let msg = `🛎️ <b><big>ការហៅសេវាកម្មបន្ទាន់!</big></b>\n📍 ទីតាំង: <b>តុលេខ ${TABLE_NO}</b>\n🔔 សំណើ: <b>${reqType}</b>`;
-                fetch(`https://api.telegram.org/bot${serviceBotToken}/sendMessage`, {
-                    method: 'POST', headers: {'Content-Type':'application/json'},
-                    body: JSON.stringify({chat_id: serviceChatId, text: msg, parse_mode: 'HTML'})
-                }).then(res => {
-                    if(res.ok) {
-                        showToast(`បានផ្ញើសំណើ "${reqType}" រួចរាល់!`);
-                        playDing();
-                    } else {
-                        showToast(`បរាជ័យក្នុងការផ្ញើសំណើ!`, true);
-                    }
-                }).catch(err => {
-                    showToast(`បរាជ័យក្នុងការផ្ញើសំណើ!`, true);
-                });
-            } else {
-                showToast(`បានផ្ញើសំណើ "${reqType}" រួចរាល់! (Offline)`);
-                playDing();
-            }
         }
 
         function renderQA() {

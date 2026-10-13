@@ -1,6 +1,24 @@
 // inventory.js
 window.currentInventoryView = 'grid';
 
+// អថេរសម្រាប់កំណត់ការបែងចែកទំព័រ (Pagination)
+window.invCurrentPage = 1;
+window.invItemsPerPage = 20; // លំនាំដើមបង្ហាញ ២០ ក្នុងមួយទំព័រ
+
+window.changeItemsPerPage = function(val) {
+    window.invItemsPerPage = val === 'all' ? 'all' : parseInt(val);
+    window.invCurrentPage = 1; // ត្រឡប់ទៅទំព័រទី១វិញពេលប្តូរចំនួន
+    window.renderInventory();
+};
+
+window.changeInvPage = function(page) {
+    window.invCurrentPage = page;
+    window.renderInventory();
+    // អូសត្រឡប់ទៅលើវិញស្វ័យប្រវត្តិពេលប្តូរទំព័រ
+    const container = document.getElementById('mainScroller');
+    if(container) container.scrollTo({top: 0, behavior: 'smooth'});
+};
+
 window.setInventoryView = function(mode, skipRender = false) { 
     window.currentInventoryView = mode; 
     localStorage.setItem(window.getBranchKey('inv_view_mode'), mode); 
@@ -19,6 +37,7 @@ window.setInventoryView = function(mode, skipRender = false) {
 
 window.renderInventory = function() {
     const container = document.getElementById('productGridContainer'); 
+    const pageContainer = document.getElementById('inventoryPagination');
     if(!container) return;
     try {
         const searchInputEl = document.getElementById('searchInput'); const search = searchInputEl ? searchInputEl.value.toLowerCase() : ''; 
@@ -49,14 +68,33 @@ window.renderInventory = function() {
         
         if (filtered.length === 0) { 
             container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-card); border-radius:12px; border:1px solid var(--border);">មិនមានទិន្នន័យ</div>'; 
+            if(pageContainer) pageContainer.innerHTML = '';
             return; 
         }
+
+        // ការគណនា Pagination
+        let totalItems = filtered.length;
+        let totalPages = 1;
+        let displayItems = filtered;
+
+        if (window.invItemsPerPage !== 'all') {
+            totalPages = Math.ceil(totalItems / window.invItemsPerPage) || 1;
+            
+            // ការពារកុំឱ្យលើសលេខទំព័រ
+            if (window.invCurrentPage > totalPages) window.invCurrentPage = totalPages;
+            if (window.invCurrentPage < 1) window.invCurrentPage = 1;
+
+            let startIndex = (window.invCurrentPage - 1) * window.invItemsPerPage;
+            let endIndex = startIndex + window.invItemsPerPage;
+            displayItems = filtered.slice(startIndex, endIndex); // កាត់យកតែទិន្នន័យសម្រាប់ទំព័រនេះ
+        }
+
         const showCost = window.sysSettings.cost && window.currentRole === 'admin'; 
         let enableEdit = window.currentRole === 'admin' ? true : false;
         
         if (window.currentInventoryView === 'grid') {
             let finalHtml = `<div class="product-grid">`;
-            filtered.forEach(p => {
+            displayItems.forEach(p => {
                 if(!p) return;
                 let pQty = parseFloat(p.qty) || 0; 
                 let sCol = pQty <= 0 ? 'var(--danger)' : (pQty <= 5 ? 'var(--warning)' : 'var(--success)'); 
@@ -73,7 +111,7 @@ window.renderInventory = function() {
             container.innerHTML = finalHtml;
         } else {
             let tableHTML = `<div class="table-responsive"><table id="mainInventoryTable"><thead><tr class="header-row"><th style="width: 60px;">រូបភាព</th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 1)">ឈ្មោះទំនិញ / Barcode <span>⬍</span></th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 2)">ប្រភេទ <span>⬍</span></th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 3, 'number')">តម្លៃលក់ <span>⬍</span></th><th style="text-align:center;" onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 4, 'number')">ស្តុកនៅសល់ <span>⬍</span></th>${window.sysSettings.expiry?'<th>កាលបរិច្ឆេទផុតកំណត់</th>':''}${enableEdit ? '<th style="text-align:center;">សកម្មភាព</th>' : ''}</tr><tr class="filter-row"><th></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th>${window.sysSettings.expiry?'<th></th>':''}${enableEdit ? '<th></th>' : ''}</tr></thead><tbody>`;
-            filtered.forEach(p => { 
+            displayItems.forEach(p => { 
                 if(!p) return;
                 let pQty = parseFloat(p.qty) || 0; 
                 let sCol = pQty <= 0 ? 'var(--danger)' : (pQty <= 5 ? 'var(--warning)' : 'var(--success)'); 
@@ -99,6 +137,18 @@ window.renderInventory = function() {
             }); 
             if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainInventoryTable'), 50);
         }
+
+        // Render ប៊ូតុង Pagination ខាងក្រោមតារាង
+        if (pageContainer) {
+            if (window.invItemsPerPage === 'all' || totalItems <= window.invItemsPerPage) {
+                pageContainer.innerHTML = ''; // លាក់ប៊ូតុងបើអត់មានទំព័របន្ទាប់
+            } else {
+                let pageHtml = `<button class="btn btn-outline" ${window.invCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvPage(${window.invCurrentPage - 1})"`}>◀ មុន</button>`;
+                pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.invCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} មុខ)</small></span>`;
+                pageHtml += `<button class="btn btn-outline" ${window.invCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvPage(${window.invCurrentPage + 1})"`}>បន្ទាប់ ▶</button>`;
+                pageContainer.innerHTML = pageHtml;
+            }
+        }
     } catch(err) { 
         container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--danger);">Error Inventory: ${err.message}</div>`; 
     }
@@ -123,7 +173,10 @@ window.generateProductBarcode = function() {
 };
 
 window.openProductModal = function() { 
-    if(window.currentRole !== 'admin') return window.ksMsg('គ្មានសិទ្ធិ!'); 
+    if(window.currentRole !== 'admin') {
+        if(typeof window.ksMsg === 'function') window.ksMsg('គ្មានសិទ្ធិ!', 'បរាជ័យ', true);
+        return;
+    } 
     document.getElementById('pId').value = ''; 
     document.getElementById('pName').value = ''; 
     document.getElementById('pCategory').value = ''; 
@@ -222,7 +275,9 @@ window.saveProduct = function() {
         condition: document.getElementById('pCondition') ? document.getElementById('pCondition').value || '' : '',
         expiry: (window.sysSettings && window.sysSettings.expiry) ? expiryVal : ''
     }; 
-    if(!data.name || (data.price <= 0 && data.riel <= 0)) return window.ksMsg("សូមបញ្ចូលឈ្មោះ និងតម្លៃលក់ (យ៉ាងហោចណាស់ ដុល្លារ ឬ រៀល)!"); 
+    if(!data.name || (data.price <= 0 && data.riel <= 0)) {
+        if(typeof window.ksMsg === 'function') return window.ksMsg("សូមបញ្ចូលឈ្មោះ និងតម្លៃលក់ (យ៉ាងហោចណាស់ ដុល្លារ ឬ រៀល)!"); 
+    }
     if(id) { 
         const idx = window.inventory.findIndex(p => p && p.id === id); 
         if(idx !== -1) window.inventory[idx] = data; 
@@ -237,7 +292,10 @@ window.saveProduct = function() {
 };
 
 window.editProduct = function(id) { 
-    if(window.currentRole !== 'admin') return window.ksMsg('គ្មានសិទ្ធិ!'); 
+    if(window.currentRole !== 'admin') {
+        if(typeof window.ksMsg === 'function') window.ksMsg('គ្មានសិទ្ធិ!', 'បរាជ័យ', true);
+        return;
+    }
     const p = window.inventory.find(i => i && i.id === id); if(!p) return; 
     document.getElementById('pId').value = p.id; 
     document.getElementById('pCustomId').value = p.customId||p.id; 
@@ -280,51 +338,37 @@ window.editProduct = function(id) {
     document.getElementById('productModal').style.display = 'flex'; 
 };
 
-// 🌟 នេះគឺជាកន្លែងដែលយើងត្រូវបន្ថែម Deleted Tracker
 window.deleteProduct = function(id) { 
-    if(window.currentRole !== 'admin') return window.ksMsg('គ្មានសិទ្ធិ!'); 
+    if(window.currentRole !== 'admin') {
+        if(typeof window.ksMsg === 'function') window.ksMsg('គ្មានសិទ្ធិ!', 'បរាជ័យ', true);
+        return;
+    }
     const p = window.inventory.find(i => i && i.id === id); if(!p) return;
     
     if(typeof window.ksMsg === 'function') {
         window.ksMsg(`តើអ្នកពិតជាចង់លុប ${p.name} ចេញពីប្រព័ន្ធមែនទេ?`, "បញ្ជាក់ការលុប", true, async () => {
-            // ⚡ ១. កត់ត្រា ID ចូលបញ្ជីខ្មៅ (Blacklist) ការពារ Cloud ទាញមកវិញ
             let deletedProds = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
             if (!deletedProds.includes(String(id))) {
                 deletedProds.push(String(id));
                 localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProds));
             }
 
-            // ⚡ ២. លុបចេញពីអេក្រង់ និង Local Storage
             const idx = window.inventory.findIndex(i => i && i.id === id);
             if (idx !== -1) window.inventory.splice(idx, 1);
             
             window.logAction('update', p.name, 0, 'លុបចេញពីប្រព័ន្ធ', window.activeUser); 
             
-            // ⚡ ៣. Save ទៅ Cloud រួច Refresh UI
             if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
             window.renderInventory();
             window.ksMsg('លុបជោគជ័យ!', 'ជោគជ័យ');
         });
-    } else {
-        if(confirm(`តើអ្នកពិតជាចង់លុប ${p.name} ចេញពីប្រព័ន្ធមែនទេ?`)) {
-            let deletedProds = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
-            if (!deletedProds.includes(String(id))) {
-                deletedProds.push(String(id));
-                localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProds));
-            }
-
-            const idx = window.inventory.findIndex(i => i && i.id === id);
-            if (idx !== -1) window.inventory.splice(idx, 1);
-            window.logAction('update', p.name, 0, 'លុបចេញពីប្រព័ន្ធ', window.activeUser); 
-            if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
-            window.renderInventory();
-        }
     }
 };
 
 window.exportCSV = function() {
     if(!window.inventory || window.inventory.length === 0) {
-        return window.ksMsg('គ្មានទិន្នន័យទំនិញដើម្បី Export ទេ!');
+        if(typeof window.ksMsg === 'function') return window.ksMsg('គ្មានទិន្នន័យទំនិញដើម្បី Export ទេ!');
+        return;
     }
     const showCost = window.sysSettings && window.sysSettings.cost && window.currentRole === 'admin';
     let csv = '\uFEFF"លេខកូដ","ឈ្មោះទំនិញ","ប្រភេទ","តម្លៃដើម($)","តម្លៃលក់($)","តម្លៃរៀល(៛)","ខ្នាត","ស្តុក","ស្ថានភាព","ផុតកំណត់","ការពណ៌នា"\n';
