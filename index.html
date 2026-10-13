@@ -649,19 +649,53 @@
                         </div>
                     </div>
 
-                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (Quick Tools) -->
-                    <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #06b6d4;">
-                        <h2 style="font-size: var(--fs-20); margin-bottom: 10px; color: #06b6d4; border-bottom: 1px solid var(--border); padding-bottom: 10px;">🛠️ ឧបករណ៍ជំនួយពិសេស & ម៉ឺនុយឌីជីថល (Quick Tools)</h2>
-                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 20px;">ចុចប៊ូតុងខាងក្រោមដើម្បីបើកផ្ទាំងគ្រប់គ្រងម៉ឺនុយអតិថិជន កាត QR តាមតុ និងផ្ទាំងរចនា Poster ផ្សព្វផ្សាយ៖</p>
-                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
-                            <button type="button" class="btn" style="background: #06b6d4; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('admin_settings.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">⚙️ គ្រប់គ្រង Digital Menu</button>
-                            <button type="button" class="btn" style="background: #0284c7; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('menu.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">🍔 បើកមើល Digital Menu</button>
-                            <button type="button" class="btn" style="background: #8b5cf6; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('skm_ultimate_qr_generator.html', '_blank')">🔳 បង្កើតកាត QR ម៉ឺនុយ & តុ</button>
-                            <button type="button" class="btn" style="background: #f59e0b; color: #000; padding: 14px; justify-content: center;" onclick="window.open('skm_pos_52_advanced_themes.html', '_blank')">🎨 រចនា Poster (52 Themes)</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+                   <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (លាក់ទុក និងការពារដោយ Password) -->
+<div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #06b6d4;">
+    
+    <!-- ចំណងជើងអាចចុចដោះសោ -->
+    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
+        <h2 style="font-size: var(--fs-20); color: #06b6d4; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="unlockQuickTools()" title="ចុចទីនេះដើម្បីដោះសោ">
+            🛠️ ឧបករណ៍ជំនួយពិសេស & ម៉ឺនុយឌីជីថល (Quick Tools) <span style="font-size: 14px;">🔒</span>
+        </h2>
+        <button type="button" class="btn btn-outline" style="font-size: 11px; padding: 4px 10px;" onclick="unlockQuickTools()">🔓 ដោះសោ</button>
+    </div>
+    
+    <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 10px;">ផ្នែកនេះត្រូវបានចាក់សោរជាពិសេស។ សូមចុចប៊ូតុងដោះសោខាងលើដើម្បីបង្ហាញប៊ូតុងគ្រប់គ្រង។</p>
+    
+    <!-- ផ្នែកប៊ូតុងដែលត្រូវលាក់ (Display: None) -->
+    <div id="protectedQuickToolsPanel" style="display: none; margin-top: 15px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
+            <button type="button" class="btn" style="background: #06b6d4; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('admin_settings.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">⚙️ គ្រប់គ្រង Digital Menu</button>
+            <button type="button" class="btn" style="background: #0284c7; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('menu.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">🍔 បើកមើល Digital Menu</button>
+            <button type="button" class="btn" style="background: #8b5cf6; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('skm_ultimate_qr_generator.html', '_blank')">🔳 បង្កើតកាត QR ម៉ឺនុយ & តុ</button>
+            <button type="button" class="btn" style="background: #f59e0b; color: #000; padding: 14px; justify-content: center;" onclick="window.open('skm_pos_52_advanced_themes.html', '_blank')">🎨 រចនា Poster (52 Themes)</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    // មុខងារដោះសោដោយប្រើពាក្យសម្ងាត់ "tang sopheng"
+    function unlockQuickTools() {
+        let inputPass = prompt("🔐 សូមបញ្ចូលលេខកូដសម្ងាត់ពិសេស (Master Password):");
+        if (inputPass === "tang sopheng") {
+            const panel = document.getElementById('protectedQuickToolsPanel');
+            if (panel) {
+                panel.style.display = 'block';
+                if (typeof window.showToast === 'function') {
+                    window.showToast("🔓 ដោះសោជោគជ័យ!");
+                } else {
+                    alert("🔓 ដោះសោជោគជ័យ!");
+                }
+            }
+        } else if (inputPass !== null) {
+            if (typeof window.showToast === 'function') {
+                window.showToast("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!", true);
+            } else {
+                alert("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!");
+            }
+        }
+    }
+</script>
 
             <!-- ផ្ទាំងអំពីប្រព័ន្ធ និងការ Backup/Restore ទិន្នន័យ (About & Version) -->
             <div id="tab-about" class="tab-content">
