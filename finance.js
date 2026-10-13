@@ -20,9 +20,9 @@ window.invListItemsPerPage = 20;
 window.expCurrentPage = 1;
 window.expItemsPerPage = 20;
 
-// ========================================================
-// 🌟 ផ្នែកទី ១៖ គ្រប់គ្រងវិក្កយបត្រ (Invoices & Debt)
-// ========================================================
+/* ========================================================
+   🌟 ផ្នែកទី ១៖ គ្រប់គ្រងវិក្កយបត្រ (Invoices & Debt)
+   ======================================================== */
 
 window.changeInvoiceItemsPerPage = function(val) {
     window.invListItemsPerPage = val === 'all' ? 'all' : parseInt(val);
@@ -144,7 +144,6 @@ window.renderUnpaid = function() {
 
     tableBody.innerHTML = '';
     displayItems.forEach((inv, index) => {
-        // ... (កូដបង្ហាញជួរតារាងនីមួយៗគឺរក្សាទុកដូចដើមទាំងអស់ គ្រាន់តែប្តូរពី invoices ទៅ displayItems)
         const invId = String(inv.id || inv.invoiceNo || `ORD-${index}`);
         const custName = inv.customerName || inv.customer || 'អតិថិជនទូទៅ';
         const custPhone = inv.customerPhone || inv.phone || '';
@@ -834,7 +833,9 @@ window.reprintInvoice = function() {
     receiptHTML += `<table style="width:100%; font-size: 12px; margin-top: 5px;">`;
     receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">$${parseFloat(inv.totalAmount || inv.total || 0).toFixed(2)}</td></tr>`;
     receiptHTML += `</table>`;
-    receiptHTML += `<p style="text-align:center; font-size:12px; margin-top: 15px; font-weight:bold;">សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។</p>`;
+    
+    let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+    receiptHTML += `<p style="text-align:center; font-size:12px; margin-top: 15px; font-weight:bold;">${footerText}</p>`;
 
     if (typeof window.executePrint === 'function') {
         window.executePrint(receiptHTML);
@@ -897,9 +898,9 @@ window.exportInvoicesCSV = function() {
     link.remove();
 };
 
-// ========================================================
-// 🌟 ផ្នែកទី ២៖ គ្រប់គ្រងការចំណាយ (Expense Management)
-// ========================================================
+/* ========================================================
+   🌟 ផ្នែកទី ២៖ គ្រប់គ្រងការចំណាយ (Expense Management)
+   ======================================================== */
 
 window.changeExpenseItemsPerPage = function(val) {
     window.expItemsPerPage = val === 'all' ? 'all' : parseInt(val);
@@ -1176,7 +1177,3 @@ window.deleteExpense = function(id) {
         executeDeleteExp();
     }
 };
-
-if(document.getElementById('searchExpense')) {
-    document.getElementById('searchExpense').addEventListener('input', window.renderExpenses);
-}

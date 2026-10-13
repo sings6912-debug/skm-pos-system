@@ -131,8 +131,8 @@
                     <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
                     <input type="datetime-local" step="1" id="dashDateTo" class="form-control" style="width: 210px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
-                    <div style="flex-grow: 1;"></div>
-                    <button class="btn btn-primary" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.printZReport()"><i class="fa-solid fa-print"></i> ព្រីនរបាយការណ៍ (Z-Report)</button>
+                    <!-- Z-Report Button -->
+                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12); border-color: #8b5cf6; color: #8b5cf6; margin-left: auto;" onclick="if(typeof window.printZReport === 'function') window.printZReport()">🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)</button>
                 </div>
 
                 <div class="stats-grid">
@@ -186,7 +186,7 @@
             <div id="tab-inventory" class="tab-content">
                 <div class="toolbar" style="display: flex; flex-direction: column; gap: 10px;">
                     <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: nowrap;">
-                        <input type="text" id="searchInput" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ (លេខកូដ, ឈ្មោះ)..." oninput="window.renderInventory()" style="flex: 1; height: 42px;">
+                        <input type="text" id="searchInput" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ (លេខកូដ, ឈ្មោះ)..." oninput="window.debounceInventorySearch ? window.debounceInventorySearch() : window.renderInventory()" style="flex: 1; height: 42px;">
                         
                         <div class="view-toggle-group" style="display: flex; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; height: 42px; align-items: center; padding: 2px; gap: 2px;">
                             <button id="btnGridView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: var(--primary); color: #fff; height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setInventoryView('grid')" title="មើលជារូបភាព">🔲</button>
@@ -233,7 +233,7 @@
                 <div class="pos-container">
                     <div style="flex: 1; display: flex; flex-direction: column; overflow: hidden; height: 100%;">
                         <div style="display: flex; gap: 10px; margin-bottom: 10px; width: 100%; flex-wrap: nowrap; flex-shrink: 0; align-items: center;">
-                            <input type="text" id="posSearch" class="form-control" placeholder="🔍 ស្វែងរក ឬ ស្កេនបាកូដ រួចចុច Enter..." oninput="window.renderPOSProducts()" onkeypress="window.handleBarcodeScan(event)" style="flex: 1; min-width: 150px; width: auto; height: 42px;">
+                            <input type="text" id="posSearch" class="form-control" placeholder="🔍 ស្វែងរក ឬ ស្កេនបាកូដ រួចចុច Enter..." oninput="window.debouncePosSearch ? window.debouncePosSearch() : window.renderPOSProducts()" onkeypress="window.handleBarcodeScan(event)" style="flex: 1; min-width: 150px; width: auto; height: 42px;">
                             
                             <div class="view-toggle-group" style="display: flex; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; width: auto; height: 42px; align-items: center; padding: 2px; gap: 2px;">
                                 <button id="btnPOSGridView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: var(--primary); color: #fff; height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setPOSView('grid')" title="មើលជារូបភាព">🔲</button>
@@ -313,7 +313,7 @@
             <!-- ផ្ទាំងវិក្កយបត្ររង់ចាំទូទាត់ (Unpaid/Invoices) -->
             <div id="tab-unpaid" class="tab-content">
                 <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderUnpaid()" style="flex: 1; min-width: 180px;">
+                    <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceUnpaidSearch ? window.debounceUnpaidSearch() : window.renderUnpaid()" style="flex: 1; min-width: 180px;">
                     <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
                         <input type="datetime-local" step="1" id="invoiceDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
@@ -364,15 +364,15 @@
                 <div id="invoicePagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
                 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 20px;">
-                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួចក្នុងតារាង: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
-                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់ក្នុងតារាង: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបទូទាត់រួច: <span id="summaryInvoicePaid" style="color: var(--success); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
+                    <div style="font-size: var(--fs-14);">សរុបរង់ចាំទូទាត់: <span id="summaryInvoiceUnpaid" style="color: var(--warning); font-weight: bold; font-size: var(--fs-18);">$0.00</span></div>
                 </div>
             </div>
 
             <!-- ផ្ទាំងការចំណាយ (Expenses) -->
             <div id="tab-expenses" class="tab-content">
                 <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.renderExpenses()" style="flex: 1; min-width: 180px;">
+                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.debounceExpenseSearch ? window.debounceExpenseSearch() : window.renderExpenses()" style="flex: 1; min-width: 180px;">
                     
                     <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
                         <input type="datetime-local" step="1" id="expenseDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderExpenses()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
@@ -418,14 +418,14 @@
                 <div id="expensePagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end;">
-                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់ក្នុងតារាង: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
+                    <div style="font-size: var(--fs-16);">សរុបប្រាក់ចំណាយទាំងអស់: <span id="summaryTotalExpense" style="color: var(--danger); font-weight: bold; font-size: var(--fs-20);">$0.00</span></div>
                 </div>
             </div>
 
             <!-- ផ្ទាំងអតិថិជន (Customers) -->
             <div id="tab-customers" class="tab-content">
                 <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderCustomers()" style="flex: 1; min-width: 200px;">
+                    <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceCustomerSearch ? window.debounceCustomerSearch() : window.renderCustomers()" style="flex: 1; min-width: 200px;">
                     
                     <!-- បន្ថែម Pagination Select សម្រាប់ Customers -->
                     <select id="customerItemsPerPageSelect" class="form-control" onchange="window.changeCustomerItemsPerPage(this.value)" style="width: 120px;">
@@ -472,7 +472,7 @@
             <!-- ផ្ទាំងប្រវត្តិប្រតិបត្តិការ (History Log) -->
             <div id="tab-history" class="tab-content">
                 <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.renderHistory()" style="flex: 1; min-width: 180px;">
+                    <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceHistorySearch ? window.debounceHistorySearch() : window.renderHistory()" style="flex: 1; min-width: 180px;">
                     <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
                         <input type="datetime-local" step="1" id="historyDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
@@ -586,6 +586,16 @@
                             <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖</strong></label>
                             <textarea id="setTickerText" class="form-control" rows="2" placeholder="សរសេរសេចក្តីជូនដំណឹងអក្សររត់នៅទីនេះ..." onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
                         </div>
+                        
+                        <!-- NEW SETTING: Toggle Sound and Custom Footer -->
+                        <label style="display:flex; align-items:center; gap:12px; margin-top:20px; margin-bottom:15px; cursor:pointer; font-size: var(--fs-16);">
+                            <input type="checkbox" id="setEnableSound" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;" checked>
+                            <span><strong style="color:var(--text-main);">🔊 បន្លឺសំឡេង (Enable Sound):</strong> បើកសំឡេង "ទីត!" ពេលស្កេន ឬចុចទំនិញចូលកន្ត្រក។</span>
+                        </label>
+                        <div style="margin-top: 15px;">
+                            <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📝 សារខាងក្រោមវិក្កយបត្រ (Receipt Footer Text)៖</strong></label>
+                            <textarea id="setReceiptFooter" class="form-control" rows="2" placeholder="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
+                        </div>
                     </div>
 
                     <div id="adminUserManagementBlock" style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--success);">
@@ -636,16 +646,6 @@
                             <span><strong style="color:var(--text-main);">ពន្ធអាករ (TAX/VAT):</strong> គិតពន្ធលើការលក់ ចំនួន</span>
                             <input type="number" id="setTaxRate" class="form-control" style="width: 80px; padding: 5px; height: 35px; text-align: center;" value="10" onchange="window.saveSysSettings()"> %
                         </div>
-
-                        <label style="display:flex; align-items:center; gap:12px; margin-bottom:20px; cursor:pointer; font-size: var(--fs-16);">
-                            <input type="checkbox" id="setEnableSound" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;" checked>
-                            <span><strong style="color:var(--text-main);">សំឡេងប្រព័ន្ធ (System Sound):</strong> បន្លឺសំឡេងពេលស្កេន ឬមានការកុម្ម៉ង់។</span>
-                        </label>
-                        
-                        <div style="margin-top: 15px;">
-                            <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📝 សារខាងក្រោមវិក្កយបត្រ (Receipt Footer)៖</strong></label>
-                            <textarea id="setReceiptFooter" class="form-control" rows="2" placeholder="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
-                        </div>
                     </div>
 
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border);">
@@ -693,15 +693,15 @@
                                 const panel = document.getElementById('protectedQuickToolsPanel');
                                 if (panel) {
                                     panel.style.display = 'block';
-                                    if (typeof window.ksMsg === 'function') {
-                                        window.ksMsg("🔓 ដោះសោជោគជ័យ!", "ជោគជ័យ");
+                                    if (typeof window.showToast === 'function') {
+                                        window.showToast("🔓 ដោះសោជោគជ័យ!");
                                     } else {
                                         alert("🔓 ដោះសោជោគជ័យ!");
                                     }
                                 }
                             } else if (inputPass !== null) {
-                                if (typeof window.ksMsg === 'function') {
-                                    window.ksMsg("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!", "បរាជ័យ", true);
+                                if (typeof window.showToast === 'function') {
+                                    window.showToast("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!", true);
                                 } else {
                                     alert("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!");
                                 }
@@ -716,7 +716,7 @@
                 <div style="display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: auto;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center;">
                         <h1 style="color: var(--primary); font-size: var(--fs-28); margin-bottom: 5px;">SKM <span style="color: var(--warning);">INTEGRATE</span></h1>
-                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 7.5 (Pharma, Expiry Date & Smart Excel Ready)</p>
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 8.0 (Ultimate Search & Performance Update)</p>
                         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
                             <span class="badge" style="background: rgba(56, 189, 248, 0.1); color: var(--primary); padding: 6px 12px; font-size: var(--fs-13);">ERP System</span>
                             <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 6px 12px; font-size: var(--fs-13);">POS Ready</span>
@@ -840,12 +840,11 @@
             </div>
 
             <div style="font-size: 14px; color: var(--text-muted); margin-bottom: 5px;">សរុបប្រាក់ត្រូវបង់ (Grand Total)</div>
-            <div id="checkoutTotalDisplay" style="font-size: 36px; font-weight: 900; color: #10b981; margin-bottom: 20px; font-family: 'Arial'; text-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);"></div>
+            <div id="checkoutTotalDisplay" style="font-size: 36px; font-weight: 900; color: #10b981; margin-bottom: 15px; font-family: 'Arial'; text-shadow: 0 2px 10px rgba(16, 185, 129, 0.2);"></div>
 
-            <!-- 🌟 បន្ថែមថ្មី៖ បង្ហាញ QR Code ទូទាត់ប្រាក់ចំកណ្តាលផ្ទាំងគិតលុយ -->
-            <div id="checkoutQrContainer" style="display: none; margin-bottom: 20px; padding: 10px; background: rgba(6, 182, 212, 0.05); border-radius: 12px; border: 1px dashed #06b6d4;">
-                <div style="font-size: 12px; font-weight: bold; color: var(--text-main); margin-bottom: 8px;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</div>
-                <img id="checkoutQrImage" src="" style="width: 150px; height: 150px; object-fit: contain; border-radius: 8px; background: #fff; padding: 5px; margin: 0 auto; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+            <!-- 🌟 ប្រអប់បង្ហាញ QR Code ទូទាត់ប្រាក់ -->
+            <div id="checkoutQrContainer" style="display: none; margin-bottom: 15px;">
+                <img id="checkoutQrImage" src="" style="width: 140px; height: 140px; object-fit: contain; border-radius: 12px; background: white; padding: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); border: 2px solid var(--success);">
             </div>
 
             <div style="display: flex; gap: 15px; margin-bottom: 20px;">
@@ -1183,7 +1182,7 @@
                 }
             } catch (e) {
                 if (typeof window.ksMsg === 'function') {
-                    window.ksMsg("❌ មានបញ្ហាក្នុងការ Backup: " + e.message, "បរាជ័យ", true);
+                    window.ksMsg("❌ មានបញ្ហាក្នុងការ Backup: " + e.message, "បរាជ័យ");
                 }
             }
         };
@@ -1209,9 +1208,7 @@
                         processRestore(file);
                     });
                 } else {
-                    if(confirm("⚠️ តើអ្នកពិតជាចង់ Restore ទិន្នន័យនេះមែនទេ? ទិន្នន័យចាស់ទាំងអស់នឹងត្រូវជំនួសដោយទិន្នន័យពី File នេះ!")) {
-                        processRestore(file);
-                    }
+                    processRestore(file);
                 }
             };
 
@@ -1252,12 +1249,11 @@
                                 window.location.reload();
                             });
                         } else {
-                            alert("✅ Restore ទិន្នន័យបានជោគជ័យ! ប្រព័ន្ធនឹងដំណើរការឡើងវិញ។");
                             window.location.reload();
                         }
                     } catch (err) {
                         if (typeof window.ksMsg === 'function') {
-                            window.ksMsg("❌ ឯកសារ Backup មិនត្រឹមត្រូវ (Invalid JSON): " + err.message, "បរាជ័យ", true);
+                            window.ksMsg("❌ ឯកសារ Backup មិនត្រឹមត្រូវ (Invalid JSON): " + err.message, "បរាជ័យ");
                         }
                     }
                 };
@@ -1455,7 +1451,7 @@
                     if (typeof window.showToast === 'function') {
                         window.showToast("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន ទើបអាចបន្តបាន!", true);
                     } else if (typeof window.ksMsg === 'function') {
-                        window.ksMsg("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!", "បរាជ័យ", true);
+                        window.ksMsg("⚠️ សូមជ្រើសរើសលេខតុជាមុនសិន!", "បរាជ័យ");
                     }
                     tableSelect.focus();
                     return; 
@@ -1481,9 +1477,25 @@
                 }
             } catch (err) {
                 console.error("កំហុសពេលចុចគិតលុយ:", err);
-                if (typeof window.ksMsg === 'function') window.ksMsg("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។", "បរាជ័យ", true);
+                if (typeof window.ksMsg === 'function') window.ksMsg("មានបញ្ហាក្នុងការដំណើរការ សូមឆែកមើល Console។", "បរាជ័យ");
             }
         };
+
+        // 🚀 ប្រព័ន្ធពន្យារពេលស្វែងរក (Debounce System) ដើម្បីកុំឱ្យគាំង
+        window.debounceTimer = null;
+        window.debounce = function(func, delay = 300) {
+            return function(...args) {
+                clearTimeout(window.debounceTimer);
+                window.debounceTimer = setTimeout(() => func.apply(this, args), delay);
+            };
+        };
+        
+        window.debounceInventorySearch = window.debounce(() => { if(typeof window.renderInventory === 'function') window.renderInventory(); });
+        window.debouncePosSearch = window.debounce(() => { if(typeof window.renderPOSProducts === 'function') window.renderPOSProducts(); });
+        window.debounceUnpaidSearch = window.debounce(() => { if(typeof window.renderUnpaid === 'function') window.renderUnpaid(); });
+        window.debounceExpenseSearch = window.debounce(() => { if(typeof window.renderExpenses === 'function') window.renderExpenses(); });
+        window.debounceCustomerSearch = window.debounce(() => { if(typeof window.renderCustomers === 'function') window.renderCustomers(); });
+        window.debounceHistorySearch = window.debounce(() => { if(typeof window.renderHistory === 'function') window.renderHistory(); });
 
         window.addEventListener('DOMContentLoaded', () => {
             window.loadTableSettingsForPOS(); 
