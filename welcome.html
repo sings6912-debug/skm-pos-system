@@ -478,7 +478,6 @@
     </div>
 
     <script>
-        // ចុះឈ្មោះ Service Worker សម្រាប់មុខងារ PWA Offline
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
             navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' }).catch(function(err) {
                 console.log('Service Worker registration skipped: ', err);
@@ -501,7 +500,6 @@
         let storePinCode = '1234'; 
         let branchSysSettings = {};
 
-        // 🌐 វចនានុក្រមបកប្រែពាក្យ ៣ ភាសា (ខ្មែរ / អង់គ្លេស / ចិន)
         const i18n = {
             km: {
                 branch: 'សាខា៖ ',
@@ -574,20 +572,28 @@
 
         let currentBgIndex = 0;
 
+        // ប្រើប្រាស់ Shared AudioContext តែមួយ ដើម្បីការពារបញ្ហាដាច់សំឡេងពេលចុចប៊ូតុងច្រើនដង
+        let sharedWelcomeAudioCtx = null;
         function playClickSound() {
+            if (branchSysSettings && branchSysSettings.enableSound === false) return;
             try {
                 const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if(!AudioContext) return;
-                const ctx = new AudioContext();
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
+                if (!AudioContext) return;
+                if (!sharedWelcomeAudioCtx || sharedWelcomeAudioCtx.state === 'closed') {
+                    sharedWelcomeAudioCtx = new AudioContext();
+                }
+                if (sharedWelcomeAudioCtx.state === 'suspended') {
+                    sharedWelcomeAudioCtx.resume().catch(() => {});
+                }
+                const osc = sharedWelcomeAudioCtx.createOscillator();
+                const gain = sharedWelcomeAudioCtx.createGain();
                 osc.connect(gain);
-                gain.connect(ctx.destination);
+                gain.connect(sharedWelcomeAudioCtx.destination);
                 osc.type = 'sine';
-                osc.frequency.setValueAtTime(800, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                osc.frequency.setValueAtTime(800, sharedWelcomeAudioCtx.currentTime);
+                gain.gain.setValueAtTime(0.08, sharedWelcomeAudioCtx.currentTime);
                 osc.start();
-                osc.stop(ctx.currentTime + 0.1);
+                osc.stop(sharedWelcomeAudioCtx.currentTime + 0.08);
             } catch(e) {}
         }
 
@@ -753,13 +759,13 @@
 
             try {
                 if(supabaseClient && navigator.onLine) {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).single();
+                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).maybeSingle();
                     let d = (data && data.data_json) ? data.data_json : {};
                     d.customBg = bgStyle;
                     await supabaseClient.from('branch_store').upsert({
                         branch_id: SHOP_BRANCH_ID,
                         data_json: d,
-                        updated_at: new Date()
+                        updated_at: new Date().toISOString()
                     }, { onConflict: 'branch_id' });
                 }
             } catch(err) {}
@@ -825,7 +831,6 @@
                 if (localSettings) {
                     branchSysSettings = localSettings;
                     if (localSettings.storePin) storePinCode = String(localSettings.storePin);
-                    // ⚡ គាំទ្រទាំង tickerNews និង tickerText (ចំណុចទី ៦)
                     const localTicker = localSettings.tickerNews || localSettings.tickerText || '';
                     if (localTicker) document.getElementById('tickerText').innerText = localTicker;
                 }
@@ -835,7 +840,7 @@
 
             if(navigator.onLine && supabaseClient) {
                 try {
-                    const fetchPromise = supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).single();
+                    const fetchPromise = supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).maybeSingle();
                     const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 4000));
                     let { data } = await Promise.race([fetchPromise, timeoutPromise]);
                     
@@ -886,7 +891,6 @@
             }
         }
 
-        // ⚡ គាំទ្រម៉ោងបើក-បិទហាងដែលបានកំណត់ក្នុង admin_settings.html ដោយស្វ័យប្រវត្តិ
         function updateStoreStatus() {
             const now = new Date();
             const statusEl = document.getElementById('displayStoreStatus');
@@ -944,7 +948,6 @@
 
         window.onload = loadShopProfile;
         
-        // 🌟 បន្ថែមមុខងារចុចតាម Keyboard លើផ្ទាំង PIN Pad
         window.addEventListener('keydown', function(e) {
             const pinModal = document.getElementById('pinModal');
             if (!pinModal || !pinModal.classList.contains('show')) return;

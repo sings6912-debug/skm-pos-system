@@ -1,7 +1,19 @@
-// config.js
+/**
+ * config.js - កំណត់អថេរគោល ភ្ជាប់ Database (Supabase) និងទាញទិន្នន័យដំបូងពីម៉ាស៊ីន (LocalStorage)
+ */
+
 window.SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
 window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
-window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+
+// ការពារកុំឱ្យគាំងប្រព័ន្ធនៅពេលដាច់អ៊ីនធឺណិត (Offline Safe Initialization)
+window.supabaseClient = null;
+try {
+    if (window.supabase && typeof window.supabase.createClient === 'function') {
+        window.supabaseClient = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+    }
+} catch (err) {
+    console.warn("Supabase initialization skipped (Offline Mode):", err);
+}
 
 window.urlParams = new URLSearchParams(window.location.search);
 window.SHOP_BRANCH_ID = window.urlParams.get('branch') || 'branch_1';
@@ -12,7 +24,7 @@ const getLocalData = (key, defaultVal) => {
     try {
         const val = localStorage.getItem(window.getBranchKey(key));
         return val ? JSON.parse(val) : defaultVal;
-    } catch(e) {
+    } catch (e) {
         return defaultVal;
     }
 };
@@ -32,7 +44,7 @@ window.shopTelegram = localStorage.getItem(window.getBranchKey('shop_telegram'))
 window.telegramBotToken = localStorage.getItem(window.getBranchKey('telegram_bot_token')) || ''; 
 window.telegramChatId = localStorage.getItem(window.getBranchKey('telegram_chat_id')) || ''; 
 
-window.sysSettings = getLocalData('sys_settings', { 
+const defaultSysSettings = { 
     cust: true, 
     unpaid: true, 
     logs: true, 
@@ -46,21 +58,24 @@ window.sysSettings = getLocalData('sys_settings', {
     preorder: false, 
     deliveryFee: 1.5, 
     expiry: true,
-    storePin: '1234' 
-});
+    storePin: '1234',
+    enableSound: true,
+    receiptFooter: 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។'
+};
 
-window.lastInvoiceCount = window.invoices.length;
+window.sysSettings = Object.assign({}, defaultSysSettings, getLocalData('sys_settings', {}));
+window.lastInvoiceCount = Array.isArray(window.invoices) ? window.invoices.length : 0;
 window.SECRET_SALT = "KOUSUKE_ERP_PRO_V1_";
 
 window.updateShopInfo = function(name, logo, qr, phone, address, telegram, botToken, chatId) {
-    if(name !== undefined) window.shopName = name;
-    if(logo !== undefined) window.shopLogo = logo;
-    if(qr !== undefined) window.shopQR = qr;
-    if(phone !== undefined) window.shopPhone = phone;
-    if(address !== undefined) window.shopAddress = address;
-    if(telegram !== undefined) window.shopTelegram = telegram;
-    if(botToken !== undefined) window.telegramBotToken = botToken;
-    if(chatId !== undefined) window.telegramChatId = chatId;
+    if (name !== undefined) window.shopName = name;
+    if (logo !== undefined) window.shopLogo = logo;
+    if (qr !== undefined) window.shopQR = qr;
+    if (phone !== undefined) window.shopPhone = phone;
+    if (address !== undefined) window.shopAddress = address;
+    if (telegram !== undefined) window.shopTelegram = telegram;
+    if (botToken !== undefined) window.telegramBotToken = botToken;
+    if (chatId !== undefined) window.telegramChatId = chatId;
 };
 
 window.fDate = function() { 
@@ -74,7 +89,7 @@ window.fMoney = function(num) {
 
 window.showToast = function(msg, isError = false) {
     const toast = document.getElementById('toastNotification'); 
-    if(!toast) return;
+    if (!toast) return;
     toast.style.background = isError ? 'var(--danger)' : 'var(--success)'; 
     toast.innerHTML = msg; 
     toast.style.display = 'block'; 
@@ -85,11 +100,24 @@ window.showToast = function(msg, isError = false) {
     }, 2000);
 };
 
+// ប្រើប្រាស់ AudioContext រួមគ្នាតែមួយ ដើម្បីការពារបញ្ហាគាំងសំឡេងពេលចុចប៊ូតុងច្រើនដង
+window.getSharedAudioContext = function() {
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContext) return null;
+    if (!window._sharedAudioCtx || window._sharedAudioCtx.state === 'closed') {
+        window._sharedAudioCtx = new AudioContext();
+    }
+    if (window._sharedAudioCtx.state === 'suspended') {
+        window._sharedAudioCtx.resume().catch(() => {});
+    }
+    return window._sharedAudioCtx;
+};
+
 window.playBeep = function() { 
+    if (window.sysSettings && window.sysSettings.enableSound === false) return;
     try { 
-        const AudioContext = window.AudioContext || window.webkitAudioContext; 
-        if(!AudioContext) return; 
-        const ctx = new AudioContext(); 
+        const ctx = window.getSharedAudioContext(); 
+        if (!ctx) return; 
         const osc = ctx.createOscillator(); 
         const gain = ctx.createGain(); 
         osc.connect(gain); 
@@ -99,14 +127,14 @@ window.playBeep = function() {
         gain.gain.setValueAtTime(0.05, ctx.currentTime); 
         osc.start(); 
         osc.stop(ctx.currentTime + 0.1); 
-    } catch(e) {} 
+    } catch (e) {} 
 };
 
 window.playOrderSound = function() {
+    if (window.sysSettings && window.sysSettings.enableSound === false) return;
     try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if(!AudioContext) return;
-        const ctx = new AudioContext();
+        const ctx = window.getSharedAudioContext();
+        if (!ctx) return;
         for (let i = 0; i < 3; i++) {
             setTimeout(() => {
                 const osc = ctx.createOscillator();
@@ -120,7 +148,7 @@ window.playOrderSound = function() {
                 osc.stop(ctx.currentTime + 0.2);
             }, i * 300);
         }
-    } catch(e) {} 
+    } catch (e) {} 
 };
 
 window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = false, onConfirm = null) { 
@@ -128,29 +156,48 @@ window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = fa
     const textEl = document.getElementById('ksMsgText');
     const actionContainer = document.getElementById('ksMsgActions');
     const msgBox = document.getElementById('ksMsgBox');
-    if(!titleEl || !textEl || !actionContainer || !msgBox) return;
+    if (!titleEl || !textEl || !actionContainer || !msgBox) return;
 
     titleEl.innerText = title; 
     textEl.innerHTML = text; 
     actionContainer.innerHTML = '';
     
-    const closeBtn = document.createElement('button'); 
-    closeBtn.className = 'btn btn-outline'; 
-    closeBtn.innerText = isConfirm ? 'បោះបង់' : 'យល់ព្រម'; 
-    closeBtn.onclick = () => msgBox.style.display = 'none'; 
-    actionContainer.appendChild(closeBtn); 
-    
-    if(isConfirm) { 
+    let primaryBtn = null;
+    if (isConfirm) { 
+        const cancelBtn = document.createElement('button'); 
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'btn btn-outline'; 
+        cancelBtn.innerText = 'បោះបង់'; 
+        cancelBtn.onclick = () => { msgBox.style.display = 'none'; }; 
+        actionContainer.appendChild(cancelBtn); 
+
         const okBtn = document.createElement('button'); 
+        okBtn.type = 'button';
         okBtn.className = 'btn btn-primary'; 
         okBtn.innerText = 'យល់ព្រម'; 
         okBtn.onclick = () => { 
             msgBox.style.display = 'none'; 
-            if(onConfirm) onConfirm(); 
+            if (typeof onConfirm === 'function') onConfirm(); 
         }; 
         actionContainer.appendChild(okBtn); 
-    } 
+        primaryBtn = okBtn;
+    } else {
+        const okBtn = document.createElement('button'); 
+        okBtn.type = 'button';
+        okBtn.className = 'btn btn-primary'; 
+        okBtn.innerText = 'យល់ព្រម'; 
+        okBtn.onclick = () => { 
+            msgBox.style.display = 'none'; 
+            if (typeof onConfirm === 'function') onConfirm(); 
+        }; 
+        actionContainer.appendChild(okBtn); 
+        primaryBtn = okBtn;
+    }
+    window.ksMsgOpenedAt = Date.now();
     msgBox.style.display = 'flex';
+    setTimeout(() => {
+        if (primaryBtn && msgBox.style.display !== 'none') primaryBtn.focus();
+    }, 60);
 };
 
 window.generateInvoiceId = function() {
@@ -163,8 +210,9 @@ window.generateInvoiceId = function() {
 };
 
 window.logAction = function(type, itemName, qty, note, activeUserRef) { 
-    if(!window.sysSettings || !window.sysSettings.logs) return; 
+    if (!window.sysSettings || !window.sysSettings.logs) return; 
     let executor = activeUserRef ? (activeUserRef.fullName ? activeUserRef.fullName : activeUserRef.username) : 'system'; 
+    if (!window.historyLog) window.historyLog = [];
     window.historyLog.unshift({ id: Date.now(), date: window.fDate(), type, itemName, qty, note: `${note} (${executor})` }); 
-    if(window.historyLog.length > 500) window.historyLog.pop(); 
+    if (window.historyLog.length > 500) window.historyLog.pop(); 
 };

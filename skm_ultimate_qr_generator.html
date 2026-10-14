@@ -1,5 +1,6 @@
 <!DOCTYPE html>
-<html lang="km"><head>
+<html lang="km">
+<head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>SKM POS - Ultimate Menu QR Generator</title>
@@ -22,15 +23,15 @@ p.subtitle { font-size: 13px; color: #94a3b8; margin-bottom: 20px; }
 .generator-card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.3); margin-bottom: 25px; text-align: left; }
 .form-group { margin-bottom: 15px; }
 .form-group label { display: block; font-size: 12px; font-weight: 700; margin-bottom: 8px; color: #cbd5e1; }
-.input-st, .select-st { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 13px; outline: none; transition: 0.2s; font-family: 'Battambang', sans-serif;}
+.input-st, .select-st { width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid #475569; background: #0f172a; color: #fff; font-size: 13px; outline: none; transition: 0.2s; font-family: 'Battambang', sans-serif; }
 .input-st:focus, .select-st:focus { border-color: #06b6d4; box-shadow: 0 0 0 2px rgba(6, 182, 212, 0.2); }
 
 .row-flex { display: flex; justify-content: space-between; align-items: center; }
 .row-flex label { margin-bottom: 0; }
 .switch { position: relative; display: inline-block; width: 44px; height: 24px; }
 .switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 24px;}
-.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%;}
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #475569; transition: .4s; border-radius: 24px; }
+.slider:before { position: absolute; content: ""; height: 16px; width: 16px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
 input:checked + .slider { background-color: #10b981; }
 input:checked + .slider:before { transform: translateX(20px); }
 
@@ -49,8 +50,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 .theme-option.active { background: #06b6d4; color: #000; border-color: #06b6d4; }
 
 .advanced-panel { background: #0f172a; padding: 15px; border-radius: 12px; border: 1px dashed #475569; margin-top: 15px; display: flex; flex-direction: column; gap: 12px; }
-.advanced-panel .sec-title { color: #38bdf8; font-weight: 900; font-size: 13px; margin-bottom: 5px; display: block;}
-.batch-flex { display: flex; gap: 10px; flex-wrap: wrap;}
+.advanced-panel .sec-title { color: #38bdf8; font-weight: 900; font-size: 13px; margin-bottom: 5px; display: block; }
+.batch-flex { display: flex; gap: 10px; flex-wrap: wrap; }
 .batch-flex > div { flex: 1; min-width: 140px; }
 
 .lang-group { display: flex; border-radius: 10px; overflow: hidden; border: 1px solid #475569; }
@@ -80,8 +81,8 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .qr-card-content { position: relative; z-index: 2; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px; width: 100%; }
 .qc-badge { display: inline-block; padding: 7px 18px; border-radius: 30px; font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); outline: none; border-bottom: 1px dashed transparent; }
-.qc-title { font-size: 26px; font-weight: 900; margin-top: 5px; margin-bottom: 5px; width: 100%; word-break: break-word; line-height: 1.3; outline: none; border-bottom: 1px dashed transparent;}
-.qc-sub { font-size: 13px; margin-bottom: 0px; font-weight: 700; opacity: 0.85; width: 100%; word-break: break-word; line-height: 1.5; outline: none; border-bottom: 1px dashed transparent;}
+.qc-title { font-size: 26px; font-weight: 900; margin-top: 5px; margin-bottom: 5px; width: 100%; word-break: break-word; line-height: 1.3; outline: none; border-bottom: 1px dashed transparent; }
+.qc-sub { font-size: 13px; margin-bottom: 0px; font-weight: 700; opacity: 0.85; width: 100%; word-break: break-word; line-height: 1.5; outline: none; border-bottom: 1px dashed transparent; }
 .is-capturing .qc-title, .is-capturing .qc-sub, .is-capturing .qc-badge { border-bottom-color: transparent !important; }
 
 .card-bg-overlay { position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.65); z-index: 1; display: none; }
@@ -89,7 +90,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
 .qr-frame-wrapper { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; margin: 0; }
 .qr-frame-box { border: 3px dashed transparent; border-radius: 24px; padding: 10px; position: relative; transition: 0.3s; }
-.qr-frame-text { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: inherit; padding: 4px 15px; border-radius: 20px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; display: none; white-space: nowrap;}
+.qr-frame-text { position: absolute; top: -15px; left: 50%; transform: translateX(-50%); background: inherit; padding: 4px 15px; border-radius: 20px; font-size: 12px; font-weight: 900; text-transform: uppercase; letter-spacing: 1px; display: none; white-space: nowrap; }
 .has-frame .qr-frame-box { border-color: inherit; margin-top: 15px; }
 .has-frame .qr-frame-text { display: block; }
 
@@ -101,14 +102,14 @@ input:checked + .slider:before { transform: translateX(20px); }
 }
 .qc-footer { font-size: 11px; font-weight: 700; opacity: 0.8; margin-top: 5px; font-family: 'Inter', 'Battambang', sans-serif; }
 
-.btn-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; width: 100%;}
+.btn-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; width: 100%; }
 .btn { flex: 1; min-width: 120px; padding: 14px; border: none; border-radius: 12px; font-weight: 800; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.2s; }
 .btn:active { transform: scale(0.96); }
 .btn-primary { background: #06b6d4; color: #000; }
 .btn-print { background: #10b981; color: #fff; }
 .btn-print-grid { background: #f59e0b; color: #000; }
 .btn-share { background: #3b82f6; color: #fff; }
-.btn-download { background: #8b5cf6; color: #fff; width: 100%; padding: 16px; font-size: 15px; margin-bottom: 30px;}
+.btn-download { background: #8b5cf6; color: #fff; width: 100%; padding: 16px; font-size: 15px; margin-bottom: 30px; }
 
 @media print {
     * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
@@ -446,7 +447,6 @@ function syncAutoCount() {
     saveState();
 }
 
-// 🌟 FIX: Auto-detect branch from URL to build correct links (ចំណុចទី ៥)
 function initGenerator() {
     const urlParams = new URLSearchParams(window.location.search);
     const urlBranch = urlParams.get('branch');
@@ -468,7 +468,7 @@ function initGenerator() {
     
     loadState();
     selectTheme(selectedTheme.id, true);
-    if(typeof toggleAutoNumbering === 'function') toggleAutoNumbering(); 
+    if (typeof toggleAutoNumbering === 'function') toggleAutoNumbering(); 
 }
 
 function selectTheme(id, isInit = false) {
@@ -489,12 +489,12 @@ function selectTheme(id, isInit = false) {
     badge.innerHTML = selectedTheme.badge; 
     
     const tableDisp = document.getElementById('tableDisplay');
-    if(tableDisp) {
+    if (tableDisp) {
         tableDisp.style.background = selectedTheme.badgeBg;
         tableDisp.style.color = selectedTheme.badgeText;
     }
     
-    if(isInit && document.getElementById('frameSelect').value !== 'FREE WIFI') {
+    if (isInit && document.getElementById('frameSelect').value !== 'FREE WIFI') {
         document.getElementById('cardSub').innerText = translations[selectedTheme.type][currentLang];
     }
     
@@ -504,7 +504,7 @@ function selectTheme(id, isInit = false) {
     }
     
     const hexColors = selectedTheme.bg.match(/#[0-9a-fA-F]{6}/g);
-    if(hexColors && hexColors.length >= 2) {
+    if (hexColors && hexColors.length >= 2) {
         document.getElementById('bgColor1').value = hexColors[0];
         document.getElementById('bgColorText1').value = hexColors[0].toUpperCase();
         document.getElementById('bgColor2').value = hexColors[1];
@@ -513,7 +513,7 @@ function selectTheme(id, isInit = false) {
     
     if (selectedTheme.text) {
         let txtColor = selectedTheme.text;
-        if(txtColor.length === 4) txtColor = '#' + txtColor[1]+txtColor[1]+txtColor[2]+txtColor[2]+txtColor[3]+txtColor[3];
+        if (txtColor.length === 4) txtColor = '#' + txtColor[1]+txtColor[1]+txtColor[2]+txtColor[2]+txtColor[3]+txtColor[3];
         document.getElementById('textColor').value = txtColor;
         document.getElementById('textColorText').value = txtColor.toUpperCase();
     }
@@ -524,10 +524,10 @@ function selectTheme(id, isInit = false) {
 function setLang(lang, btn) {
     currentLang = lang;
     document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-    if(btn) btn.classList.add('active'); 
+    if (btn) btn.classList.add('active'); 
     
     let isWifi = document.getElementById('frameSelect').value === 'FREE WIFI';
-    if(isWifi) {
+    if (isWifi) {
         document.getElementById('cardSub').innerText = translations.wifi[lang];
     } else {
         document.getElementById('cardSub').innerText = translations[selectedTheme.type][lang];
@@ -541,7 +541,7 @@ function changeFont() {
 }
 
 function changeFontSize(type) {
-    if(type === 'title') {
+    if (type === 'title') {
         const val = document.getElementById('titleSizeRange').value;
         document.getElementById('cardShopTitle').style.fontSize = val + 'px';
         document.getElementById('titleSizeDisp').innerText = val + 'px';
@@ -561,7 +561,7 @@ function syncColor(num, source) {
     if (source === 'picker') { text.value = picker.value.toUpperCase(); } 
     else if (source === 'text') {
         let hex = text.value.trim();
-        if(!hex.startsWith('#') && hex.length > 0) hex = '#' + hex;
+        if (!hex.startsWith('#') && hex.length > 0) hex = '#' + hex;
         if (/^#[0-9A-F]{6}$/i.test(hex)) picker.value = hex;
     }
     const card = document.getElementById('qrCardTheme');
@@ -576,7 +576,7 @@ function syncTextColor(source) {
     if (source === 'picker') { text.value = picker.value.toUpperCase(); } 
     else if (source === 'text') {
         let hex = text.value.trim();
-        if(!hex.startsWith('#') && hex.length > 0) hex = '#' + hex;
+        if (!hex.startsWith('#') && hex.length > 0) hex = '#' + hex;
         if (/^#[0-9A-F]{6}$/i.test(hex)) picker.value = hex;
     }
     document.getElementById('qrCardTheme').style.color = document.getElementById('textColor').value;
@@ -588,20 +588,20 @@ function changeFrame() {
     const linkG = document.getElementById('linkGroup');
     const wifiG = document.getElementById('wifiGroup');
     
-    if(val === 'none') { wrapper.classList.remove('has-frame'); } 
+    if (val === 'none') { wrapper.classList.remove('has-frame'); } 
     else { wrapper.classList.add('has-frame'); document.getElementById('frameText').innerText = val; }
     
-    if(val === 'FREE WIFI') {
+    if (val === 'FREE WIFI') {
         linkG.style.display = 'none'; 
         wifiG.style.display = 'block';
         document.getElementById('cardSub').innerText = translations.wifi[currentLang];
         document.getElementById('badgeWrapper').style.display = 'none';
-        if(document.getElementById('tableDisplayWrapper')) document.getElementById('tableDisplayWrapper').style.display = 'none';
+        if (document.getElementById('tableDisplayWrapper')) document.getElementById('tableDisplayWrapper').style.display = 'none';
     } else {
         linkG.style.display = 'block'; 
         wifiG.style.display = 'none';
-        if(document.getElementById('badgeToggle').checked) document.getElementById('badgeWrapper').style.display = 'block';
-        if(document.getElementById('cardSub').innerText.includes("WiFi")) document.getElementById('cardSub').innerText = translations[selectedTheme.type][currentLang];
+        if (document.getElementById('badgeToggle').checked) document.getElementById('badgeWrapper').style.display = 'block';
+        if (document.getElementById('cardSub').innerText.includes("WiFi")) document.getElementById('cardSub').innerText = translations[selectedTheme.type][currentLang];
     }
     updateFrameColor();
     updateQR(); saveState();
@@ -654,14 +654,17 @@ function handleLogoUpload(event) {
     reader.readAsDataURL(file);
 }
 
+// ប្រើ FileReader (DataURL) ជំនួស ObjectURL ដើម្បីឱ្យ htmlToImage ថតជាប់រូបផ្ទៃខាងក្រោយ ១០០% លើ Safari/iOS
 function handleBgUpload(event) {
     const file = event.target.files[0];
-    if (file) {
-        const bgUrl = URL.createObjectURL(file);
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = function(e) {
         const card = document.getElementById('qrCardTheme');
-        card.style.background = `url(${bgUrl})`;
+        card.style.background = `url("${e.target.result}")`;
         card.classList.add('has-bg');
-    }
+    };
+    reader.readAsDataURL(file);
 }
 
 function clearImages() {
@@ -675,13 +678,11 @@ function clearImages() {
 
 function debounceUpdate() { clearTimeout(debounceTimer); debounceTimer = setTimeout(() => { updateQR(); saveState(); }, 300); }
 
-// 🌟 FIX: Generate link dynamically based on the current domain (ចំណុចទី ៥)
 function updateQR() {
-    if(!currentQrCode) return;
+    if (!currentQrCode) return;
     const branchName = document.getElementById('branchInput').value.trim() || 'Heng';
     let tableNo = document.getElementById('tableInput') ? document.getElementById('tableInput').value.trim() : '';
     
-    // Dynamic domain generation
     let currentUrlPath = window.location.href.split('?')[0];
     let basePath = currentUrlPath.substring(0, currentUrlPath.lastIndexOf('/'));
     let menuUrl = basePath + '/menu.html?branch=';
@@ -705,7 +706,7 @@ function updateQR() {
         }
     }
     
-    if(document.getElementById('frameSelect').value === 'FREE WIFI') {
+    if (document.getElementById('frameSelect').value === 'FREE WIFI') {
         let ssid = document.getElementById('wifiSsid').value;
         let pwd = document.getElementById('wifiPwd').value;
         finalUrl = `WIFI:S:${ssid};T:WPA;P:${pwd};;`;
@@ -760,45 +761,45 @@ function saveState() {
 }
 
 function applyStateObj(saved) {
-    if(!saved) return;
-    if(saved.theme) selectTheme(saved.theme, false);
-    if(saved.frame) document.getElementById('frameSelect').value = saved.frame;
-    if(saved.dots) document.getElementById('dotSelect').value = saved.dots;
-    if(saved.eye) document.getElementById('eyeSelect').value = saved.eye;
-    if(saved.qrCol) document.getElementById('qrColor').value = saved.qrCol;
-    if(saved.font) { document.getElementById('fontSelect').value = saved.font; changeFont(); }
+    if (!saved) return;
+    if (saved.theme) selectTheme(saved.theme, false);
+    if (saved.frame) document.getElementById('frameSelect').value = saved.frame;
+    if (saved.dots) document.getElementById('dotSelect').value = saved.dots;
+    if (saved.eye) document.getElementById('eyeSelect').value = saved.eye;
+    if (saved.qrCol) document.getElementById('qrColor').value = saved.qrCol;
+    if (saved.font) { document.getElementById('fontSelect').value = saved.font; changeFont(); }
     
-    if(saved.frameColor && document.getElementById('frameColor')) { document.getElementById('frameColor').value = saved.frameColor; }
-    if(saved.gridCols && document.getElementById('gridColsSelect')) { document.getElementById('gridColsSelect').value = saved.gridCols; }
+    if (saved.frameColor && document.getElementById('frameColor')) { document.getElementById('frameColor').value = saved.frameColor; }
+    if (saved.gridCols && document.getElementById('gridColsSelect')) { document.getElementById('gridColsSelect').value = saved.gridCols; }
     
-    if(saved.titleSize) { document.getElementById('titleSizeRange').value = saved.titleSize; changeFontSize('title'); }
-    if(saved.subSize) { document.getElementById('subSizeRange').value = saved.subSize; changeFontSize('sub'); }
+    if (saved.titleSize) { document.getElementById('titleSizeRange').value = saved.titleSize; changeFontSize('title'); }
+    if (saved.subSize) { document.getElementById('subSizeRange').value = saved.subSize; changeFontSize('sub'); }
     
-    if(saved.autoNum !== undefined && document.getElementById('autoNumbering')) {
+    if (saved.autoNum !== undefined && document.getElementById('autoNumbering')) {
         document.getElementById('autoNumbering').checked = saved.autoNum;
-        if(typeof toggleAutoNumbering === 'function') toggleAutoNumbering();
+        if (typeof toggleAutoNumbering === 'function') toggleAutoNumbering();
     }
-    if(saved.autoLimit !== undefined && document.getElementById('autoCountLimit')) { document.getElementById('autoCountLimit').value = saved.autoLimit; }
+    if (saved.autoLimit !== undefined && document.getElementById('autoCountLimit')) { document.getElementById('autoCountLimit').value = saved.autoLimit; }
     
-    if(saved.branchInput) document.getElementById('branchInput').value = saved.branchInput;
-    if(saved.tableCount) document.getElementById('tableCount').value = saved.tableCount;
-    if(saved.cardTitle) document.getElementById('cardShopTitle').innerText = saved.cardTitle;
-    if(saved.cardSub) document.getElementById('cardSub').innerText = saved.cardSub;
+    if (saved.branchInput) document.getElementById('branchInput').value = saved.branchInput;
+    if (saved.tableCount) document.getElementById('tableCount').value = saved.tableCount;
+    if (saved.cardTitle) document.getElementById('cardShopTitle').innerText = saved.cardTitle;
+    if (saved.cardSub) document.getElementById('cardSub').innerText = saved.cardSub;
     
-    if(saved.lang) {
+    if (saved.lang) {
         currentLang = saved.lang;
         document.querySelectorAll('.lang-btn').forEach(b => {
             b.classList.remove('active');
-            if(b.getAttribute('onclick').includes(`'${saved.lang}'`)) b.classList.add('active');
+            if (b.getAttribute('onclick').includes(`'${saved.lang}'`)) b.classList.add('active');
         });
     }
     
-    if(saved.bgColor1 && saved.bgColor2) {
+    if (saved.bgColor1 && saved.bgColor2) {
         document.getElementById('bgColor1').value = saved.bgColor1;
         document.getElementById('bgColor2').value = saved.bgColor2;
         syncColor('1', 'picker'); syncColor('2', 'picker');
     }
-    if(saved.textColor) {
+    if (saved.textColor) {
         document.getElementById('textColor').value = saved.textColor;
         syncTextColor('picker');
     }
@@ -846,7 +847,6 @@ function importConfig(event) {
     reader.readAsText(file);
 }
 
-// 🌟 FIX: Dynamic URL generation for copy functionality
 async function copyURL() {
     const branchName = document.getElementById('branchInput').value.trim() || 'Heng';
     let currentUrlPath = window.location.href.split('?')[0];
@@ -857,7 +857,7 @@ async function copyURL() {
     if (tableNo && !branchName.startsWith('http')) { url += '&table=' + encodeURIComponent(tableNo); }
     
     try {
-        if(navigator.clipboard && window.isSecureContext) {
+        if (navigator.clipboard && window.isSecureContext) {
             await navigator.clipboard.writeText(url);
             showToast('✅ បាន Copy លីងជោគជ័យ!');
         } else {
@@ -874,7 +874,6 @@ async function copyURL() {
     } catch(err) { showToast('❌ បរាជ័យក្នុងការ Copy លីង!'); }
 }
 
-// 🌟 FIX: Dynamic URL generation for share functionality
 async function shareCard() {
     const branchName = document.getElementById('branchInput').value.trim() || 'Heng';
     let currentUrlPath = window.location.href.split('?')[0];
@@ -923,6 +922,12 @@ async function downloadCard() {
 }
 
 async function printA4Grid() {
+    let win = window.open('', '_blank');
+    if (!win) {
+        showToast('⚠️ សូមអនុញ្ញាតផ្ទាំង Popup លើ Browser ដើម្បីបោះពុម្ព A4 Grid!');
+        return;
+    }
+
     const btn = document.getElementById('gridPrintBtn');
     const originalText = btn.innerHTML;
     btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> កំពុងរៀបចំ...';
@@ -940,7 +945,6 @@ async function printA4Grid() {
         
         let cols = parseInt(document.getElementById('gridColsSelect') ? document.getElementById('gridColsSelect').value : "3") || 3;
         
-        let win = window.open('', '_blank');
         win.document.write(`
         <html><head><title>SKM Batch A4 Print</title>
         <style>
@@ -965,7 +969,7 @@ async function printA4Grid() {
             identicalDataUrl = await htmlToImage.toPng(card, { quality: 1.0, pixelRatio: 4, width: 360, height: 540, style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } });
         }
 
-        for(let i = 1; i <= tableCount; i++) {
+        for (let i = 1; i <= tableCount; i++) {
             if (autoNumbering) {
                 if (i <= autoLimit) {
                     let displayVal = originalTableInput ? originalTableInput + " " + i : i.toString();
@@ -1010,4 +1014,5 @@ async function printA4Grid() {
 window.onload = initGenerator;
 </script>
 
-</body></html>
+</body>
+</html>

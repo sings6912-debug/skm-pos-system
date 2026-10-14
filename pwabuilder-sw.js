@@ -1,5 +1,5 @@
 // pwabuilder-sw.js
-const CACHE_NAME = "skm-integrate-pos-offline-v4";
+const CACHE_NAME = "skm-integrate-pos-offline-v5";
 
 // បញ្ជីឯកសារទាំងអស់ក្នុងប្រព័ន្ធដែលត្រូវរក្សាទុកសម្រាប់ប្រើប្រាស់ពេលគ្មានអ៊ីនធឺណិត (Offline Mode)
 const FILES_TO_CACHE = [
@@ -21,7 +21,8 @@ const FILES_TO_CACHE = [
   "./customer.js",
   "./main.js",
   "./manifest.json",
-  "./logo.png"
+  "./logo.png",
+  "./logo1.png"
 ];
 
 self.addEventListener("install", (evt) => {

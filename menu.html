@@ -103,12 +103,12 @@
             position: relative;
             background: var(--brand-dark);
             box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            aspect-ratio: 16 / 7; /* Responsive height for mobile */
+            aspect-ratio: 16 / 7;
             max-height: 250px;
         }
         @media (min-width: 768px) {
             .promo-banner {
-                aspect-ratio: 21 / 9; /* Wider banner for desktop */
+                aspect-ratio: 21 / 9;
                 max-height: 350px;
             }
         }
@@ -120,14 +120,14 @@
         #bannerSlider img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; }
         
         .slider-dots {
-            position: absolute; bottom: 10px; right: 15px; /* Moved to right */
+            position: absolute; bottom: 10px; right: 15px;
             display: flex; gap: 6px; z-index: 10;
         }
         .slider-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: 0.3s; }
         .slider-dot.active { background: #fff; transform: scale(1.4); }
 
         .banner-overlay-badge {
-            position: absolute; bottom: 10px; left: 10px; right: 80px; /* leave space for dots */
+            position: absolute; bottom: 10px; left: 10px; right: 80px;
             display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-end; z-index: 10;
         }
         .promo-tag {
@@ -162,7 +162,6 @@
         }
         .cat-pill.active { background: var(--brand-dark); color: white; border-color: var(--brand-dark); }
 
-        /* កែប្រែនៅទីនេះ: ធ្វើឱ្យវា Responsive (តូចល្មមស្រួលមើលទាំងលើទូរស័ព្ទ និងកុំព្យូទ័រ) */
         .product-grid { 
             display: grid; 
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
@@ -352,7 +351,7 @@
             </div>
         </div>
 
-        <!-- Slider Banner (Multiple Images) - FIXED FOR ASPECT RATIO -->
+        <!-- Slider Banner (Multiple Images) -->
         <div class="promo-banner" id="promoBannerWrapper" style="display: none;">
             <div id="bannerSlider"></div>
             <div class="slider-dots" id="bannerDots"></div>
@@ -604,7 +603,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
         
         let supabaseClient = null;
-        if (window.supabase) {
+        if (window.supabase && typeof window.supabase.createClient === 'function') {
             try {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             } catch(e) {}
@@ -650,13 +649,28 @@
             setTimeout(() => t.classList.remove('show'), 2500);
         }
         
+        // ប្រើប្រាស់ Shared AudioContext ដើម្បីការពារបញ្ហាដាច់សំឡេងពេលចុចច្រើនដង
+        let sharedMenuAudioCtx = null;
         function playDing() {
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
-                const osc = ctx.createOscillator(); const gain = ctx.createGain();
-                osc.type = 'sine'; osc.frequency.setValueAtTime(880, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime); gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
-                osc.connect(gain); gain.connect(ctx.destination); osc.start(); osc.stop(ctx.currentTime + 0.3);
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                if (!AudioContext) return;
+                if (!sharedMenuAudioCtx || sharedMenuAudioCtx.state === 'closed') {
+                    sharedMenuAudioCtx = new AudioContext();
+                }
+                if (sharedMenuAudioCtx.state === 'suspended') {
+                    sharedMenuAudioCtx.resume().catch(() => {});
+                }
+                const osc = sharedMenuAudioCtx.createOscillator();
+                const gain = sharedMenuAudioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, sharedMenuAudioCtx.currentTime);
+                gain.gain.setValueAtTime(0.1, sharedMenuAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, sharedMenuAudioCtx.currentTime + 0.3);
+                osc.connect(gain);
+                gain.connect(sharedMenuAudioCtx.destination);
+                osc.start();
+                osc.stop(sharedMenuAudioCtx.currentTime + 0.3);
             } catch(e){}
         }
 
@@ -736,6 +750,17 @@
             try {
                 let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`));
                 let localSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`));
+                let localShopName = localStorage.getItem(`ks2_${BRANCH}_shop_name`);
+                let localShopLogo = localStorage.getItem(`ks2_${BRANCH}_shop_logo`);
+                let localShopQr = localStorage.getItem(`ks2_${BRANCH}_shop_qr`);
+
+                if (localShopName) {
+                    document.getElementById('lpName').innerText = localShopName;
+                    document.getElementById('splashName').innerText = localShopName;
+                }
+                if (localShopLogo) {
+                    document.getElementById('lpLogo').src = localShopLogo;
+                }
                 
                 if (localSys) {
                     sys = localSys;
@@ -755,6 +780,13 @@
                         document.getElementById('tickerContentText').innerText = localTicker;
                         document.getElementById('marqueeTickerBar').style.display = 'block';
                     }
+
+                    const shopQr = document.getElementById('shopQrImg');
+                    const qrSrc = sys.menuQR || localShopQr || '';
+                    if (shopQr && qrSrc) {
+                        shopQr.src = qrSrc;
+                        document.getElementById('qrBoxContainer').style.display = 'block';
+                    }
                 }
                 
                 if (localInv && Array.isArray(localInv)) {
@@ -767,7 +799,7 @@
             // ⚡ 2. Fetch from Cloud (Supabase) in Background
             try {
                 if (supabaseClient) {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
+                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
                     if (data && data.data_json) {
                         let d = data.data_json;
                         if (d.sysSettings) {
@@ -972,11 +1004,12 @@
             const c = [...new Set(inventory.map(p => p.category).filter(Boolean))];
             let allCount = inventory.length; 
             let transText = trans[lang] ? trans[lang].all : 'All';
-            let h = `<div class="cat-pill active" onclick="filterCat('all', this)">${transText} (${allCount})</div>`;
+            let h = `<div class="cat-pill ${selCat === 'all' ? 'active' : ''}" onclick="filterCat('all', this)">${transText} (${allCount})</div>`;
             
             c.forEach(x => {
                 let catCount = inventory.filter(p => p.category === x).length;
-                h += `<div class="cat-pill" onclick="filterCat('${x}', this)">${x} (${catCount})</div>`;
+                let safeCat = String(x).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                h += `<div class="cat-pill ${selCat === x ? 'active' : ''}" onclick="filterCat('${safeCat}', this)">${x} (${catCount})</div>`;
             });
             document.getElementById('catTabs').innerHTML = h;
             initMenuTabScroll();
@@ -985,48 +1018,6 @@
         function filterCat(c, el) {
             selCat = c; document.querySelectorAll('.cat-pill').forEach(t=>t.classList.remove('active'));
             el.classList.add('active'); renderMenu();
-        }
-
-        function handleCustomBgUpload(e) {
-            const file = e.target.files[0];
-            if (!file) return;
-            
-            if (file.size > 5 * 1024 * 1024) {
-                if(typeof showToast === 'function') {
-                    showToast("កំពុងបង្ហាប់រូបភាពទំហំធំ... សូមរង់ចាំបន្តិច!", false);
-                }
-            }
-            if(typeof playClickSound === 'function') playClickSound();
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const img = new Image();
-                img.onload = async function() {
-                    const canvas = document.createElement('canvas');
-                    const maxW = 1920;
-                    const maxH = 1080;
-                    let w = img.width, h = img.height;
-                    
-                    if (w > maxW || h > maxH) {
-                        const ratio = Math.min(maxW / w, maxH / h);
-                        w = Math.round(w * ratio);
-                        h = Math.round(h * ratio);
-                    }
-                    
-                    canvas.width = w;
-                    canvas.height = h;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, w, h);
-                    
-                    const compressedBg = `url("${canvas.toDataURL('image/jpeg', 0.6)}")`;
-                    
-                    if(typeof applyAndSaveWallpaper === 'function') {
-                        applyAndSaveWallpaper(compressedBg, null);
-                    }
-                };
-                img.src = evt.target.result;
-            };
-            reader.readAsDataURL(file);
         }
 
         function renderMenu() {
@@ -1081,7 +1072,10 @@
             const p = inventory.find(x=>x.id===id); if(!p) return;
             curProd = p; selVar = (p.variants && p.variants.length) ? p.variants[0] : 'Base';
             
-            let vHtml = (p.variants || ['Base']).map(v => `<button class="v-btn ${v===selVar?'active':''}" onclick="setVar(this, '${v}')">${v}</button>`).join('');
+            let vHtml = (p.variants || ['Base']).map(v => {
+                let safeVar = String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                return `<button class="v-btn ${v===selVar?'active':''}" onclick="setVar(this, '${safeVar}')">${v}</button>`;
+            }).join('');
             
             let isFav = wishlist.some(w=>w.id===id);
             document.getElementById('dContent').innerHTML = `
@@ -1144,9 +1138,11 @@
             const list = document.getElementById('cartList');
             if(cart.length===0) return list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-weight:800;">Cart is empty</div>`;
             
-            list.innerHTML = cart.map(c => `
+            list.innerHTML = cart.map(c => {
+                let safeCid = String(c.cartId).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                return `
                 <div class="c-item">
-                    <img src="${c.image}" class="c-img">
+                    <img src="${c.image||'https://placehold.co/100'}" class="c-img" onerror="this.src='https://placehold.co/100'">
                     <div class="c-info">
                         <div class="c-row-top">
                             <div class="c-title">${c.name} ${c.qty>1?`<span style="color:var(--brand-cyan);">x${c.qty}</span>`:''}</div>
@@ -1154,11 +1150,11 @@
                         </div>
                         <div class="c-row-bot">
                             <div class="c-variant">Variant: ${c.cartVar}</div>
-                            <button class="c-delete" onclick="delCart('${c.cartId}')">Delete</button>
+                            <button class="c-delete" onclick="delCart('${safeCid}')">Delete</button>
                         </div>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
         }
         function delCart(cid) { cart = cart.filter(c=>c.cartId!==cid); updateCartBadges(); renderCart(); updateTotal(); }
 
@@ -1176,7 +1172,7 @@
             if(wishlist.length===0) return list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-weight:800;">Empty Wishlist</div>`;
             list.innerHTML = wishlist.map(w => `
                 <div class="c-item" style="align-items:center;">
-                    <img src="${w.image}" class="c-img">
+                    <img src="${w.image||'https://placehold.co/100'}" class="c-img" onerror="this.src='https://placehold.co/100'">
                     <div style="flex:1;">
                         <div class="c-title" style="margin-bottom:4px;">${w.name}</div>
                         <div class="c-price">${fmt(getPrc(w))}</div>
@@ -1382,103 +1378,120 @@
                 seller: 'Digital Menu'
             };
 
-            document.getElementById('checkoutBtn').innerText = 'Processing...';
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            checkoutBtn.innerText = 'Processing...';
+            checkoutBtn.disabled = true;
 
             try {
-                if (!supabaseClient) {
-                    showToast('Offline Mode: Cannot submit order.', true);
-                    document.getElementById('checkoutBtn').innerText = 'Checkout';
-                    return;
+                let d = null;
+                if (supabaseClient && navigator.onLine) {
+                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                    d = (data && data.data_json) ? data.data_json : null;
                 }
-                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
-                if(data && data.data_json) {
-                    let d = data.data_json;
-                    if(!d.invoices) d.invoices = [];
 
-                    // ឆែកមើលសិទ្ធិប្រើកូដប្រូម៉ូសិន ១ដង/១លេខទូរស័ព្ទ
-                    if (appliedPromo && appliedPromo.oneTimePerUser && ph) {
-                        const alreadyUsedByPhone = d.invoices.some(inv => inv && inv.phone === ph && String(inv.promoCode).toUpperCase() === String(appliedPromo.code).toUpperCase());
-                        if (alreadyUsedByPhone) {
-                            showToast('⚠️ លេខទូរស័ព្ទនេះធ្លាប់បានប្រើប្រាស់កូដប្រូម៉ូសិននេះរួចហើយ!', true);
-                            document.getElementById('checkoutBtn').innerText = 'Checkout';
-                            return;
+                // ប្រសិនបើសាខានេះមិនទាន់មានលើ Cloud ឬកំពុង Offline ទាញយកទិន្នន័យពីម៉ាស៊ីន (LocalStorage) មកប្រើជាមូលដ្ឋាន
+                if (!d) {
+                    d = {
+                        inventory: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`)) || inventory || [],
+                        invoices: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`)) || [],
+                        customers: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_customers_pro`)) || [],
+                        sysSettings: sys || {}
+                    };
+                }
+
+                if(!d.invoices) d.invoices = [];
+
+                // ឆែកមើលសិទ្ធិប្រើកូដប្រូម៉ូសិន ១ដង/១លេខទូរស័ព្ទ
+                if (appliedPromo && appliedPromo.oneTimePerUser && ph) {
+                    const alreadyUsedByPhone = d.invoices.some(inv => inv && (inv.phone === ph || inv.customerPhone === ph) && String(inv.promoCode).toUpperCase() === String(appliedPromo.code).toUpperCase());
+                    if (alreadyUsedByPhone) {
+                        showToast('⚠️ លេខទូរស័ព្ទនេះធ្លាប់បានប្រើប្រាស់កូដប្រូម៉ូសិននេះរួចហើយ!', true);
+                        checkoutBtn.innerText = 'Checkout';
+                        checkoutBtn.disabled = false;
+                        return;
+                    }
+                }
+
+                d.invoices.unshift(ord);
+
+                // កាត់ស្តុកទំនិញដោយស្វ័យប្រវត្តិ
+                if (!d.inventory) d.inventory = inventory || [];
+                cart.forEach(c => {
+                    let i = d.inventory.find(x => x && x.id === c.id);
+                    if(i) i.qty = Math.max(0, (parseFloat(i.qty) || 0) - c.qty);
+                });
+
+                // បន្ថែមឈ្មោះអតិថិជនចូលបញ្ជីអតិថិជនស្វ័យប្រវត្តិ (បើមិនមែនជាឈ្មោះតុ)
+                if (!TABLE_NO && n && n !== 'អតិថិជនទូទៅ') {
+                    if (!d.customers) d.customers = [];
+                    const existingCust = d.customers.find(c => c && String(c.name).trim().toLowerCase() === n.toLowerCase());
+                    if (!existingCust) {
+                        d.customers.push({ id: 'C_' + Date.now(), name: n, phone: ph || '' });
+                    } else if (!existingCust.phone && ph) {
+                        existingCust.phone = ph;
+                    }
+                }
+
+                // បូកចំនួនដងប្រើប្រាស់ (usedCount) នៃ Promo Code
+                if (appliedPromo && d.sysSettings && Array.isArray(d.sysSettings.promoCodes)) {
+                    const pIdx = d.sysSettings.promoCodes.findIndex(p => p && String(p.code).toUpperCase() === String(appliedPromo.code).toUpperCase());
+                    if (pIdx !== -1) {
+                        d.sysSettings.promoCodes[pIdx].usedCount = (d.sysSettings.promoCodes[pIdx].usedCount || 0) + 1;
+                        sys.promoCodes = d.sysSettings.promoCodes;
+                    }
+                    if (appliedPromo.oneTimePerUser) {
+                        const usedPromos = JSON.parse(localStorage.getItem(`skm_used_promos_${BRANCH}`) || '[]');
+                        if (!usedPromos.includes(appliedPromo.code)) {
+                            usedPromos.push(appliedPromo.code);
+                            localStorage.setItem(`skm_used_promos_${BRANCH}`, JSON.stringify(usedPromos));
                         }
                     }
+                }
 
-                    d.invoices.unshift(ord);
-
-                    // កាត់ស្តុកទំនិញដោយស្វ័យប្រវត្តិ
-                    cart.forEach(c => {
-                        let i = (d.inventory || []).find(x => x && x.id === c.id);
-                        if(i) i.qty = Math.max(0, (parseFloat(i.qty) || 0) - c.qty);
-                    });
-
-                    // បន្ថែមឈ្មោះអតិថិជនចូលបញ្ជីអតិថិជនស្វ័យប្រវត្តិ (បើមិនមែនជាឈ្មោះតុ)
-                    if (!TABLE_NO && n && n !== 'អតិថិជនទូទៅ') {
-                        if (!d.customers) d.customers = [];
-                        const existingCust = d.customers.find(c => c && String(c.name).toLowerCase() === n.toLowerCase());
-                        if (!existingCust) {
-                            d.customers.push({ id: 'C_' + Date.now(), name: n, phone: ph || '' });
-                        } else if (!existingCust.phone && ph) {
-                            existingCust.phone = ph;
-                        }
-                    }
-
-                    // បូកចំនួនដងប្រើប្រាស់ (usedCount) នៃ Promo Code
-                    if (appliedPromo && d.sysSettings && Array.isArray(d.sysSettings.promoCodes)) {
-                        const pIdx = d.sysSettings.promoCodes.findIndex(p => p && String(p.code).toUpperCase() === String(appliedPromo.code).toUpperCase());
-                        if (pIdx !== -1) {
-                            d.sysSettings.promoCodes[pIdx].usedCount = (d.sysSettings.promoCodes[pIdx].usedCount || 0) + 1;
-                            sys.promoCodes = d.sysSettings.promoCodes;
-                        }
-                        if (appliedPromo.oneTimePerUser) {
-                            const usedPromos = JSON.parse(localStorage.getItem(`skm_used_promos_${BRANCH}`) || '[]');
-                            if (!usedPromos.includes(appliedPromo.code)) {
-                                usedPromos.push(appliedPromo.code);
-                                localStorage.setItem(`skm_used_promos_${BRANCH}`, JSON.stringify(usedPromos));
-                            }
-                        }
-                    }
-
-                    await supabaseClient.from('branch_store').update({
+                // Sync ឡើងទៅ Supabase (ប្រើ upsert ដើម្បីគាំទ្រសាខាថ្មីដែលមិនទាន់មាន Row)
+                if (supabaseClient && navigator.onLine) {
+                    await supabaseClient.from('branch_store').upsert({
+                        branch_id: BRANCH,
                         data_json: d,
                         updated_at: new Date().toISOString()
-                    }).eq('branch_id', BRANCH);
-
-                    // Sync ចូល LocalStorage ដើម្បីឱ្យ POS លើឧបករណ៍ដូចគ្នាទទួលបានភ្លាមៗ
-                    localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(d.invoices));
-                    localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
-                    if (d.customers) localStorage.setItem(`ks2_${BRANCH}_customers_pro`, JSON.stringify(d.customers));
-                    if (d.sysSettings) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
-                    
-                    points += Math.floor(tot); localStorage.setItem('skm_pts', points);
-                    document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
-                    playDing();
-
-                    // 🌟 ប្រើប្រាស់ Order Bot Token ដើម្បីបាញ់សារចូល Group កុម្ម៉ង់
-                    if(orderBotToken && orderChatId) {
-                        let itxt = ord.items.map((i,x)=>`${x+1}. ${i.name} [${i.cartVar}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
-                        let discTxt = discUsd > 0 ? `\n🏷️ បញ្ចុះតម្លៃ: <b>-$${discUsd.toFixed(2)}</b>` : '';
-                        let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n🧾 លេខកូដ: <code>${orderId}</code>\n👤 អតិថិជន: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}${discTxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
-                        fetch(`https://api.telegram.org/bot${orderBotToken}/sendMessage`, {
-                            method: 'POST', headers: {'Content-Type':'application/json'},
-                            body: JSON.stringify({chat_id: orderChatId, text: msg, parse_mode: 'HTML'})
-                        });
-                    }
-                    showToast(`Order Success! ID: ${orderId}`);
-                    cart = [];
-                    appliedPromo = null;
-                    discount = 0;
-                    document.getElementById('cPromo').value = '';
-                    const statusEl = document.getElementById('promoAppliedStatus');
-                    if (statusEl) statusEl.style.display = 'none';
-                    updateCartBadges(); 
-                    document.getElementById('checkoutBtn').innerText = 'Checkout';
-                    closeModal('cartModal'); init();
+                    }, { onConflict: 'branch_id' });
                 }
+
+                // Sync ចូល LocalStorage ដើម្បីឱ្យ POS លើឧបករណ៍ដូចគ្នាទទួលបានភ្លាមៗ
+                localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(d.invoices));
+                localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
+                if (d.customers) localStorage.setItem(`ks2_${BRANCH}_customers_pro`, JSON.stringify(d.customers));
+                if (d.sysSettings) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
+                
+                points += Math.floor(tot); localStorage.setItem('skm_pts', points);
+                document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
+                playDing();
+
+                // 🌟 ប្រើប្រាស់ Order Bot Token ដើម្បីបាញ់សារចូល Group កុម្ម៉ង់
+                if(orderBotToken && orderChatId && navigator.onLine) {
+                    let itxt = ord.items.map((i,x)=>`${x+1}. ${i.name} [${i.cartVar}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
+                    let discTxt = discUsd > 0 ? `\n🏷️ បញ្ចុះតម្លៃ: <b>-$${discUsd.toFixed(2)}</b>` : '';
+                    let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n🧾 លេខកូដ: <code>${orderId}</code>\n👤 អតិថិជន: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}${discTxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
+                    fetch(`https://api.telegram.org/bot${orderBotToken}/sendMessage`, {
+                        method: 'POST', headers: {'Content-Type':'application/json'},
+                        body: JSON.stringify({chat_id: orderChatId, text: msg, parse_mode: 'HTML'})
+                    }).catch(() => {});
+                }
+                showToast(`Order Success! ID: ${orderId}`);
+                cart = [];
+                appliedPromo = null;
+                discount = 0;
+                document.getElementById('cPromo').value = '';
+                const statusEl = document.getElementById('promoAppliedStatus');
+                if (statusEl) statusEl.style.display = 'none';
+                updateCartBadges(); 
+                closeModal('cartModal');
+                init();
             } catch(e) { 
                 showToast('Error processing order', true); 
-                document.getElementById('checkoutBtn').innerText = 'Checkout';
+            } finally {
+                checkoutBtn.innerText = 'Checkout';
+                checkoutBtn.disabled = false;
             }
         }
 
@@ -1488,28 +1501,32 @@
             if(!ph) return showToast('Enter phone number!', true);
             res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">Searching...</div>';
             try {
-                if (!supabaseClient) {
-                    res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--danger);">Offline Mode.</div>';
-                    return;
+                let allInvoices = [];
+                if (supabaseClient && navigator.onLine) {
+                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                    if (data && data.data_json && Array.isArray(data.data_json.invoices)) {
+                        allInvoices = data.data_json.invoices;
+                    }
                 }
-                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
-                if(data && data.data_json && data.data_json.invoices) {
-                    let uOrds = data.data_json.invoices.filter(i => i && (i.phone === ph || i.customerPhone === ph));
-                    if(uOrds.length===0) return res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">No orders found.</div>';
-                    res.innerHTML = uOrds.map(o => {
-                        const st = String(o.status || 'unpaid').toLowerCase();
-                        let statusHtml = '<span style="color:#f59e0b;">កំពុងរៀបចំ / រង់ចាំទូទាត់ (Processing) 🚚</span>';
-                        if (st === 'paid') statusHtml = '<span style="color:var(--success);">ទូទាត់រួចរាល់ (Completed) ✅</span>';
-                        else if (st === 'ready') statusHtml = '<span style="color:var(--brand-cyan);">រៀបចំរួចរាល់ហើយ! (Ready for Pickup/Delivery) 🎉</span>';
+                if (allInvoices.length === 0) {
+                    allInvoices = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`)) || [];
+                }
 
-                        return `
-                        <div style="background:var(--store-bg); padding:12px; border-radius:12px; margin-bottom:10px; border:1px solid var(--border-color);">
-                            <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px;"><span>${o.id}</span> <span style="color:var(--brand-cyan);">$${parseFloat(o.totalAmount || 0).toFixed(2)}</span></div>
-                            <div style="font-size:11px; color:var(--text-muted); margin:4px 0;">${o.date}</div>
-                            <div style="font-size:12px; font-weight:800;">Status: ${statusHtml}</div>
-                        </div>
-                    `}).join('');
-                } else res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">No orders found.</div>';
+                let uOrds = allInvoices.filter(i => i && (i.phone === ph || i.customerPhone === ph));
+                if(uOrds.length===0) return res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">No orders found.</div>';
+                res.innerHTML = uOrds.map(o => {
+                    const st = String(o.status || 'unpaid').toLowerCase();
+                    let statusHtml = '<span style="color:#f59e0b;">កំពុងរៀបចំ / រង់ចាំទូទាត់ (Processing) 🚚</span>';
+                    if (st === 'paid') statusHtml = '<span style="color:var(--success);">ទូទាត់រួចរាល់ (Completed) ✅</span>';
+                    else if (st === 'ready') statusHtml = '<span style="color:var(--brand-cyan);">រៀបចំរួចរាល់ហើយ! (Ready for Pickup/Delivery) 🎉</span>';
+
+                    return `
+                    <div style="background:var(--store-bg); padding:12px; border-radius:12px; margin-bottom:10px; border:1px solid var(--border-color);">
+                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px;"><span>${o.id}</span> <span style="color:var(--brand-cyan);">$${parseFloat(o.totalAmount || 0).toFixed(2)}</span></div>
+                        <div style="font-size:11px; color:var(--text-muted); margin:4px 0;">${o.date}</div>
+                        <div style="font-size:12px; font-weight:800;">Status: ${statusHtml}</div>
+                    </div>
+                `}).join('');
             } catch(e) { res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--danger);">Error searching.</div>'; }
         }
 
@@ -1518,14 +1535,13 @@
             const n = document.getElementById('rName').value.trim();
             if(!n) return showToast('Name required!', true);
             try {
-                if (!supabaseClient) return showToast('Offline Mode', true);
-                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).single();
-                if(data && data.data_json) {
-                    let d = data.data_json; if(!d.reviews) d.reviews=[];
-                    d.reviews.unshift({ name:n, comment:document.getElementById('rCom').value, rating:rateStar, date:new Date().toLocaleString() });
-                    await supabaseClient.from('branch_store').update({data_json: d}).eq('branch_id', BRANCH);
-                    showToast('Thanks for your rating!'); closeModal('reviewModal');
-                }
+                if (!supabaseClient || !navigator.onLine) return showToast('Offline Mode', true);
+                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                let d = (data && data.data_json) ? data.data_json : {};
+                if(!d.reviews) d.reviews=[];
+                d.reviews.unshift({ name:n, comment:document.getElementById('rCom').value, rating:rateStar, date:new Date().toLocaleString() });
+                await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
+                showToast('Thanks for your rating!'); closeModal('reviewModal');
             } catch(e) {}
         }
 
