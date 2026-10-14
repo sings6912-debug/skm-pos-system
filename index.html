@@ -53,7 +53,7 @@
         <h1 style="color: var(--danger); font-size: 32px; margin-bottom: 10px;">🔒 ប្រព័ន្ធត្រូវបានចាក់សោរ</h1>
         <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 16px;">សិទ្ធិប្រើប្រាស់របស់អ្នកបានផុតកំណត់ ឬមិនទាន់បានបញ្ចូលកូដ។ សូមទាក់ទងអ្នកអភិវឌ្ឍន៍។</p>
         <div style="background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
-            <input type="text" id="licenseInputBox" class="form-control" placeholder="បញ្ចូលលេខកូដ (License Key)..." style="margin-bottom: 15px; font-size: 16px; text-align: center; width: 100%;">
+            <input type="text" id="licenseInputBox" class="form-control" placeholder="បញ្ចូលលេខកូដ (License Key)..." style="margin-bottom: 15px; font-size: 16px; text-align: center; width: 100%;" onkeydown="if(event.key==='Enter') window.verifyAndSaveLicense()">
             <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px;" onclick="window.verifyAndSaveLicense()">🔓 បើកដំណើរការ</button>
         </div>
     </div>
@@ -123,16 +123,16 @@
                     <button id="grid-btn-unpaid" class="btn btn-warning" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('unpaid', '📝 វិក្កយបត្រ & ទូទាត់', document.getElementById('nav-unpaid'))"><i style="font-size: 30px; margin-bottom: 5px;">📝</i>វិក្កយបត្រ</button>
                     <button id="grid-btn-exp" class="btn btn-danger" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('expenses', '📉 ការចំណាយ (Expenses)', document.getElementById('nav-expenses'))"><i style="font-size: 30px; margin-bottom: 5px;">📉</i>ចំណាយ</button>
                     <button id="grid-btn-cust" class="btn btn-outline" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onclick="window.switchTab('customers', '👥 គ្រប់គ្រងអតិថិជន', document.getElementById('nav-customers'))"><i style="font-size: 30px; margin-bottom: 5px;">👥</i>អតិថិជន</button>
-                </div>
-
-                <div class="toolbar" style="margin-bottom: 20px;">
-                    <span style="font-size: var(--fs-14); font-weight:bold; color: var(--text-main);">📅 ជ្រើសរើសកាលបរិច្ឆេទបង្ហាញ៖ </span>
-                    <input type="datetime-local" step="1" id="dashDateFrom" class="form-control" style="width: 210px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
-                    <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
-                    <input type="datetime-local" step="1" id="dashDateTo" class="form-control" style="width: 210px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
-                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
+                <div class="toolbar" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="font-size: var(--fs-14); font-weight:bold; color: var(--text-main);">📅 ជ្រើសរើសកាលបរិច្ឆេទបង្ហាញ៖ </span>
+                        <input type="datetime-local" step="1" id="dashDateFrom" class="form-control" style="width: 195px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
+                        <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
+                        <input type="datetime-local" step="1" id="dashDateTo" class="form-control" style="width: 195px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
+                        <button class="btn btn-outline" style="padding: 8px 14px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
+                    </div>
                     <!-- Z-Report Button -->
-                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12); border-color: #8b5cf6; color: #8b5cf6; margin-left: auto;" onclick="if(typeof window.printZReport === 'function') window.printZReport()">🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)</button>
+                    <button class="btn btn-outline" style="padding: 8px 14px; font-size: var(--fs-12); border-color: #8b5cf6; color: #8b5cf6;" onclick="if(typeof window.printZReport === 'function') window.printZReport()">🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)</button>
                 </div>
 
                 <div class="stats-grid">
@@ -285,25 +285,33 @@
                             <div class="summary-row summary-total"><span id="lblTotalText">សរុបទឹកប្រាក់:</span><span style="text-align:right;"><div id="cartTotalAmount">$0.00</div><div id="cartTotalAmountRiel" style="font-size: var(--fs-14); color: var(--text-muted); font-weight: normal; margin-top: 4px;"></div></span></div>
                             
                             <!-- ប្រអប់បញ្ចូលឈ្មោះអតិថិជន -->
-                            <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); transition: 0.3s;">
+                            <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); transition: 0.3s;">
                                 <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%; transition: 0.3s;">
                                 <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
                                 <datalist id="customerDatalist"></datalist>
                             </div>
 
-                            <!-- ប្រអប់ជ្រើសរើសលេខតុ (Table Management) -->
-                            <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--brand-cyan); display: none;">
-                                <label style="font-size: var(--fs-13); font-weight: bold; color: var(--brand-dark); display: block; margin-bottom: 5px;">🪑 ជ្រើសរើសលេខតុ (Table):</label>
-                                <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--brand-cyan);" onchange="window.handleTableSelectionChange()">
+                            <!-- ប្រអប់ជ្រើសរើសលេខតុ និងបន្ថែមតុ VIP (Table & VIP Management) -->
+                            <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed var(--primary); display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 5px;">
+                                    <label style="font-size: var(--fs-13); font-weight: bold; color: var(--text-main); margin: 0;">🪑 ជ្រើសរើសតុ / VIP:</label>
+                                    <button type="button" class="btn btn-outline" style="padding: 3px 8px; font-size: 11px; border-color: var(--primary); color: var(--primary);" onclick="window.toggleAddCustomTableBox()">➕ ថែមតុ / VIP</button>
+                                </div>
+                                <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--primary);" onchange="window.handleTableSelectionChange()">
                                     <option value="">-- សូមជ្រើសរើសតុ --</option>
                                 </select>
+                                <!-- ប្រអប់បន្ថែមតុ VIP ឬតុថ្មីភ្លាមៗ -->
+                                <div id="posQuickAddTableBox" style="display: none; margin-top: 8px; gap: 6px; align-items: center;">
+                                    <input type="text" id="posNewCustomTableInput" class="form-control" placeholder="ឧ. VIP 1, បន្ទប់ VIP, តុថែម..." style="font-size: 12px; padding: 6px 10px; height: 34px;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.addQuickCustomTable();}">
+                                    <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 12px; height: 34px;" onclick="window.addQuickCustomTable()">រក្សាទុក</button>
+                                </div>
                             </div>
 
                             <!-- ប៊ូតុងគិតលុយ -->
-                            <div style="display: flex; gap: 10px; flex-shrink: 0;">
-                                <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
-                                <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
-                                <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('paid')">💰 ទូទាត់រួច</button>
+                            <div class="pos-checkout-btns">
+                                <button id="btnCheckoutPreorder" class="btn" style="background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
+                                <button id="btnCheckoutUnpaid" class="btn btn-warning" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
+                                <button id="btnCheckoutPaid" class="btn btn-success" onclick="window.validateTableAndProceed('paid')">💰 ទូទាត់រួច</button>
                             </div>
                         </div>
                     </div>
@@ -587,7 +595,6 @@
                             <textarea id="setTickerText" class="form-control" rows="2" placeholder="សរសេរសេចក្តីជូនដំណឹងអក្សររត់នៅទីនេះ..." onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
                         </div>
                         
-                        <!-- NEW SETTING: Toggle Sound and Custom Footer -->
                         <label style="display:flex; align-items:center; gap:12px; margin-top:20px; margin-bottom:15px; cursor:pointer; font-size: var(--fs-16);">
                             <input type="checkbox" id="setEnableSound" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;" checked>
                             <span><strong style="color:var(--text-main);">🔊 បន្លឺសំឡេង (Enable Sound):</strong> បើកសំឡេង "ទីត!" ពេលស្កេន ឬចុចទំនិញចូលកន្ត្រក។</span>
@@ -595,6 +602,16 @@
                         <div style="margin-top: 15px;">
                             <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📝 សារខាងក្រោមវិក្កយបត្រ (Receipt Footer Text)៖</strong></label>
                             <textarea id="setReceiptFooter" class="form-control" rows="2" placeholder="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
+                        </div>
+
+                        <!-- 🖨️ ជម្រើសទំហំក្រដាសព្រីន និងទាញយករូបវិក្កយបត្រ (80mm, 57x40mm, A4) -->
+                        <div style="margin-top: 18px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
+                            <label for="setReceiptSize" style="font-size: var(--fs-15);"><strong style="color:var(--text-main);">🖨️ ទំហំក្រដាសវិក្កយបត្រ (ព្រីន & ទាញយករូប)៖</strong></label>
+                            <select id="setReceiptSize" class="form-control" style="width: 260px; font-weight: bold; border-color: var(--primary);" onchange="window.saveSysSettings()">
+                                <option value="80mm">📄 ខ្នាត 80mm (ម៉ាស៊ីនព្រីនធំស្តង់ដារ)</option>
+                                <option value="58mm">🧾 ខ្នាត 57x40mm / 58mm (ម៉ាស៊ីនព្រីនតូច)</option>
+                                <option value="A4">📋 ខ្នាតក្រដាសធម្មតា A4 (វិក្កយបត្រធំ)</option>
+                            </select>
                         </div>
                     </div>
 
@@ -655,59 +672,39 @@
                             <input type="password" id="chgOldPassword" class="form-control" style="margin-bottom: 15px; width: 100%;">
                             
                             <label style="display: block; margin-bottom: 5px; font-size: var(--fs-14);">លេខកូដថ្មី (New Password):</label>
-                            <input type="password" id="chgNewPassword" class="form-control" style="margin-bottom: 15px; width: 100%;">
+                            <input type="password" id="chgNewPassword" class="form-control" style="margin-bottom: 15px; width: 100%;" onkeydown="if(event.key==='Enter') window.handleChangePassword()">
                             
                             <button class="btn btn-warning" onclick="window.handleChangePassword()">🔄 ផ្លាស់ប្តូរលេខកូដ</button>
                         </div>
                     </div>
 
-                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (លាក់ទុក និងការពារដោយ Password) -->
+                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (លាក់ទុក និងការពារដោយ Password ដោយមិនប្រើ prompt/alert) -->
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #06b6d4;">
-                        
-                        <!-- ចំណងជើងអាចចុចដោះសោ -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px;">
-                            <h2 style="font-size: var(--fs-20); color: #06b6d4; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="unlockQuickTools()" title="ចុចទីនេះដើម្បីដោះសោ">
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                            <h2 style="font-size: var(--fs-20); color: #06b6d4; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="window.toggleQuickToolsPassBox()" title="ចុចទីនេះដើម្បីដោះសោ">
                                 🛠️ ឧបករណ៍ជំនួយពិសេស & ម៉ឺនុយឌីជីថល (Quick Tools) <span style="font-size: 14px;">🔒</span>
                             </h2>
-                            <button type="button" class="btn btn-outline" style="font-size: 11px; padding: 4px 10px;" onclick="unlockQuickTools()">🔓 ដោះសោ</button>
+                            <button type="button" class="btn btn-outline" style="font-size: 11px; padding: 4px 10px;" onclick="window.toggleQuickToolsPassBox()">🔓 ដោះសោ</button>
                         </div>
                         
                         <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 10px;">ផ្នែកនេះត្រូវបានចាក់សោរជាពិសេស។ សូមចុចប៊ូតុងដោះសោខាងលើដើម្បីបង្ហាញប៊ូតុងគ្រប់គ្រង។</p>
                         
+                        <!-- ប្រអប់វាយពាក្យសម្ងាត់ដោះសោ (Inline Password Unlock Box) -->
+                        <div id="quickToolsPassBox" style="display: none; gap: 10px; align-items: center; margin-top: 12px; margin-bottom: 12px; background: rgba(6, 182, 212, 0.08); padding: 12px; border-radius: 10px; border: 1px dashed #06b6d4;">
+                            <input type="password" id="quickToolsMasterPassInput" class="form-control" placeholder="🔐 បញ្ចូលលេខកូដសម្ងាត់ពិសេស (Master Password)..." style="flex: 1;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.verifyQuickToolsPass();}">
+                            <button type="button" class="btn btn-primary" onclick="window.verifyQuickToolsPass()">✅ យល់ព្រម</button>
+                        </div>
+
                         <!-- ផ្នែកប៊ូតុងដែលត្រូវលាក់ (Display: None) -->
                         <div id="protectedQuickToolsPanel" style="display: none; margin-top: 15px;">
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                                 <button type="button" class="btn" style="background: #06b6d4; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('admin_settings.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">⚙️ គ្រប់គ្រង Digital Menu</button>
                                 <button type="button" class="btn" style="background: #0284c7; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('menu.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">🍔 បើកមើល Digital Menu</button>
-                                <button type="button" class="btn" style="background: #8b5cf6; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('skm_ultimate_qr_generator.html', '_blank')">🔳 បង្កើតកាត QR ម៉ឺនុយ & តុ</button>
+                                <button type="button" class="btn" style="background: #8b5cf6; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('skm_ultimate_qr_generator.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">🔳 បង្កើតកាត QR ម៉ឺនុយ & តុ</button>
                                 <button type="button" class="btn" style="background: #f59e0b; color: #000; padding: 14px; justify-content: center;" onclick="window.open('skm_pos_52_advanced_themes.html', '_blank')">🎨 រចនា Poster (52 Themes)</button>
                             </div>
                         </div>
                     </div>
-
-                    <script>
-                        // មុខងារដោះសោដោយប្រើពាក្យសម្ងាត់ "tang sopheng"
-                        function unlockQuickTools() {
-                            let inputPass = prompt("🔐 សូមបញ្ចូលលេខកូដសម្ងាត់ពិសេស (Master Password):");
-                            if (inputPass === "tang sopheng") {
-                                const panel = document.getElementById('protectedQuickToolsPanel');
-                                if (panel) {
-                                    panel.style.display = 'block';
-                                    if (typeof window.showToast === 'function') {
-                                        window.showToast("🔓 ដោះសោជោគជ័យ!");
-                                    } else {
-                                        alert("🔓 ដោះសោជោគជ័យ!");
-                                    }
-                                }
-                            } else if (inputPass !== null) {
-                                if (typeof window.showToast === 'function') {
-                                    window.showToast("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!", true);
-                                } else {
-                                    alert("❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!");
-                                }
-                            }
-                        }
-                    </script>
                 </div>
             </div>
 
@@ -716,7 +713,7 @@
                 <div style="display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: auto;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center;">
                         <h1 style="color: var(--primary); font-size: var(--fs-28); margin-bottom: 5px;">SKM <span style="color: var(--warning);">INTEGRATE</span></h1>
-                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 8.0 (Ultimate Search & Performance Update)</p>
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 8.0 (Multi-Size Print, Debounce & Performance Edition)</p>
                         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
                             <span class="badge" style="background: rgba(56, 189, 248, 0.1); color: var(--primary); padding: 6px 12px; font-size: var(--fs-13);">ERP System</span>
                             <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 6px 12px; font-size: var(--fs-13);">POS Ready</span>
@@ -730,7 +727,7 @@
                         <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
                             <label style="display: block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">បញ្ចូល ឬប្តូរលេខកូដថ្មី (License Key):</label>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <input type="text" id="aboutLicenseInput" class="form-control" placeholder="ដាក់លេខកូដ License Key..." style="flex: 1; min-width: 220px; width: 100%;">
+                                <input type="text" id="aboutLicenseInput" class="form-control" placeholder="ដាក់លេខកូដ License Key..." style="flex: 1; min-width: 220px; width: 100%;" onkeydown="if(event.key==='Enter') window.verifyAndSaveLicenseFromAbout()">
                                 <button class="btn btn-primary" onclick="window.verifyAndSaveLicenseFromAbout()">🔄 បញ្ចូលកូដថ្មី</button>
                             </div>
                         </div>
@@ -755,7 +752,6 @@
     <!-- ========================================================
          MODALS (ផ្ទាំងលោតផ្សេងៗ)
          ======================================================== -->
-
     <!-- Modal: បង្កើត/កែប្រែ គណនី -->
     <div class="modal-overlay" id="userManageModal" style="z-index: 1005;" onclick="if(event.target === this) window.closeUserModal()">
         <div class="modal" style="max-width: 450px;">
@@ -792,7 +788,7 @@
                 <hr style="border: none; border-top: 1px dashed var(--border); margin: 20px 0;">
                 <div style="background: rgba(225, 29, 72, 0.1); border: 1px solid var(--danger); padding: 15px; border-radius: 8px;">
                     <label style="display:block; margin-bottom: 5px; color: var(--danger); font-weight: bold;">🔒 បញ្ជាក់លេខកូដ Admin របស់អ្នក:</label>
-                    <input type="password" id="adminConfirmPassword" class="form-control" placeholder="បញ្ចូលលេខកូដ Admin ដើម្បីយល់ព្រម" style="border-color: var(--danger); width: 100%;">
+                    <input type="password" id="adminConfirmPassword" class="form-control" placeholder="បញ្ចូលលេខកូដ Admin ដើម្បីយល់ព្រម" style="border-color: var(--danger); width: 100%;" onkeydown="if(event.key==='Enter') window.saveNewUser()">
                 </div>
             </div>
             <div class="modal-footer">
@@ -802,7 +798,7 @@
         </div>
     </div>
 
-    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) VVIP ថ្មី -->
+    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) VVIP ថ្មី (គាំទ្រការចុច Enter គិតលុយភ្លាមៗ) -->
     <div class="modal-overlay" id="checkoutModal" style="z-index: 100005; backdrop-filter: blur(5px);" onclick="if(event.target === this) document.getElementById('checkoutModal').style.display='none'">
         <style>
             .skm-checkout-glass {
@@ -850,11 +846,11 @@
             <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                 <div style="flex: 1; text-align: left;">
                     <label style="display:block; margin-bottom: 8px; font-size: 13px; font-weight:bold; color: var(--text-muted);">ប្រាក់ទទួល ($):</label>
-                    <input type="number" id="checkoutReceivedUsd" class="skm-chk-input" placeholder="0.00" oninput="window.calculateChange()" autocomplete="off">
+                    <input type="number" id="checkoutReceivedUsd" class="skm-chk-input" placeholder="0.00" oninput="window.calculateChange()" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.processCheckoutPaid();}" autocomplete="off">
                 </div>
                 <div style="flex: 1; text-align: left;">
                     <label style="display:block; margin-bottom: 8px; font-size: 13px; font-weight:bold; color: var(--text-muted);">ប្រាក់ទទួល (៛):</label>
-                    <input type="number" id="checkoutReceivedRiel" class="skm-chk-input" placeholder="0" oninput="window.calculateChange()" autocomplete="off">
+                    <input type="number" id="checkoutReceivedRiel" class="skm-chk-input" placeholder="0" oninput="window.calculateChange()" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.processCheckoutPaid();}" autocomplete="off">
                 </div>
             </div>
             
@@ -894,11 +890,11 @@
                 <div style="display: flex; gap: 15px; margin-bottom: 20px;">
                     <div style="flex: 1; text-align: left;">
                         <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់ទូទាត់ឥឡូវ ($):</label>
-                        <input type="number" id="debtPayUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0.00" oninput="window.calculateDebtChange()" autocomplete="off">
+                        <input type="number" id="debtPayUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0.00" oninput="window.calculateDebtChange()" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.processDebtPayment();}" autocomplete="off">
                     </div>
                     <div style="flex: 1; text-align: left;">
                         <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់ទូទាត់ឥឡូវ (៛):</label>
-                        <input type="number" id="debtPayRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0" oninput="window.calculateDebtChange()" autocomplete="off">
+                        <input type="number" id="debtPayRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: var(--primary); width: 100%;" placeholder="0" oninput="window.calculateDebtChange()" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.processDebtPayment();}" autocomplete="off">
                     </div>
                 </div>
                 
@@ -928,11 +924,11 @@
                 <div style="display: flex; gap: 15px; margin-bottom: 20px; margin-top: 15px;">
                     <div style="flex: 1; text-align: left;">
                         <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់កក់មុន ($):</label>
-                        <input type="number" id="preorderDepositUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: #8b5cf6; width: 100%;" placeholder="0.00" oninput="window.calculatePreorderRemaining()" autocomplete="off">
+                        <input type="number" id="preorderDepositUsd" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: #8b5cf6; width: 100%;" placeholder="0.00" oninput="window.calculatePreorderRemaining()" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.processPreorder();}" autocomplete="off">
                     </div>
                     <div style="flex: 1; text-align: left;">
                         <label style="display:block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">ប្រាក់កក់មុន (៛):</label>
-                        <input type="number" id="preorderDepositRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: #8b5cf6; width: 100%;" placeholder="0" oninput="window.calculatePreorderRemaining()" autocomplete="off">
+                        <input type="number" id="preorderDepositRiel" class="form-control" style="font-size: 20px; text-align: center; height: 50px; border-color: #8b5cf6; width: 100%;" placeholder="0" oninput="window.calculatePreorderRemaining()" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.processPreorder();}" autocomplete="off">
                     </div>
                 </div>
                 
@@ -948,7 +944,7 @@
         </div>
     </div>
 
-    <!-- Modal: ប្រអប់សារ Alert ជូនដំណឹង (Message Box) (មិនដាក់ onclick ទេ ការពារកុំឱ្យចុចច្រឡំ) -->
+    <!-- Modal: ប្រអប់សារ Alert ជូនដំណឹង (Message Box) -->
     <div class="modal-overlay" id="ksMsgBox" style="z-index: 999999;">
         <div class="modal" style="max-width: 400px; text-align: center; margin: auto;">
             <div class="modal-body">
@@ -959,35 +955,35 @@
         </div>
     </div>
 
-    <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile) -->
+    <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile - ពង្រីកទំហំឱ្យស្អាតមិនហៀរ) -->
     <div class="modal-overlay" id="shopNameModal" style="z-index: 9000;" onclick="if(event.target === this) window.closeShopNameModal()">
-        <div class="modal" style="max-width: 350px;">
+        <div class="modal" style="max-width: 440px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-18);">✏️ ប្តូរឈ្មោះហាង និង Logo</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeShopNameModal()">✕</button></div>
             <div class="modal-body">
                 <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">ឈ្មោះហាង:</label>
                 <input type="text" id="newShopNameInput" class="form-control" placeholder="វាយឈ្មោះហាងនៅទីនេះ..." style="text-align: center; font-size: var(--fs-16); width: 100%;">
                 
-                <div style="margin-top: 15px;">
+                <div style="margin-top: 12px;">
                     <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">លេខទូរស័ព្ទហាង:</label>
                     <input type="text" id="newShopPhoneInput" class="form-control" placeholder="ឧ. 012 345 678" style="font-size: var(--fs-14); width: 100%;">
                 </div>
-                <div style="margin-top: 15px;">
+                <div style="margin-top: 12px;">
                     <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">អាសយដ្ឋានហាង:</label>
-                    <textarea id="newShopAddressInput" class="form-control" placeholder="ឧ. ផ្ទះលេខ ១, ផ្លូវ ០០..." style="font-size: var(--fs-14); height: 60px; resize:none; width: 100%;"></textarea>
+                    <textarea id="newShopAddressInput" class="form-control" placeholder="ឧ. ផ្ទះលេខ ១, ផ្លូវ ០០..." style="font-size: var(--fs-14); height: 55px; resize:none; width: 100%;"></textarea>
                 </div>
 
-                <div style="margin-top: 15px; display: flex; gap: 10px; border-top: 1px dashed var(--border); padding-top: 15px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">ឡូហ្គោហាង:</label>
+                <div style="margin-top: 15px; display: flex; gap: 12px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                    <div style="flex: 1; min-width: 0; text-align: center;">
+                        <label style="font-size: var(--fs-13); display:block; margin-bottom: 6px;">ឡូហ្គោហាង:</label>
                         <input type="file" id="shopLogoInput" accept="image/*" style="display:none;" onchange="window.handleShopLogo(event)">
-                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopLogoInput').click()">📸 ឡូហ្គោ</button>
-                        <div style="text-align: center; margin-top: 10px;"><img id="shopLogoPreview" src="" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; display: none; margin: auto; border: 2px solid var(--border);"></div>
+                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12); padding: 8px;" onclick="document.getElementById('shopLogoInput').click()">📸 ឡូហ្គោ</button>
+                        <div style="text-align: center; margin-top: 10px;"><img id="shopLogoPreview" src="" style="width: 90px; height: 90px; object-fit: cover; border-radius: 50%; display: none; margin: auto; border: 2px solid var(--border);"></div>
                     </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">QR ទូទាត់ប្រាក់:</label>
+                    <div style="flex: 1; min-width: 0; text-align: center;">
+                        <label style="font-size: var(--fs-13); display:block; margin-bottom: 6px;">QR ទូទាត់ប្រាក់:</label>
                         <input type="file" id="shopQRInput" accept="image/*" style="display:none;" onchange="window.handleShopQR(event)">
-                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopQRInput').click()">📷 QR Code</button>
-                        <div style="text-align: center; margin-top: 10px;"><img id="shopQRPreview" src="" style="width: 120px; height: 120px; object-fit: contain; display: none; margin: auto; border: 2px solid var(--border);"></div>
+                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12); padding: 8px;" onclick="document.getElementById('shopQRInput').click()">📷 QR Code</button>
+                        <div style="text-align: center; margin-top: 10px;"><img id="shopQRPreview" src="" style="width: 90px; height: 90px; object-fit: contain; border-radius: 10px; background: #fff; padding: 3px; display: none; margin: auto; border: 2px solid var(--border);"></div>
                     </div>
                 </div>
                 
@@ -1066,7 +1062,7 @@
             <div class="modal-body">
                 <input type="hidden" id="cId">
                 <div style="margin-bottom: 15px;"><label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">ឈ្មោះអតិថិជន *</label><input type="text" id="cName" class="form-control" style="width: 100%;"></div>
-                <div><label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">លេខទូរស័ព្ទ</label><input type="text" id="cPhone" class="form-control" style="width: 100%;"></div>
+                <div><label style="display:block; margin-bottom:5px; font-size: var(--fs-14);">លេខទូរស័ព្ទ</label><input type="text" id="cPhone" class="form-control" style="width: 100%;" onkeydown="if(event.key==='Enter') window.saveCustomer()"></div>
             </div>
             <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeCustomerModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveCustomer()">រក្សាទុក</button></div>
         </div>
@@ -1147,6 +1143,42 @@
 
         window.toggleLowStockSection = function() {
             window.toggleSection('lowStockCardContainer');
+        };
+
+        // 🔓 មុខងារដោះសោ Quick Tools ដោយមិនប្រើ prompt() ឬ alert()
+        window.toggleQuickToolsPassBox = function() {
+            const panel = document.getElementById('protectedQuickToolsPanel');
+            if (panel && panel.style.display === 'block') {
+                panel.style.display = 'none';
+                return;
+            }
+            const passBox = document.getElementById('quickToolsPassBox');
+            const passInput = document.getElementById('quickToolsMasterPassInput');
+            if (passBox) {
+                const isHidden = passBox.style.display === 'none';
+                passBox.style.display = isHidden ? 'flex' : 'none';
+                if (isHidden && passInput) {
+                    passInput.value = '';
+                    setTimeout(() => passInput.focus(), 50);
+                }
+            }
+        };
+
+        window.verifyQuickToolsPass = function() {
+            const passInput = document.getElementById('quickToolsMasterPassInput');
+            const passBox = document.getElementById('quickToolsPassBox');
+            const panel = document.getElementById('protectedQuickToolsPanel');
+            if (!passInput) return;
+
+            if (passInput.value === 'tang sopheng') {
+                if (passBox) passBox.style.display = 'none';
+                if (panel) panel.style.display = 'block';
+                passInput.value = '';
+                if (typeof window.showToast === 'function') window.showToast('🔓 ដោះសោជោគជ័យ!');
+            } else {
+                if (typeof window.showToast === 'function') window.showToast('❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!', true);
+                else if (typeof window.ksMsg === 'function') window.ksMsg('❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!', 'បរាជ័យ');
+            }
         };
 
         // 💾 មុខងារ Backup ទិន្នន័យ (Export JSON)
@@ -1401,28 +1433,94 @@
 
         window.loadTableSettingsForPOS = function() {
             const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-            let sysSettings = {};
+            let sysSettings = window.sysSettings || {};
             try {
                 const raw = localStorage.getItem(`ks2_${branchId}_sys_settings`);
-                if (raw) sysSettings = JSON.parse(raw);
+                if (raw) sysSettings = Object.assign({}, sysSettings, JSON.parse(raw));
             } catch(e) {}
             
             const tableContainer = document.getElementById('posTableInputContainer');
             const tableSelect = document.getElementById('posTableSelect');
             
             if (sysSettings.toggleTableFeature && tableContainer && tableSelect) {
+                const prevSelected = tableSelect.value;
                 tableContainer.style.display = 'block'; 
                 let totalTables = parseInt(sysSettings.totalTables) || 20;
                 let prefix = sysSettings.tablePrefix || 'តុលេខ';
                 
-                tableSelect.innerHTML = '<option value="">-- សូមជ្រើសរើសតុ --</option>';
+                // បញ្ជីតុ VIP និងតុពិសេសបន្ថែម
+                let customTablesRaw = sysSettings.customTables !== undefined ? sysSettings.customTables : 'VIP 1, VIP 2, VIP 3';
+                let customTables = String(customTablesRaw)
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean);
+
+                let html = '<option value="">-- សូមជ្រើសរើសតុ / VIP --</option>';
+                if (customTables.length > 0) {
+                    html += '<optgroup label="🌟 តុ VIP / តុពិសេស">';
+                    customTables.forEach(ct => {
+                        const safeVal = ct.replace(/"/g, '&quot;');
+                        html += `<option value="${safeVal}">🌟 ${ct}</option>`;
+                    });
+                    html += '</optgroup>';
+                }
+
+                html += `<optgroup label="🪑 ${prefix} (១ ដល់ ${totalTables})">`;
                 for (let i = 1; i <= totalTables; i++) {
                     let tableName = `${prefix} ${i}`;
-                    tableSelect.innerHTML += `<option value="${tableName}">${tableName}</option>`;
+                    html += `<option value="${tableName}">${tableName}</option>`;
                 }
+                html += '</optgroup>';
+
+                tableSelect.innerHTML = html;
+                if (prevSelected) tableSelect.value = prevSelected;
             } else if (tableContainer) {
                 tableContainer.style.display = 'none'; 
             }
+        };
+
+        window.toggleAddCustomTableBox = function() {
+            const box = document.getElementById('posQuickAddTableBox');
+            const inp = document.getElementById('posNewCustomTableInput');
+            if (!box) return;
+            const isHidden = box.style.display === 'none';
+            box.style.display = isHidden ? 'flex' : 'none';
+            if (isHidden && inp) {
+                inp.value = '';
+                setTimeout(() => inp.focus(), 50);
+            }
+        };
+
+        window.addQuickCustomTable = async function() {
+            const inp = document.getElementById('posNewCustomTableInput');
+            const box = document.getElementById('posQuickAddTableBox');
+            const tableSelect = document.getElementById('posTableSelect');
+            if (!inp) return;
+            const newTable = inp.value.trim();
+            if (!newTable) return;
+
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            if (!window.sysSettings) window.sysSettings = {};
+            let currentCustom = window.sysSettings.customTables !== undefined ? window.sysSettings.customTables : 'VIP 1, VIP 2, VIP 3';
+            let list = String(currentCustom).split(',').map(s => s.trim()).filter(Boolean);
+
+            if (!list.some(t => t.toLowerCase() === newTable.toLowerCase())) {
+                list.push(newTable);
+            }
+            window.sysSettings.customTables = list.join(', ');
+            window.sysSettings.toggleTableFeature = true;
+            localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
+
+            window.loadTableSettingsForPOS();
+            if (tableSelect) {
+                tableSelect.value = newTable;
+                window.handleTableSelectionChange();
+            }
+            if (box) box.style.display = 'none';
+            inp.value = '';
+
+            if (typeof window.showToast === 'function') window.showToast(`✅ បានបន្ថែមតុ "${newTable}" រួចរាល់!`);
+            if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
         };
 
         window.handleTableSelectionChange = function() {
