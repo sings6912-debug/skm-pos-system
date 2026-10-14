@@ -119,6 +119,7 @@ window.logAction = function(type, itemName, qty, note, activeUserRef) {
     if(!window.sysSettings || !window.sysSettings.logs) return; 
     let executor = activeUserRef ? (activeUserRef.fullName ? activeUserRef.fullName : activeUserRef.username) : 'system'; 
     let dateStr = typeof window.fDate==='function' ? window.fDate() : new Date().toLocaleString();
+    if (!window.historyLog) window.historyLog = [];
     window.historyLog.unshift({ id: Date.now(), date: dateStr, type, itemName, qty, note: `${note} (${executor})` }); 
     if(window.historyLog.length > 500) window.historyLog.pop(); 
 };
@@ -797,8 +798,8 @@ window.sysI18n = {
 
         searchCustPlh: '🔍 搜索客户姓名或电话...',
         btnAddCust: '➕ 添加新客户',
-        btnExport JSON: '📤 导出 JSON',
-        btnImport Json: '📥 导入 JSON',
+        btnExportJson: '📤 导出 JSON',
+        btnImportJson: '📥 导入 JSON',
         thCustName: '客户姓名',
         thCustPhone: '联系电话',
         thCustPaid: '累计消费 (已付)',
@@ -1213,11 +1214,17 @@ window.changeAppLanguage = function(lang) {
 };
 
 // ==========================================
-// 4. SMART MULTI-LANGUAGE ALERT & CONFIRM DIALOG
+// 4. SMART MULTI-LANGUAGE ALERT & CONFIRM DIALOG (WITH ENTER KEY SUPPORT)
 // ==========================================
+window.ksMsgOpenedAt = 0;
+
 window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
     const box = document.getElementById('ksMsgBox');
-    if (!box) return alert(msg);
+    if (!box) {
+        if (typeof window.showToast === 'function') window.showToast(msg);
+        if (!isConfirm && typeof onConfirm === 'function') onConfirm();
+        return;
+    }
 
     const lang = localStorage.getItem('app_lang') || 'km';
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
@@ -1236,14 +1243,18 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
     const actContainer = document.getElementById('ksMsgActions');
     actContainer.innerHTML = '';
 
+    let primaryBtn = null;
+
     if (isConfirm) {
         const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
         cancelBtn.className = 'btn btn-outline';
         cancelBtn.innerText = d.btnCancel || 'បោះបង់';
         cancelBtn.onclick = () => { box.style.display = 'none'; };
         actContainer.appendChild(cancelBtn);
 
         const okBtn = document.createElement('button');
+        okBtn.type = 'button';
         okBtn.className = 'btn btn-success';
         okBtn.innerText = d.btnConfirmOk || 'យល់ព្រម';
         okBtn.onclick = () => {
@@ -1251,8 +1262,10 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
             if (typeof onConfirm === 'function') onConfirm();
         };
         actContainer.appendChild(okBtn);
+        primaryBtn = okBtn;
     } else {
         const okBtn = document.createElement('button');
+        okBtn.type = 'button';
         okBtn.className = 'btn btn-primary';
         okBtn.innerText = d.btnConfirmOk || 'យល់ព្រម';
         okBtn.onclick = () => {
@@ -1260,10 +1273,97 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
             if (typeof onConfirm === 'function') onConfirm();
         };
         actContainer.appendChild(okBtn);
+        primaryBtn = okBtn;
     }
 
+    window.ksMsgOpenedAt = Date.now();
     box.style.display = 'flex';
+
+    // ផ្តោត (Focus) ទៅលើប៊ូតុង "យល់ព្រម" ដោយស្វ័យប្រវត្តិ ដើម្បីឱ្យចុច Enter បានភ្លាមៗ
+    setTimeout(() => {
+        if (primaryBtn && box.style.display !== 'none') {
+            primaryBtn.focus();
+        }
+    }, 60);
 };
+
+// ប្រព័ន្ធចាប់យកប៊ូតុង Enter និង Escape គ្រប់ពេលដែលផ្ទាំង #ksMsgBox លោតឡើង (ទោះហៅចេញពី auth.js ឬ config.js ក៏ដើរដែរ)
+(function setupGlobalKsMsgKeyboardSupport() {
+    window.addEventListener('keydown', function(e) {
+        const box = document.getElementById('ksMsgBox');
+        if (!box) return;
+        const isVisible = box.style.display !== 'none' && window.getComputedStyle(box).display !== 'none';
+
+        if (isVisible) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                // ការពារកុំឱ្យការចុច Enter ពីប្រអប់ Login រំលងផ្ទាំងសារលឿនពេកមុន 120ms
+                if (Date.now() - (window.ksMsgOpenedAt || 0) < 120) return;
+
+                const buttons = box.querySelectorAll('#ksMsgActions button');
+                if (buttons.length > 0) {
+                    // ប៊ូតុងចុងក្រោយគឺជាប៊ូតុង "យល់ព្រម" ជានិច្ច
+                    buttons[buttons.length - 1].click();
+                } else {
+                    box.style.display = 'none';
+                }
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                const buttons = box.querySelectorAll('#ksMsgActions button');
+                if (buttons.length > 0) {
+                    // ប៊ូតុងទីមួយគឺជាប៊ូតុង "បោះបង់" (ឬ "យល់ព្រម" បើមានតែ១ប៊ូតុង)
+                    buttons[0].click();
+                } else {
+                    box.style.display = 'none';
+                }
+            }
+            return;
+        }
+
+        // គាំទ្រការចុច Enter នៅក្នុងប្រអប់ Login (Username / Password)
+        const authScreen = document.getElementById('authScreen');
+        if (authScreen && window.getComputedStyle(authScreen).display !== 'none') {
+            if (e.key === 'Enter') {
+                const activeEl = document.activeElement;
+                if (activeEl && (activeEl.id === 'loginUsername' || activeEl.id === 'loginPassword')) {
+                    e.preventDefault();
+                    window.ksMsgOpenedAt = Date.now();
+                    if (typeof window.handleLogin === 'function') window.handleLogin();
+                } else if (activeEl && (activeEl.id === 'resetUsername' || activeEl.id === 'resetPin' || activeEl.id === 'newResetPassword')) {
+                    e.preventDefault();
+                    window.ksMsgOpenedAt = Date.now();
+                    if (typeof window.handleResetPassword === 'function') window.handleResetPassword();
+                }
+            }
+        }
+    }, true);
+
+    // តាមដានរាល់ពេល #ksMsgBox បង្ហាញខ្លួន (MutationObserver) ដើម្បី Auto-Focus ប៊ូតុង "យល់ព្រម" ជានិច្ច
+    const attachObserver = () => {
+        const box = document.getElementById('ksMsgBox');
+        if (!box) return;
+        const observer = new MutationObserver(() => {
+            if (box.style.display !== 'none' && window.getComputedStyle(box).display !== 'none') {
+                window.ksMsgOpenedAt = Date.now();
+                setTimeout(() => {
+                    const buttons = box.querySelectorAll('#ksMsgActions button');
+                    if (buttons.length > 0) {
+                        buttons[buttons.length - 1].focus();
+                    }
+                }, 60);
+            }
+        });
+        observer.observe(box, { attributes: true, attributeFilter: ['style'] });
+    };
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', attachObserver);
+    } else {
+        attachObserver();
+    }
+})();
 
 // ==========================================
 // 5. LIVE SYNC STATUS INDICATOR
@@ -1473,7 +1573,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
 window.loadDataFromSupabase = async function(userAccountsRef) {
     try {
         if(!window.supabaseClient) return;
-        let { data, error } = await window.supabaseClient
+        let { data } = await window.supabaseClient
             .from('branch_store')
             .select('data_json')
             .eq('branch_id', window.SHOP_BRANCH_ID)
@@ -1770,7 +1870,8 @@ window.saveSysSettings = async function() {
 
     if(window.currentRole !== 'admin') {
         if(typeof window.ksMsg==='function') return window.ksMsg(d.errNoPermission || 'គ្មានសិទ្ធិ', d.errNoPermission || 'គ្មានសិទ្ធិ'); 
-        else return alert('គ្មានសិទ្ធិ');
+        else if(typeof window.showToast==='function') return window.showToast(d.errNoPermission || 'គ្មានសិទ្ធិ', true);
+        return;
     }
     
     const newStorePin = document.getElementById('setStorePin') ? document.getElementById('setStorePin').value.trim() : '1234';
@@ -1778,7 +1879,8 @@ window.saveSysSettings = async function() {
 
     if (adminAccount && String(adminAccount.pin).trim() === newStorePin) {
         if(typeof window.ksMsg==='function') return window.ksMsg("❌ លេខកូដហាង (Store PIN) មិនអាចដូចលេខ PIN របស់ Admin បានទេ! សូមជ្រើសរើសលេខផ្សេង។", "បម្រាមសុវត្ថិភាព");
-        else return alert("❌ លេខកូដហាង (Store PIN) មិនអាចដូចលេខ PIN របស់ Admin បានទេ!");
+        else if(typeof window.showToast==='function') return window.showToast("❌ លេខកូដហាង (Store PIN) មិនអាចដូចលេខ PIN របស់ Admin បានទេ!", true);
+        return;
     }
 
     if(!window.sysSettings) window.sysSettings = {};
@@ -1889,7 +1991,8 @@ window.verifyAndSaveLicense = async function() {
 
     if(!inputKey) {
         if(typeof window.ksMsg==='function') return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); 
-        else return alert('សូមបញ្ចូលលេខកូដ (License Key)!');
+        else if(typeof window.showToast==='function') return window.showToast('សូមបញ្ចូលលេខកូដ (License Key)!', true);
+        return;
     }
 
     if (btnUnlock) {
@@ -1909,14 +2012,14 @@ window.verifyAndSaveLicense = async function() {
         if (error || !data) { 
             if (btnUnlock) { btnUnlock.innerText = '🔓 បើកដំណើរការ'; btnUnlock.disabled = false; }
             if(typeof window.ksMsg==='function') return window.ksMsg('❌ លេខកូដ License មិនត្រឹមត្រូវ ឬមិនទាន់ត្រូវបានបើកសិទ្ធិ!', 'បរាជ័យ'); 
-            else return alert('❌ លេខកូដ License មិនត្រឹមត្រូវ ឬមិនទាន់ត្រូវបានបើកសិទ្ធិ!');
+            return;
         }
 
         const expiry = new Date(data.expires_at).getTime();
         if (expiry <= Date.now()) { 
             if (btnUnlock) { btnUnlock.innerText = '🔓 បើកដំណើរការ'; btnUnlock.disabled = false; }
             if(typeof window.ksMsg==='function') return window.ksMsg('❌ លេខកូដ License នេះបានផុតកំណត់ហើយ!', 'បរាជ័យ'); 
-            else return alert('❌ លេខកូដ License នេះបានផុតកំណត់ហើយ!');
+            return;
         }
 
         localStorage.setItem(window.getBranchKey('license_key'), inputKey); 
@@ -1936,7 +2039,6 @@ window.verifyAndSaveLicense = async function() {
     } catch(e) { 
         if (btnUnlock) { btnUnlock.innerText = '🔓 បើកដំណើរការ'; btnUnlock.disabled = false; }
         if(typeof window.ksMsg==='function') window.ksMsg('❌ មិនអាចភ្ជាប់ទៅកាន់ Server ដើម្បីផ្ទៀងផ្ទាត់ License បានទេ!', 'បរាជ័យ'); 
-        else alert('❌ មិនអាចភ្ជាប់ទៅកាន់ Server ដើម្បីផ្ទៀងផ្ទាត់ License បានទេ!');
     } 
 };
 
@@ -1945,7 +2047,7 @@ window.verifyAndSaveLicenseFromAbout = async function() {
     const inputKey = inputEl ? inputEl.value.trim() : ''; 
     if(!inputKey) {
         if(typeof window.ksMsg==='function') return window.ksMsg('សូមបញ្ចូលលេខកូដ (License Key)!'); 
-        else return alert('សូមបញ្ចូលលេខកូដ (License Key)!');
+        return;
     }
 
     try { 
@@ -1959,13 +2061,13 @@ window.verifyAndSaveLicenseFromAbout = async function() {
 
         if (error || !data) { 
             if(typeof window.ksMsg==='function') return window.ksMsg('❌ លេខកូដ License មិនត្រឹមត្រូវ ឬមិនទាន់ត្រូវបានបើកសិទ្ធិ!', 'បរាជ័យ'); 
-            else return alert('❌ លេខកូដ License មិនត្រឹមត្រូវ ឬមិនទាន់ត្រូវបានបើកសិទ្ធិ!');
+            return;
         }
 
         const expiry = new Date(data.expires_at).getTime();
         if (expiry <= Date.now()) { 
             if(typeof window.ksMsg==='function') return window.ksMsg('❌ លេខកូដ License នេះបានផុតកំណត់ហើយ!', 'បរាជ័យ'); 
-            else return alert('❌ លេខកូដ License នេះបានផុតកំណត់ហើយ!');
+            return;
         }
 
         localStorage.setItem(window.getBranchKey('license_key'), inputKey); 
@@ -1977,7 +2079,6 @@ window.verifyAndSaveLicenseFromAbout = async function() {
                 location.reload(); 
             }); 
         } else {
-            alert('✅ សិទ្ធិប្រើប្រាស់ត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!');
             location.reload();
         }
 
@@ -2059,14 +2160,14 @@ window.openShopNameModal = function() {
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
     if(window.currentRole !== 'admin') {
         if(typeof window.ksMsg==='function') return window.ksMsg(d.errAdminOnlyLogo || 'មានតែ Admin ប៉ុណ្ណោះដែលអាចប្តូរឈ្មោះបាន!', d.errNoPermission || 'គ្មានសិទ្ធិ'); 
-        else return alert('គ្មានសិទ្ធិ');
+        return;
     }
-    document.getElementById('newShopNameInput').value = window.shopName; 
-    document.getElementById('newShopPhoneInput').value = window.shopPhone; 
-    document.getElementById('newShopAddressInput').value = window.shopAddress; 
-    document.getElementById('newShopTelegramInput').value = window.shopTelegram; 
-    document.getElementById('newBotTokenInput').value = window.telegramBotToken; 
-    document.getElementById('newChatIdInput').value = window.telegramChatId; 
+    document.getElementById('newShopNameInput').value = window.shopName || ''; 
+    document.getElementById('newShopPhoneInput').value = window.shopPhone || ''; 
+    document.getElementById('newShopAddressInput').value = window.shopAddress || ''; 
+    document.getElementById('newShopTelegramInput').value = window.shopTelegram || ''; 
+    document.getElementById('newBotTokenInput').value = window.telegramBotToken || ''; 
+    document.getElementById('newChatIdInput').value = window.telegramChatId || ''; 
     
     const preview = document.getElementById('shopLogoPreview'); 
     if(window.shopLogo) { preview.src = window.shopLogo; preview.style.display = 'block'; } else preview.style.display = 'none'; 
@@ -2085,7 +2186,7 @@ window.closeShopNameModal = function() {
 window.handleShopLogo = function(e) { 
     const file = e.target.files[0]; if(!file) return; 
     const reader = new FileReader(); 
-    reader.onload = (e) => { 
+    reader.onload = (ev) => { 
         const img = new Image(); 
         img.onload = () => { 
             const canvas = document.createElement('canvas'); const max = 200; let w = img.width, h = img.height; 
@@ -2098,7 +2199,7 @@ window.handleShopLogo = function(e) {
             document.getElementById('shopLogoPreview').src = globalThis.shopLogo; 
             document.getElementById('shopLogoPreview').style.display = 'block'; 
         }; 
-        img.src = e.target.result; 
+        img.src = ev.target.result; 
     }; 
     reader.readAsDataURL(file); 
 };
@@ -2106,7 +2207,7 @@ window.handleShopLogo = function(e) {
 window.handleShopQR = function(e) { 
     const file = e.target.files[0]; if(!file) return; 
     const reader = new FileReader(); 
-    reader.onload = (e) => { 
+    reader.onload = (ev) => { 
         const img = new Image(); 
         img.onload = () => { 
             const canvas = document.createElement('canvas'); const max = 300; let w = img.width, h = img.height; 
@@ -2119,7 +2220,7 @@ window.handleShopQR = function(e) {
             document.getElementById('shopQRPreview').src = globalThis.shopQR; 
             document.getElementById('shopQRPreview').style.display = 'block'; 
         }; 
-        img.src = e.target.result; 
+        img.src = ev.target.result; 
     }; 
     reader.readAsDataURL(file); 
 };
@@ -2201,11 +2302,11 @@ window.resetDashboardDate = function() {
 // ==========================================
 window.renderDashboard = function() {
     try {
-        let tItems = window.inventory.length;
+        let tItems = (window.inventory || []).length;
         let tQty = 0, estRev = 0, lowItems = [], expItems = []; 
         const nowMs = Date.now();
 
-        window.inventory.forEach(p => { 
+        (window.inventory || []).forEach(p => { 
             if(!p) return; 
             let q = parseInt(p.qty) || 0;
             tQty += q;
@@ -2232,7 +2333,7 @@ window.renderDashboard = function() {
         const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity;
         let totalSalesRevenue = 0, totalUnpaid = 0, totalExpenses = 0, totalCOGS = 0, salesMap = {};
         
-        window.invoices.forEach(inv => { 
+        (window.invoices || []).forEach(inv => { 
             if (!inv) return;
             let invTime = inv.timestamp || parseInt(String(inv.id).split('_')[1]) || new Date(inv.date || 0).getTime() || 0; 
             if (invTime >= fromTime && invTime <= toTime) { 
@@ -2263,7 +2364,7 @@ window.renderDashboard = function() {
             } 
         });
 
-        window.expenses.forEach(exp => {
+        (window.expenses || []).forEach(exp => {
             if (!exp) return;
             let expTime = exp.timestamp || new Date(exp.date || 0).getTime() || 0;
             if(expTime >= fromTime && expTime <= toTime) totalExpenses += (parseFloat(exp.amount) || 0);
@@ -2368,7 +2469,7 @@ window.renderHistory = function() {
     const lang = localStorage.getItem('app_lang') || 'km';
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
 
-    let filtered = window.historyLog.filter(h => 
+    let filtered = (window.historyLog || []).filter(h => 
         (String(h.itemName).toLowerCase().includes(searchVal) || (h.note && String(h.note).toLowerCase().includes(searchVal))) && 
         (h.id >= fromTime && h.id <= toTime)
     );
@@ -2402,7 +2503,7 @@ window.renderHistory = function() {
         let tName = h.type === 'sale' ? (d.logSale||'លក់ចេញ') : (h.type === 'add' ? (d.logAdd||'នាំចូលថ្មី') : (d.logUpdate||'កែប្រែទិន្នន័យ')); 
         let bClass = h.type === 'sale' ? 'badge-sale' : (h.type === 'add' ? 'badge-add' : 'badge-update'); 
         let catStr = '-', unitStr = ''; 
-        const pItem = window.inventory.find(i => i.name === h.itemName); 
+        const pItem = (window.inventory || []).find(i => i && i.name === h.itemName); 
         if(pItem) { catStr = pItem.category||'-'; unitStr = pItem.unit ? ' ' + pItem.unit : ''; }
         
         let qtyDisplay = h.qty === 0 ? '0' : `${h.qty > 0 ? '+' : (h.type === 'sale'?'-':'')}${Math.abs(h.qty)}${unitStr}`; 
@@ -2458,7 +2559,7 @@ window.importCSV = function(e) {
                 const name = row[1].replace(/(^"|"$)/g, '').trim(); 
                 if(!name) continue; 
                 
-                const existing = window.inventory.find(p => p.id === id || p.name === name);
+                const existing = (window.inventory || []).find(p => p && (p.id === id || p.name === name));
                 
                 let conditionVal = '';
                 let expiryVal = '';
@@ -2765,23 +2866,23 @@ window.onload = async () => {
                 }
 
                 // ដំណើរការគូរអេក្រង់ឡើងវិញពេលមានការកាត់ស្តុក
-        if (shouldRenderInventory) {
-            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
-            const activeTab = document.querySelector('.tab-content.active');
-            if (activeTab && activeTab.id === 'tab-inventory' && typeof window.renderInventory === 'function') window.renderInventory();
-            if (activeTab && activeTab.id === 'tab-pos' && typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
-            if (activeTab && activeTab.id === 'tab-dashboard' && typeof window.renderDashboard === 'function') window.renderDashboard();
-        }
-    }
-} catch(e) {}
-}, 30000); 
+                if (shouldRenderInventory) {
+                    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+                    const activeTab = document.querySelector('.tab-content.active');
+                    if (activeTab && activeTab.id === 'tab-inventory' && typeof window.renderInventory === 'function') window.renderInventory();
+                    if (activeTab && activeTab.id === 'tab-pos' && typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+                    if (activeTab && activeTab.id === 'tab-dashboard' && typeof window.renderDashboard === 'function') window.renderDashboard();
+                }
+            }
+        } catch(e) {}
+    }, 30000); 
 
-/* 🌟 បន្ថែមថ្មី៖ ដំណើរការប្រព័ន្ធថែទាំទិន្នន័យស្វ័យប្រវត្តិពេលបើកវេបសាយ ៣ វិនាទីក្រោយ */
-setTimeout(() => {
-    if(typeof window.runSmartDatabaseMaintenance === 'function') {
-        window.runSmartDatabaseMaintenance();
-    }
-}, 3000);
+    /* 🌟 បន្ថែមថ្មី៖ ដំណើរការប្រព័ន្ធថែទាំទិន្នន័យស្វ័យប្រវត្តិពេលបើកវេបសាយ ៣ វិនាទីក្រោយ */
+    setTimeout(() => {
+        if(typeof window.runSmartDatabaseMaintenance === 'function') {
+            window.runSmartDatabaseMaintenance();
+        }
+    }, 3000);
 };
 
 // ==========================================
@@ -2803,7 +2904,7 @@ window.printZReport = function() {
     
     let reportDateStr = (dateFrom && dateFrom.value) ? `${new Date(fromTime).toLocaleDateString('km-KH')} - ${new Date(toTime).toLocaleDateString('km-KH')}` : window.fDate().split(' ')[0];
 
-    window.invoices.forEach(inv => { 
+    (window.invoices || []).forEach(inv => { 
         if (!inv) return;
         let invTime = inv.timestamp || parseInt(String(inv.id).split('_')[1]) || new Date(inv.date || 0).getTime() || 0; 
         if (invTime >= fromTime && invTime <= toTime) { 
@@ -2823,7 +2924,7 @@ window.printZReport = function() {
         } 
     });
 
-    window.expenses.forEach(exp => {
+    (window.expenses || []).forEach(exp => {
         if (!exp) return;
         let expTime = exp.timestamp || new Date(exp.date || 0).getTime() || 0;
         if(expTime >= fromTime && expTime <= toTime) totalExpenses += (parseFloat(exp.amount) || 0);
