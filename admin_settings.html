@@ -519,7 +519,7 @@
         <!-- 🖨️ TAB 8: PRINTER & RECEIPT DOWNLOAD SIZE CUSTOMIZER -->
         <div id="tab-printer" class="tab-pane">
             <div class="section-title" style="color: var(--brand-cyan); border-bottom: 2px dashed var(--brand-cyan); padding-bottom: 10px;">
-                <i class="fa-solid fa-print"></i> 8. កំណត់ខ្នាតម៉ាស៊ីនព្រីន & ទំហំទាញយករូបវិក្កយបត្រ (Printer & PNG Size)
+                <i class="fa-solid fa-print"></i> 8.1 កំណត់ខ្នាតម៉ាស៊ីនព្រីនវិក្កយបត្រគោល (Main Printer)
             </div>
             <p class="help-text">ជ្រើសរើសខ្នាតក្រដាសស្តង់ដារ ឬសេរេបង្កើតទំហំថ្មីតាមម៉ាស៊ីនព្រីនរបស់អ្នកដោយសេរី (សម្រាប់ទាំងការបោះពុម្ពវិក្កយបត្រ និងការទាញយករូបភាព PNG)។</p>
 
@@ -616,6 +616,80 @@
                     <div id="adminReceiptLivePreview" style="background: #ffffff; color: #000000; padding: 16px; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: left; width: 380px; max-width: 100%; font-size: 12px; line-height: 1.4;"></div>
                 </div>
             </div>
+
+            <!-- 🖨️ 8.2 MULTI-PRINTER ROUTING SECTION -->
+            <div style="height: 1px; background: var(--border-color); margin: 30px 0;"></div>
+            
+            <div class="section-title" style="color: #f59e0b; border-bottom: 2px dashed #f59e0b; padding-bottom: 10px;">
+                <i class="fa-solid fa-route"></i> 8.2 កំណត់ម៉ាស៊ីនព្រីនតាមផ្នែក (Multi-Printer Routing)
+            </div>
+            <p class="help-text">រៀបចំម៉ាស៊ីនព្រីនបន្ថែមសម្រាប់ ផ្ទះបាយ(Kitchen) បារ(Bar) ដើម្បីព្រីនបញ្ជា (Order) ទៅតាមផ្នែកនីមួយៗក្នុងពេលតែមួយ។</p>
+
+            <div class="toggle-row" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);">
+                <span style="color: var(--brand-dark); font-weight: bold;"><i class="fa-solid fa-network-wired"></i> បើកមុខងារព្រីនបំបែកតាមផ្នែក (Enable Multi-Printer)</span>
+                <input type="checkbox" id="toggleMultiPrinter" style="width: 20px; height: 20px; accent-color: #f59e0b; cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
+
+            <div class="layout-wrapper" style="gap: 20px; max-width: 100%; padding: 0; flex-wrap: wrap; margin-top: 15px;">
+                
+                <!-- ផ្នែកទី១៖ បញ្ជីម៉ាស៊ីនព្រីន -->
+                <div class="section-box" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                        <div style="font-size: 14px; font-weight: 900; color: var(--text-dark);"><i class="fa-solid fa-server" style="color: #f59e0b;"></i> បញ្ជីម៉ាស៊ីនព្រីន</div>
+                        <button class="btn-action" style="background: #f59e0b; color: white; padding: 6px 12px; font-size: 12px;" onclick="showAddPrinterForm()">
+                            <i class="fa-solid fa-plus"></i> បន្ថែមម៉ាស៊ីន
+                        </button>
+                    </div>
+
+                    <!-- ទម្រង់បញ្ចូលម៉ាស៊ីនថ្មី (លាក់សិន) -->
+                    <div id="addPrinterForm" style="display: none; background: rgba(0,0,0,0.02); padding: 12px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 15px;">
+                        <input type="text" id="newPrinterName" class="input-st" placeholder="ឈ្មោះម៉ាស៊ីន (ឧ. Kitchen)" style="margin-bottom: 8px; padding: 8px; font-size: 13px;">
+                        <select id="newPrinterType" class="input-st" style="margin-bottom: 8px; padding: 8px; font-size: 13px;" onchange="document.getElementById('newPrinterIpContainer').style.display = this.value === 'network' ? 'block' : 'none'">
+                            <option value="local">USB / Bluetooth / Local</option>
+                            <option value="network">Network (IP Address)</option>
+                        </select>
+                        <div id="newPrinterIpContainer" style="display: none; margin-bottom: 8px;">
+                            <input type="text" id="newPrinterIp" class="input-st" placeholder="IP Address (ឧ. 192.168.1.100)" style="padding: 8px; font-size: 13px;">
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="btn-action" style="flex: 1; background: var(--success); color: white; padding: 8px; font-size: 12px; justify-content: center;" onclick="saveNewDepartmentPrinter()">រក្សាទុក</button>
+                            <button class="btn-action" style="flex: 1; background: var(--store-bg); border: 1px solid var(--border-color); color: var(--text-dark); padding: 8px; font-size: 12px; justify-content: center;" onclick="document.getElementById('addPrinterForm').style.display='none'">បោះបង់</button>
+                        </div>
+                    </div>
+                    
+                    <div id="departmentPrintersList" style="display: flex; flex-direction: column; gap: 10px;">
+                        <!-- JS Will render printers here -->
+                    </div>
+                </div>
+
+                <!-- ផ្នែកទី២៖ ភ្ជាប់ប្រភេទទៅម៉ាស៊ីនព្រីន -->
+                <div class="section-box" style="flex: 1; min-width: 300px; margin-bottom: 0;">
+                    <div style="font-size: 14px; font-weight: 900; color: var(--text-dark); margin-bottom: 5px;"><i class="fa-solid fa-link" style="color: #f59e0b;"></i> ភ្ជាប់ប្រភេទមុខម្ហូប (Category Routing)</div>
+                    <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 15px;">កំណត់ថាតើទំនិញក្នុងក្រុមនីមួយៗត្រូវលោតទៅព្រីននៅម៉ាស៊ីនមួយណាពេលកម្ម៉ង់។</p>
+                    
+                    <div style="overflow-x: auto;">
+                        <table style="width: 100%; text-align: left; border-collapse: collapse; font-size: 13px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--border-color); color: var(--text-muted);">
+                                    <th style="padding: 8px 4px; width: 45%;">ប្រភេទ (Category)</th>
+                                    <th style="padding: 8px 4px;">ម៉ាស៊ីនគោលដៅ (Send to)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="categoryRoutingList">
+                                <!-- JS Will render categories here -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <div style="margin-top: 15px; border-top: 1px dashed var(--border-color); padding-top: 15px;">
+                        <div class="toggle-row" style="padding: 8px; margin-bottom: 8px; border: none; background: transparent;">
+                            <span style="font-size: 12px; color: var(--text-dark); font-weight: bold;">ព្រីនវិក្កយបត្រ (Cashier) និងបញ្ជា (Kitchen) ក្នុងពេលតែមួយ</span>
+                            <input type="checkbox" id="printAllSync" style="width: 16px; height: 16px; accent-color: #f59e0b; cursor: pointer;" onchange="saveAdminSettings()">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </div>
@@ -690,6 +764,11 @@
     let showAllMenuScripts = false;
     let showAllPosScripts = false;
     let customPrinterPresets = [];
+
+    // អថេរថ្មីសម្រាប់ Multi-Printer
+    let deptPrinters = [];
+    let categoryRouting = {};
+    let posCategories = [];
 
     const DEFAULT_RECEIPT_PRESETS = {
         '80mm': { paperMm: 80, bodyMm: 76, padMm: 4, downloadWidthPx: 380, downloadScale: 2, fontPx: 12, titlePx: 16, logoPx: 100, qrPx: 170 },
@@ -973,6 +1052,19 @@
                 applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[mode] || DEFAULT_RECEIPT_PRESETS['80mm']);
             }
 
+            // Load Multi-Printer settings ពី LocalStorage
+            if (localSys.deptPrinters) deptPrinters = localSys.deptPrinters;
+            if (localSys.categoryRouting) categoryRouting = localSys.categoryRouting;
+            if (document.getElementById('toggleMultiPrinter')) document.getElementById('toggleMultiPrinter').checked = !!localSys.toggleMultiPrinter;
+            if (document.getElementById('printAllSync')) document.getElementById('printAllSync').checked = !!localSys.printAllSync;
+            
+            try {
+                let cats = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_categories`));
+                if (cats && Array.isArray(cats)) posCategories = cats;
+            } catch(e) {}
+            
+            renderDeptPrinters();
+
             renderMenuScripts(); renderPosScripts(); renderPromoCodesList();
 
             if (supabaseClient && navigator.onLine) {
@@ -1039,6 +1131,15 @@
                         applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[mode] || DEFAULT_RECEIPT_PRESETS['80mm']);
                     }
 
+                    // Load Multi-Printer settings ពី Cloud (Supabase)
+                    if(sys.deptPrinters) deptPrinters = sys.deptPrinters;
+                    if(sys.categoryRouting) categoryRouting = sys.categoryRouting;
+                    if (document.getElementById('toggleMultiPrinter')) document.getElementById('toggleMultiPrinter').checked = !!sys.toggleMultiPrinter;
+                    if (document.getElementById('printAllSync')) document.getElementById('printAllSync').checked = !!sys.printAllSync;
+                    
+                    if (d.categories && Array.isArray(d.categories)) posCategories = d.categories;
+                    renderDeptPrinters();
+
                     if(sys.orderTelegramBotToken || d.telegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken || d.telegramBotToken || '';
                     if(sys.orderTelegramChatId || d.telegramChatId) document.getElementById('setOrderTelegramChatId').value = sys.orderTelegramChatId || d.telegramChatId || '';
                     if(sys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = sys.serviceTelegramBotToken || '';
@@ -1104,6 +1205,12 @@
                 d.sysSettings.receiptFooter = document.getElementById('setAdminReceiptFooter').value.trim();
             }
 
+            // រក្សាទុក Multi-Printer settings
+            d.sysSettings.deptPrinters = deptPrinters;
+            d.sysSettings.categoryRouting = categoryRouting;
+            d.sysSettings.toggleMultiPrinter = document.getElementById('toggleMultiPrinter')?.checked || false;
+            d.sysSettings.printAllSync = document.getElementById('printAllSync')?.checked || false;
+
             let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim();
             let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
             let servTok = document.getElementById('setServiceTelegramBotToken').value.trim();
@@ -1132,6 +1239,110 @@
             }
             showToast('រក្សាទុកបានជោគជ័យ! (Saved!)');
         } catch(e) { showToast('Save Failed: ' + e.message, true); console.error(e); }
+    }
+
+    // ============================================
+    // 🖨️ អនុគមន៍សម្រាប់ Multi-Printer Routing
+    // ============================================
+    
+    function renderDeptPrinters() {
+        const list = document.getElementById('departmentPrintersList');
+        if (!list) return;
+        list.innerHTML = '';
+        if (deptPrinters.length === 0) {
+            list.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 10px;">មិនទាន់មានម៉ាស៊ីនព្រីនទេ។ សូមចុចបន្ថែម!</div>';
+        } else {
+            deptPrinters.forEach((p, idx) => {
+                list.innerHTML += `
+                    <div style="background: var(--card-bg); border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center; border-left: 4px solid ${p.color || '#cbd5e1'}; box-shadow: 0 2px 5px rgba(0,0,0,0.02);">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <div style="width: 38px; height: 38px; background: rgba(0,0,0,0.04); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: ${p.color || '#333'}; font-size: 16px;">
+                                <i class="fa-solid ${p.icon || 'fa-print'}"></i>
+                            </div>
+                            <div>
+                                <div style="font-size: 13px; font-weight: 900; color: var(--brand-dark);">${p.name}</div>
+                                <div style="font-size: 11px; color: var(--text-muted);">${p.type === 'network' ? '<i class="fa-solid fa-wifi" style="font-size:9px;"></i> IP: ' + p.ip : '<i class="fa-brands fa-usb" style="font-size:10px;"></i> Local / USB'}</div>
+                            </div>
+                        </div>
+                        <button class="btn-action" style="background: transparent; color: var(--danger); border: none; box-shadow: none; padding: 6px;" onclick="deleteDepartmentPrinter(${idx})"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                `;
+            });
+        }
+        renderCategoryRouting();
+    }
+
+    function showAddPrinterForm() {
+        document.getElementById('addPrinterForm').style.display = 'block';
+        document.getElementById('newPrinterName').value = '';
+        document.getElementById('newPrinterType').value = 'local';
+        document.getElementById('newPrinterIpContainer').style.display = 'none';
+        document.getElementById('newPrinterIp').value = '';
+    }
+
+    function saveNewDepartmentPrinter() {
+        let name = document.getElementById('newPrinterName').value.trim();
+        if(!name) return showToast('សូមវាយឈ្មោះម៉ាស៊ីន!', true);
+        
+        let type = document.getElementById('newPrinterType').value;
+        let ip = type === 'network' ? document.getElementById('newPrinterIp').value.trim() : 'default';
+        if(type === 'network' && !ip) return showToast('សូមវាយ IP Address!', true);
+
+        let id = 'printer_' + Date.now();
+        let icon = name.toLowerCase().includes('bar') || name.includes('ភេសជ្ជៈ') || name.includes('កាហ្វេ') ? 'fa-coffee' : (name.toLowerCase().includes('kitchen') || name.includes('បាយ') ? 'fa-fire-burner' : 'fa-print');
+        let color = icon === 'fa-coffee' ? '#f59e0b' : (icon === 'fa-fire-burner' ? 'var(--danger)' : 'var(--brand-cyan)');
+        
+        deptPrinters.push({ id, name, type, ip, icon, color });
+        
+        document.getElementById('addPrinterForm').style.display = 'none';
+        renderDeptPrinters();
+        saveAdminSettings();
+        showToast('បានបន្ថែមម៉ាស៊ីនព្រីនថ្មី!');
+    }
+
+    function deleteDepartmentPrinter(idx) {
+        deptPrinters.splice(idx, 1);
+        renderDeptPrinters();
+        saveAdminSettings();
+        showToast("បានលុបម៉ាស៊ីនព្រីនជោគជ័យ!");
+    }
+
+    function renderCategoryRouting() {
+        const list = document.getElementById('categoryRoutingList');
+        if (!list) return;
+        list.innerHTML = '';
+        
+        if (posCategories.length === 0) {
+            list.innerHTML = '<tr><td colspan="2" style="font-size:12px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 8px;">មិនទាន់មានប្រភេទមុខម្ហូបក្នុងប្រព័ន្ធទេ។<br>សូមបង្កើតក្នុងផ្ទាំង POS ជាមុនសិន។</td></tr>';
+            return;
+        }
+
+        posCategories.forEach(cat => {
+            let catName = typeof cat === 'string' ? cat : (cat.name || 'Unknown');
+            let catId = typeof cat === 'string' ? cat : (cat.id || catName);
+            let selectedPrinter = categoryRouting[catId] || 'none';
+            
+            let selectHtml = `<select class="input-st" style="padding: 6px; font-size: 12px; margin-bottom: 0; background: rgba(0,0,0,0.02);" onchange="updateCategoryRoute('${catId}', this.value)">`;
+            
+            selectHtml += `<option value="none" ${selectedPrinter === 'none' ? 'selected' : ''}>-- មិនព្រីន --</option>`;
+            selectHtml += `<option value="cashier" ${selectedPrinter === 'cashier' ? 'selected' : ''}>👉 Cashier (គិតលុយ)</option>`;
+            deptPrinters.forEach(p => {
+                selectHtml += `<option value="${p.id}" ${selectedPrinter === p.id ? 'selected' : ''}>🖨️ ${p.name}</option>`;
+            });
+            selectHtml += `</select>`;
+
+            list.innerHTML += `
+                <tr style="border-bottom: 1px solid rgba(0,0,0,0.04);">
+                    <td style="padding: 10px 4px; font-size: 13px; font-weight: 800; color: var(--brand-dark);">${catName}</td>
+                    <td style="padding: 10px 4px;">${selectHtml}</td>
+                </tr>
+            `;
+        });
+    }
+
+    function updateCategoryRoute(catId, printerId) {
+        categoryRouting[catId] = printerId;
+        saveAdminSettings();
     }
 
     function onPromoTypeChange() {
