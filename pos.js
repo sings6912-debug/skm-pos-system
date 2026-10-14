@@ -1,1648 +1,786 @@
-<!DOCTYPE html>
-<html lang="km">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Master POS & Menu</title>
+/**
+ * pos.js - គ្រប់គ្រងប្រព័ន្ធលក់ កន្ត្រកទំនិញ ការស្កេនបាកូដ និងការបោះពុម្ពវិក្កយបត្រ (Point of Sale)
+ */
+
+window.currentPOSView = 'grid';
+window.currentPosCategory = 'all';
+window.cartFinalUsd = 0;
+window.cartFinalRiel = 0;
+window.cartRate = 4000;
+
+// អនុគមន៍ជំនួយសម្រាប់បង្ហាញសារជូនដំណឹងដោយសុវត្ថិភាព (មិនប្រើ alert/confirm)
+function notifyPosUser(msg, title = 'ជូនដំណឹង', isError = false) {
+    if (typeof window.ksMsg === 'function') {
+        window.ksMsg(msg, title);
+    } else if (typeof window.showToast === 'function') {
+        window.showToast(msg, isError);
+    } else {
+        console.log(`[${title}] ${msg}`);
+    }
+}
+
+window.setPosCategory = function(cat) { 
+    window.currentPosCategory = cat; 
+    window.updateCategories(); 
+    window.renderPOSProducts(); 
+};
+
+window.updateCategories = function() {
+    let activeItems = (window.inventory || []).filter(p => p !== null && typeof p === 'object');
+    const cats = [...new Set(activeItems.filter(p => p.category).map(p => p.category))];
     
-    <!-- Supabase Library -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    const filter = document.getElementById('filterCategory'); 
+    if (filter) {
+        const currentVal = filter.value || 'all';
+        filter.innerHTML = '<option value="all">គ្រប់ប្រភេទ</option>' + cats.map(c => {
+            const safeAttr = String(c).replace(/"/g, '&quot;');
+            return `<option value="${safeAttr}">${c}</option>`;
+        }).join('');
+        filter.value = currentVal;
+    }
     
-    <!-- FontAwesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    const catList = document.getElementById('catList');
+    if (catList) {
+        catList.innerHTML = cats.map(c => `<option value="${String(c).replace(/"/g, '&quot;')}">${c}</option>`).join('');
+    }
     
-    <!-- Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-
-    <style>
-        :root {
-            --brand-dark: #1d162d;
-            --brand-cyan: #06b6d4;
-            --store-bg: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-dark: #1e293b;
-            --text-muted: #64748b;
-            --border-color: #e5e7eb;
-            --success: #22c55e;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-        }
-
-        [data-admin-theme="anime"] {
-            --brand-dark: #0f172a;
-            --brand-cyan: #8b5cf6;
-            --store-bg: #e0e7ff;
-            --card-bg: rgba(255, 255, 255, 0.95);
-            --text-dark: #1e1b4b;
-            --text-muted: #6366f1;
-            --border-color: #c7d2fe;
-            --success: #0ea5e9;
-            --danger: #f43f5e;
-            --warning: #f59e0b;
-        }
-
-        [data-admin-theme="pharmacy"] {
-            --brand-dark: #0f766e;
-            --brand-cyan: #10b981;
-            --store-bg: #f0fdf4;
-            --card-bg: #ffffff;
-            --text-dark: #134e4a;
-            --text-muted: #64748b;
-            --border-color: #a7f3d0;
-            --success: #059669;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-        }
-
-        [data-admin-theme="cafe"] {
-            --brand-dark: #3e2723;
-            --brand-cyan: #d4a373;
-            --store-bg: #f5f5dc;
-            --card-bg: #ffffff;
-            --text-dark: #4e342e;
-            --text-muted: #8d6e63;
-            --border-color: #d7ccc8;
-            --success: #2e7d32;
-            --danger: #c62828;
-            --warning: #f57f17;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Battambang', sans-serif; }
-        body { background-color: var(--store-bg); color: var(--text-dark); min-height: 100vh; padding: 20px; transition: background-color 0.4s ease, color 0.4s ease; }
-
-        .theme-selector {
-            display: flex; gap: 10px; margin-bottom: 25px; flex-wrap: wrap; justify-content: center;
-            background: rgba(0,0,0,0.03); padding: 12px; border-radius: 16px; border: 1px dashed var(--border-color);
-        }
-        .theme-btn {
-            padding: 8px 16px; border-radius: 20px; border: 2px solid transparent; background: var(--card-bg);
-            color: var(--text-muted); cursor: pointer; font-weight: 800; font-size: 13px; transition: 0.3s;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
-        }
-        .theme-btn.active { border-color: var(--brand-cyan); color: var(--brand-cyan); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-
-        .section-box { background: rgba(0,0,0,0.015); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 20px; transition: 0.3s; }
-        .section-title { font-size: 16px; font-weight: 900; color: var(--brand-cyan); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 10px; }
-
-        .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 6px; color: var(--text-dark); }
-        .input-st { 
-            width: 100%; padding: 12px 15px; border-radius: 12px; border: 1px solid var(--border-color); 
-            background: var(--store-bg); color: var(--text-dark); font-size: 14px; outline: none; font-weight: 600; 
-            transition: all 0.3s ease;
-        }
-        .input-st:focus { border-color: var(--brand-cyan); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); background: #fff; }
-
-        .btn-save { 
-            background: var(--success); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; 
-            font-size: 16px; font-weight: 900; cursor: pointer; box-shadow: 0 10px 20px rgba(0,0,0,0.1); transition: transform 0.2s; margin-top: 20px; letter-spacing: 0.5px;
-        }
-        .btn-save:active { transform: scale(0.98); }
-
-        .preview-box { margin-top: 8px; text-align: center; background: var(--store-bg); padding: 8px; border-radius: 12px; border: 1px dashed var(--border-color); }
-        .preview-box img { max-height: 120px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
-
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--store-bg); padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; font-size: 13px; font-weight: 800; border: 1px solid var(--border-color); }
-
-        #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background: var(--success); color: white; padding: 12px 25px; border-radius: 9999px; font-size: 14px; font-weight: 800; z-index: 9999; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
-        #toast.show { transform: translate(-50%, 0); }
-        
-        .action-btn-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; }
-        .btn-action { 
-            padding: 10px 18px; font-size: 13px; font-weight: 800; border-radius: 10px; 
-            cursor: pointer; display: inline-flex; align-items: center; gap: 6px; 
-            transition: all 0.2s; border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-        }
-        
-        .script-list-container { display: flex; flex-direction: column; gap: 10px; }
-        .script-item { 
-            display: flex; align-items: center; justify-content: space-between; 
-            background: #ffffff; padding: 14px 18px; border-radius: 12px; 
-            border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
-        }
-        .script-name { font-weight: 800; font-size: 14px; color: var(--brand-dark); word-break: break-all; }
-        .script-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
-        
-        .btn-script { 
-            padding: 8px 16px; font-size: 12px; cursor: pointer; border-radius: 20px; 
-            border: 2px solid transparent; font-weight: 800; transition: all 0.2s; background: transparent;
-        }
-        .btn-toggle-on { color: var(--success); border-color: var(--success); background: rgba(34, 197, 94, 0.05); }
-        .btn-toggle-off { color: var(--text-muted); border-color: var(--border-color); background: var(--store-bg); }
-        
-        .btn-delete { 
-            color: white; background: var(--danger); border-radius: 50%; width: 32px; height: 32px;
-            display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: 0.2s; padding: 0;
-        }
-        .help-text { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; }
-
-        :root { --tab-active-bg: var(--brand-cyan); --tab-active-text: #ffffff; }
-        [data-admin-theme="anime"] { --tab-active-bg: linear-gradient(135deg, #8b5cf6, #0ea5e9); --tab-active-text: #ffffff; }
-        [data-admin-theme="pharmacy"] { --tab-active-bg: var(--success); --tab-active-text: #ffffff; }
-        [data-admin-theme="cafe"] { --tab-active-bg: var(--brand-cyan); --tab-active-text: #ffffff; }
-
-        .layout-wrapper { display: flex; gap: 25px; max-width: 1300px; margin: 0 auto; align-items: flex-start; }
-        
-        .sidebar { 
-            width: 300px; flex-shrink: 0; background: var(--card-bg); 
-            border-radius: 20px; padding: 25px; border: 1px solid var(--border-color); 
-            position: sticky; top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            backdrop-filter: blur(10px); 
-        }
-        
-        .content-area { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
-        
-        .sidebar-nav { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
-        .tab-btn { 
-            display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 18px; 
-            border-radius: 12px; cursor: pointer; color: var(--text-dark); background: transparent; 
-            border: 1px solid transparent; text-align: left; font-weight: 800; font-size: 14px; transition: all 0.3s ease; 
-        }
-        .tab-btn:hover { background: rgba(0,0,0,0.03); border-color: var(--border-color); }
-        .tab-btn.active { background: var(--tab-active-bg); color: var(--tab-active-text); box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-color: transparent; }
-        .tab-btn.active i { color: inherit; }
-        .tab-btn i { font-size: 16px; width: 20px; text-align: center; color: var(--text-muted); transition: 0.3s; }
-        
-        .tab-pane { 
-            display: none; animation: fadeIn 0.4s ease; background: var(--card-bg); 
-            border-radius: 20px; padding: 25px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            border: 1px solid var(--border-color); backdrop-filter: blur(10px); margin-bottom: 20px;
-        }
-        .tab-pane.active { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .btn-save-mobile { display: none; }
-        @media (max-width: 900px) {
-            .layout-wrapper { flex-direction: column; gap: 15px; padding-bottom: 80px; }
-            .sidebar { width: 100%; position: static; padding: 15px; }
-            .sidebar-nav { display: flex; flex-direction: row; overflow-x: auto; padding-bottom: 10px; gap: 8px; scroll-snap-type: x mandatory; margin-top: 10px; }
-            .sidebar-nav::-webkit-scrollbar { height: 4px; }
-            .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-            .tab-btn { white-space: nowrap; width: auto; scroll-snap-align: start; flex-shrink: 0; padding: 10px 14px; }
-            .tab-pane { padding: 15px; }
-            .sidebar .btn-save { display: none; }
-            .btn-save-mobile { 
-                display: block; position: fixed; bottom: 15px; left: 15px; right: 15px; 
-                width: calc(100% - 30px); z-index: 50; margin: 0;
-            }
-        }
-    </style>
-</head>
-<body>
-<div class="layout-wrapper">
+    const units = [...new Set(activeItems.filter(p => p.unit).map(p => p.unit))];
+    const unitList = document.getElementById('unitList');
+    if (unitList) {
+        unitList.innerHTML = units.map(u => `<option value="${String(u).replace(/"/g, '&quot;')}">${u}</option>`).join('');
+    }
     
-    <!-- 🗂️ SIDEBAR NAVIGATION -->
-    <div class="sidebar">
-        <h2 style="font-size: 18px; font-weight: 900; color: var(--brand-dark); display:flex; align-items:center; gap:8px; margin-bottom: 15px;">
-            <i class="fa-solid fa-gear"></i> Settings
-        </h2>
-
-        <button onclick="const b = new URLSearchParams(window.location.search).get('branch') || 'branch_1'; if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') { showToast('មុខងារតំណភ្ជាប់ត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។'); } else { window.location.href='index.html?branch=' + encodeURIComponent(b); }" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 12px; border: 2px solid var(--brand-cyan); background: transparent; color: var(--brand-cyan); font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;" onmouseover="this.style.background='var(--brand-cyan)'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='var(--brand-cyan)';">
-            <i class="fa-solid fa-arrow-left"></i> ត្រឡប់ទៅប្រព័ន្ធលក់
-        </button>
+    const posTabs = document.getElementById('posCategoryTabs');
+    if (posTabs) { 
+        let activeCat = window.currentPosCategory ? window.currentPosCategory : 'all'; 
+        const lang = localStorage.getItem('app_lang') || 'km';
+        const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
+        const allLabel = d.allCategoryTab || 'ទាំងអស់ (All)';
         
-        <!-- 🎨 THEME SWITCHER -->
-        <div class="theme-selector" style="margin-bottom: 15px; padding: 10px;">
-            <span style="font-size: 11px; font-weight: 900; color: var(--text-muted); width: 100%; text-align: center; margin-bottom: 5px;">🎨 ជ្រើសរើស ស្បែក Admin៖</span>
-            <button class="theme-btn" id="theme-btn-standard" onclick="setAdminTheme('standard')" style="padding: 4px 10px;">🔵 STD</button>
-            <button class="theme-btn" id="theme-btn-anime" onclick="setAdminTheme('anime')" style="padding: 4px 10px;">🔮 Anime</button>
-            <button class="theme-btn" id="theme-btn-pharmacy" onclick="setAdminTheme('pharmacy')" style="padding: 4px 10px;">⚕️ Med</button>
-            <button class="theme-btn" id="theme-btn-cafe" onclick="setAdminTheme('cafe')" style="padding: 4px 10px;">☕ Cafe</button>
-        </div>
-
-        <div class="sidebar-nav">
-            <button class="tab-btn active" onclick="switchTab('tab-links')"><i class="fa-solid fa-link"></i> ទំព័រភ្ជាប់ប្រព័ន្ធ</button>
-            <button class="tab-btn" onclick="switchTab('tab-theme')"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែកគោល</button>
-            <button class="tab-btn" onclick="switchTab('tab-banner')"><i class="fa-solid fa-images"></i> 2. ផ្ទាំងផ្សាយ & ប្រូម៉ូសិន</button>
-            <button class="tab-btn" onclick="switchTab('tab-ticker')"><i class="fa-solid fa-bullhorn"></i> 3. អត្ថបទរត់ (Ticker)</button>
-            <button class="tab-btn" onclick="switchTab('tab-store')"><i class="fa-solid fa-store"></i> 4. ម៉ោងបើក & ស្វាគមន៍</button>
-            <button class="tab-btn" onclick="switchTab('tab-social')"><i class="fa-solid fa-share-nodes"></i> 5. បណ្តាញ & បូត</button>
-            <button class="tab-btn" onclick="switchTab('tab-customjs')"><i class="fa-solid fa-file-code"></i> 6. កូដបន្ថែម (Custom JS)</button>
-            <button class="tab-btn" onclick="switchTab('tab-tables')"><i class="fa-solid fa-chair"></i> 7. លេខតុ & ទិន្នន័យ</button>
-            <button class="tab-btn" onclick="switchTab('tab-printer')"><i class="fa-solid fa-print"></i> 8. ខ្នាតម៉ាស៊ីនព្រីន & រូប</button>
-        </div>
-
-        <button class="btn-save" onclick="saveAdminSettings()" style="margin-top: 25px; padding: 14px; font-size: 14px;"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់</button>
-    </div>
-    
-    <!-- 🗂️ CONTENT AREA -->
-    <div class="content-area">
+        let allCount = activeItems.length;
+        let tabsHtml = `<button class="pos-tab ${activeCat === 'all' ? 'active' : ''}" onclick="window.setPosCategory('all')">${allLabel} (${allCount})</button>`; 
         
-        <!-- TAB 0: System Links -->
-        <div id="tab-links" class="tab-pane active">
-            <div class="section-title"><i class="fa-solid fa-link"></i> 🏠 ទំព័រភ្ជាប់ប្រព័ន្ធ (System Links)</div>
-            <div style="width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 10px; background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color);">
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                    <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 140px;">🏠 ទំព័រ Welcome:</span>
-                    <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToWelcome()"><i class="fa-solid fa-eye"></i> មើល</button>
-                    <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyWelcomeLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
-                    <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-cyan); color: white; border: none;" onclick="showWelcomeQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
-                </div>
-                <div style="width: 100%; height: 1px; background: var(--border-color);"></div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-                    <span style="font-size: 13px; font-weight: 800; color: var(--text-muted); width: 140px;">🍔 ទំព័រ Menu ផ្ទាល់:</span>
-                    <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--brand-dark); color: white; border: none;" onclick="goToMenu()"><i class="fa-solid fa-eye"></i> មើល</button>
-                    <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer;" onclick="copyMenuLink()"><i class="fa-solid fa-copy"></i> Copy Link</button>
-                    <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: var(--success); color: white; border: none;" onclick="showMenuQR()"><i class="fa-solid fa-qrcode"></i> QR Code</button>
-                    <button class="input-st" style="width: auto; padding: 8px 14px; font-size: 12px; cursor: pointer; background: #8b5cf6; color: white; border: none;" onclick="window.open('skm_ultimate_qr_generator.html?branch=' + encodeURIComponent(BRANCH), '_blank')"><i class="fa-solid fa-wand-magic-sparkles"></i> រចនាកាត QR តាមតុ</button>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 1: Theme Color -->
-        <div id="tab-theme" class="tab-pane">
-            <div class="section-title"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែកគោល Menu (Theme Color)</div>
-            <div class="form-group">
-                <label>ពណ៌ស្បែក (Theme Accent Color) - ប្តូរពណ៌ប៊ូតុង និង Icon ទូទាំង Menu អតិថិជន</label>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="color" id="setMenuThemeColor" value="#06b6d4" style="width: 50px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: transparent;" onchange="saveAdminSettings()">
-                    <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ជ្រើសរើសពណ៌ដែលត្រូវនឹងប្រេនអាជីវកម្មរបស់អ្នក</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- TAB 2: Banner & Promo Codes Manager -->
-        <div id="tab-banner" class="tab-pane">
-            <div class="section-title"><i class="fa-solid fa-images"></i> 2. ផ្ទាំងផ្សាយ (Banner) & កូដប្រូម៉ូសិន (Promo Codes)</div>
-            
-            <div class="form-group">
-                <label>បញ្ជីរូបភាព Banner (អាចដាក់បានច្រើនឥតកំណត់)</label>
-                <div id="bannerListContainer"></div>
-                <button class="input-st" style="width: 100%; border-style: dashed; margin-top: 10px; cursor: pointer; color: var(--brand-cyan);" onclick="addAdminBanner()">+ បន្ថែម Banner ថ្មី</button>
-            </div>
-
-            <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
-
-            <!-- 🎟️ PROMO CODES MANAGER -->
-            <div class="section-title" style="color: var(--success);"><i class="fa-solid fa-ticket"></i> កុម្ម៉ង់ និងគ្រប់គ្រងកូដបញ្ចុះតម្លៃ (Promo Codes Manager)</div>
-            <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, FREESHIP) កំណត់ប្រភេទបញ្ចុះតម្លៃ (% , $ ឬ ដឹកជញ្ជូនឥតគិតថ្លៃ) និងកំណត់ចំនួនដងដែលអាចប្រើប្រាស់បាន។</p>
-            
-            <div class="toggle-row" style="background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.25);">
-                <span style="color: var(--text-dark);"><i class="fa-solid fa-eye-slash" style="color: var(--danger);"></i> លាក់ស្លាកកូដប្រូម៉ូសិនកុំឱ្យបង្ហាញលើ Banner អតិថិជន (Hide Promo Badge on Banner)</span>
-                <input type="checkbox" id="toggleHideBannerPromoBadge" style="width: 20px; height: 20px; accent-color: var(--danger); cursor: pointer;" onchange="saveAdminSettings()">
-            </div>
-
-            <div style="background: rgba(34, 197, 94, 0.03); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-bottom: 15px;">
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-                    <input type="text" id="newPromoCode" class="input-st" placeholder="ឈ្មោះកូដ (ឧ. FREESHIP)" style="flex: 2; margin-bottom: 0;">
-                    <select id="newPromoType" class="input-st" style="flex: 1.5; margin-bottom: 0;" onchange="onPromoTypeChange()">
-                        <option value="percent">📉 បញ្ចុះជាភាគរយ (%)</option>
-                        <option value="fixed">💵 បញ្ចុះជាទឹកប្រាក់ ($)</option>
-                        <option value="freeship">🚚 ដឹកជញ្ជូនឥតគិតថ្លៃ (Free Ship)</option>
-                    </select>
-                </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
-                    <input type="number" id="newPromoValue" class="input-st" placeholder="តម្លៃ (ឧ. 10)" style="flex: 1; margin-bottom: 0;" min="0" step="0.1">
-                    <input type="number" id="newPromoLimit" class="input-st" placeholder="កំណត់ចំនួនដងប្រើ (ទទេ = គ្មានកំណត់)" style="flex: 1; margin-bottom: 0;" min="1">
-                    
-                    <div style="flex: 1; display: flex; gap: 5px;">
-                        <button id="btnSavePromo" class="input-st" style="flex: 1; background: var(--brand-cyan); color: white; border: none; cursor: pointer; font-weight: bold;" onclick="addNewPromoCode()">+ បន្ថែមរក្សាទុក</button>
-                        <button id="btnCancelPromo" class="input-st" style="width: 45px; background: var(--store-bg); color: var(--danger); border: 1px solid var(--border-color); cursor: pointer; display: none; padding: 0;" onclick="cancelPromoEdit()" title="បោះបង់ការកែប្រែ"><i class="fa-solid fa-xmark"></i></button>
-                    </div>
-                </div>
-                <div class="toggle-row" style="background: transparent; border: none; padding: 0; margin-top: 10px; margin-bottom: 0;">
-                    <span style="color: var(--text-dark); font-size: 13px;"><i class="fa-solid fa-user-shield"></i> កំណត់ឱ្យអតិថិជនម្នាក់ (មួយលេខទូរស័ព្ទ) ប្រើបានតែ ១ ដងគត់</span>
-                    <input type="checkbox" id="newPromoPerUser" style="width: 18px; height: 18px; accent-color: var(--success); cursor: pointer;">
-                </div>
-            </div>
-            
-            <div id="promoCodesListContainer" style="display: flex; flex-direction: column; gap: 8px;"></div>
-        </div>
+        cats.forEach(c => { 
+            let catCount = activeItems.filter(p => p.category === c).length;
+            let safeCat = String(c).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            tabsHtml += `<button class="pos-tab ${activeCat === c ? 'active' : ''}" onclick="window.setPosCategory('${safeCat}')">${c} (${catCount})</button>`; 
+        }); 
+        posTabs.innerHTML = tabsHtml; 
         
-        <!-- TAB 3: Ticker -->
-        <div id="tab-ticker" class="tab-pane">
-            <div class="section-title"><i class="fa-solid fa-bullhorn"></i> 3. របារប្រអប់អត្ថបទរត់ (Marquee Ticker)</div>
-            <div class="toggle-row">
-                <span>📢 បើករបារសេចក្តីជូនដំណឹងរត់</span>
-                <input type="checkbox" id="toggleTicker" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
-            </div>
-            <div class="form-group">
-                <label>អត្ថបទជូនដំណឹងរត់ (បង្ហាញទាំងលើ Digital Menu និងទំព័រស្វាគមន៍)៖</label>
-                <input type="text" id="setTickerText" class="input-st" placeholder="ឧ. ទិញទំនិញគ្រប់ ២០$ ថែមជូនការដឹកជញ្ជូនឥតគិតថ្លៃ..." onchange="saveAdminSettings()">
-            </div>
-        </div>
+        if (typeof window.initPosTabScroll === 'function') {
+            window.initPosTabScroll();
+        }
+    }
+};
 
-        <!-- TAB 4: Welcome Popup & Store Hours -->
-        <div id="tab-store" class="tab-pane">
-            <div class="section-title"><i class="fa-solid fa-store"></i> 4. ផ្ទាំងស្វាគមន៍ & ម៉ោងបើកហាង (Popup & Store Hours)</div>
-            
-            <div class="toggle-row">
-                <span>✨ បើកផ្ទាំង Pop-up រូបភាពស្វាគមន៍ពេលភ្ញៀវចូលមើលដំបូង</span>
-                <input type="checkbox" id="toggleWelcomePopup" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
-            </div>
-            <div class="form-group">
-                <label>រូបភាព Welcome Popup (អាចដាក់ Link ឬចុច Upload រូបភាពពីម៉ាស៊ីន):</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" id="setWelcomeImg" class="input-st" placeholder="https://... ឬចុចប៊ូតុង Upload ខាងស្តាំ" style="flex: 1; margin-bottom: 0;" onchange="updateWelcomePreview(this.value); saveAdminSettings()">
-                    <input type="file" id="welcomeImgFile" accept="image/*" style="display: none;" onchange="uploadWelcomeImg(event)">
-                    <button type="button" class="input-st" style="width: auto; cursor: pointer; background: var(--brand-cyan); color: #fff; border: none; padding: 0 18px;" onclick="document.getElementById('welcomeImgFile').click()"><i class="fa-solid fa-upload"></i> Upload រូប</button>
-                </div>
-                <div class="preview-box" id="welcomeImgPreviewContainer" style="display: none;">
-                    <img id="welcomeImgPreview" src="" alt="Welcome Preview" style="max-height: 150px;">
-                </div>
-            </div>
+window.setPOSView = function(mode, skipRender = false) {
+    window.currentPOSView = mode; 
+    localStorage.setItem(window.getBranchKey('pos_view_mode'), mode); 
+    const btnGrid = document.getElementById('btnPOSGridView'); 
+    const btnList = document.getElementById('btnPOSListView');
+    if (!btnGrid || !btnList) return;
+    if (mode === 'grid') { 
+        btnGrid.style.background = 'var(--primary)'; btnGrid.style.color = '#fff'; 
+        btnList.style.background = 'transparent'; btnList.style.color = 'var(--text-main)'; 
+    } else { 
+        btnList.style.background = 'var(--primary)'; btnList.style.color = '#fff'; 
+        btnGrid.style.background = 'transparent'; btnGrid.style.color = 'var(--text-main)'; 
+    } 
+    if (!skipRender) window.renderPOSProducts();
+};
 
-            <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 14px; border-radius: 12px; border: 1px dashed var(--brand-cyan);">
-                <label><i class="fa-solid fa-clock-rotate-left"></i> រយៈពេលផ្លាស់ប្តូរកូដប្រូម៉ូសិនម្ដង ១ កូដ នៅលើ Banner (Promo Rotation Interval):</label>
-                <select id="setPopupRepeatInterval" class="input-st" onchange="saveAdminSettings()">
-                    <option value="1">⏱️ ប្តូរកូដម្ដង ១ រៀងរាល់ ១ នាទី (Every 1 Minute)</option>
-                    <option value="3">⏱️ ប្តូរកូដម្ដង ១ រៀងរាល់ ៣ នាទី (Every 3 Minutes)</option>
-                    <option value="5">⏱️ ប្តូរកូដម្ដង ១ រៀងរាល់ ៥ នាទី (Every 5 Minutes)</option>
-                </select>
-            </div>
-
-            <div class="toggle-row">
-                <span>🕒 បើកប្រព័ន្ធកំណត់ម៉ោងបើក-បិទហាងស្វ័យប្រវត្តិ</span>
-                <input type="checkbox" id="toggleStoreHours" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
-            </div>
-            <div style="display: flex; gap: 10px; margin-bottom: 15px;">
-                <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                    <label>ម៉ោងបើក (ឧ. 08:00)</label>
-                    <input type="time" id="setOpenTime" class="input-st" value="08:00" onchange="saveAdminSettings()">
-                </div>
-                <div class="form-group" style="flex: 1; margin-bottom: 0;">
-                    <label>ម៉ោងបិទ (ឧ. 21:00)</label>
-                    <input type="time" id="setCloseTime" class="input-st" value="21:00" onchange="saveAdminSettings()">
-                </div>
-            </div>
-
-            <div class="toggle-row" style="background: rgba(34, 197, 94, 0.1); border-color: rgba(34, 197, 94, 0.3);">
-                <span style="color: var(--success);">📦 អនុញ្ញាតឱ្យភ្ញៀវកុម្ម៉ង់ទំនិញទោះអស់ស្តុក (បើក Pre-order)</span>
-                <input type="checkbox" id="togglePreorder" style="width: 20px; height: 20px; accent-color: var(--success); cursor: pointer;" onchange="saveAdminSettings()">
-            </div>
-        </div>
-
-        <!-- TAB 5: Payment QR & Chat Link & BOTS -->
-        <div id="tab-social" class="tab-pane">
-            <div class="section-title"><i class="fa-solid fa-link"></i> 5. បណ្តាញសង្គម & ទូទាត់ប្រាក់ (Social & Payments)</div>
-            
-            <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--brand-cyan);">
-                <label style="color: var(--brand-dark);"><i class="fa-solid fa-share-nodes"></i> បណ្តាញសង្គម (បង្ហាញលើ Landing Page)</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <select id="setSocialIcon" class="input-st" style="width: auto; margin-bottom: 0;" onchange="saveAdminSettings()">
-                        <option value="fa-brands fa-youtube">🔴 YouTube</option>
-                        <option value="fa-brands fa-facebook">🔵 Facebook</option>
-                        <option value="fa-brands fa-tiktok">⚫ TikTok</option>
-                        <option value="fa-brands fa-instagram">🟣 Instagram</option>
-                        <option value="fa-brands fa-telegram">🔵 Telegram</option>
-                    </select>
-                    <input type="text" id="setSocialLabel" class="input-st" placeholder="ឈ្មោះបង្ហាញ..." style="margin-bottom: 0;" onchange="saveAdminSettings()">
-                </div>
-                <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL (Link)..." onchange="saveAdminSettings()">
-            </div>
-
-            <div class="form-group">
-                <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ABA / ACLEDA)</label>
-                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" id="setMenuQR" class="input-st" placeholder="Link ឬ Base64..." style="margin-bottom:0;" onchange="saveAdminSettings()">
-                    <input type="file" id="qrFile" accept="image/*" style="display:none;" onchange="uploadQR(event)">
-                    <button class="input-st" style="width: auto; cursor: pointer;" onclick="document.getElementById('qrFile').click()"><i class="fa-solid fa-upload"></i></button>
-                </div>
-                <div class="preview-box" id="qrPreviewContainer" style="display: none;">
-                    <img id="menuQRPreview" src="" alt="QR Preview" style="display: none;">
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label><i class="fa-brands fa-telegram"></i> តំណភ្ជាប់ Chat សម្រាប់ប៊ូតុងអណ្តែត (Floating Chat)</label>
-                <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
-            </div>
-
-            <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--brand-cyan); margin-top: 20px;">
-                <label style="color: var(--brand-cyan);"><i class="fa-solid fa-robot"></i> 1. Telegram Bot សម្រាប់ "កុម្ម៉ង់ទំនិញ"</label>
-                <div style="margin-bottom: 10px;">
-                    <input type="text" id="setOrderTelegramBotToken" class="input-st" placeholder="Bot Token (Order)..." onchange="saveAdminSettings()">
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <input type="text" id="setOrderTelegramChatId" class="input-st" placeholder="Group Chat ID (ឧ. -100xxxxxxxxx)" onchange="saveAdminSettings()">
-                </div>
-                <div>
-                    <button type="button" class="input-st" style="background: var(--brand-cyan); color: white; border: none; cursor: pointer; font-weight: bold;" onclick="testOrderTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 Test Bot កុម្ម៉ង់</button>
-                </div>
-            </div>
-
-            <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-top: 15px;">
-                <label style="color: var(--success);"><i class="fa-solid fa-bell-concierge"></i> 2. Telegram Bot សម្រាប់ "សេវាកម្ម / ហៅបុគ្គលិក"</label>
-                <div style="margin-bottom: 10px;">
-                    <input type="text" id="setServiceTelegramBotToken" class="input-st" placeholder="Bot Token (Service)..." onchange="saveAdminSettings()">
-                </div>
-                <div style="margin-bottom: 10px;">
-                    <input type="text" id="setServiceTelegramChatId" class="input-st" placeholder="Group Chat ID (ឧ. -100xxxxxxxxx)" onchange="saveAdminSettings()">
-                </div>
-                <div>
-                    <button type="button" class="input-st" style="background: var(--success); color: white; border: none; cursor: pointer; font-weight: bold;" onclick="testServiceTelegramBot()"><i class="fa-solid fa-paper-plane"></i> 🧪 Test Bot សេវាកម្ម</button>
-                </div>
-            </div>
-        </div>
+window.renderPOSProducts = function() {
+    const container = document.getElementById('posProductGridContainer'); 
+    if (!container) return;
+    try {
+        const searchInputEl = document.getElementById('posSearch'); 
+        const search = searchInputEl ? searchInputEl.value.toLowerCase().trim() : ''; 
+        const posCat = window.currentPosCategory ? window.currentPosCategory : 'all';
+        let availableItems = (window.inventory || []).filter(p => p !== null && typeof p === 'object');
         
-        <!-- TAB 6: CUSTOM JS -->
-        <div id="tab-customjs" class="tab-pane">
-            <div style="margin-bottom: 30px;">
-                <div class="section-title" style="color: var(--brand-cyan); border-bottom: 2px dashed var(--brand-cyan); padding-bottom: 10px;"><i class="fa-solid fa-code"></i> 6.1 កូដបន្ថែមអតិថិជន (Menu Custom JS)</div>
-                <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>Menu អតិថិជន (menu.html)</b>។</p>
+        if (search) {
+            availableItems = availableItems.filter(p => {
+                if (!p) return false;
+                return (p.name ? String(p.name).toLowerCase() : '').includes(search) || 
+                       (p.customId ? String(p.customId).toLowerCase() : '').includes(search) || 
+                       (p.desc ? String(p.desc).toLowerCase() : '').includes(search) || 
+                       (p.id ? String(p.id).toLowerCase() : '').includes(search);
+            });
+        }
+        if (posCat !== 'all') {
+            availableItems = availableItems.filter(p => p && p.category === posCat);
+        }
+
+        availableItems.sort((a, b) => {
+            let outA = (parseFloat(a.qty) || 0) <= 0 ? 1 : 0; 
+            let outB = (parseFloat(b.qty) || 0) <= 0 ? 1 : 0;
+            if (outA !== outB) return outA - outB; 
+            return String(b.id || '').localeCompare(String(a.id || '')); 
+        });
+
+        if (availableItems.length === 0) { 
+            container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px; background: rgba(0,0,0,0.05); border-radius: 8px;">មិនមានទំនិញទេ</div>'; 
+            return; 
+        }
+
+        const currentRate = parseFloat(document.getElementById('globalExchangeRate')?.value) || window.cartRate || 4000;
+        
+        if (window.currentPOSView === 'grid') {
+            let finalHtml = `<div class="pos-products">`;
+            availableItems.forEach(p => { 
+                if (!p) return;
+                let pQty = parseFloat(p.qty) || 0; 
+                let stockBadge = '';
+                if (pQty <= 0) {
+                    stockBadge = `<div class="badge-cat" style="background: var(--danger); color: #fff; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">❌ អស់ស្តុក</div>`;
+                } else {
+                    stockBadge = `<div class="badge-cat" style="background: ${pQty<=5?'var(--warning)':'var(--primary)'}; color: ${pQty<=5?'#000':'#fff'}; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">📦 សល់: ${pQty}</div>`;
+                }
+
+                let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<div class="badge-cat" style="background: #38bdf8; color: #fff; top: 8px; right: 8px; padding: 3px 6px; font-size: 10px; border-radius: 4px;">${p.condition}</div>` : '';
+                let expiryBadge = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<div style="font-size:10px; color:var(--warning); margin-top:2px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</div>` : '';
+
+                let cItem = (window.cart || []).find(c => c && c.id === p.id); 
+                let qtyInCart = cItem ? cItem.cartQty : 0;
+                let btnHtml = qtyInCart > 0 ? `<div class="pos-add-btn added">${qtyInCart}</div>` : `<div class="pos-add-btn empty">+</div>`;
+
+                let pUsd = parseFloat(p.price) || 0;
+                let pRiel = parseFloat(p.riel) || 0;
+                let displayUsd = pUsd > 0 ? window.fMoney(pUsd) : (pRiel > 0 ? window.fMoney(pRiel / currentRate) : '$0.00');
+                let rielHtml = pRiel > 0 ? `<span style="font-size:var(--fs-11); color:var(--text-muted); font-weight:normal;">| ${pRiel.toLocaleString()} ៛</span>` : '';
+                let itemOpacity = pQty <= 0 ? 'opacity: 0.6; filter: grayscale(50%);' : '';
+                let safeTitle = String(p.name || '').replace(/"/g, '&quot;');
                 
-                <div class="action-btn-group">
-                    <input type="file" id="menuJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadMenuScripts(event)">
-                    <button class="btn-action" style="background: var(--brand-cyan); color: white;" onclick="document.getElementById('menuJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
-                    <input type="file" id="importMenuJsBackup" accept=".json" style="display: none;" onchange="importMenuScriptsBackup(event)">
-                    <button class="btn-action" style="background: #fffbeb; color: var(--warning);" onclick="document.getElementById('importMenuJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
-                    <button class="btn-action" style="background: #f0fdf4; color: var(--success);" onclick="exportMenuScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
-                    <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="toggleAllMenuScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
-                    <button class="btn-action" style="background: #fff1f2; color: var(--danger);" onclick="deleteAllMenuScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
-                </div>
-                <div id="menuScriptsToggleContainer" style="margin-bottom: 10px;"></div>
-                <div id="menuScriptsListContainer" class="script-list-container"></div>
-            </div>
-
-            <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
-
-            <div>
-                <div class="section-title" style="color: #ef4444; border-bottom: 2px dashed #ef4444; padding-bottom: 10px;"><i class="fa-solid fa-terminal"></i> 6.2 កូដបន្ថែមប្រព័ន្ធ (POS Custom JS)</div>
-                <p class="help-text">នាំចូលឯកសារ JavaScript ផ្ទាល់ខ្លួនដើម្បីដំណើរការស្វ័យប្រវត្តិនៅលើទំព័រ <b>ប្រព័ន្ធគិតលុយកន្លែងលក់ (POS)</b>។</p>
-                
-                <div class="action-btn-group">
-                    <input type="file" id="posJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadPosScripts(event)">
-                    <button class="btn-action" style="background: var(--danger); color: white;" onclick="document.getElementById('posJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS</button>
-                    <input type="file" id="importPosJsBackup" accept=".json" style="display: none;" onchange="importPosScriptsBackup(event)">
-                    <button class="btn-action" style="background: #fffbeb; color: var(--warning);" onclick="document.getElementById('importPosJsBackup').click()"><i class="fa-solid fa-folder-open"></i> Restore JSON</button>
-                    <button class="btn-action" style="background: #f0fdf4; color: var(--success);" onclick="exportPosScriptsBackup()"><i class="fa-solid fa-floppy-disk"></i> Backup JSON</button>
-                    <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="toggleAllPosScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
-                    <button class="btn-action" style="background: #fff1f2; color: var(--danger);" onclick="deleteAllPosScripts()"><i class="fa-solid fa-trash-can"></i> លុបទាំងអស់</button>
-                </div>
-                <div id="posScriptsToggleContainer" style="margin-bottom: 10px;"></div>
-                <div id="posScriptsListContainer" class="script-list-container"></div>
-            </div>
-        </div>
-
-        <!-- 🪑 TAB 7: TABLE SETTINGS & ARCHIVE -->
-        <div id="tab-tables" class="tab-pane">
-            <div class="section-title" style="color: #8b5cf6; border-bottom: 2px dashed #8b5cf6; padding-bottom: 10px;">
-                <i class="fa-solid fa-chair"></i> 7. កំណត់លេខតុ & តុ VIP (Table & VIP Management)
-            </div>
-            <p class="help-text">បើកមុខងារនេះដើម្បីអនុញ្ញាតឱ្យទាំងបុគ្គលិក (POS) និងអតិថិជន (Digital Menu) អាចជ្រើសរើសលេខតុធម្មតា តុ VIP ឬបន្ថែមឈ្មោះតុថ្មីៗបានតាមចិត្ត។</p>
+                finalHtml += `<div class="pos-item" style="${itemOpacity}" onclick="window.addToCart('${p.id}')"><div class="pos-item-img-container">${stockBadge}${conditionBadge}<img src="${p.image||'https://placehold.co/200?text=No+Img'}" alt="Product" onerror="this.src='https://placehold.co/200?text=No+Img'">${btnHtml}</div><div class="pos-item-details"><div class="pos-item-price">${displayUsd} ${rielHtml}</div><div class="pos-item-name" title="${safeTitle}">${p.name}</div>${expiryBadge}</div></div>`; 
+            });
+            container.innerHTML = finalHtml + `</div>`;
+        } else {
+            let tableHTML = `<div class="table-responsive" style="height: 100%;"><table id="mainPOSTable" style="font-size: var(--fs-13); width: 100%;"><thead><tr class="header-row"><th style="width: 60px; text-align:center;">រូបភាព</th><th onclick="if(window.sortTable) window.sortTable('mainPOSTable', 1)">ឈ្មោះទំនិញ <span>⬍</span></th><th style="width: 120px; text-align:right;" onclick="if(window.sortTable) window.sortTable('mainPOSTable', 2, 'number')">តម្លៃលក់ <span>⬍</span></th><th style="width: 90px; text-align:center;">សកម្មភាព</th></tr><tr class="filter-row"><th></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainPOSTable')" placeholder="ស្វែងរកឈ្មោះ..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainPOSTable')" placeholder="ស្វែងរកតម្លៃ..."></th><th></th></tr></thead><tbody>`;
             
-            <div class="toggle-row" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);">
-                <span style="color: var(--brand-dark); font-weight: bold;"><i class="fa-solid fa-chair"></i> បើកមុខងារជ្រើសរើសលេខតុ & តុ VIP (Enable Tables)</span>
-                <input type="checkbox" id="toggleTableFeature" style="width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer;" onchange="saveAdminSettings()">
-            </div>
-            
-            <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
-                <div class="form-group" style="flex: 1; min-width: 150px;">
-                    <label>ចំនួនតុធម្មតាសរុប (Total Tables):</label>
-                    <input type="number" id="setTotalTables" class="input-st" value="20" min="1" placeholder="ឧ. 20" onchange="saveAdminSettings()">
-                </div>
-                <div class="form-group" style="flex: 1; min-width: 150px;">
-                    <label>ពាក្យនាំមុខតុធម្មតា (Table Prefix):</label>
-                    <input type="text" id="setTablePrefix" class="input-st" placeholder="ឧ. តុលេខ ឬ Table" value="តុលេខ" onchange="saveAdminSettings()">
-                </div>
-            </div>
+            availableItems.forEach(p => {
+                if (!p) return;
+                let pQty = parseFloat(p.qty) || 0;
+                let stockText = pQty <= 0 ? `<span style="color:var(--danger); font-weight:bold;">អស់ស្តុក</span>` : `<span style="color:${pQty<=5?'var(--warning)':'var(--success)'}">${pQty}</span> ${p.unit||''}`;
+                let pUsd = parseFloat(p.price) || 0;
+                let pRiel = parseFloat(p.riel) || 0;
+                let effectiveUsd = pUsd > 0 ? pUsd : (pRiel > 0 ? (pRiel / currentRate) : 0);
+                let rielHtml = pRiel > 0 ? `<br><span style="font-size:var(--fs-11); color:var(--text-muted);">${pRiel.toLocaleString()} ៛</span>` : '';
+                let itemOpacity = pQty <= 0 ? 'opacity: 0.6;' : '';
+                let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<span style="font-size:10px; background:#38bdf8; color:#fff; padding:2px 4px; border-radius:4px; margin-left:4px;">${p.condition}</span>` : '';
+                let expiryDisplay = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<br><span style="color:var(--warning); font-size:10px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</span>` : '';
 
-            <div class="form-group" style="background: rgba(139, 92, 246, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed #8b5cf6; margin-top: 5px;">
-                <label style="color: #6d28d9;"><i class="fa-solid fa-crown"></i> បញ្ជីតុ VIP ឬតុពិសេសបន្ថែម (ខណ្ឌដោយសញ្ញាក្បៀស ","):</label>
-                <input type="text" id="setCustomTables" class="input-st" placeholder="ឧ. VIP 1, VIP 2, VIP 3, បន្ទប់ VIP, កញ្ចុះ 1" value="VIP 1, VIP 2, VIP 3" onchange="saveAdminSettings()">
-                <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">💡 អ្នកក៏អាចចុចប៊ូតុង <b>"➕ ថែមតុ / VIP"</b> នៅក្នុងផ្ទាំងលក់ POS ឬផ្ទាំងអតិថិជនដោយផ្ទាល់បានផងដែរ។</div>
-            </div>
-
-            <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
-
-            <!-- មុខងារ Archive សម្អាតទិន្នន័យចាស់ -->
-            <div class="section-title" style="color: var(--danger); border-bottom: 2px dashed var(--danger); padding-bottom: 10px;">
-                <i class="fa-solid fa-database"></i> ការគ្រប់គ្រងទិន្នន័យ (Data Management)
-            </div>
-            <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--danger);">
-                <h3 style="font-size: 16px; color: var(--danger); margin-bottom: 8px;"><i class="fa-solid fa-broom"></i> សម្អាតទិន្នន័យចាស់ៗ (Data Archive)</h3>
-                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">ទាញយក និងលុបវិក្កយបត្រចាស់ៗ (ដែលមានអាយុកាលលើសពី ៣ ខែ) ចេញពីប្រព័ន្ធ ដើម្បីឱ្យ App ដំណើរការបានលឿនជានិច្ច និងកាត់បន្ថយទំហំ Database។</p>
-                <button type="button" class="btn-action" style="background: var(--danger); color: white; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none;" onclick="archiveOldData()"><i class="fa-solid fa-box-archive"></i> Archive វិក្កយបត្រចាស់ (> ៣ខែ)</button>
-            </div>
-        </div>
-
-        <!-- 🖨️ TAB 8: PRINTER & RECEIPT DOWNLOAD SIZE CUSTOMIZER -->
-        <div id="tab-printer" class="tab-pane">
-            <div class="section-title" style="color: var(--brand-cyan); border-bottom: 2px dashed var(--brand-cyan); padding-bottom: 10px;">
-                <i class="fa-solid fa-print"></i> 8.1 កំណត់ខ្នាតម៉ាស៊ីនព្រីន & ទំហំទាញយករូបវិក្កយបត្រ (Printer & PNG Size)
-            </div>
-            <p class="help-text">ជ្រើសរើសខ្នាតក្រដាសស្តង់ដារ ឬសេរេបង្កើតទំហំថ្មីតាមម៉ាស៊ីនព្រីនរបស់អ្នកដោយសេរី (សម្រាប់ទាំងការបោះពុម្ពវិក្កយបត្រ និងការទាញយករូបភាព PNG)។</p>
-
-            <div class="form-group" style="background: rgba(6, 182, 212, 0.06); padding: 16px; border-radius: 14px; border: 1px dashed var(--brand-cyan);">
-                <label style="font-size: 14px; color: var(--brand-dark);"><i class="fa-solid fa-sliders"></i> ជ្រើសរើសប្រភេទខ្នាតក្រដាសវិក្កយបត្រ (Receipt Size Preset):</label>
-                <select id="setAdminReceiptSize" class="input-st" style="background: var(--card-bg); font-weight: 800;" onchange="onAdminReceiptPresetChange(this.value)">
-                    <option value="80mm">📄 ខ្នាត 80mm (ម៉ាស៊ីនព្រីនធំស្តង់ដារ - Thermal 80mm)</option>
-                    <option value="58mm">🧾 ខ្នាត 57x40mm / 58mm (ម៉ាស៊ីនព្រីនតូច - Thermal 58mm)</option>
-                    <option value="A4">📋 ខ្នាតក្រដាសធម្មតា A4 (វិក្កយបត្រធំផ្លូវការ - 210mm)</option>
-                    <option value="custom">⚙️ សេរេទំហំខ្លួនឯងតាមចិត្ត (Custom Printer & Image Size)</option>
-                </select>
-            </div>
-
-            <!-- ប្រអប់សេរេទំហំលម្អិតតាមចិត្ត -->
-            <div class="section-box" style="margin-top: 15px;">
-                <div class="section-title" style="font-size: 14px; margin-bottom: 12px;">
-                    <i class="fa-solid fa-ruler-combined"></i> សេរេទំហំក្រដាសព្រីន និងទំហំរូបភាពពេល Download (កែប្រែបានតាមចិត្ត)
-                </div>
-
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>ទទឹងក្រដាសព្រីន (Paper mm):</label>
-                        <input type="number" id="setPrintPaperMm" class="input-st" value="80" min="30" max="300" oninput="onCustomDimensionEdit()">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>ទទឹងផ្ទៃអក្សរព្រីន (Content mm):</label>
-                        <input type="number" id="setPrintBodyMm" class="input-st" value="76" min="25" max="290" oninput="onCustomDimensionEdit()">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>គម្លាតគែមក្រដាស (Padding mm):</label>
-                        <input type="number" id="setPrintPadMm" class="input-st" value="4" min="0" max="30" oninput="onCustomDimensionEdit()">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>ទទឹងរូបពេល Download (PNG px):</label>
-                        <input type="number" id="setDownloadWidthPx" class="input-st" value="380" min="180" max="1600" oninput="onCustomDimensionEdit()">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>កម្រិតច្បាស់រូប PNG (Scale):</label>
-                        <select id="setDownloadScale" class="input-st" onchange="onCustomDimensionEdit()">
-                            <option value="2">🌟 ច្បាស់ស្តង់ដារ (2x HD)</option>
-                            <option value="3">🔥 ច្បាស់ខ្លាំង (3x Full HD)</option>
-                            <option value="4">💎 ច្បាស់កម្រិតកំពូល (4x Ultra 4K)</option>
-                        </select>
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>ទំហំអក្សរវិក្កយបត្រ (Font px):</label>
-                        <input type="number" id="setReceiptFontPx" class="input-st" value="12" min="8" max="24" oninput="onCustomDimensionEdit()">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>ទំហំឈ្មោះហាង (Title px):</label>
-                        <input type="number" id="setReceiptTitlePx" class="input-st" value="16" min="11" max="32" oninput="onCustomDimensionEdit()">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>ទំហំ Logo លើវិក្កយបត្រ (px):</label>
-                        <input type="number" id="setReceiptLogoPx" class="input-st" value="100" min="40" max="220" oninput="onCustomDimensionEdit()">
-                    </div>
-                    <div class="form-group" style="margin-bottom: 0;">
-                        <label>ទំហំ QR ទូទាត់លើវិក្កយបត្រ (px):</label>
-                        <input type="number" id="setReceiptQrPx" class="input-st" value="170" min="80" max="300" oninput="onCustomDimensionEdit()">
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
-                    <label>📝 សារអរគុណខាងក្រោមវិក្កយបត្រ (Receipt Footer Text):</label>
-                    <input type="text" id="setAdminReceiptFooter" class="input-st" value="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" placeholder="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" oninput="updateLiveReceiptPreview()" onchange="saveAdminSettings()">
-                </div>
-            </div>
-
-            <!-- បង្កើត និងរក្សាទុកឈ្មោះខ្នាតម៉ាស៊ីនព្រីនថ្មី -->
-            <div class="section-box" style="background: rgba(16, 185, 129, 0.04); border-color: rgba(16, 185, 129, 0.3);">
-                <div class="section-title" style="color: var(--success); font-size: 14px; margin-bottom: 10px;">
-                    <i class="fa-solid fa-bookmark"></i> បង្កើត និងរក្សាទុកជាខ្នាតម៉ាស៊ីនព្រីនផ្ទាល់ខ្លួន (Save Custom Printer Preset)
-                </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <input type="text" id="newPrinterPresetName" class="input-st" placeholder="ដាក់ឈ្មោះខ្នាត (ឧ. ម៉ាស៊ីនព្រីនតូច 57mm, ខ្នាត A5, ម៉ាស៊ីន Bluetooth)..." style="flex: 2; min-width: 200px; margin-bottom: 0;">
-                    <button type="button" class="btn-action" style="background: var(--success); color: white; border: none;" onclick="saveCustomPrinterPreset()">
-                        <i class="fa-solid fa-plus"></i> រក្សាទុកខ្នាតថ្មីនេះ
-                    </button>
-                </div>
-                <div id="customPrinterPresetsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"></div>
-            </div>
-
-            <!-- ផ្ទាំងមើលគំរូវិក្កយបត្រផ្ទាល់ (Live Preview & Test) -->
-            <div class="section-box" style="text-align: center;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
-                    <span style="font-weight: 900; font-size: 14px; color: var(--brand-dark);"><i class="fa-solid fa-eye"></i> គំរូវិក្កយបត្រផ្ទាល់ (Live Receipt Preview):</span>
-                    <div style="display: flex; gap: 8px;">
-                        <button type="button" class="btn-action" style="background: var(--brand-dark); color: white;" onclick="testPrintReceiptFromAdmin()">
-                            <i class="fa-solid fa-print"></i> សាកល្បងព្រីន
-                        </button>
-                    </div>
-                </div>
-                <div style="background: #cbd5e1; padding: 20px; border-radius: 14px; overflow-x: auto; display: flex; justify-content: center;">
-                    <div id="adminReceiptLivePreview" style="background: #ffffff; color: #000000; padding: 16px; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: left; width: 380px; max-width: 100%; font-size: 12px; line-height: 1.4;"></div>
-                </div>
-            </div>
-
-            <!-- 🖨️ 8.2 ព្រីនបំបែកតាមផ្នែក (Multi-Printer Routing) -->
-            <div class="section-title" style="color: #f59e0b; border-bottom: 2px dashed #f59e0b; padding-bottom: 10px; margin-top: 30px;">
-                <i class="fa-solid fa-route"></i> 8.2 ព្រីនបំបែកតាមផ្នែក (Multi-Printer / Kitchen Routing)
-            </div>
-            <p class="help-text">មុខងារនេះអនុញ្ញាតឱ្យព្រីនវិក្កយបត្របំបែកទៅតាមផ្នែកផ្សេងៗគ្នាដោយស្វ័យប្រវត្តិ (ឧ. ភេសជ្ជៈទៅបារ, ម្ហូបទៅផ្ទះបាយ)។</p>
-
-            <div class="toggle-row" style="background: rgba(245, 158, 11, 0.05); border-color: rgba(245, 158, 11, 0.2);">
-                <span style="color: var(--brand-dark); font-weight: bold;"><i class="fa-solid fa-code-branch"></i> បើកមុខងារព្រីនបំបែកតាមផ្នែក (Enable Split Printing)</span>
-                <input type="checkbox" id="toggleSplitPrinting" style="width: 20px; height: 20px; accent-color: #f59e0b; cursor: pointer;" onchange="saveAdminSettings()">
-            </div>
-
-            <div class="form-group" style="background: rgba(245, 158, 11, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed #f59e0b; margin-top: 5px;">
-                <label style="color: #d97706;"><i class="fa-solid fa-network-wired"></i> កំណត់ម៉ាស៊ីនព្រីនតាមផ្នែក (Print Stations):</label>
-                <div id="printStationsList" style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;"></div>
-
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <input type="text" id="newStationName" class="input-st" placeholder="ឈ្មោះម៉ាស៊ីន (ឧ. Kitchen)" style="flex: 1; margin-bottom: 0;">
-                    <input type="text" id="newStationCategories" class="input-st" placeholder="ប្រភេទ (ឧ. ម្ហូប, ស៊ុប)" style="flex: 2; margin-bottom: 0;" title="ខណ្ឌដោយសញ្ញាក្បៀស (,)">
-                    <input type="number" id="newStationCopies" class="input-st" placeholder="ចំនួនសន្លឹក" value="1" min="1" style="width: 100px; margin-bottom: 0;">
-                    <button type="button" class="btn-action" style="background: #f59e0b; color: white; border: none;" onclick="addPrintStation()">
-                        <i class="fa-solid fa-plus"></i> បន្ថែម
-                    </button>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    
-    <button class="btn-save btn-save-mobile" onclick="saveAdminSettings()"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់ទាំងអស់ (Save Changes)</button>
-</div>
-
-<!-- Custom Confirmation Modal for Archive -->
-<div id="adminConfirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 20px;">
-    <div style="background: var(--card-bg); color: var(--text-dark); max-width: 400px; width: 100%; padding: 25px; border-radius: 18px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--border-color);">
-        <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 10px; color: var(--danger);">⚠️ បញ្ជាក់ការ Archive ទិន្នន័យ</h3>
-        <p id="adminConfirmText" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;"></p>
-        <div style="display: flex; gap: 10px; justify-content: center;">
-            <button type="button" class="input-st" style="width: auto; padding: 10px 20px; cursor: pointer; margin-bottom: 0;" onclick="document.getElementById('adminConfirmModal').style.display='none'">បោះបង់</button>
-            <button type="button" id="adminConfirmOkBtn" class="input-st" style="width: auto; padding: 10px 20px; background: var(--danger); color: #fff; border: none; cursor: pointer; font-weight: bold; margin-bottom: 0;">យល់ព្រម Archive</button>
-        </div>
-    </div>
-</div>
-
-<div id="toast">Saved Successfully!</div>
-
-<script>
-    const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-
-    (function verifyAdminAccess() {
-        const authPassed = sessionStorage.getItem('ks2_auth_passed');
-        let activeUser = null;
-        try {
-            activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`));
-        } catch(e) {}
-        if (authPassed !== 'true' && (!activeUser || String(activeUser.role).toLowerCase() !== 'admin')) {
-            if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
-                console.warn("Preview Environment Detected: Authentication redirect to welcome.html bypassed.");
-            } else {
-                window.location.href = `welcome.html?branch=${encodeURIComponent(BRANCH)}`;
-            }
+                tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" onerror="this.src='https://placehold.co/100?text=Img'" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${effectiveUsd}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(effectiveUsd)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">➕ បន្ថែម</button></td></tr>`;
+            });
+            container.innerHTML = tableHTML + `</tbody></table></div>`;
         }
-    })();
-
-    function switchTab(tabId) {
-        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-        if(window.innerWidth <= 768) { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+    } catch (err) { 
+        container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--danger);">Error POS: ${err.message}</div>`; 
     }
+};
 
-    function setAdminTheme(themeName) {
-        document.documentElement.setAttribute('data-admin-theme', themeName);
-        localStorage.setItem('skm_admin_theme', themeName);
-        document.querySelectorAll('.theme-btn').forEach(btn => btn.classList.remove('active'));
-        const activeBtn = document.getElementById(`theme-btn-${themeName}`);
-        if(activeBtn) activeBtn.classList.add('active');
-    }
-    const savedTheme = localStorage.getItem('skm_admin_theme') || 'standard';
-    setAdminTheme(savedTheme);
+window.addToCart = function(id) { 
+    if (typeof window.playBeep === 'function') window.playBeep(); 
+    const p = (window.inventory || []).find(i => i && i.id === id); 
+    if (!p) return; 
+    if (!window.cart) window.cart = [];
+    const cItem = window.cart.find(c => c && c.id === id); 
+    let stockQty = parseInt(p.qty) || 0;
 
-    const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+    const executeAddToCart = () => {
+        let globalRateEl = document.getElementById('globalExchangeRate'); 
+        let currentRate = parseFloat(globalRateEl ? globalRateEl.value : window.cartRate) || 4000;
+        let effectiveUsdPrice = parseFloat(p.price) > 0 ? parseFloat(p.price) : ((parseFloat(p.riel) || 0) / currentRate);
+
+        if (cItem) { 
+            if (cItem.cartQty < stockQty || (window.sysSettings && window.sysSettings.preorder)) { 
+                cItem.cartQty++; 
+                cItem.qty = cItem.cartQty;
+                if (effectiveUsdPrice > 0 && !(parseFloat(cItem.price) > 0)) cItem.price = effectiveUsdPrice;
+            } else { 
+                notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+            } 
+        } else { 
+            window.cart.push({
+                ...p,
+                price: effectiveUsdPrice,
+                cartQty: 1,
+                qty: 1
+            }); 
+        } 
+        window.renderCart(); 
+        window.renderPOSProducts();
+    };
     
-    let supabaseClient = null;
-    if (window.supabase) {
-        try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } 
-        catch (err) { console.error("Supabase init error:", err); }
+    if (stockQty <= 0 && window.sysSettings && window.sysSettings.preorder) {
+        if (cItem) {
+            executeAddToCart();
+        } else if (typeof window.ksMsg === 'function') {
+            window.ksMsg(`ទំនិញ "${p.name}" អស់ពីស្តុកហើយ! តើអ្នកចង់កត់ត្រាវាជាការកុម្ម៉ង់ទុកមុន (Pre-order) មែនទេ?`, 'បញ្ជាក់ Pre-order', true, executeAddToCart);
+        } else {
+            executeAddToCart();
+        }
+        return;
+    } else if (stockQty <= 0) {
+        return notifyPosUser('ទំនិញនេះអស់ពីស្តុកហើយ!');
     }
 
-    let adminBanners = [];
-    let promoCodesList = [];
-    let editPromoIndex = -1;
-    let menuScripts = []; 
-    let posScripts = [];  
-    let showAllMenuScripts = false;
-    let showAllPosScripts = false;
-    let customPrinterPresets = [];
-    
-    // តួប្រែថ្មីសម្រាប់ម៉ាស៊ីនព្រីនតាមផ្នែក
-    let printStations = [];
+    executeAddToCart();
+};
 
-    const DEFAULT_RECEIPT_PRESETS = {
-        '80mm': { paperMm: 80, bodyMm: 76, padMm: 4, downloadWidthPx: 380, downloadScale: 2, fontPx: 12, titlePx: 16, logoPx: 100, qrPx: 170 },
-        '58mm': { paperMm: 57, bodyMm: 54, padMm: 2, downloadWidthPx: 260, downloadScale: 2, fontPx: 10, titlePx: 13, logoPx: 65, qrPx: 125 },
-        'A4':   { paperMm: 210, bodyMm: 190, padMm: 10, downloadWidthPx: 720, downloadScale: 2, fontPx: 14, titlePx: 20, logoPx: 120, qrPx: 190 }
+window.updateCartQty = function(id, change) { 
+    if (change > 0 && typeof window.playBeep === 'function') window.playBeep(); 
+    const cItem = (window.cart || []).find(c => c && c.id === id); 
+    const p = (window.inventory || []).find(i => i && i.id === id); 
+    if (!p || !cItem) return;
+    let stockQty = parseInt(p.qty) || 0; 
+    cItem.cartQty += change; 
+    
+    if (cItem.cartQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
+        cItem.cartQty = stockQty; 
+        notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+    } 
+    
+    cItem.qty = cItem.cartQty;
+
+    if (cItem.cartQty <= 0) {
+        window.cart = window.cart.filter(c => c && c.id !== id);
+    }
+    
+    window.renderCart(); 
+    window.renderPOSProducts();
+};
+
+window.setCartQtyManually = function(id, val) {
+    let newQty = parseInt(val);
+    if (isNaN(newQty) || newQty <= 0) { 
+        window.cart = (window.cart || []).filter(c => c && c.id !== id);
+    } else {
+        const cItem = (window.cart || []).find(c => c && c.id === id); 
+        const p = (window.inventory || []).find(i => i && i.id === id); 
+        if (!p || !cItem) return;
+        let stockQty = parseInt(p.qty) || 0;
+        
+        if (newQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
+            cItem.cartQty = stockQty; 
+            notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+        } else {
+            cItem.cartQty = newQty;
+        }
+        cItem.qty = cItem.cartQty;
+    }
+    window.renderCart(); 
+    window.renderPOSProducts();
+};
+
+window.renderCart = function() {
+    const cHTML = document.getElementById('cartItems'); 
+    if (!cHTML) return;
+    let tQty = 0, tUsdOnly = 0, tRielOnly = 0; 
+    let globalRateEl = document.getElementById('globalExchangeRate'); 
+    window.cartRate = parseFloat(globalRateEl ? globalRateEl.value : 4000) || 4000;
+    
+    if (!window.cart || window.cart.length === 0) {
+        cHTML.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 50px; font-size: var(--fs-14);">កន្ត្រកទទេ</div>`; 
+    } else {
+        let finalCartHtml = '';
+        window.cart.forEach(c => {
+            if (!c) return; 
+            tQty += c.cartQty; 
+            let origProd = (window.inventory || []).find(i => i && i.id === c.id);
+            let origUsd = origProd ? (parseFloat(origProd.price) || 0) : (parseFloat(c.price) || 0);
+            let pRiel = parseFloat(c.riel) || 0;
+            let pUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / window.cartRate) : (parseFloat(c.price) || 0));
+            c.price = pUsd;
+            c.qty = c.cartQty;
+
+            if (origUsd > 0) tUsdOnly += origUsd * c.cartQty; 
+            else if (pRiel > 0) tRielOnly += pRiel * c.cartQty;
+            else tUsdOnly += pUsd * c.cartQty;
+
+            let priceDisplay = origUsd > 0 ? window.fMoney(origUsd) : (pRiel > 0 ? pRiel.toLocaleString()+' ៛' : window.fMoney(pUsd)); 
+            let totalDisplay = origUsd > 0 ? window.fMoney(origUsd * c.cartQty) : (pRiel > 0 ? (pRiel * c.cartQty).toLocaleString()+' ៛' : window.fMoney(pUsd * c.cartQty));
+            finalCartHtml += `<div class="cart-item"><img src="${c.image||'https://placehold.co/100?text=Img'}" onerror="this.src='https://placehold.co/100?text=Img'" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 10px; border: 1px solid var(--border);"><div style="flex:1;"><div style="font-weight:bold; font-size:var(--fs-14); margin-bottom:2px; line-height: 1.2; color: var(--text-main);">${c.name}</div><div style="color:var(--success); font-size:var(--fs-12);">${priceDisplay} <small style="color:var(--text-muted);">/ ${c.unit||'ឯកតា'}</small></div></div><div style="display:flex; align-items:center; gap:4px; background:var(--bg-dark); padding:2px; border-radius:6px; border:1px solid var(--border);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-14);"> - </button><input type="number" class="cart-qty-input" value="${c.cartQty}" onchange="window.setCartQtyManually('${c.id}', this.value)" style="width: 35px; height:22px; text-align: center; background: transparent; border: none; font-weight: bold; color: var(--text-main); outline:none; font-size: var(--fs-13);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-14);"> + </button></div><div style="width:70px; text-align:right; font-weight:bold; font-size:var(--fs-14); margin-left: 10px; color: var(--text-main);">${totalDisplay}</div></div>`;
+        });
+        cHTML.innerHTML = finalCartHtml;
+    }
+    
+    let posDiscEl = document.getElementById('posDiscount'); 
+    let discountValue = parseFloat(posDiscEl ? posDiscEl.value : 0) || 0; 
+    let posDiscTypeEl = document.getElementById('posDiscountType'); 
+    let discountType = posDiscTypeEl ? posDiscTypeEl.value : '%';
+    
+    let totalBaseUsd = tUsdOnly + (tRielOnly / window.cartRate); 
+    let discountAmountUsd = 0;
+    if (discountType === '%') { 
+        if (discountValue > 100) discountValue = 100; 
+        if (discountValue < 0) discountValue = 0; 
+        discountAmountUsd = totalBaseUsd * (discountValue / 100); 
+    } else { 
+        if (discountValue < 0) discountValue = 0; 
+        discountAmountUsd = discountValue; 
+        if (discountAmountUsd > totalBaseUsd) discountAmountUsd = totalBaseUsd; 
+    }
+    let subTotalAfterDiscount = totalBaseUsd - discountAmountUsd; 
+    let taxAmountUsd = 0; 
+    if (window.sysSettings && window.sysSettings.tax) { 
+        let taxRate = parseFloat(window.sysSettings.taxRate) || 0; 
+        taxAmountUsd = subTotalAfterDiscount * (taxRate / 100); 
+    }
+    window.cartFinalUsd = subTotalAfterDiscount + taxAmountUsd; 
+    window.cartFinalRiel = window.cartFinalUsd * window.cartRate;
+    
+    const cartTotalQtyEl = document.getElementById('cartTotalQty');
+    if (cartTotalQtyEl) cartTotalQtyEl.innerText = tQty; 
+    
+    const cartDiscEl = document.getElementById('cartDiscountAmount');
+    if (cartDiscEl) {
+        if (discountType === '%' && discountValue > 0) {
+            cartDiscEl.innerText = `-${window.fMoney(discountAmountUsd)} (${discountValue}%)`;
+        } else {
+            cartDiscEl.innerText = '-' + window.fMoney(discountAmountUsd);
+        }
+    } 
+    
+    const cartTaxEl = document.getElementById('cartTaxAmount');
+    if (cartTaxEl) cartTaxEl.innerText = '+' + window.fMoney(taxAmountUsd);
+    
+    const cartTotEl = document.getElementById('cartTotalAmount');
+    if (cartTotEl) cartTotEl.innerText = window.fMoney(window.cartFinalUsd); 
+    
+    const cartRielEl = document.getElementById('cartTotalAmountRiel');
+    if (cartRielEl) {
+        if (window.cartFinalRiel > 0) cartRielEl.innerText = Math.round(window.cartFinalRiel).toLocaleString() + ' ៛'; 
+        else cartRielEl.innerText = '';
+    }
+    
+    const body = document.getElementById('cartSummaryBody'); 
+    if (!body) return;
+    const isCollapsed = body.classList.contains('collapsed'); 
+    const arrow = isCollapsed ? '▲' : '▼'; 
+    const actionText = isCollapsed ? 'បើកផ្ទាំងគិតលុយ (Checkout)' : 'បង្រួម/ពង្រីក ផ្ទាំងគិតលុយ';
+    const mobileInfo = document.getElementById('mobileCartTotalInfo');
+    if (mobileInfo) mobileInfo.innerText = `${arrow} ${actionText} - ${tQty} មុខ (${window.fMoney(window.cartFinalUsd)}) ${arrow}`;
+};
+
+window.clearCart = function() { 
+    if (!window.cart || window.cart.length === 0) return; 
+    if (typeof window.ksMsg === 'function') {
+        window.ksMsg('តើអ្នកពិតជាចង់លុបទំនិញទាំងអស់ចេញពីកន្ត្រកមែនទេ?', 'បញ្ជាក់ការលុប', true, () => { 
+            window.cart = []; 
+            window.renderCart(); 
+            window.renderPOSProducts(); 
+        }); 
+    } else {
+        window.cart = []; 
+        window.renderCart(); 
+        window.renderPOSProducts(); 
+    }
+};
+
+window.toggleCartSummary = function() { 
+    const body = document.getElementById('cartSummaryBody'); 
+    const btn = document.getElementById('toggleCartBtn'); 
+    if (!body || !btn) return;
+    const tQty = (window.cart || []).reduce((acc, item) => acc + item.cartQty, 0);
+    if (window.innerWidth <= 768) { 
+        document.getElementById('mobileCartContainer').classList.toggle('open'); 
+    } else {
+        if (body.classList.contains('collapsed')) { 
+            body.classList.remove('collapsed'); 
+            btn.innerHTML = `<span id="mobileCartTotalInfo">▼ បង្រួម/ពង្រីក ផ្ទាំងគិតលុយ - ${tQty} មុខ (${window.fMoney(window.cartFinalUsd)}) ▼</span>`; 
+        } else { 
+            body.classList.add('collapsed'); 
+            btn.innerHTML = `<span id="mobileCartTotalInfo">▲ បើកផ្ទាំងគិតលុយ (Checkout) - ${tQty} មុខ (${window.fMoney(window.cartFinalUsd)}) ▲</span>`; 
+        }
+    }
+};
+
+window.openCheckoutModal = function() { 
+    if (!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); 
+    let displayHtml = `${window.fMoney(window.cartFinalUsd)}`; 
+    if (window.cartFinalRiel > 0) displayHtml += ` <br><span style="font-size: 18px; color: var(--text-muted);">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</span>`; 
+    
+    document.getElementById('checkoutTotalDisplay').innerHTML = displayHtml; 
+
+    const qrContainer = document.getElementById('checkoutQrContainer');
+    const qrImage = document.getElementById('checkoutQrImage');
+    if (window.shopQR && qrContainer && qrImage) {
+        qrImage.src = window.shopQR;
+        qrContainer.style.display = 'block';
+    } else if (qrContainer) {
+        qrContainer.style.display = 'none';
+    }
+    
+    document.getElementById('checkoutReceivedUsd').value = ''; 
+    document.getElementById('checkoutReceivedRiel').value = ''; 
+    document.getElementById('checkoutChangeDisplay').innerText = '$0.00 | 0 ៛'; 
+    document.getElementById('checkoutModal').style.display = 'flex'; 
+    
+    if (window.innerWidth <= 768) { document.getElementById('mobileCartContainer').classList.remove('open'); }
+    if (window.cartFinalUsd > 0) setTimeout(() => document.getElementById('checkoutReceivedUsd').focus(), 100); 
+    else setTimeout(() => document.getElementById('checkoutReceivedRiel').focus(), 100); 
+};
+
+window.calculateChange = function() { 
+    let recvUsd = parseFloat(document.getElementById('checkoutReceivedUsd').value) || 0; 
+    let recvRiel = parseFloat(document.getElementById('checkoutReceivedRiel').value) || 0; 
+    let totalKhr = Math.round(window.cartFinalRiel); 
+    let recvKhr = (recvUsd * window.cartRate) + recvRiel; 
+    let changeKhr = recvKhr - totalKhr; 
+    if (changeKhr < 0) changeKhr = 0; 
+    let changeUsd = changeKhr / window.cartRate; 
+    document.getElementById('checkoutChangeDisplay').innerText = `${window.fMoney(changeUsd)} | ${Math.round(changeKhr).toLocaleString()} ៛`; 
+};
+
+window.processCheckoutPaid = function() { 
+    let recvUsdText = document.getElementById('checkoutReceivedUsd').value; 
+    let recvRielText = document.getElementById('checkoutReceivedRiel').value; 
+    let recvUsd = parseFloat(recvUsdText) || 0;
+    let recvRiel = parseFloat(recvRielText) || 0;
+
+    if (!recvUsdText && !recvRielText) {
+        recvUsd = window.cartFinalUsd;
+        recvRiel = 0;
+    }
+
+    let totalKhr = Math.round(window.cartFinalRiel); 
+    let recvKhr = (recvUsd * window.cartRate) + recvRiel; 
+    let changeKhr = recvKhr - totalKhr; 
+    if (changeKhr < 0) changeKhr = 0; 
+    let changeUsd = changeKhr / window.cartRate; 
+    
+    document.getElementById('checkoutModal').style.display = 'none'; 
+    window.checkout('paid', recvUsd, recvRiel, changeUsd, changeKhr); 
+};
+
+window.openPreorderModal = function() { 
+    if (!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); 
+    
+    const custNameInput = document.getElementById('posCustomerName').value.trim();
+    if (!custNameInput) return notifyPosUser('សុំបញ្ចូលឈ្មោះអតិថិជនសិន មុននឹងចុចកក់ប្រាក់!');
+
+    let displayHtml = `${window.fMoney(window.cartFinalUsd)}`; 
+    if (window.cartFinalRiel > 0) displayHtml += ` <br><span style="font-size: 18px; color: var(--text-muted);">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</span>`; 
+    
+    document.getElementById('preorderTotalDisplay').innerHTML = displayHtml; 
+    document.getElementById('preorderDepositUsd').value = ''; 
+    document.getElementById('preorderDepositRiel').value = ''; 
+    document.getElementById('preorderRemainingDisplay').innerText = `${window.fMoney(window.cartFinalUsd)} | ${Math.round(window.cartFinalRiel).toLocaleString()} ៛`; 
+    document.getElementById('preorderModal').style.display = 'flex'; 
+    
+    if (window.innerWidth <= 768) { document.getElementById('mobileCartContainer').classList.remove('open'); }
+    setTimeout(() => document.getElementById('preorderDepositUsd').focus(), 100);
+};
+
+window.calculatePreorderRemaining = function() { 
+    let depositUsd = parseFloat(document.getElementById('preorderDepositUsd').value) || 0; 
+    let depositRiel = parseFloat(document.getElementById('preorderDepositRiel').value) || 0; 
+    let totalKhr = Math.round(window.cartFinalRiel); 
+    let depositKhr = (depositUsd * window.cartRate) + depositRiel; 
+    let remainingKhr = totalKhr - depositKhr; 
+    if (remainingKhr < 0) remainingKhr = 0; 
+    let remainingUsd = remainingKhr / window.cartRate; 
+    document.getElementById('preorderRemainingDisplay').innerText = `${window.fMoney(remainingUsd)} | ${Math.round(remainingKhr).toLocaleString()} ៛`; 
+};
+
+window.processPreorder = function() {
+    let depositUsd = parseFloat(document.getElementById('preorderDepositUsd').value) || 0; 
+    let depositRiel = parseFloat(document.getElementById('preorderDepositRiel').value) || 0;
+    document.getElementById('preorderModal').style.display = 'none'; 
+    window.checkout('preorder', depositUsd, depositRiel, 0, 0); 
+};
+
+// 🖨️ មុខងារបោះពុម្ពវិក្កយបត្រគាំទ្រខ្នាត 80mm, 57x40mm (58mm), និង A4
+window.executePrint = function(htmlContent) {
+    const cfg = (typeof window.getReceiptSizeConfig === 'function') ? window.getReceiptSizeConfig() : {
+        mode: '80mm',
+        pageCss: '@page { size: 80mm auto; margin: 0; }',
+        bodyWidth: '76mm',
+        padding: '4mm',
+        fontSize: '12px',
+        titleSize: '16px'
     };
 
-    function applyReceiptConfigToInputs(cfg) {
-        if (!cfg) return;
-        document.getElementById('setPrintPaperMm').value = cfg.paperMm || 80;
-        document.getElementById('setPrintBodyMm').value = cfg.bodyMm || 76;
-        document.getElementById('setPrintPadMm').value = cfg.padMm !== undefined ? cfg.padMm : 4;
-        document.getElementById('setDownloadWidthPx').value = cfg.downloadWidthPx || 380;
-        document.getElementById('setDownloadScale').value = String(cfg.downloadScale || 2);
-        document.getElementById('setReceiptFontPx').value = cfg.fontPx || 12;
-        document.getElementById('setReceiptTitlePx').value = cfg.titlePx || 16;
-        document.getElementById('setReceiptLogoPx').value = cfg.logoPx || 100;
-        document.getElementById('setReceiptQrPx').value = cfg.qrPx || 170;
-        updateLiveReceiptPreview();
-    }
+    const printStyles = `
+        <style>
+            ${cfg.pageCss}
+            * { box-sizing: border-box; font-family: 'Kantumruy Pro', 'Battambang', sans-serif; color: #000 !important; }
+            body { width: ${cfg.bodyWidth}; max-width: 100%; margin: 0 auto; padding: ${cfg.padding}; font-size: ${cfg.fontSize}; line-height: 1.4; background: #fff; }
+            h2 { font-size: ${cfg.titleSize} !important; }
+            table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+            th, td { word-wrap: break-word; vertical-align: top; }
+            .print-dashed-line { border-bottom: 1px dashed #000; margin: 6px 0; }
+        </style>
+    `;
 
-    function getCurrentReceiptInputsConfig() {
-        return {
-            mode: document.getElementById('setAdminReceiptSize')?.value || '80mm',
-            paperMm: parseFloat(document.getElementById('setPrintPaperMm')?.value) || 80,
-            bodyMm: parseFloat(document.getElementById('setPrintBodyMm')?.value) || 76,
-            padMm: parseFloat(document.getElementById('setPrintPadMm')?.value) || 0,
-            downloadWidthPx: parseInt(document.getElementById('setDownloadWidthPx')?.value) || 380,
-            downloadScale: parseInt(document.getElementById('setDownloadScale')?.value) || 2,
-            fontPx: parseInt(document.getElementById('setReceiptFontPx')?.value) || 12,
-            titlePx: parseInt(document.getElementById('setReceiptTitlePx')?.value) || 16,
-            logoPx: parseInt(document.getElementById('setReceiptLogoPx')?.value) || 100,
-            qrPx: parseInt(document.getElementById('setReceiptQrPx')?.value) || 170
-        };
-    }
-
-    function onAdminReceiptPresetChange(val) {
-        if (DEFAULT_RECEIPT_PRESETS[val]) {
-            applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[val]);
-        } else if (val.startsWith('preset_')) {
-            const found = customPrinterPresets.find(p => p.id === val);
-            if (found) applyReceiptConfigToInputs(found);
-        } else {
-            updateLiveReceiptPreview();
-        }
-        saveAdminSettings();
-    }
-
-    function onCustomDimensionEdit() {
-        const sel = document.getElementById('setAdminReceiptSize');
-        if (sel && DEFAULT_RECEIPT_PRESETS[sel.value]) {
-            sel.value = 'custom';
-        }
-        updateLiveReceiptPreview();
-        saveAdminSettings();
-    }
-
-    function renderCustomPrinterPresets() {
-        const sel = document.getElementById('setAdminReceiptSize');
-        const listEl = document.getElementById('customPrinterPresetsList');
-        if (!sel || !listEl) return;
-
-        const currentVal = sel.value;
-        sel.querySelectorAll('option[data-custom-preset="true"]').forEach(o => o.remove());
-
-        customPrinterPresets.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.setAttribute('data-custom-preset', 'true');
-            opt.textContent = `🖨️ ${p.name} (${p.paperMm}mm | ${p.downloadWidthPx}px)`;
-            sel.appendChild(opt);
-        });
-
-        if ([...sel.options].some(o => o.value === currentVal)) {
-            sel.value = currentVal;
-        }
-
-        if (customPrinterPresets.length === 0) {
-            listEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">មិនទាន់មានខ្នាតបង្កើតថ្មីនៅឡើយទេ។</span>';
-            return;
-        }
-
-        listEl.innerHTML = customPrinterPresets.map((p, idx) => `
-            <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--card-bg); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;">
-                <span style="cursor: pointer; color: var(--brand-dark);" onclick="document.getElementById('setAdminReceiptSize').value='${p.id}'; onAdminReceiptPresetChange('${p.id}');">
-                    🖨️ ${p.name} <small style="color: var(--brand-cyan);">(${p.paperMm}mm / ${p.downloadWidthPx}px)</small>
-                </span>
-                <button type="button" style="background: var(--danger); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px;" onclick="deleteCustomPrinterPreset(${idx})" title="លុបខ្នាតនេះ">✕</button>
-            </div>
-        `).join('');
-    }
-
-    function saveCustomPrinterPreset() {
-        const nameInp = document.getElementById('newPrinterPresetName');
-        const name = nameInp ? nameInp.value.trim() : '';
-        if (!name) return showToast('សូមវាយឈ្មោះខ្នាតម៉ាស៊ីនព្រីនជាមុនសិន!', true);
-
-        const cfg = getCurrentReceiptInputsConfig();
-        const presetId = 'preset_' + Date.now();
-        customPrinterPresets.push({
-            id: presetId,
-            name: name,
-            ...cfg
-        });
-
-        nameInp.value = '';
-        renderCustomPrinterPresets();
-        document.getElementById('setAdminReceiptSize').value = presetId;
-        saveAdminSettings();
-        showToast(`✅ បានបង្កើតខ្នាត "${name}" រួចរាល់!`);
-    }
-
-    function deleteCustomPrinterPreset(idx) {
-        const removed = customPrinterPresets.splice(idx, 1)[0];
-        const sel = document.getElementById('setAdminReceiptSize');
-        if (sel && removed && sel.value === removed.id) {
-            sel.value = '80mm';
-            applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS['80mm']);
-        }
-        renderCustomPrinterPresets();
-        saveAdminSettings();
-        showToast('បានលុបខ្នាតម៉ាស៊ីនព្រីន!');
-    }
-
-    // មុខងារគ្រប់គ្រងម៉ាស៊ីនព្រីនតាមផ្នែក (Multi-Printer)
-    function renderPrintStations() {
-        const container = document.getElementById('printStationsList');
-        if (!container) return;
-        container.innerHTML = '';
-        if (printStations.length === 0) {
-            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center;">មិនទាន់មានម៉ាស៊ីនព្រីនតាមផ្នែកទេ។ សូមបង្កើតថ្មីខាងក្រោម។</div>';
-            return;
-        }
-        printStations.forEach((st, idx) => {
-            container.innerHTML += `
-                <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color);">
-                    <div>
-                        <strong style="color: var(--brand-dark); font-size: 13px;">🖨️ ${st.name}</strong> 
-                        <span style="font-size: 11px; color: var(--text-muted); margin-left: 5px;">(ព្រីន ${st.copies} សន្លឹក)</span>
-                        <div style="font-size: 12px; color: var(--brand-cyan); margin-top: 4px;">🏷️ ប្រភេទ: ${st.categories.join(', ')}</div>
-                    </div>
-                    <button type="button" class="btn-script btn-delete" onclick="removePrintStation(${idx})"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `;
-        });
-    }
-
-    function addPrintStation() {
-        const nameInp = document.getElementById('newStationName');
-        const catInp = document.getElementById('newStationCategories');
-        const copyInp = document.getElementById('newStationCopies');
-        
-        const name = nameInp.value.trim();
-        const cats = catInp.value.split(',').map(c => c.trim()).filter(c => c);
-        const copies = parseInt(copyInp.value) || 1;
-
-        if (!name) return showToast('សូមបញ្ជាក់ឈ្មោះម៉ាស៊ីនព្រីន!', true);
-        if (cats.length === 0) return showToast('សូមបញ្ចូលប្រភេទមុខទំនិញ!', true);
-
-        printStations.push({ name: name, categories: cats, copies: copies, enabled: true });
-        
-        nameInp.value = '';
-        catInp.value = '';
-        copyInp.value = '1';
-        
-        renderPrintStations();
-        saveAdminSettings();
-        showToast('បានបន្ថែមម៉ាស៊ីនព្រីនថ្មីជោគជ័យ!');
-    }
-
-    function removePrintStation(idx) {
-        printStations.splice(idx, 1);
-        renderPrintStations();
-        saveAdminSettings();
-        showToast('បានលុបម៉ាស៊ីនព្រីន!');
-    }
-
-    function updateLiveReceiptPreview() {
-        const box = document.getElementById('adminReceiptLivePreview');
-        if (!box) return;
-        const cfg = getCurrentReceiptInputsConfig();
-        const footerTxt = document.getElementById('setAdminReceiptFooter')?.value || 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
-        const shopNm = localStorage.getItem(`ks2_${BRANCH}_shop_name`) || 'SKM INTEGRATE POS';
-        const qrSrc = document.getElementById('setMenuQR')?.value || '';
-
-        box.style.width = `${cfg.downloadWidthPx}px`;
-        box.style.fontSize = `${cfg.fontPx}px`;
-        box.style.padding = `${Math.max(8, cfg.padMm * 3)}px`;
-
-        box.innerHTML = `
-            <div style="text-align: center; margin-bottom: 8px;">
-                <div style="font-weight: 900; font-size: ${cfg.titlePx}px; color: #000;">${shopNm}</div>
-                <div style="font-size: ${Math.max(9, cfg.fontPx - 1)}px; color: #444;">ខ្នាតព្រីន: ${cfg.paperMm}mm (ផ្ទៃអក្សរ ${cfg.bodyMm}mm) | រូប: ${cfg.downloadWidthPx}px (${cfg.downloadScale}x)</div>
-                <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
-                <div style="font-weight: bold;">បង្កាន់ដៃទទួលប្រាក់ / Receipt</div>
-                <div style="text-align: left; font-size: ${Math.max(9, cfg.fontPx - 1)}px;">លេខវិក្កយបត្រ: INV-SAMPLE-001</div>
-                <div style="text-align: left; font-size: ${Math.max(9, cfg.fontPx - 1)}px;">អតិថិជន: តុ VIP 1</div>
-                <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
-            </div>
-            <table style="width: 100%; border-collapse: collapse; font-size: ${cfg.fontPx}px;">
-                <thead>
-                    <tr style="border-bottom: 1px solid #000;">
-                        <th style="text-align: left; padding-bottom: 4px;">ទំនិញ</th>
-                        <th style="text-align: center; padding-bottom: 4px;">ចំនួន</th>
-                        <th style="text-align: right; padding-bottom: 4px;">សរុប</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="padding: 4px 0;">1. កាហ្វេទឹកដោះគោទឹកកក</td>
-                        <td style="text-align: center; padding: 4px 0;">2</td>
-                        <td style="text-align: right; font-weight: bold; padding: 4px 0;">$3.00</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0;">2. ម៉ាត់ឆាដូងក្រអូប</td>
-                        <td style="text-align: center; padding: 4px 0;">1</td>
-                        <td style="text-align: right; font-weight: bold; padding: 4px 0;">$2.50</td>
-                    </tr>
-                </tbody>
-            </table>
-            <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
-            <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: ${cfg.fontPx + 2}px;">
-                <span>សរុបប្រាក់:</span>
-                <span>$5.50 (22,000 ៛)</span>
-            </div>
-            ${qrSrc ? `<div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 8px;"><div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">ស្កេនទូទាត់ប្រាក់</div><img src="${qrSrc}" style="width: ${cfg.qrPx}px; height: ${cfg.qrPx}px; object-fit: contain;"></div>` : ''}
-            <div style="text-align: center; margin-top: 10px; font-weight: bold; font-size: ${Math.max(10, cfg.fontPx - 1)}px;">${footerTxt}</div>
-        `;
-    }
-
-    function testPrintReceiptFromAdmin() {
-        const previewEl = document.getElementById('adminReceiptLivePreview');
-        if (!previewEl) return;
-        const cfg = getCurrentReceiptInputsConfig();
-        const pageSizeCss = cfg.mode === 'A4' ? `@page { size: A4 portrait; margin: ${cfg.padMm}mm; }` : `@page { size: ${cfg.paperMm}mm auto; margin: 0; }`;
-        const win = window.open('', '', cfg.paperMm >= 150 ? 'width=850,height=900' : 'width=380,height=650');
-        if (!win) return showToast('សូមអនុញ្ញាតផ្ទាំង Popup ដើម្បីសាកល្បងព្រីន!', true);
-        win.document.write(`<html><head><title>Test Print (${cfg.paperMm}mm)</title>
-            <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet">
-            <style>
-                ${pageSizeCss}
-                * { box-sizing: border-box; font-family: 'Battambang', sans-serif; color: #000 !important; }
-                body { width: ${cfg.bodyMm}mm; max-width: 100%; margin: 0 auto; padding: ${cfg.padMm}mm; font-size: ${cfg.fontPx}px; line-height: 1.4; }
-            </style></head><body>${previewEl.innerHTML}</body></html>`);
-        win.document.close();
-        setTimeout(() => { win.print(); win.close(); }, 500);
-    }
-
-    function showToast(msg, isError = false) {
-        const t = document.getElementById('toast'); 
-        t.innerText = msg; t.style.background = isError ? 'var(--danger)' : 'var(--success)';
-        t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500);
-    }
-
-    async function testOrderTelegramBot() {
-        const token = document.getElementById('setOrderTelegramBotToken').value.trim();
-        const chatId = document.getElementById('setOrderTelegramChatId').value.trim();
-        if (!token || !chatId) return showToast('សូមបំពេញ Bot Token និង Chat ID (Order) ជាមុនសិន!', true);
-        
-        showToast('កំពុងផ្ញើសារសាកល្បង Order Bot...');
-        try {
-            const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, text: "🛒 [TEST] សារសាកល្បងសម្រាប់ Bot កុម្ម៉ង់ទំនិញ ដំណើរការជោគជ័យ!", parse_mode: 'HTML' })
-            });
-            const data = await res.json();
-            if (data.ok) showToast('✅ ផ្ញើសារ Test Order Bot ជោគជ័យ!');
-            else showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
-        } catch(err) { showToast('❌ Error: ' + err.message, true); }
-    }
-
-    async function testServiceTelegramBot() {
-        const token = document.getElementById('setServiceTelegramBotToken').value.trim();
-        const chatId = document.getElementById('setServiceTelegramChatId').value.trim();
-        if (!token || !chatId) return showToast('សូមបំពេញ Bot Token និង Chat ID (Service) ជាមុនសិន!', true);
-        
-        showToast('កំពុងផ្ញើសារសាកល្បង Service Bot...');
-        try {
-            const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ chat_id: chatId, text: "🛎️ [TEST] សារសាកល្បងសម្រាប់ Bot សេវាកម្ម / ហៅបុគ្គលិក ដំណើរការជោគជ័យ!", parse_mode: 'HTML' })
-            });
-            const data = await res.json();
-            if (data.ok) showToast('✅ ផ្ញើសារ Test Service Bot ជោគជ័យ!');
-            else showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
-        } catch(err) { showToast('❌ Error: ' + err.message, true); }
-    }
-
-    async function initAdmin() {
-        try {
-            let localSys = {}; let localPosScripts = [];
-            try { const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`); if (rawSys) localSys = JSON.parse(rawSys); } catch(e) {}
-            try { const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`); if (rawPos) localPosScripts = JSON.parse(rawPos); } catch(e) {}
-            
-            if (localSys.customMenuScripts) menuScripts = localSys.customMenuScripts;
-            if (localSys.promoCodes) promoCodesList = localSys.promoCodes;
-            if (localPosScripts.length > 0) posScripts = localPosScripts;
-            
-            if (localSys.orderTelegramBotToken) document.getElementById('setOrderTelegramBotToken').value = localSys.orderTelegramBotToken;
-            if (localSys.orderTelegramChatId) document.getElementById('setOrderTelegramChatId').value = localSys.orderTelegramChatId;
-            if (localSys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = localSys.serviceTelegramBotToken;
-            if (localSys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = localSys.serviceTelegramChatId;
-
-            document.getElementById('toggleTicker').checked = !!(localSys.toggleTicker || localSys.tickerText || localSys.tickerNews);
-            document.getElementById('setTickerText').value = localSys.tickerText || localSys.tickerNews || '';
-            document.getElementById('toggleTableFeature').checked = !!localSys.toggleTableFeature;
-            document.getElementById('setTotalTables').value = localSys.totalTables || 20;
-            document.getElementById('setTablePrefix').value = localSys.tablePrefix || 'តុលេខ';
-            if (document.getElementById('setCustomTables')) {
-                document.getElementById('setCustomTables').value = localSys.customTables !== undefined ? localSys.customTables : 'VIP 1, VIP 2, VIP 3';
-            }
-            if (document.getElementById('toggleHideBannerPromoBadge')) {
-                document.getElementById('toggleHideBannerPromoBadge').checked = !!localSys.hideBannerPromoBadge;
-            }
-            if (document.getElementById('setPopupRepeatInterval')) {
-                document.getElementById('setPopupRepeatInterval').value = localSys.popupRepeatInterval ? String(localSys.popupRepeatInterval) : '1';
-            }
-            if (localSys.welcomeImg) updateWelcomePreview(localSys.welcomeImg);
-
-            if (localSys.customPrinterPresets && Array.isArray(localSys.customPrinterPresets)) {
-                customPrinterPresets = localSys.customPrinterPresets;
-            }
-            renderCustomPrinterPresets();
-            if (localSys.receiptSize && document.getElementById('setAdminReceiptSize')) {
-                document.getElementById('setAdminReceiptSize').value = localSys.receiptSize;
-            }
-            if (localSys.receiptFooter && document.getElementById('setAdminReceiptFooter')) {
-                document.getElementById('setAdminReceiptFooter').value = localSys.receiptFooter;
-            }
-            if (localSys.customReceiptConfig) {
-                applyReceiptConfigToInputs(localSys.customReceiptConfig);
-            } else {
-                const mode = localSys.receiptSize || '80mm';
-                applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[mode] || DEFAULT_RECEIPT_PRESETS['80mm']);
-            }
-
-            if (localSys.printSplitByCategory !== undefined && document.getElementById('toggleSplitPrinting')) {
-                document.getElementById('toggleSplitPrinting').checked = localSys.printSplitByCategory;
-            }
-            if (localSys.printStations && Array.isArray(localSys.printStations)) {
-                printStations = localSys.printStations;
-            }
-            renderPrintStations();
-
-            renderMenuScripts(); renderPosScripts(); renderPromoCodesList();
-
-            if (supabaseClient && navigator.onLine) {
-                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                if (data && data.data_json) {
-                    let d = data.data_json; let sys = d.sysSettings || {};
-                    
-                    if(sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
-                    if(sys.menuBanners && sys.menuBanners.length > 0) adminBanners = sys.menuBanners; else if(sys.menuBanner) adminBanners = [sys.menuBanner];
-                    renderAdminBanners();
-                    
-                    if(sys.promoCodes && Array.isArray(sys.promoCodes)) promoCodesList = sys.promoCodes;
-                    renderPromoCodesList();
-                    if (document.getElementById('toggleHideBannerPromoBadge')) {
-                        document.getElementById('toggleHideBannerPromoBadge').checked = !!sys.hideBannerPromoBadge;
-                    }
-
-                    if(sys.menuQR) {
-                        document.getElementById('setMenuQR').value = sys.menuQR;
-                        const qp = document.getElementById('menuQRPreview'); qp.src = sys.menuQR; qp.style.display = 'block';
-                        document.getElementById('qrPreviewContainer').style.display = 'block';
-                    }
-                    
-                    if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
-                    if(sys.socialIcon) document.getElementById('setSocialIcon').value = sys.socialIcon;
-                    if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
-                    if(sys.socialLink) document.getElementById('setSocialLink').value = sys.socialLink;
-                    
-                    const cloudTicker = sys.tickerText || sys.tickerNews || '';
-                    document.getElementById('toggleTicker').checked = !!(sys.toggleTicker || cloudTicker);
-                    document.getElementById('setTickerText').value = cloudTicker;
-                    document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
-                    document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
-                    if (document.getElementById('setPopupRepeatInterval') && sys.popupRepeatInterval) {
-                        document.getElementById('setPopupRepeatInterval').value = String(sys.popupRepeatInterval);
-                    }
-                    document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
-                    document.getElementById('setOpenTime').value = sys.openTime || '08:00';
-                    document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
-                    document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
-
-                    document.getElementById('toggleTableFeature').checked = !!sys.toggleTableFeature;
-                    document.getElementById('setTotalTables').value = sys.totalTables || 20;
-                    document.getElementById('setTablePrefix').value = sys.tablePrefix || 'តុលេខ';
-                    if (document.getElementById('setCustomTables')) {
-                        document.getElementById('setCustomTables').value = sys.customTables !== undefined ? sys.customTables : 'VIP 1, VIP 2, VIP 3';
-                    }
-
-                    if (sys.customPrinterPresets && Array.isArray(sys.customPrinterPresets)) {
-                        customPrinterPresets = sys.customPrinterPresets;
-                    }
-                    renderCustomPrinterPresets();
-                    if (sys.receiptSize && document.getElementById('setAdminReceiptSize')) {
-                        document.getElementById('setAdminReceiptSize').value = sys.receiptSize;
-                    }
-                    if (sys.receiptFooter && document.getElementById('setAdminReceiptFooter')) {
-                        document.getElementById('setAdminReceiptFooter').value = sys.receiptFooter;
-                    }
-                    if (sys.customReceiptConfig) {
-                        applyReceiptConfigToInputs(sys.customReceiptConfig);
-                    } else {
-                        const mode = sys.receiptSize || '80mm';
-                        applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[mode] || DEFAULT_RECEIPT_PRESETS['80mm']);
-                    }
-
-                    if (sys.printSplitByCategory !== undefined && document.getElementById('toggleSplitPrinting')) {
-                        document.getElementById('toggleSplitPrinting').checked = sys.printSplitByCategory;
-                    }
-                    if (sys.printStations && Array.isArray(sys.printStations)) {
-                        printStations = sys.printStations;
-                    }
-                    renderPrintStations();
-
-                    if(sys.orderTelegramBotToken || d.telegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken || d.telegramBotToken || '';
-                    if(sys.orderTelegramChatId || d.telegramChatId) document.getElementById('setOrderTelegramChatId').value = sys.orderTelegramChatId || d.telegramChatId || '';
-                    if(sys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = sys.serviceTelegramBotToken || '';
-                    if(sys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = sys.serviceTelegramChatId || '';
-
-                    if(sys.customMenuScripts && Array.isArray(sys.customMenuScripts)) menuScripts = sys.customMenuScripts;
-                    if(d.customPosScripts && Array.isArray(d.customPosScripts)) posScripts = d.customPosScripts;
-                    
-                    renderMenuScripts(); renderPosScripts();
-                }
-            }
-        } catch(e) { console.error("Init admin error:", e); }
-    }
-
-    async function saveAdminSettings() {
-        try {
-            localStorage.setItem(`ks2_${BRANCH}_pos_scripts`, JSON.stringify(posScripts));
-            let d = {};
-            if (supabaseClient && navigator.onLine) {
-                try { let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle(); if (data && data.data_json) d = data.data_json; } catch(err) {}
-            }
-            if(!d.sysSettings) {
-                try {
-                    d.sysSettings = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`)) || {};
-                } catch(e) { d.sysSettings = {}; }
-            }
-            
-            d.sysSettings.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
-            d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== '');
-            d.sysSettings.promoCodes = promoCodesList;
-            d.sysSettings.hideBannerPromoBadge = document.getElementById('toggleHideBannerPromoBadge')?.checked || false;
-            d.sysSettings.menuQR = document.getElementById('setMenuQR').value.trim();
-            d.sysSettings.chatLink = document.getElementById('setChatLink').value.trim();
-            d.sysSettings.socialIcon = document.getElementById('setSocialIcon').value;
-            d.sysSettings.socialLabel = document.getElementById('setSocialLabel').value.trim();
-            d.sysSettings.socialLink = document.getElementById('setSocialLink').value.trim();
-            d.sysSettings.toggleTicker = document.getElementById('toggleTicker').checked;
-
-            const tickerVal = document.getElementById('setTickerText').value.trim();
-            d.sysSettings.tickerText = tickerVal;
-            d.sysSettings.tickerNews = tickerVal;
-
-            d.sysSettings.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
-            d.sysSettings.welcomeImg = document.getElementById('setWelcomeImg').value.trim();
-            d.sysSettings.popupRepeatInterval = parseInt(document.getElementById('setPopupRepeatInterval')?.value || '1') || 1;
-            d.sysSettings.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
-            d.sysSettings.openTime = document.getElementById('setOpenTime').value;
-            d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
-            d.sysSettings.preorder = document.getElementById('togglePreorder').checked;
-
-            d.sysSettings.toggleTableFeature = document.getElementById('toggleTableFeature').checked;
-            d.sysSettings.totalTables = parseInt(document.getElementById('setTotalTables').value) || 20;
-            d.sysSettings.tablePrefix = document.getElementById('setTablePrefix').value.trim() || 'តុលេខ';
-            d.sysSettings.customTables = document.getElementById('setCustomTables') ? document.getElementById('setCustomTables').value.trim() : 'VIP 1, VIP 2, VIP 3';
-
-            // 🖨️ រក្សាទុកការកំណត់ខ្នាតម៉ាស៊ីនព្រីន និងទំហំទាញយករូបវិក្កយបត្រ (Tab 8.1)
-            if (document.getElementById('setAdminReceiptSize')) {
-                d.sysSettings.receiptSize = document.getElementById('setAdminReceiptSize').value || '80mm';
-                d.sysSettings.customReceiptConfig = getCurrentReceiptInputsConfig();
-                d.sysSettings.customPrinterPresets = customPrinterPresets;
-            }
-            if (document.getElementById('setAdminReceiptFooter')) {
-                d.sysSettings.receiptFooter = document.getElementById('setAdminReceiptFooter').value.trim();
-            }
-
-            // 🖨️ រក្សាទុកការកំណត់ម៉ាស៊ីនព្រីនតាមផ្នែក (Tab 8.2)
-            if (document.getElementById('toggleSplitPrinting')) {
-                d.sysSettings.printSplitByCategory = document.getElementById('toggleSplitPrinting').checked;
-            }
-            d.sysSettings.printStations = printStations;
-
-            let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim();
-            let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
-            let servTok = document.getElementById('setServiceTelegramBotToken').value.trim();
-            let servChat = document.getElementById('setServiceTelegramChatId').value.trim();
-
-            d.sysSettings.orderTelegramBotToken = orderTok;
-            d.sysSettings.orderTelegramChatId = orderChat;
-            d.sysSettings.serviceTelegramBotToken = servTok;
-            d.sysSettings.serviceTelegramChatId = servChat;
-
-            d.telegramBotToken = orderTok; 
-            d.telegramChatId = orderChat;  
-            d.sysSettings.telegramBotToken = orderTok;
-            d.sysSettings.telegramChatId = orderChat;
-
-            d.sysSettings.customMenuScripts = menuScripts;
-            d.customPosScripts = posScripts;
-
-            localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
-            if (orderTok) localStorage.setItem(`ks2_${BRANCH}_telegram_bot_token`, orderTok);
-            if (orderChat) localStorage.setItem(`ks2_${BRANCH}_telegram_chat_id`, orderChat);
-
-            if (supabaseClient && navigator.onLine) {
-                let { error } = await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
-                if (error) throw error;
-            }
-            showToast('រក្សាទុកបានជោគជ័យ! (Saved!)');
-        } catch(e) { showToast('Save Failed: ' + e.message, true); console.error(e); }
-    }
-
-    function onPromoTypeChange() {
-        const type = document.getElementById('newPromoType').value;
-        const valInp = document.getElementById('newPromoValue');
-        if (type === 'freeship') {
-            valInp.value = '0';
-            valInp.disabled = true;
-            valInp.style.opacity = '0.5';
-        } else {
-            valInp.disabled = false;
-            valInp.style.opacity = '1';
+    const printWindow = window.open('', '', cfg.mode === 'A4' ? 'width=850,height=900' : 'width=350,height=650');
+    if (printWindow) {
+        printWindow.document.write('<html><head><title>Print Receipt</title>');
+        printWindow.document.write('<link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Kantumruy+Pro:wght@400;600;700&display=swap" rel="stylesheet">');
+        printWindow.document.write(printStyles);
+        printWindow.document.write('</head><body>');
+        printWindow.document.write(`<div id="receipt-container">${htmlContent}</div>`);
+        printWindow.document.write('</body></html>');
+        printWindow.document.close();
+        printWindow.focus();
+        setTimeout(() => {
+            printWindow.print();
+            printWindow.close();
+        }, 500);
+    } else {
+        const fallbackArea = document.getElementById('printReceiptArea');
+        if (fallbackArea) {
+            fallbackArea.style.maxWidth = cfg.bodyWidth;
+            fallbackArea.style.fontSize = cfg.fontSize;
+            fallbackArea.innerHTML = htmlContent;
+            window.print();
         }
     }
+};
 
-    function renderPromoCodesList() {
-        const container = document.getElementById('promoCodesListContainer');
-        if(!container) return;
-        container.innerHTML = '';
-        if(promoCodesList.length === 0) {
-            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដបញ្ចុះតម្លៃទេ។ សូមបង្កើតថ្មីខាងលើ។</div>';
-            return;
-        }
-        promoCodesList.forEach((promo, idx) => {
-            let desc = '';
-            if(promo.type === 'percent') desc = `(-${promo.value}%)`;
-            else if(promo.type === 'fixed') desc = `(-$${parseFloat(promo.value).toFixed(2)})`;
-            else if(promo.type === 'freeship') desc = `(ដឹកជញ្ជូនឥតគិតថ្លៃ)`;
+window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
+    if (!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!');
+    const custNameInput = document.getElementById('posCustomerName').value.trim(); 
+    const custPhoneInput = document.getElementById('posCustomerPhone').value.trim();
+    const tableSelectEl = document.getElementById('posTableSelect');
+    const selectedTable = (tableSelectEl && tableSelectEl.value) ? tableSelectEl.value.trim() : '';
 
-            let limitDesc = promo.limit > 0 ? `ប្រើបាន: ${promo.usedCount || 0}/${promo.limit} ដង` : `ប្រើបាន: មិនកំណត់`;
-            let userLimitBadge = promo.oneTimePerUser ? `<span style="font-size: 11px; color: #ef4444; margin-left: 5px; background: rgba(239, 68, 68, 0.1); padding: 2px 6px; border-radius: 4px;"><i class="fa-solid fa-user-lock"></i> ១ដង/ម្នាក់</span>` : '';
-
-            container.innerHTML += `
-                <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); ${editPromoIndex === idx ? 'border-color: var(--warning); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);' : ''}">
-                    <div>
-                        <strong style="color: var(--brand-dark); font-size: 14px;">🏷️ ${promo.code}</strong>
-                        <span style="font-size: 12px; color: var(--success); font-weight: bold; margin-left: 10px;">${desc}</span>
-                        <span style="font-size: 11px; color: var(--text-muted); margin-left: 10px; background: rgba(0,0,0,0.03); padding: 2px 6px; border-radius: 4px;">${limitDesc}</span>
-                        ${userLimitBadge}
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn-script" onclick="editPromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px; background: var(--warning); color: white; border-radius: 50%; border: none; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn-script btn-delete" onclick="deletePromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </div>
-            `;
-        });
-    }
-
-    function editPromoCode(idx) {
-        editPromoIndex = idx;
-        const promo = promoCodesList[idx];
-        
-        document.getElementById('newPromoCode').value = promo.code;
-        document.getElementById('newPromoType').value = promo.type;
-        document.getElementById('newPromoValue').value = promo.value || '';
-        document.getElementById('newPromoLimit').value = promo.limit > 0 ? promo.limit : '';
-        document.getElementById('newPromoPerUser').checked = !!promo.oneTimePerUser;
-        
-        onPromoTypeChange();
-        
-        const btnSave = document.getElementById('btnSavePromo');
-        btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកែប្រែ';
-        btnSave.style.background = 'var(--warning)';
-        
-        document.getElementById('btnCancelPromo').style.display = 'block';
-        renderPromoCodesList();
-    }
-
-    function cancelPromoEdit() {
-        editPromoIndex = -1;
-        document.getElementById('newPromoCode').value = '';
-        document.getElementById('newPromoType').value = 'percent';
-        document.getElementById('newPromoValue').value = '';
-        document.getElementById('newPromoLimit').value = '';
-        document.getElementById('newPromoPerUser').checked = false;
-        
-        onPromoTypeChange();
-        
-        const btnSave = document.getElementById('btnSavePromo');
-        btnSave.innerHTML = '+ បន្ថែមរក្សាទុក';
-        btnSave.style.background = 'var(--brand-cyan)';
-        
-        document.getElementById('btnCancelPromo').style.display = 'none';
-        renderPromoCodesList();
-    }
-
-    function addNewPromoCode() {
-        const codeInp = document.getElementById('newPromoCode');
-        const typeInp = document.getElementById('newPromoType');
-        const valInp = document.getElementById('newPromoValue');
-        const limitInp = document.getElementById('newPromoLimit');
-        const perUserInp = document.getElementById('newPromoPerUser');
-
-        const code = codeInp.value.trim().toUpperCase();
-        const type = typeInp.value;
-        const value = parseFloat(valInp.value) || 0;
-        const limit = parseInt(limitInp.value) || 0;
-        const oneTimePerUser = perUserInp.checked;
-
-        if(!code) {
-            return showToast('សូមបំពេញឈ្មោះកូដបញ្ចុះតម្លៃ!', true);
-        }
-
-        if(type !== 'freeship' && (isNaN(value) || value <= 0)) {
-            return showToast('សូមបញ្ចូលតម្លៃបញ្ចុះឱ្យបានត្រឹមត្រូវ!', true);
-        }
-
-        if (editPromoIndex === -1) {
-            if(promoCodesList.some(p => p.code === code)) {
-                return showToast('កូដនេះមានរួចហើយ!', true);
-            }
-            promoCodesList.push({ 
-                code, type, value, limit, usedCount: 0, oneTimePerUser
-            });
-            showToast('បានបន្ថែមរក្សាទុកកូដប្រូម៉ូសិនជោគជ័យ!');
-        } else {
-            if(promoCodesList.some((p, idx) => p.code === code && idx !== editPromoIndex)) {
-                return showToast('កូដនេះជាន់គ្នាជាមួយកូដផ្សេង!', true);
-            }
-            const currentUsedCount = promoCodesList[editPromoIndex].usedCount || 0;
-            promoCodesList[editPromoIndex] = { 
-                code, type, value, limit, usedCount: currentUsedCount, oneTimePerUser
-            };
-            showToast('បានកែប្រែកូដប្រូម៉ូសិនជោគជ័យ!');
-        }
-
-        cancelPromoEdit();
-        saveAdminSettings();
-    }
-
-    function deletePromoCode(idx) {
-        promoCodesList.splice(idx, 1);
-        if (editPromoIndex === idx) cancelPromoEdit();
-        renderPromoCodesList();
-        saveAdminSettings();
-        showToast('បានលុបកូដប្រូម៉ូសិន!');
-    }
-
-    function renderAdminBanners() {
-        const container = document.getElementById('bannerListContainer'); container.innerHTML = '';
-        if (adminBanners.length === 0) container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មាន Banner ទេ។ សូមចុច + បន្ថែម។</div>';
-        adminBanners.forEach((b, index) => {
-            container.innerHTML += `
-                <div style="background: var(--store-bg); padding: 10px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 10px; position: relative;">
-                    <div style="font-size:12px; font-weight:bold; margin-bottom:6px; color:var(--text-muted);">Banner ទី ${index + 1}</div>
-                    <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                        <input type="text" class="input-st" value="${b}" placeholder="Link ឬ Base64..." style="margin-bottom:0; flex:1;" onchange="updateAdminBanner(${index}, this.value)">
-                        <input type="file" id="bannerFile_${index}" accept="image/*" style="display:none;" onchange="uploadAdminBanner(event, ${index})">
-                        <button class="input-st" style="width: auto; padding: 0 15px; cursor: pointer;" onclick="document.getElementById('bannerFile_${index}').click()"><i class="fa-solid fa-upload"></i></button>
-                        <button class="input-st" style="width: auto; padding: 0 15px; cursor: pointer; color: var(--danger);" onclick="removeAdminBanner(${index})"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                    ${b ? `<div class="preview-box"><img src="${b}" style="width: 100%; height: auto; max-height: 250px; object-fit: contain; border-radius: 8px;"></div>` : ''}
-                </div>
-            `;
-        });
-    }
-    function addAdminBanner() { adminBanners.push(''); renderAdminBanners(); }
-    function removeAdminBanner(index) { adminBanners.splice(index, 1); renderAdminBanners(); saveAdminSettings(); }
-    function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); saveAdminSettings(); }
+    if ((status === 'unpaid' || status === 'preorder') && !custNameInput) return notifyPosUser('សុំបញ្ចូលឈ្មោះអតិថិជនសិន!');
     
-    function uploadAdminBanner(e, index) {
-        const file = e.target.files[0]; if(!file) return; 
-        
-        if (file.size > 5 * 1024 * 1024) {
-            showToast("កំពុងបង្ហាប់រូបភាពទំហំធំ... សូមរង់ចាំបន្តិច!", false);
-        }
+    let discountValue = parseFloat(document.getElementById('posDiscount') ? document.getElementById('posDiscount').value : 0) || 0; 
+    let discountType = document.getElementById('posDiscountType') ? document.getElementById('posDiscountType').value : '%'; 
+    let appliedTaxRate = (window.sysSettings && window.sysSettings.tax) ? (parseFloat(window.sysSettings.taxRate) || 0) : 0;
+    
+    let docType = status === 'paid' ? 'បង្កាន់ដៃទទួលប្រាក់ / Receipt' : (status === 'preorder' ? 'បង្កាន់ដៃកក់ប្រាក់ / Pre-order Receipt' : 'វិក្កយបត្រ / Invoice'); 
+    let currentSellerName = window.activeUser ? (window.activeUser.fullName ? window.activeUser.fullName : window.activeUser.username) : 'System'; 
+    let newInvId = window.generateInvoiceId(); 
+    let timestampNow = Date.now(); 
 
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas'); 
-                const maxW = 1920; const maxH = 1080;
-                let w = img.width, h = img.height;
-                if (w > maxW || h > maxH) {
-                    const ratio = Math.min(maxW / w, maxH / h);
-                    w = Math.round(w * ratio);
-                    h = Math.round(h * ratio);
-                }
-                canvas.width = w; canvas.height = h; 
-                const ctx = canvas.getContext('2d'); 
-                ctx.drawImage(img, 0, 0, w, h);
-                adminBanners[index] = canvas.toDataURL('image/jpeg', 0.7); 
-                renderAdminBanners(); 
-                saveAdminSettings();
-            }; 
-            img.src = ev.target.result;
-        }; 
-        reader.readAsDataURL(file);
-    }
+    const sizeCfg = (typeof window.getReceiptSizeConfig === 'function') ? window.getReceiptSizeConfig() : { mode: '80mm' };
+    const logoWidth = sizeCfg.mode === '58mm' ? '65px' : '100px';
+    const qrWidth = sizeCfg.mode === '58mm' ? '125px' : '170px';
 
-    function uploadQR(e) {
-        const file = e.target.files[0]; if(!file) return; const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas'); const max = 400; let w = img.width, h = img.height;
-                if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
-                canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img, 0, 0, w, h);
-                const url = canvas.toDataURL('image/jpeg', 0.8); document.getElementById('setMenuQR').value = url;
-                const qp = document.getElementById('menuQRPreview'); qp.src = url; qp.style.display = 'block'; document.getElementById('qrPreviewContainer').style.display = 'block'; saveAdminSettings();
-            }; img.src = ev.target.result;
-        }; reader.readAsDataURL(file);
-    }
+    let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
+    if (window.shopLogo) receiptHTML += `<img src="${window.shopLogo}" style="width: ${logoWidth}; height: ${logoWidth}; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
+    receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.shopName}</h2>`; 
+    if (window.shopPhone) receiptHTML += `<p style="margin:2px 0;">Tel: ${window.shopPhone}</p>`; 
+    if (window.shopAddress) receiptHTML += `<p style="margin:2px 0;">${window.shopAddress}</p>`; 
+    receiptHTML += `<div class="print-dashed-line"></div><p style="margin:4px 0; font-weight:bold;">${docType}</p><p style="margin:2px 0; text-align:left;">កាលបរិច្ឆេទ: ${window.fDate()}</p><p style="margin:2px 0; text-align:left;">លេខវិក្កយបត្រ: ${newInvId}</p><p style="margin:2px 0; text-align:left;">អ្នកលក់: ${currentSellerName}</p>`;
+    if (custNameInput) receiptHTML += `<p style="margin:2px 0; text-align:left;">អតិថិជន: <b>${custNameInput}</b> ${custPhoneInput?`(${custPhoneInput})`:''}</p>`;
+    if (selectedTable && selectedTable !== custNameInput) receiptHTML += `<p style="margin:2px 0; text-align:left; font-weight:bold;">តុ: ${selectedTable}</p>`;
+    receiptHTML += `<div class="print-dashed-line"></div></div><table style="width:100%; text-align:left; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
 
-    function updateWelcomePreview(src) {
-        const box = document.getElementById('welcomeImgPreviewContainer');
-        const img = document.getElementById('welcomeImgPreview');
-        if (!box || !img) return;
-        if (src && src.trim() !== '') {
-            img.src = src;
-            box.style.display = 'block';
-        } else {
-            img.src = '';
-            box.style.display = 'none';
-        }
-    }
+    const normalizedCartItems = [];
 
-    function uploadWelcomeImg(e) {
-        const file = e.target.files[0]; if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-            const img = new Image();
-            img.onload = () => {
-                const canvas = document.createElement('canvas');
-                const maxW = 1200, maxH = 900;
-                let w = img.width, h = img.height;
-                if (w > maxW || h > maxH) {
-                    const ratio = Math.min(maxW / w, maxH / h);
-                    w = Math.round(w * ratio);
-                    h = Math.round(h * ratio);
-                }
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d');
-                ctx.drawImage(img, 0, 0, w, h);
-                const url = canvas.toDataURL('image/jpeg', 0.75);
-                document.getElementById('setWelcomeImg').value = url;
-                document.getElementById('toggleWelcomePopup').checked = true;
-                updateWelcomePreview(url);
-                saveAdminSettings();
-            };
-            img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
-    }
+    window.cart.forEach((c, index) => {
+        if (!c) return; 
+        const idx = (window.inventory || []).findIndex(p => p && p.id === c.id);
+        let origUsd = (idx !== -1 && parseFloat(window.inventory[idx].price) > 0) ? parseFloat(window.inventory[idx].price) : (parseFloat(c.price) || 0);
+        let pRiel = parseFloat(c.riel) || 0;
+        let effectiveUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / window.cartRate) : 0);
 
-    function renderMenuScripts() {
-        const container = document.getElementById('menuScriptsListContainer');
-        const toggleContainer = document.getElementById('menuScriptsToggleContainer');
-        if (!container || !toggleContainer) return;
-        container.innerHTML = ''; toggleContainer.innerHTML = '';
-        if (menuScripts.length === 0) {
-            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
-            return;
-        }
-        let displayScripts = [...menuScripts].reverse();
-        if (menuScripts.length > 3) {
-            let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length})`;
-            toggleContainer.innerHTML = `<button class="input-st" style="width: 100%; padding: 10px; background:rgba(6, 182, 212, 0.05); border: 1px dashed var(--brand-cyan); color:var(--brand-cyan); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px;" onclick="toggleMenuScriptsView()">${toggleBtnText}</button>`;
-        }
-        if (!showAllMenuScripts && menuScripts.length > 3) displayScripts = displayScripts.slice(0, 3);
-        displayScripts.forEach(s => {
-            let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off'; let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
-            container.innerHTML += `<div class="script-item"><div class="script-name">${s.name}</div><div class="script-actions"><button class="btn-script ${btnClass}" onclick="toggleMenuScript('${s.id}')">${btnText}</button><button class="btn-script btn-delete" onclick="deleteMenuScript('${s.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
+        normalizedCartItems.push({
+            ...c,
+            price: effectiveUsd,
+            cartQty: c.cartQty,
+            qty: c.cartQty
         });
-    }
-    function toggleMenuScriptsView() { showAllMenuScripts = !showAllMenuScripts; renderMenuScripts(); }
-    function uploadMenuScripts(e) {
-        const files = e.target.files; if (!files || files.length === 0) return; let filesProcessed = 0;
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const existingIdx = menuScripts.findIndex(s => s.name === file.name);
-                if (existingIdx !== -1) menuScripts[existingIdx].code = ev.target.result;
-                else menuScripts.push({ id: 'mjs_' + Date.now() + Math.floor(Math.random() * 1000), name: file.name, code: ev.target.result, isActive: true });
-                filesProcessed++; if (filesProcessed === files.length) { renderMenuScripts(); saveAdminSettings(); showToast(`Upload ជោគជ័យ!`); }
-            }; reader.readAsText(file);
-        }); e.target.value = '';
-    }
-    function toggleMenuScript(id) { let s = menuScripts.find(x => x.id === id); if (s) { s.isActive = !s.isActive; renderMenuScripts(); saveAdminSettings(); } }
-    function toggleAllMenuScripts() { if (menuScripts.length === 0) return; let targetState = menuScripts.some(s => !s.isActive); menuScripts.forEach(s => s.isActive = targetState); renderMenuScripts(); saveAdminSettings(); }
-    function deleteMenuScript(id) { menuScripts = menuScripts.filter(x => x.id !== id); renderMenuScripts(); saveAdminSettings(); }
-    function deleteAllMenuScripts() { if (menuScripts.length === 0) return; menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
-    function exportMenuScriptsBackup() { if(menuScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); a.download = `Menu_JS.json`; a.click(); }
-    function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err){ showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
 
-    function renderPosScripts() {
-        const container = document.getElementById('posScriptsListContainer'); const toggleContainer = document.getElementById('posScriptsToggleContainer');
-        if (!container || !toggleContainer) return;
-        container.innerHTML = ''; toggleContainer.innerHTML = '';
-        if (posScripts.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>'; return; }
-        let displayScripts = [...posScripts].reverse();
-        if (posScripts.length > 3) {
-            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${posScripts.length})`;
-            toggleContainer.innerHTML = `<button class="input-st" style="width: 100%; padding: 10px; background:rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); color:var(--danger); cursor:pointer; text-align:center; font-weight: bold; border-radius: 8px;" onclick="togglePosScriptsView()">${toggleBtnText}</button>`;
-        }
-        if (!showAllPosScripts && posScripts.length > 3) displayScripts = displayScripts.slice(0, 3);
-        displayScripts.forEach(s => {
-            let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off'; let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
-            container.innerHTML += `<div class="script-item"><div class="script-name">${s.name}</div><div class="script-actions"><button class="btn-script ${btnClass}" onclick="togglePosScript('${s.id}')">${btnText}</button><button class="btn-script btn-delete" onclick="deletePosScript('${s.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
-        });
-    }
-    function togglePosScriptsView() { showAllPosScripts = !showAllPosScripts; renderPosScripts(); }
-    function uploadPosScripts(e) {
-        const files = e.target.files; if (!files || files.length === 0) return; let filesProcessed = 0;
-        Array.from(files).forEach(file => {
-            const reader = new FileReader();
-            reader.onload = (ev) => {
-                const existingIdx = posScripts.findIndex(s => s.name === file.name);
-                if (existingIdx !== -1) posScripts[existingIdx].code = ev.target.result;
-                else posScripts.push({ id: 'pjs_' + Date.now() + Math.floor(Math.random() * 1000), name: file.name, code: ev.target.result, isActive: true });
-                filesProcessed++; if (filesProcessed === files.length) { renderPosScripts(); saveAdminSettings(); showToast(`Upload POS Scripts ជោគជ័យ!`); }
-            }; reader.readAsText(file);
-        }); e.target.value = '';
-    }
-    function togglePosScript(id) { let s = posScripts.find(x => x.id === id); if (s) { s.isActive = !s.isActive; renderPosScripts(); saveAdminSettings(); } }
-    function toggleAllPosScripts() { if (posScripts.length === 0) return; let targetState = posScripts.some(s => !s.isActive); posScripts.forEach(s => s.isActive = targetState); renderPosScripts(); saveAdminSettings(); }
-    function deletePosScript(id) { posScripts = posScripts.filter(x => x.id !== id); renderPosScripts(); saveAdminSettings(); }
-    function deleteAllPosScripts() { if (posScripts.length === 0) return; posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
-    function exportPosScriptsBackup() { if(posScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); a.download = `POS_JS.json`; a.click(); }
-    function importPosScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err) { showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
-
-    function getPageUrl(pageName) { let path = window.location.pathname; let lastSlash = path.lastIndexOf('/'); return window.location.origin + path.substring(0, lastSlash + 1) + pageName + '?branch=' + encodeURIComponent(BRANCH); }
-    function copyTextSafe(txt) {
-        let ta = document.createElement('textarea');
-        ta.value = txt; ta.style.position = 'fixed'; document.body.appendChild(ta);
-        ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
-    }
-    function copyWelcomeLink() { copyTextSafe(getPageUrl('welcome.html')); showToast('Copied Welcome Link!'); }
-    function showWelcomeQR() { const url = getPageUrl('welcome.html'); const win = window.open('', '_blank', 'width=450,height=550'); if(!win) return; win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Welcome QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
-    
-    function goToWelcome() { 
-        if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
-            showToast('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។');
-        } else {
-            window.open(getPageUrl('welcome.html'), '_blank'); 
-        }
-    }
-    
-    function copyMenuLink() { copyTextSafe(getPageUrl('menu.html')); showToast('Copied Menu Link!'); }
-    function showMenuQR() { const url = getPageUrl('menu.html'); const win = window.open('', '_blank', 'width=450,height=550'); if(!win) return; win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Menu QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
-    
-    function goToMenu() { 
-        if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
-            showToast('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។');
-        } else {
-            window.open(getPageUrl('menu.html'), '_blank'); 
-        }
-    }
-
-    async function archiveOldData() {
-        try {
-            let invoices = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`)) || [];
-            if (invoices.length === 0) return showToast("មិនមានវិក្កយបត្រដើម្បី Archive ទេ!", true);
-
-            const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-            let oldInvoices = [];
-            let newInvoices = [];
-
-            invoices.forEach(inv => {
-                const invTime = inv.timestamp || new Date(inv.date || inv.createdAt).getTime();
-                if (invTime < ninetyDaysAgo) {
-                    oldInvoices.push(inv);
-                } else {
-                    newInvoices.push(inv);
-                }
-            });
-
-            if (oldInvoices.length === 0) {
-                return showToast("មិនមានវិក្កយបត្រចាស់ជាង ៣ខែ ដែលត្រូវ Archive ទេ!");
+        if (idx !== -1) {
+            if (status !== 'preorder') {
+                window.inventory[idx].qty = Math.max(0, (parseFloat(window.inventory[idx].qty) || 0) - c.cartQty); 
             }
-
-            const modal = document.getElementById('adminConfirmModal');
-            const txt = document.getElementById('adminConfirmText');
-            const okBtn = document.getElementById('adminConfirmOkBtn');
-            txt.innerText = `រកឃើញវិក្កយបត្រចាស់ចំនួន ${oldInvoices.length} វិក្កយបត្រ។ តើអ្នកពិតជាចង់ទាញយកវាទុកជាឯកសារ Backup ហើយលុបវាចេញពីប្រព័ន្ធមែនទេ?`;
-            modal.style.display = 'flex';
-
-            okBtn.onclick = async () => {
-                modal.style.display = 'none';
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(oldInvoices, null, 2));
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", `Archive_${BRANCH}_Invoices_${new Date().toISOString().slice(0, 10)}.json`);
-                document.body.appendChild(downloadAnchor);
-                downloadAnchor.click();
-                downloadAnchor.remove();
-
-                localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(newInvoices));
-
-                if (supabaseClient && navigator.onLine) {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                    if (data && data.data_json) {
-                        let d = data.data_json;
-                        d.invoices = newInvoices;
-                        await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
-                    }
-                }
-
-                showToast(`✅ បាន Archive និងសម្អាតវិក្កយបត្រចំនួន ${oldInvoices.length} ដោយជោគជ័យ!`);
-            };
-        } catch (e) {
-            console.error(e);
-            showToast("❌ មានបញ្ហាក្នុងការ Archive: " + e.message, true);
+            if (typeof window.logAction === 'function') {
+                window.logAction('sale', c.name, c.cartQty, status === 'paid' ? 'លក់ចេញ (ទូទាត់រួច)' : (status === 'preorder' ? `កក់ប្រាក់ (Pre-order ដោយ ${custNameInput})` : `លក់ចេញ (រង់ចាំទូទាត់ ដោយ ${custNameInput})`), window.activeUser);
+            }
         }
+
+        let lineStr = '', uPriceStr = '';
+        if (origUsd > 0) { lineStr = window.fMoney(origUsd * c.cartQty); uPriceStr = window.fMoney(origUsd); } 
+        else if (pRiel > 0) { lineStr = (pRiel * c.cartQty).toLocaleString() + '៛'; uPriceStr = pRiel.toLocaleString() + '៛'; } 
+        else { lineStr = window.fMoney(effectiveUsd * c.cartQty); uPriceStr = window.fMoney(effectiveUsd); } 
+
+        if (sizeCfg.mode === 'A4') {
+            receiptHTML += `<tr style="border-bottom: 1px dotted #ccc;"><td style="padding: 6px 0;"><b>${index + 1}. ${c.name}</b> <small>(${uPriceStr})</small></td><td style="text-align:center; padding: 6px 0;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding: 6px 0;">${lineStr}</td></tr>`;
+        } else {
+            receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold;">${index + 1}. ${c.name}</td></tr><tr><td style="padding-bottom: 4px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
+        }
+    });
+    receiptHTML += `</tbody></table><div class="print-dashed-line"></div>`;
+
+    let paidUsdAmount = 0;
+    if (status === 'paid') paidUsdAmount = window.cartFinalUsd;
+    else if (status === 'preorder') paidUsdAmount = rUsd + (rRiel / window.cartRate);
+
+    const finalCustomerName = custNameInput || selectedTable || 'អតិថិជនទូទៅ';
+    const invoiceNote = (selectedTable && selectedTable !== finalCustomerName) ? `[${selectedTable}]` : '';
+
+    const newInvoice = { 
+        id: newInvId, 
+        invoiceNo: newInvId,
+        timestamp: timestampNow, 
+        date: window.fDate(), 
+        customer: finalCustomerName, 
+        customerName: finalCustomerName,
+        phone: custPhoneInput, 
+        customerPhone: custPhoneInput,
+        note: invoiceNote,
+        items: normalizedCartItems, 
+        rate: window.cartRate, 
+        totalAmount: window.cartFinalUsd, 
+        total: window.cartFinalUsd,
+        totalRiel: Math.round(window.cartFinalRiel), 
+        discount: discountValue, 
+        discountType: discountType, 
+        taxRate: appliedTaxRate, 
+        receivedUsd: rUsd, 
+        receivedRiel: rRiel, 
+        changeUsd: cUsd, 
+        changeRiel: cRiel, 
+        status: status, 
+        seller: currentSellerName, 
+        paidUsd: paidUsdAmount,
+        paidAmount: paidUsdAmount
+    }; 
+    
+    if (!window.invoices) window.invoices = [];
+    window.invoices.unshift(newInvoice); 
+    
+    if (custNameInput && custNameInput !== selectedTable && typeof window.setAutoRegisterCustomer === 'function') {
+        window.setAutoRegisterCustomer(custNameInput, custPhoneInput);
     }
 
-    window.onload = initAdmin;
-</script>
-</body>
-</html>
+    receiptHTML += `<table style="width:100%; margin-top: 5px;">`;
+    if (discountValue > 0) receiptHTML += `<tr><td>បញ្ចុះតម្លៃ:</td><td style="text-align:right;">${discountType === '%' ? `${discountValue}%` : window.fMoney(discountValue)}</td></tr>`;
+    if (appliedTaxRate > 0) receiptHTML += `<tr><td>VAT (${appliedTaxRate}%):</td><td style="text-align:right;">បូកបញ្ចូល</td></tr>`;
+    receiptHTML += `<tr><td style="font-weight:bold; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; padding-top:4px;">${window.fMoney(window.cartFinalUsd)}</td></tr>`;
+    if (window.cartFinalRiel > 0) receiptHTML += `<tr><td></td><td style="text-align:right; font-weight:bold;">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</td></tr>`;
+    
+    if (status === 'paid' && (rUsd > 0 || rRiel > 0)) { 
+        let rStr = []; if (rUsd > 0) rStr.push(window.fMoney(rUsd)); if (rRiel > 0) rStr.push(rRiel.toLocaleString() + '៛'); 
+        receiptHTML += `<tr><td style="padding-top:6px;">ប្រាក់ទទួល:</td><td style="text-align:right; padding-top:6px;">${rStr.join(' | ')}</td></tr>`; 
+        let cStr = []; if (cUsd > 0 || cRiel > 0) { cStr.push(window.fMoney(cUsd)); cStr.push(Math.round(cRiel).toLocaleString() + ' ៛'); } else cStr.push('$0.00'); 
+        receiptHTML += `<tr><td>ប្រាក់អាប់:</td><td style="text-align:right;">${cStr.join(' | ')}</td></tr>`; 
+    } else if (status === 'preorder') {
+        let rStr = []; if (rUsd > 0) rStr.push(window.fMoney(rUsd)); if (rRiel > 0) rStr.push(rRiel.toLocaleString() + '៛');
+        if (rStr.length > 0) {
+            receiptHTML += `<tr><td style="padding-top:4px;">ប្រាក់កក់មុន:</td><td style="text-align:right;">${rStr.join(' | ')}</td></tr>`;
+            let remainingUsd = window.cartFinalUsd - (rUsd + (rRiel/window.cartRate));
+            if (remainingUsd < 0) remainingUsd = 0;
+            receiptHTML += `<tr><td style="font-weight:bold;">ប្រាក់នៅខ្វះ:</td><td style="text-align:right; font-weight:bold;">${window.fMoney(remainingUsd)}</td></tr>`;
+        }
+    }
+    receiptHTML += `</table>`;
+
+    let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+    
+    if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${window.shopQR}" style="width: ${qrWidth}; height: ${qrWidth}; object-fit: contain; filter: grayscale(100%);"></div>`;
+    receiptHTML += `<p style="text-align:center; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; margin-top: 5px; font-weight:bold;">${footerText}</p>`; 
+    
+    window.cart = []; 
+    
+    const cNameInputEl = document.getElementById('posCustomerName'); 
+    if (cNameInputEl) {
+        cNameInputEl.value = ''; 
+        cNameInputEl.style.borderLeft = '1px solid var(--border)';
+    }
+    const cPhoneInputEl = document.getElementById('posCustomerPhone'); if (cPhoneInputEl) cPhoneInputEl.value = ''; 
+    if (tableSelectEl) tableSelectEl.value = '';
+    const posDiscEl = document.getElementById('posDiscount'); if (posDiscEl) posDiscEl.value = ''; 
+    const mobileContainer = document.getElementById('mobileCartContainer'); if (mobileContainer) mobileContainer.classList.remove('open'); 
+    
+    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+    if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+    
+    const dateFromInput = document.getElementById('invoiceDateFrom');
+    const dateToInput = document.getElementById('invoiceDateTo');
+    if (dateFromInput) dateFromInput.value = '';
+    if (dateToInput) dateToInput.value = '';
+
+    window.renderCart(); 
+    window.renderPOSProducts(); 
+    if (typeof window.renderUnpaid === 'function') window.renderUnpaid();
+    if (typeof window.renderCustomers === 'function') window.renderCustomers();
+    if (typeof window.renderDashboard === 'function') window.renderDashboard();
+    
+    window.executePrint(receiptHTML);
+
+    setTimeout(() => {
+        if (typeof window.saveData === 'function') {
+            window.saveData(window.userAccounts); 
+        }
+    }, 100);
+};
+
+window.handleBarcodeScan = function(e) {
+    if (e.key === 'Enter') {
+        e.preventDefault();
+        const input = document.getElementById('posSearch');
+        if (!input) return;
+        const code = input.value.trim().toLowerCase();
+        if (!code) return;
+
+        const found = (window.inventory || []).find(p => p && (
+            String(p.customId || '').toLowerCase() === code ||
+            String(p.id || '').toLowerCase() === code ||
+            String(p.name || '').toLowerCase() === code
+        ));
+
+        if (found) {
+            window.addToCart(found.id);
+            input.value = '';
+            window.renderPOSProducts();
+        } else {
+            notifyPosUser('រកមិនឃើញទំនិញដែលមានបាកូដនេះទេ!', 'មិនមានទំនិញ', true);
+        }
+    }
+};
+
+let isPosTabScrollInitialized = false;
+
+window.initPosTabScroll = function() {
+    const slider = document.getElementById('posCategoryTabs');
+    if (!slider || isPosTabScrollInitialized) return;
+
+    let isDown = false;
+    let startX;
+    let scrollLeft;
+    let isDragging = false;
+
+    slider.addEventListener('mousedown', (e) => {
+        isDown = true;
+        isDragging = false;
+        slider.style.cursor = 'grabbing';
+        startX = e.pageX - slider.offsetLeft;
+        scrollLeft = slider.scrollLeft;
+    });
+
+    slider.addEventListener('mouseleave', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+
+    slider.addEventListener('mouseup', () => {
+        isDown = false;
+        slider.style.cursor = 'grab';
+    });
+
+    slider.addEventListener('mousemove', (e) => {
+        if (!isDown) return;
+        e.preventDefault();
+        const x = e.pageX - slider.offsetLeft;
+        const walk = (x - startX) * 2;
+        if (Math.abs(walk) > 5) isDragging = true;
+        slider.scrollLeft = scrollLeft - walk;
+    });
+
+    slider.addEventListener('click', (e) => {
+        if (isDragging) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }, true); 
+
+    slider.style.cursor = 'grab';
+    isPosTabScrollInitialized = true;
+};
