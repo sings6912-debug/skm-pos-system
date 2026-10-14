@@ -716,19 +716,19 @@ window.viewInvoiceDetails = function(invId) {
     const captureArea = document.getElementById('invoiceViewContent');
     const logoImg = document.getElementById('viewInvoiceLogo');
     if (!modal || !captureArea) return notifyFinanceUser("❌ រកមិនឃើញផ្ទាំង Modal មើលវិក្កយបត្រ!", "បរាជ័យ", true);
-
-    // 🖨️ អនុវត្តខ្នាតក្រដាស (80mm, 57x40mm / 58mm, ឬ A4) លើផ្ទាំង Preview និងរូបភាព PNG
+    // 🖨️ អនុវត្តខ្នាតក្រដាស (80mm, 57x40mm / 58mm, A4, ឬខ្នាតកំណត់ខ្លួនឯង) លើផ្ទាំង Preview និងរូបភាព PNG
     if (typeof window.applyReceiptSizeToPreview === 'function') {
         window.applyReceiptSizeToPreview();
     }
-    const sizeCfg = (typeof window.getReceiptSizeConfig === 'function') ? window.getReceiptSizeConfig() : { mode: '80mm', fontSize: '12px' };
+    const sizeCfg = (typeof window.getReceiptSizeConfig === 'function') ? window.getReceiptSizeConfig() : { mode: '80mm', fontSize: '12px', logoSize: '100px', qrSize: '170px', downloadScale: 2 };
 
     const currentLogo = window.shopLogo || localStorage.getItem(window.getBranchKey('shop_logo')) || '';
     if (logoImg) {
         if (currentLogo && currentLogo.trim() !== '') {
             logoImg.src = currentLogo;
-            logoImg.style.width = sizeCfg.mode === '58mm' ? '70px' : '110px';
-            logoImg.style.height = sizeCfg.mode === '58mm' ? '70px' : '110px';
+            const lSize = sizeCfg.logoSize || (sizeCfg.mode === '58mm' ? '70px' : '110px');
+            logoImg.style.width = lSize;
+            logoImg.style.height = lSize;
             logoImg.style.display = 'block';
         } else {
             logoImg.style.display = 'none';
@@ -814,9 +814,9 @@ window.reprintInvoice = function() {
     const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
     if (!inv) return;
 
-    const sizeCfg = (typeof window.getReceiptSizeConfig === 'function') ? window.getReceiptSizeConfig() : { mode: '80mm' };
-    const logoWidth = sizeCfg.mode === '58mm' ? '65px' : '100px';
-    const qrWidth = sizeCfg.mode === '58mm' ? '125px' : '170px';
+    const sizeCfg = (typeof window.getReceiptSizeConfig === 'function') ? window.getReceiptSizeConfig() : { mode: '80mm', logoSize: '100px', qrSize: '170px' };
+    const logoWidth = sizeCfg.logoSize || (sizeCfg.mode === '58mm' ? '65px' : '100px');
+    const qrWidth = sizeCfg.qrSize || (sizeCfg.mode === '58mm' ? '125px' : '170px');
 
     let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
     const currentLogo = window.shopLogo || localStorage.getItem(window.getBranchKey('shop_logo')) || '';
@@ -889,9 +889,10 @@ window.downloadInvoicePNG = function() {
     if (typeof window.applyReceiptSizeToPreview === 'function') {
         window.applyReceiptSizeToPreview();
     }
-    const sizeCfg = (typeof window.getReceiptSizeConfig === 'function') ? window.getReceiptSizeConfig() : { mode: '80mm' };
+    const sizeCfg = (typeof window.getReceiptSizeConfig === 'function') ? window.getReceiptSizeConfig() : { mode: '80mm', downloadScale: 2 };
+    const scaleVal = parseInt(sizeCfg.downloadScale) || 2;
 
-    html2canvas(captureArea, { scale: 2, backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
+    html2canvas(captureArea, { scale: scaleVal, backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
         const link = document.createElement('a');
         link.download = `Invoice_${window.currentActiveInvoiceId || 'Receipt'}_${sizeCfg.mode}.png`;
         link.href = canvas.toDataURL('image/png');

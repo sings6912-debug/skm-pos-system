@@ -219,6 +219,7 @@
             <button class="tab-btn" onclick="switchTab('tab-social')"><i class="fa-solid fa-share-nodes"></i> 5. បណ្តាញ & បូត</button>
             <button class="tab-btn" onclick="switchTab('tab-customjs')"><i class="fa-solid fa-file-code"></i> 6. កូដបន្ថែម (Custom JS)</button>
             <button class="tab-btn" onclick="switchTab('tab-tables')"><i class="fa-solid fa-chair"></i> 7. លេខតុ & ទិន្នន័យ</button>
+            <button class="tab-btn" onclick="switchTab('tab-printer')"><i class="fa-solid fa-print"></i> 8. ខ្នាតម៉ាស៊ីនព្រីន & រូប</button>
         </div>
 
         <button class="btn-save" onclick="saveAdminSettings()" style="margin-top: 25px; padding: 14px; font-size: 14px;"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់</button>
@@ -276,6 +277,11 @@
             <div class="section-title" style="color: var(--success);"><i class="fa-solid fa-ticket"></i> កុម្ម៉ង់ និងគ្រប់គ្រងកូដបញ្ចុះតម្លៃ (Promo Codes Manager)</div>
             <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, FREESHIP) កំណត់ប្រភេទបញ្ចុះតម្លៃ (% , $ ឬ ដឹកជញ្ជូនឥតគិតថ្លៃ) និងកំណត់ចំនួនដងដែលអាចប្រើប្រាស់បាន។</p>
             
+            <div class="toggle-row" style="background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.25);">
+                <span style="color: var(--text-dark);"><i class="fa-solid fa-eye-slash" style="color: var(--danger);"></i> លាក់ស្លាកកូដប្រូម៉ូសិនកុំឱ្យបង្ហាញលើ Banner អតិថិជន (Hide Promo Badge on Banner)</span>
+                <input type="checkbox" id="toggleHideBannerPromoBadge" style="width: 20px; height: 20px; accent-color: var(--danger); cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
+
             <div style="background: rgba(34, 197, 94, 0.03); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-bottom: 15px;">
                 <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px;">
                     <input type="text" id="newPromoCode" class="input-st" placeholder="ឈ្មោះកូដ (ឧ. FREESHIP)" style="flex: 2; margin-bottom: 0;">
@@ -321,7 +327,7 @@
             <div class="section-title"><i class="fa-solid fa-store"></i> 4. ផ្ទាំងស្វាគមន៍ & ម៉ោងបើកហាង (Popup & Store Hours)</div>
             
             <div class="toggle-row">
-                <span>✨ បើកផ្ទាំង Pop-up ស្វាគមន៍ / ប្រូម៉ូសិនលើ Menu អតិថិជន</span>
+                <span>✨ បើកផ្ទាំង Pop-up រូបភាពស្វាគមន៍ពេលភ្ញៀវចូលមើលដំបូង</span>
                 <input type="checkbox" id="toggleWelcomePopup" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
             </div>
             <div class="form-group">
@@ -337,12 +343,11 @@
             </div>
 
             <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 14px; border-radius: 12px; border: 1px dashed var(--brand-cyan);">
-                <label><i class="fa-solid fa-clock-rotate-left"></i> កំណត់រយៈពេលលោតរំលឹកផ្ទាំងប្រូម៉ូសិន / កូដបញ្ចុះតម្លៃម្ដងទៀត (Popup & Promo Repeat Interval):</label>
+                <label><i class="fa-solid fa-clock-rotate-left"></i> រយៈពេលផ្លាស់ប្តូរកូដប្រូម៉ូសិនម្ដង ១ កូដ នៅលើ Banner (Promo Rotation Interval):</label>
                 <select id="setPopupRepeatInterval" class="input-st" onchange="saveAdminSettings()">
-                    <option value="0">បង្ហាញតែ ១ ដងគត់ពេលភ្ញៀវចូលដំបូង</option>
-                    <option value="1">⏱️ រៀងរាល់ ១ នាទីម្ដង (Every 1 Minute)</option>
-                    <option value="3">⏱️ រៀងរាល់ ៣ នាទីម្ដង (Every 3 Minutes)</option>
-                    <option value="5">⏱️ រៀងរាល់ ៥ នាទីម្ដង (Every 5 Minutes)</option>
+                    <option value="1">⏱️ ប្តូរកូដម្ដង ១ រៀងរាល់ ១ នាទី (Every 1 Minute)</option>
+                    <option value="3">⏱️ ប្តូរកូដម្ដង ១ រៀងរាល់ ៣ នាទី (Every 3 Minutes)</option>
+                    <option value="5">⏱️ ប្តូរកូដម្ដង ១ រៀងរាល់ ៥ នាទី (Every 5 Minutes)</option>
                 </select>
             </div>
 
@@ -511,6 +516,108 @@
             </div>
         </div>
 
+        <!-- 🖨️ TAB 8: PRINTER & RECEIPT DOWNLOAD SIZE CUSTOMIZER -->
+        <div id="tab-printer" class="tab-pane">
+            <div class="section-title" style="color: var(--brand-cyan); border-bottom: 2px dashed var(--brand-cyan); padding-bottom: 10px;">
+                <i class="fa-solid fa-print"></i> 8. កំណត់ខ្នាតម៉ាស៊ីនព្រីន & ទំហំទាញយករូបវិក្កយបត្រ (Printer & PNG Size)
+            </div>
+            <p class="help-text">ជ្រើសរើសខ្នាតក្រដាសស្តង់ដារ ឬសេរេបង្កើតទំហំថ្មីតាមម៉ាស៊ីនព្រីនរបស់អ្នកដោយសេរី (សម្រាប់ទាំងការបោះពុម្ពវិក្កយបត្រ និងការទាញយករូបភាព PNG)។</p>
+
+            <div class="form-group" style="background: rgba(6, 182, 212, 0.06); padding: 16px; border-radius: 14px; border: 1px dashed var(--brand-cyan);">
+                <label style="font-size: 14px; color: var(--brand-dark);"><i class="fa-solid fa-sliders"></i> ជ្រើសរើសប្រភេទខ្នាតក្រដាសវិក្កយបត្រ (Receipt Size Preset):</label>
+                <select id="setAdminReceiptSize" class="input-st" style="background: var(--card-bg); font-weight: 800;" onchange="onAdminReceiptPresetChange(this.value)">
+                    <option value="80mm">📄 ខ្នាត 80mm (ម៉ាស៊ីនព្រីនធំស្តង់ដារ - Thermal 80mm)</option>
+                    <option value="58mm">🧾 ខ្នាត 57x40mm / 58mm (ម៉ាស៊ីនព្រីនតូច - Thermal 58mm)</option>
+                    <option value="A4">📋 ខ្នាតក្រដាសធម្មតា A4 (វិក្កយបត្រធំផ្លូវការ - 210mm)</option>
+                    <option value="custom">⚙️ សេរេទំហំខ្លួនឯងតាមចិត្ត (Custom Printer & Image Size)</option>
+                </select>
+            </div>
+
+            <!-- ប្រអប់សេរេទំហំលម្អិតតាមចិត្ត -->
+            <div class="section-box" style="margin-top: 15px;">
+                <div class="section-title" style="font-size: 14px; margin-bottom: 12px;">
+                    <i class="fa-solid fa-ruler-combined"></i> សេរេទំហំក្រដាសព្រីន និងទំហំរូបភាពពេល Download (កែប្រែបានតាមចិត្ត)
+                </div>
+
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>ទទឹងក្រដាសព្រីន (Paper mm):</label>
+                        <input type="number" id="setPrintPaperMm" class="input-st" value="80" min="30" max="300" oninput="onCustomDimensionEdit()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>ទទឹងផ្ទៃអក្សរព្រីន (Content mm):</label>
+                        <input type="number" id="setPrintBodyMm" class="input-st" value="76" min="25" max="290" oninput="onCustomDimensionEdit()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>គម្លាតគែមក្រដាស (Padding mm):</label>
+                        <input type="number" id="setPrintPadMm" class="input-st" value="4" min="0" max="30" oninput="onCustomDimensionEdit()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>ទទឹងរូបពេល Download (PNG px):</label>
+                        <input type="number" id="setDownloadWidthPx" class="input-st" value="380" min="180" max="1600" oninput="onCustomDimensionEdit()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>កម្រិតច្បាស់រូប PNG (Scale):</label>
+                        <select id="setDownloadScale" class="input-st" onchange="onCustomDimensionEdit()">
+                            <option value="2">🌟 ច្បាស់ស្តង់ដារ (2x HD)</option>
+                            <option value="3">🔥 ច្បាស់ខ្លាំង (3x Full HD)</option>
+                            <option value="4">💎 ច្បាស់កម្រិតកំពូល (4x Ultra 4K)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>ទំហំអក្សរវិក្កយបត្រ (Font px):</label>
+                        <input type="number" id="setReceiptFontPx" class="input-st" value="12" min="8" max="24" oninput="onCustomDimensionEdit()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>ទំហំឈ្មោះហាង (Title px):</label>
+                        <input type="number" id="setReceiptTitlePx" class="input-st" value="16" min="11" max="32" oninput="onCustomDimensionEdit()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>ទំហំ Logo លើវិក្កយបត្រ (px):</label>
+                        <input type="number" id="setReceiptLogoPx" class="input-st" value="100" min="40" max="220" oninput="onCustomDimensionEdit()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>ទំហំ QR ទូទាត់លើវិក្កយបត្រ (px):</label>
+                        <input type="number" id="setReceiptQrPx" class="input-st" value="170" min="80" max="300" oninput="onCustomDimensionEdit()">
+                    </div>
+                </div>
+
+                <div class="form-group" style="margin-top: 15px; margin-bottom: 0;">
+                    <label>📝 សារអរគុណខាងក្រោមវិក្កយបត្រ (Receipt Footer Text):</label>
+                    <input type="text" id="setAdminReceiptFooter" class="input-st" value="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" placeholder="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" oninput="updateLiveReceiptPreview()" onchange="saveAdminSettings()">
+                </div>
+            </div>
+
+            <!-- បង្កើត និងរក្សាទុកឈ្មោះខ្នាតម៉ាស៊ីនព្រីនថ្មី -->
+            <div class="section-box" style="background: rgba(16, 185, 129, 0.04); border-color: rgba(16, 185, 129, 0.3);">
+                <div class="section-title" style="color: var(--success); font-size: 14px; margin-bottom: 10px;">
+                    <i class="fa-solid fa-bookmark"></i> បង្កើត និងរក្សាទុកជាខ្នាតម៉ាស៊ីនព្រីនផ្ទាល់ខ្លួន (Save Custom Printer Preset)
+                </div>
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                    <input type="text" id="newPrinterPresetName" class="input-st" placeholder="ដាក់ឈ្មោះខ្នាត (ឧ. ម៉ាស៊ីនព្រីនតូច 57mm, ខ្នាត A5, ម៉ាស៊ីន Bluetooth)..." style="flex: 2; min-width: 200px; margin-bottom: 0;">
+                    <button type="button" class="btn-action" style="background: var(--success); color: white; border: none;" onclick="saveCustomPrinterPreset()">
+                        <i class="fa-solid fa-plus"></i> រក្សាទុកខ្នាតថ្មីនេះ
+                    </button>
+                </div>
+                <div id="customPrinterPresetsList" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px;"></div>
+            </div>
+
+            <!-- ផ្ទាំងមើលគំរូវិក្កយបត្រផ្ទាល់ (Live Preview & Test) -->
+            <div class="section-box" style="text-align: center;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                    <span style="font-weight: 900; font-size: 14px; color: var(--brand-dark);"><i class="fa-solid fa-eye"></i> គំរូវិក្កយបត្រផ្ទាល់ (Live Receipt Preview):</span>
+                    <div style="display: flex; gap: 8px;">
+                        <button type="button" class="btn-action" style="background: var(--brand-dark); color: white;" onclick="testPrintReceiptFromAdmin()">
+                            <i class="fa-solid fa-print"></i> សាកល្បងព្រីន
+                        </button>
+                    </div>
+                </div>
+                <div style="background: #cbd5e1; padding: 20px; border-radius: 14px; overflow-x: auto; display: flex; justify-content: center;">
+                    <div id="adminReceiptLivePreview" style="background: #ffffff; color: #000000; padding: 16px; border-radius: 6px; box-shadow: 0 10px 25px rgba(0,0,0,0.15); text-align: left; width: 380px; max-width: 100%; font-size: 12px; line-height: 1.4;"></div>
+                </div>
+            </div>
+        </div>
+
     </div>
     
     <button class="btn-save btn-save-mobile" onclick="saveAdminSettings()"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់ទាំងអស់ (Save Changes)</button>
@@ -582,6 +689,201 @@
     let posScripts = [];  
     let showAllMenuScripts = false;
     let showAllPosScripts = false;
+    let customPrinterPresets = [];
+
+    const DEFAULT_RECEIPT_PRESETS = {
+        '80mm': { paperMm: 80, bodyMm: 76, padMm: 4, downloadWidthPx: 380, downloadScale: 2, fontPx: 12, titlePx: 16, logoPx: 100, qrPx: 170 },
+        '58mm': { paperMm: 57, bodyMm: 54, padMm: 2, downloadWidthPx: 260, downloadScale: 2, fontPx: 10, titlePx: 13, logoPx: 65, qrPx: 125 },
+        'A4':   { paperMm: 210, bodyMm: 190, padMm: 10, downloadWidthPx: 720, downloadScale: 2, fontPx: 14, titlePx: 20, logoPx: 120, qrPx: 190 }
+    };
+
+    function applyReceiptConfigToInputs(cfg) {
+        if (!cfg) return;
+        document.getElementById('setPrintPaperMm').value = cfg.paperMm || 80;
+        document.getElementById('setPrintBodyMm').value = cfg.bodyMm || 76;
+        document.getElementById('setPrintPadMm').value = cfg.padMm !== undefined ? cfg.padMm : 4;
+        document.getElementById('setDownloadWidthPx').value = cfg.downloadWidthPx || 380;
+        document.getElementById('setDownloadScale').value = String(cfg.downloadScale || 2);
+        document.getElementById('setReceiptFontPx').value = cfg.fontPx || 12;
+        document.getElementById('setReceiptTitlePx').value = cfg.titlePx || 16;
+        document.getElementById('setReceiptLogoPx').value = cfg.logoPx || 100;
+        document.getElementById('setReceiptQrPx').value = cfg.qrPx || 170;
+        updateLiveReceiptPreview();
+    }
+
+    function getCurrentReceiptInputsConfig() {
+        return {
+            mode: document.getElementById('setAdminReceiptSize')?.value || '80mm',
+            paperMm: parseFloat(document.getElementById('setPrintPaperMm')?.value) || 80,
+            bodyMm: parseFloat(document.getElementById('setPrintBodyMm')?.value) || 76,
+            padMm: parseFloat(document.getElementById('setPrintPadMm')?.value) || 0,
+            downloadWidthPx: parseInt(document.getElementById('setDownloadWidthPx')?.value) || 380,
+            downloadScale: parseInt(document.getElementById('setDownloadScale')?.value) || 2,
+            fontPx: parseInt(document.getElementById('setReceiptFontPx')?.value) || 12,
+            titlePx: parseInt(document.getElementById('setReceiptTitlePx')?.value) || 16,
+            logoPx: parseInt(document.getElementById('setReceiptLogoPx')?.value) || 100,
+            qrPx: parseInt(document.getElementById('setReceiptQrPx')?.value) || 170
+        };
+    }
+
+    function onAdminReceiptPresetChange(val) {
+        if (DEFAULT_RECEIPT_PRESETS[val]) {
+            applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[val]);
+        } else if (val.startsWith('preset_')) {
+            const found = customPrinterPresets.find(p => p.id === val);
+            if (found) applyReceiptConfigToInputs(found);
+        } else {
+            updateLiveReceiptPreview();
+        }
+        saveAdminSettings();
+    }
+
+    function onCustomDimensionEdit() {
+        const sel = document.getElementById('setAdminReceiptSize');
+        if (sel && DEFAULT_RECEIPT_PRESETS[sel.value]) {
+            sel.value = 'custom';
+        }
+        updateLiveReceiptPreview();
+        saveAdminSettings();
+    }
+
+    function renderCustomPrinterPresets() {
+        const sel = document.getElementById('setAdminReceiptSize');
+        const listEl = document.getElementById('customPrinterPresetsList');
+        if (!sel || !listEl) return;
+
+        const currentVal = sel.value;
+        sel.querySelectorAll('option[data-custom-preset="true"]').forEach(o => o.remove());
+
+        customPrinterPresets.forEach(p => {
+            const opt = document.createElement('option');
+            opt.value = p.id;
+            opt.setAttribute('data-custom-preset', 'true');
+            opt.textContent = `🖨️ ${p.name} (${p.paperMm}mm | ${p.downloadWidthPx}px)`;
+            sel.appendChild(opt);
+        });
+
+        if ([...sel.options].some(o => o.value === currentVal)) {
+            sel.value = currentVal;
+        }
+
+        if (customPrinterPresets.length === 0) {
+            listEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">មិនទាន់មានខ្នាតបង្កើតថ្មីនៅឡើយទេ។</span>';
+            return;
+        }
+
+        listEl.innerHTML = customPrinterPresets.map((p, idx) => `
+            <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--card-bg); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;">
+                <span style="cursor: pointer; color: var(--brand-dark);" onclick="document.getElementById('setAdminReceiptSize').value='${p.id}'; onAdminReceiptPresetChange('${p.id}');">
+                    🖨️ ${p.name} <small style="color: var(--brand-cyan);">(${p.paperMm}mm / ${p.downloadWidthPx}px)</small>
+                </span>
+                <button type="button" style="background: var(--danger); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px;" onclick="deleteCustomPrinterPreset(${idx})" title="លុបខ្នាតនេះ">✕</button>
+            </div>
+        `).join('');
+    }
+
+    function saveCustomPrinterPreset() {
+        const nameInp = document.getElementById('newPrinterPresetName');
+        const name = nameInp ? nameInp.value.trim() : '';
+        if (!name) return showToast('សូមវាយឈ្មោះខ្នាតម៉ាស៊ីនព្រីនជាមុនសិន!', true);
+
+        const cfg = getCurrentReceiptInputsConfig();
+        const presetId = 'preset_' + Date.now();
+        customPrinterPresets.push({
+            id: presetId,
+            name: name,
+            ...cfg
+        });
+
+        nameInp.value = '';
+        renderCustomPrinterPresets();
+        document.getElementById('setAdminReceiptSize').value = presetId;
+        saveAdminSettings();
+        showToast(`✅ បានបង្កើតខ្នាត "${name}" រួចរាល់!`);
+    }
+
+    function deleteCustomPrinterPreset(idx) {
+        const removed = customPrinterPresets.splice(idx, 1)[0];
+        const sel = document.getElementById('setAdminReceiptSize');
+        if (sel && removed && sel.value === removed.id) {
+            sel.value = '80mm';
+            applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS['80mm']);
+        }
+        renderCustomPrinterPresets();
+        saveAdminSettings();
+        showToast('បានលុបខ្នាតម៉ាស៊ីនព្រីន!');
+    }
+
+    function updateLiveReceiptPreview() {
+        const box = document.getElementById('adminReceiptLivePreview');
+        if (!box) return;
+        const cfg = getCurrentReceiptInputsConfig();
+        const footerTxt = document.getElementById('setAdminReceiptFooter')?.value || 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+        const shopNm = localStorage.getItem(`ks2_${BRANCH}_shop_name`) || 'SKM INTEGRATE POS';
+        const qrSrc = document.getElementById('setMenuQR')?.value || '';
+
+        box.style.width = `${cfg.downloadWidthPx}px`;
+        box.style.fontSize = `${cfg.fontPx}px`;
+        box.style.padding = `${Math.max(8, cfg.padMm * 3)}px`;
+
+        box.innerHTML = `
+            <div style="text-align: center; margin-bottom: 8px;">
+                <div style="font-weight: 900; font-size: ${cfg.titlePx}px; color: #000;">${shopNm}</div>
+                <div style="font-size: ${Math.max(9, cfg.fontPx - 1)}px; color: #444;">ខ្នាតព្រីន: ${cfg.paperMm}mm (ផ្ទៃអក្សរ ${cfg.bodyMm}mm) | រូប: ${cfg.downloadWidthPx}px (${cfg.downloadScale}x)</div>
+                <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
+                <div style="font-weight: bold;">បង្កាន់ដៃទទួលប្រាក់ / Receipt</div>
+                <div style="text-align: left; font-size: ${Math.max(9, cfg.fontPx - 1)}px;">លេខវិក្កយបត្រ: INV-SAMPLE-001</div>
+                <div style="text-align: left; font-size: ${Math.max(9, cfg.fontPx - 1)}px;">អតិថិជន: តុ VIP 1</div>
+                <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
+            </div>
+            <table style="width: 100%; border-collapse: collapse; font-size: ${cfg.fontPx}px;">
+                <thead>
+                    <tr style="border-bottom: 1px solid #000;">
+                        <th style="text-align: left; padding-bottom: 4px;">ទំនិញ</th>
+                        <th style="text-align: center; padding-bottom: 4px;">ចំនួន</th>
+                        <th style="text-align: right; padding-bottom: 4px;">សរុប</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td style="padding: 4px 0;">1. កាហ្វេទឹកដោះគោទឹកកក</td>
+                        <td style="text-align: center; padding: 4px 0;">2</td>
+                        <td style="text-align: right; font-weight: bold; padding: 4px 0;">$3.00</td>
+                    </tr>
+                    <tr>
+                        <td style="padding: 4px 0;">2. ម៉ាត់ឆាដូងក្រអូប</td>
+                        <td style="text-align: center; padding: 4px 0;">1</td>
+                        <td style="text-align: right; font-weight: bold; padding: 4px 0;">$2.50</td>
+                    </tr>
+                </tbody>
+            </table>
+            <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
+            <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: ${cfg.fontPx + 2}px;">
+                <span>សរុបប្រាក់:</span>
+                <span>$5.50 (22,000 ៛)</span>
+            </div>
+            ${qrSrc ? `<div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 8px;"><div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">ស្កេនទូទាត់ប្រាក់</div><img src="${qrSrc}" style="width: ${cfg.qrPx}px; height: ${cfg.qrPx}px; object-fit: contain;"></div>` : ''}
+            <div style="text-align: center; margin-top: 10px; font-weight: bold; font-size: ${Math.max(10, cfg.fontPx - 1)}px;">${footerTxt}</div>
+        `;
+    }
+
+    function testPrintReceiptFromAdmin() {
+        const previewEl = document.getElementById('adminReceiptLivePreview');
+        if (!previewEl) return;
+        const cfg = getCurrentReceiptInputsConfig();
+        const pageSizeCss = cfg.mode === 'A4' ? `@page { size: A4 portrait; margin: ${cfg.padMm}mm; }` : `@page { size: ${cfg.paperMm}mm auto; margin: 0; }`;
+        const win = window.open('', '', cfg.paperMm >= 150 ? 'width=850,height=900' : 'width=380,height=650');
+        if (!win) return showToast('សូមអនុញ្ញាតផ្ទាំង Popup ដើម្បីសាកល្បងព្រីន!', true);
+        win.document.write(`<html><head><title>Test Print (${cfg.paperMm}mm)</title>
+            <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet">
+            <style>
+                ${pageSizeCss}
+                * { box-sizing: border-box; font-family: 'Battambang', sans-serif; color: #000 !important; }
+                body { width: ${cfg.bodyMm}mm; max-width: 100%; margin: 0 auto; padding: ${cfg.padMm}mm; font-size: ${cfg.fontPx}px; line-height: 1.4; }
+            </style></head><body>${previewEl.innerHTML}</body></html>`);
+        win.document.close();
+        setTimeout(() => { win.print(); win.close(); }, 500);
+    }
 
     function showToast(msg, isError = false) {
         const t = document.getElementById('toast'); 
@@ -646,10 +948,30 @@
             if (document.getElementById('setCustomTables')) {
                 document.getElementById('setCustomTables').value = localSys.customTables !== undefined ? localSys.customTables : 'VIP 1, VIP 2, VIP 3';
             }
+            if (document.getElementById('toggleHideBannerPromoBadge')) {
+                document.getElementById('toggleHideBannerPromoBadge').checked = !!localSys.hideBannerPromoBadge;
+            }
             if (document.getElementById('setPopupRepeatInterval')) {
-                document.getElementById('setPopupRepeatInterval').value = localSys.popupRepeatInterval !== undefined ? String(localSys.popupRepeatInterval) : '1';
+                document.getElementById('setPopupRepeatInterval').value = localSys.popupRepeatInterval ? String(localSys.popupRepeatInterval) : '1';
             }
             if (localSys.welcomeImg) updateWelcomePreview(localSys.welcomeImg);
+
+            if (localSys.customPrinterPresets && Array.isArray(localSys.customPrinterPresets)) {
+                customPrinterPresets = localSys.customPrinterPresets;
+            }
+            renderCustomPrinterPresets();
+            if (localSys.receiptSize && document.getElementById('setAdminReceiptSize')) {
+                document.getElementById('setAdminReceiptSize').value = localSys.receiptSize;
+            }
+            if (localSys.receiptFooter && document.getElementById('setAdminReceiptFooter')) {
+                document.getElementById('setAdminReceiptFooter').value = localSys.receiptFooter;
+            }
+            if (localSys.customReceiptConfig) {
+                applyReceiptConfigToInputs(localSys.customReceiptConfig);
+            } else {
+                const mode = localSys.receiptSize || '80mm';
+                applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[mode] || DEFAULT_RECEIPT_PRESETS['80mm']);
+            }
 
             renderMenuScripts(); renderPosScripts(); renderPromoCodesList();
 
@@ -664,6 +986,9 @@
                     
                     if(sys.promoCodes && Array.isArray(sys.promoCodes)) promoCodesList = sys.promoCodes;
                     renderPromoCodesList();
+                    if (document.getElementById('toggleHideBannerPromoBadge')) {
+                        document.getElementById('toggleHideBannerPromoBadge').checked = !!sys.hideBannerPromoBadge;
+                    }
 
                     if(sys.menuQR) {
                         document.getElementById('setMenuQR').value = sys.menuQR;
@@ -682,7 +1007,7 @@
                     document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
                     document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
                     if (sys.welcomeImg) updateWelcomePreview(sys.welcomeImg);
-                    if (document.getElementById('setPopupRepeatInterval') && sys.popupRepeatInterval !== undefined) {
+                    if (document.getElementById('setPopupRepeatInterval') && sys.popupRepeatInterval) {
                         document.getElementById('setPopupRepeatInterval').value = String(sys.popupRepeatInterval);
                     }
                     document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
@@ -695,6 +1020,23 @@
                     document.getElementById('setTablePrefix').value = sys.tablePrefix || 'តុលេខ';
                     if (document.getElementById('setCustomTables')) {
                         document.getElementById('setCustomTables').value = sys.customTables !== undefined ? sys.customTables : 'VIP 1, VIP 2, VIP 3';
+                    }
+
+                    if (sys.customPrinterPresets && Array.isArray(sys.customPrinterPresets)) {
+                        customPrinterPresets = sys.customPrinterPresets;
+                    }
+                    renderCustomPrinterPresets();
+                    if (sys.receiptSize && document.getElementById('setAdminReceiptSize')) {
+                        document.getElementById('setAdminReceiptSize').value = sys.receiptSize;
+                    }
+                    if (sys.receiptFooter && document.getElementById('setAdminReceiptFooter')) {
+                        document.getElementById('setAdminReceiptFooter').value = sys.receiptFooter;
+                    }
+                    if (sys.customReceiptConfig) {
+                        applyReceiptConfigToInputs(sys.customReceiptConfig);
+                    } else {
+                        const mode = sys.receiptSize || '80mm';
+                        applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[mode] || DEFAULT_RECEIPT_PRESETS['80mm']);
                     }
 
                     if(sys.orderTelegramBotToken || d.telegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken || d.telegramBotToken || '';
@@ -727,6 +1069,7 @@
             d.sysSettings.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
             d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== '');
             d.sysSettings.promoCodes = promoCodesList;
+            d.sysSettings.hideBannerPromoBadge = document.getElementById('toggleHideBannerPromoBadge')?.checked || false;
             d.sysSettings.menuQR = document.getElementById('setMenuQR').value.trim();
             d.sysSettings.chatLink = document.getElementById('setChatLink').value.trim();
             d.sysSettings.socialIcon = document.getElementById('setSocialIcon').value;
@@ -740,7 +1083,7 @@
 
             d.sysSettings.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
             d.sysSettings.welcomeImg = document.getElementById('setWelcomeImg').value.trim();
-            d.sysSettings.popupRepeatInterval = parseInt(document.getElementById('setPopupRepeatInterval')?.value || '0') || 0;
+            d.sysSettings.popupRepeatInterval = parseInt(document.getElementById('setPopupRepeatInterval')?.value || '1') || 1;
             d.sysSettings.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
             d.sysSettings.openTime = document.getElementById('setOpenTime').value;
             d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
@@ -750,6 +1093,16 @@
             d.sysSettings.totalTables = parseInt(document.getElementById('setTotalTables').value) || 20;
             d.sysSettings.tablePrefix = document.getElementById('setTablePrefix').value.trim() || 'តុលេខ';
             d.sysSettings.customTables = document.getElementById('setCustomTables') ? document.getElementById('setCustomTables').value.trim() : 'VIP 1, VIP 2, VIP 3';
+
+            // 🖨️ រក្សាទុកការកំណត់ខ្នាតម៉ាស៊ីនព្រីន និងទំហំទាញយករូបវិក្កយបត្រ (Tab 8)
+            if (document.getElementById('setAdminReceiptSize')) {
+                d.sysSettings.receiptSize = document.getElementById('setAdminReceiptSize').value || '80mm';
+                d.sysSettings.customReceiptConfig = getCurrentReceiptInputsConfig();
+                d.sysSettings.customPrinterPresets = customPrinterPresets;
+            }
+            if (document.getElementById('setAdminReceiptFooter')) {
+                d.sysSettings.receiptFooter = document.getElementById('setAdminReceiptFooter').value.trim();
+            }
 
             let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim();
             let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
