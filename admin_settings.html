@@ -15,9 +15,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700;900&family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
-        /* =========================================
-           🎨 1. STANDARD THEME (Default)
-           ========================================= */
         :root {
             --brand-dark: #1d162d;
             --brand-cyan: #06b6d4;
@@ -31,9 +28,6 @@
             --warning: #f59e0b;
         }
 
-        /* =========================================
-           🔮 2. ANIME (GOJO) THEME
-           ========================================= */
         [data-admin-theme="anime"] {
             --brand-dark: #0f172a;
             --brand-cyan: #8b5cf6;
@@ -47,9 +41,6 @@
             --warning: #f59e0b;
         }
 
-        /* =========================================
-           ⚕️ 3. PHARMACY THEME
-           ========================================= */
         [data-admin-theme="pharmacy"] {
             --brand-dark: #0f766e;
             --brand-cyan: #10b981;
@@ -63,9 +54,6 @@
             --warning: #f59e0b;
         }
 
-        /* =========================================
-           ☕ 4. CAFE THEME
-           ========================================= */
         [data-admin-theme="cafe"] {
             --brand-dark: #3e2723;
             --brand-cyan: #d4a373;
@@ -94,7 +82,7 @@
         .theme-btn.active { border-color: var(--brand-cyan); color: var(--brand-cyan); box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
 
         .section-box { background: rgba(0,0,0,0.015); border: 1px solid var(--border-color); border-radius: 14px; padding: 20px; margin-bottom: 20px; transition: 0.3s; }
-        .section-title { font-size: 16px; font-weight: 900; color: var(--brand-cyan); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 10px;}
+        .section-title { font-size: 16px; font-weight: 900; color: var(--brand-cyan); margin-bottom: 15px; display: flex; align-items: center; gap: 8px; border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 10px; }
 
         .form-group { margin-bottom: 15px; }
         .form-group label { display: block; font-size: 13px; font-weight: 800; margin-bottom: 6px; color: var(--text-dark); }
@@ -103,7 +91,7 @@
             background: var(--store-bg); color: var(--text-dark); font-size: 14px; outline: none; font-weight: 600; 
             transition: all 0.3s ease;
         }
-        .input-st:focus { border-color: var(--brand-cyan); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); background:#fff;}
+        .input-st:focus { border-color: var(--brand-cyan); box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.1); background: #fff; }
 
         .btn-save { 
             background: var(--success); color: white; border: none; width: 100%; padding: 16px; border-radius: 12px; 
@@ -112,9 +100,9 @@
         .btn-save:active { transform: scale(0.98); }
 
         .preview-box { margin-top: 8px; text-align: center; background: var(--store-bg); padding: 8px; border-radius: 12px; border: 1px dashed var(--border-color); }
-        .preview-box img { max-height: 120px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05);}
+        .preview-box img { max-height: 120px; object-fit: contain; border-radius: 8px; background: #fff; padding: 4px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
 
-        .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--store-bg); padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; font-size: 13px; font-weight: 800; border: 1px solid var(--border-color);}
+        .toggle-row { display: flex; align-items: center; justify-content: space-between; background: var(--store-bg); padding: 12px 16px; border-radius: 12px; margin-bottom: 12px; font-size: 13px; font-weight: 800; border: 1px solid var(--border-color); }
 
         #toast { position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px); background: var(--success); color: white; padding: 12px 25px; border-radius: 9999px; font-size: 14px; font-weight: 800; z-index: 9999; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
         #toast.show { transform: translate(-50%, 0); }
@@ -132,25 +120,22 @@
             background: #ffffff; padding: 14px 18px; border-radius: 12px; 
             border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
         }
-        .script-name { font-weight: 800; font-size: 14px; color: var(--brand-dark); word-break: break-all;}
-        .script-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0;}
+        .script-name { font-weight: 800; font-size: 14px; color: var(--brand-dark); word-break: break-all; }
+        .script-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
         
         .btn-script { 
             padding: 8px 16px; font-size: 12px; cursor: pointer; border-radius: 20px; 
             border: 2px solid transparent; font-weight: 800; transition: all 0.2s; background: transparent;
         }
-        .btn-toggle-on { color: var(--success); border-color: var(--success); background: rgba(34, 197, 94, 0.05);}
-        .btn-toggle-off { color: var(--text-muted); border-color: var(--border-color); background: var(--store-bg);}
+        .btn-toggle-on { color: var(--success); border-color: var(--success); background: rgba(34, 197, 94, 0.05); }
+        .btn-toggle-off { color: var(--text-muted); border-color: var(--border-color); background: var(--store-bg); }
         
         .btn-delete { 
             color: white; background: var(--danger); border-radius: 50%; width: 32px; height: 32px;
             display: flex; align-items: center; justify-content: center; border: none; cursor: pointer; transition: 0.2s; padding: 0;
         }
-        .help-text { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5;}
+        .help-text { font-size: 13px; color: var(--text-muted); margin-bottom: 15px; line-height: 1.5; }
 
-        /* =========================================
-           🗂️ TABS & LAYOUT STYLES
-           ========================================= */
         :root { --tab-active-bg: var(--brand-cyan); --tab-active-text: #ffffff; }
         [data-admin-theme="anime"] { --tab-active-bg: linear-gradient(135deg, #8b5cf6, #0ea5e9); --tab-active-text: #ffffff; }
         [data-admin-theme="pharmacy"] { --tab-active-bg: var(--success); --tab-active-text: #ffffff; }
@@ -167,7 +152,7 @@
         
         .content-area { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
         
-        .sidebar-nav { display: flex; flex-direction: column; gap: 8px; margin-top: 15px;}
+        .sidebar-nav { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
         .tab-btn { 
             display: flex; align-items: center; gap: 12px; width: 100%; padding: 14px 18px; 
             border-radius: 12px; cursor: pointer; color: var(--text-dark); background: transparent; 
@@ -188,12 +173,12 @@
 
         .btn-save-mobile { display: none; }
         @media (max-width: 900px) {
-            .layout-wrapper { flex-direction: column; gap: 15px; padding-bottom: 80px;}
+            .layout-wrapper { flex-direction: column; gap: 15px; padding-bottom: 80px; }
             .sidebar { width: 100%; position: static; padding: 15px; }
-            .sidebar-nav { display: flex; flex-direction: row; overflow-x: auto; padding-bottom: 10px; gap: 8px; scroll-snap-type: x mandatory; margin-top: 10px;}
+            .sidebar-nav { display: flex; flex-direction: row; overflow-x: auto; padding-bottom: 10px; gap: 8px; scroll-snap-type: x mandatory; margin-top: 10px; }
             .sidebar-nav::-webkit-scrollbar { height: 4px; }
-            .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px;}
-            .tab-btn { white-space: nowrap; width: auto; scroll-snap-align: start; flex-shrink: 0; padding: 10px 14px;}
+            .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+            .tab-btn { white-space: nowrap; width: auto; scroll-snap-align: start; flex-shrink: 0; padding: 10px 14px; }
             .tab-pane { padding: 15px; }
             .sidebar .btn-save { display: none; }
             .btn-save-mobile { 
@@ -212,8 +197,7 @@
             <i class="fa-solid fa-gear"></i> Settings
         </h2>
 
-        <!-- ⚡ ជួសជុលបញ្ហាការចុច Back បណ្តាលឱ្យគាំង (Prevent Error in Blob Preview) -->
-        <button onclick="const b = new URLSearchParams(window.location.search).get('branch') || 'branch_1'; if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') { alert('មុខងារតំណភ្ជាប់ត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។'); } else { window.location.href='index.html?branch=' + encodeURIComponent(b); }" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 12px; border: 2px solid var(--brand-cyan); background: transparent; color: var(--brand-cyan); font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;" onmouseover="this.style.background='var(--brand-cyan)'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='var(--brand-cyan)';">
+        <button onclick="const b = new URLSearchParams(window.location.search).get('branch') || 'branch_1'; if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') { showToast('មុខងារតំណភ្ជាប់ត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។'); } else { window.location.href='index.html?branch=' + encodeURIComponent(b); }" style="width: 100%; padding: 10px; margin-bottom: 15px; border-radius: 12px; border: 2px solid var(--brand-cyan); background: transparent; color: var(--brand-cyan); font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px; transition: 0.3s;" onmouseover="this.style.background='var(--brand-cyan)'; this.style.color='#fff';" onmouseout="this.style.background='transparent'; this.style.color='var(--brand-cyan)';">
             <i class="fa-solid fa-arrow-left"></i> ត្រឡប់ទៅប្រព័ន្ធលក់
         </button>
         
@@ -337,12 +321,29 @@
             <div class="section-title"><i class="fa-solid fa-store"></i> 4. ផ្ទាំងស្វាគមន៍ & ម៉ោងបើកហាង (Popup & Store Hours)</div>
             
             <div class="toggle-row">
-                <span>✨ បើកផ្ទាំង Pop-up ស្វាគមន៍ពេលចូលមើលដំបូង</span>
+                <span>✨ បើកផ្ទាំង Pop-up ស្វាគមន៍ / ប្រូម៉ូសិនលើ Menu អតិថិជន</span>
                 <input type="checkbox" id="toggleWelcomePopup" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
             </div>
             <div class="form-group">
-                <label>រូបភាព Welcome Popup (Link ឬ Base64):</label>
-                <input type="text" id="setWelcomeImg" class="input-st" placeholder="https://..." onchange="saveAdminSettings()">
+                <label>រូបភាព Welcome Popup (អាចដាក់ Link ឬចុច Upload រូបភាពពីម៉ាស៊ីន):</label>
+                <div style="display: flex; gap: 8px; margin-bottom: 8px;">
+                    <input type="text" id="setWelcomeImg" class="input-st" placeholder="https://... ឬចុចប៊ូតុង Upload ខាងស្តាំ" style="flex: 1; margin-bottom: 0;" onchange="updateWelcomePreview(this.value); saveAdminSettings()">
+                    <input type="file" id="welcomeImgFile" accept="image/*" style="display: none;" onchange="uploadWelcomeImg(event)">
+                    <button type="button" class="input-st" style="width: auto; cursor: pointer; background: var(--brand-cyan); color: #fff; border: none; padding: 0 18px;" onclick="document.getElementById('welcomeImgFile').click()"><i class="fa-solid fa-upload"></i> Upload រូប</button>
+                </div>
+                <div class="preview-box" id="welcomeImgPreviewContainer" style="display: none;">
+                    <img id="welcomeImgPreview" src="" alt="Welcome Preview" style="max-height: 150px;">
+                </div>
+            </div>
+
+            <div class="form-group" style="background: rgba(6, 182, 212, 0.05); padding: 14px; border-radius: 12px; border: 1px dashed var(--brand-cyan);">
+                <label><i class="fa-solid fa-clock-rotate-left"></i> កំណត់រយៈពេលលោតរំលឹកផ្ទាំងប្រូម៉ូសិន / កូដបញ្ចុះតម្លៃម្ដងទៀត (Popup & Promo Repeat Interval):</label>
+                <select id="setPopupRepeatInterval" class="input-st" onchange="saveAdminSettings()">
+                    <option value="0">បង្ហាញតែ ១ ដងគត់ពេលភ្ញៀវចូលដំបូង</option>
+                    <option value="1">⏱️ រៀងរាល់ ១ នាទីម្ដង (Every 1 Minute)</option>
+                    <option value="3">⏱️ រៀងរាល់ ៣ នាទីម្ដង (Every 3 Minutes)</option>
+                    <option value="5">⏱️ រៀងរាល់ ៥ នាទីម្ដង (Every 5 Minutes)</option>
+                </select>
             </div>
 
             <div class="toggle-row">
@@ -471,36 +472,42 @@
         <!-- 🪑 TAB 7: TABLE SETTINGS & ARCHIVE -->
         <div id="tab-tables" class="tab-pane">
             <div class="section-title" style="color: #8b5cf6; border-bottom: 2px dashed #8b5cf6; padding-bottom: 10px;">
-                <i class="fa-solid fa-chair"></i> 7. កំណត់លេខតុ (Table Management)
+                <i class="fa-solid fa-chair"></i> 7. កំណត់លេខតុ & តុ VIP (Table & VIP Management)
             </div>
-            <p class="help-text">បើកមុខងារនេះដើម្បីតម្រូវឲ្យអតិថិជន ឬបុគ្គលិកត្រូវតែជ្រើសរើសលេខតុមុនពេលបញ្ជូនការកុម្ម៉ង់ (Order)។</p>
+            <p class="help-text">បើកមុខងារនេះដើម្បីអនុញ្ញាតឱ្យទាំងបុគ្គលិក (POS) និងអតិថិជន (Digital Menu) អាចជ្រើសរើសលេខតុធម្មតា តុ VIP ឬបន្ថែមឈ្មោះតុថ្មីៗបានតាមចិត្ត។</p>
             
             <div class="toggle-row" style="background: rgba(139, 92, 246, 0.05); border-color: rgba(139, 92, 246, 0.2);">
-                <span style="color: var(--brand-dark); font-weight: bold;"><i class="fa-solid fa-chair"></i> បើកមុខងារជ្រើសរើសលេខតុ (Enable Tables)</span>
+                <span style="color: var(--brand-dark); font-weight: bold;"><i class="fa-solid fa-chair"></i> បើកមុខងារជ្រើសរើសលេខតុ & តុ VIP (Enable Tables)</span>
                 <input type="checkbox" id="toggleTableFeature" style="width: 20px; height: 20px; accent-color: #8b5cf6; cursor: pointer;" onchange="saveAdminSettings()">
             </div>
             
             <div style="display: flex; gap: 15px; margin-top: 15px; flex-wrap: wrap;">
                 <div class="form-group" style="flex: 1; min-width: 150px;">
-                    <label>ចំនួនតុសរុប (Total Tables):</label>
+                    <label>ចំនួនតុធម្មតាសរុប (Total Tables):</label>
                     <input type="number" id="setTotalTables" class="input-st" value="20" min="1" placeholder="ឧ. 20" onchange="saveAdminSettings()">
                 </div>
                 <div class="form-group" style="flex: 1; min-width: 150px;">
-                    <label>ពាក្យនាំមុខ (Table Prefix):</label>
+                    <label>ពាក្យនាំមុខតុធម្មតា (Table Prefix):</label>
                     <input type="text" id="setTablePrefix" class="input-st" placeholder="ឧ. តុលេខ ឬ Table" value="តុលេខ" onchange="saveAdminSettings()">
                 </div>
             </div>
 
+            <div class="form-group" style="background: rgba(139, 92, 246, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed #8b5cf6; margin-top: 5px;">
+                <label style="color: #6d28d9;"><i class="fa-solid fa-crown"></i> បញ្ជីតុ VIP ឬតុពិសេសបន្ថែម (ខណ្ឌដោយសញ្ញាក្បៀស ","):</label>
+                <input type="text" id="setCustomTables" class="input-st" placeholder="ឧ. VIP 1, VIP 2, VIP 3, បន្ទប់ VIP, កញ្ចុះ 1" value="VIP 1, VIP 2, VIP 3" onchange="saveAdminSettings()">
+                <div style="font-size: 12px; color: var(--text-muted); margin-top: 6px;">💡 អ្នកក៏អាចចុចប៊ូតុង <b>"➕ ថែមតុ / VIP"</b> នៅក្នុងផ្ទាំងលក់ POS ឬផ្ទាំងអតិថិជនដោយផ្ទាល់បានផងដែរ។</div>
+            </div>
+
             <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
 
-            <!-- 🌟 បន្ថែមថ្មី៖ មុខងារ Archive សម្អាតទិន្នន័យចាស់ -->
+            <!-- មុខងារ Archive សម្អាតទិន្នន័យចាស់ -->
             <div class="section-title" style="color: var(--danger); border-bottom: 2px dashed var(--danger); padding-bottom: 10px;">
                 <i class="fa-solid fa-database"></i> ការគ្រប់គ្រងទិន្នន័យ (Data Management)
             </div>
             <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--danger);">
                 <h3 style="font-size: 16px; color: var(--danger); margin-bottom: 8px;"><i class="fa-solid fa-broom"></i> សម្អាតទិន្នន័យចាស់ៗ (Data Archive)</h3>
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">ទាញយក និងលុបវិក្កយបត្រចាស់ៗ (ដែលមានអាយុកាលលើសពី ៣ ខែ) ចេញពីប្រព័ន្ធ ដើម្បីឱ្យ App ដំណើរការបានលឿនជានិច្ច និងកាត់បន្ថយទំហំ Database។</p>
-                <button type="button" class="btn" style="background: var(--danger); color: white; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none;" onclick="archiveOldData()"><i class="fa-solid fa-box-archive"></i> Archive វិក្កយបត្រចាស់ (> ៣ខែ)</button>
+                <button type="button" class="btn-action" style="background: var(--danger); color: white; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none;" onclick="archiveOldData()"><i class="fa-solid fa-box-archive"></i> Archive វិក្កយបត្រចាស់ (> ៣ខែ)</button>
             </div>
         </div>
 
@@ -509,12 +516,23 @@
     <button class="btn-save btn-save-mobile" onclick="saveAdminSettings()"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់ទាំងអស់ (Save Changes)</button>
 </div>
 
+<!-- Custom Confirmation Modal for Archive -->
+<div id="adminConfirmModal" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 10000; display: none; justify-content: center; align-items: center; padding: 20px;">
+    <div style="background: var(--card-bg); color: var(--text-dark); max-width: 400px; width: 100%; padding: 25px; border-radius: 18px; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.3); border: 1px solid var(--border-color);">
+        <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 10px; color: var(--danger);">⚠️ បញ្ជាក់ការ Archive ទិន្នន័យ</h3>
+        <p id="adminConfirmText" style="font-size: 14px; color: var(--text-muted); margin-bottom: 20px; line-height: 1.5;"></p>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button type="button" class="input-st" style="width: auto; padding: 10px 20px; cursor: pointer; margin-bottom: 0;" onclick="document.getElementById('adminConfirmModal').style.display='none'">បោះបង់</button>
+            <button type="button" id="adminConfirmOkBtn" class="input-st" style="width: auto; padding: 10px 20px; background: var(--danger); color: #fff; border: none; cursor: pointer; font-weight: bold; margin-bottom: 0;">យល់ព្រម Archive</button>
+        </div>
+    </div>
+</div>
+
 <div id="toast">Saved Successfully!</div>
 
 <script>
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
-    // 🔒 FIX: រំលងការ Redirect នៅពេលកូដដំណើរការក្នុងផ្ទាំង Preview របស់ AI (blob: ឬ data:)
     (function verifyAdminAccess() {
         const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
@@ -625,10 +643,17 @@
             document.getElementById('toggleTableFeature').checked = !!localSys.toggleTableFeature;
             document.getElementById('setTotalTables').value = localSys.totalTables || 20;
             document.getElementById('setTablePrefix').value = localSys.tablePrefix || 'តុលេខ';
+            if (document.getElementById('setCustomTables')) {
+                document.getElementById('setCustomTables').value = localSys.customTables !== undefined ? localSys.customTables : 'VIP 1, VIP 2, VIP 3';
+            }
+            if (document.getElementById('setPopupRepeatInterval')) {
+                document.getElementById('setPopupRepeatInterval').value = localSys.popupRepeatInterval !== undefined ? String(localSys.popupRepeatInterval) : '1';
+            }
+            if (localSys.welcomeImg) updateWelcomePreview(localSys.welcomeImg);
 
             renderMenuScripts(); renderPosScripts(); renderPromoCodesList();
 
-            if (supabaseClient) {
+            if (supabaseClient && navigator.onLine) {
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
                 if (data && data.data_json) {
                     let d = data.data_json; let sys = d.sysSettings || {};
@@ -656,6 +681,10 @@
                     document.getElementById('setTickerText').value = cloudTicker;
                     document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
                     document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
+                    if (sys.welcomeImg) updateWelcomePreview(sys.welcomeImg);
+                    if (document.getElementById('setPopupRepeatInterval') && sys.popupRepeatInterval !== undefined) {
+                        document.getElementById('setPopupRepeatInterval').value = String(sys.popupRepeatInterval);
+                    }
                     document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
                     document.getElementById('setOpenTime').value = sys.openTime || '08:00';
                     document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
@@ -664,6 +693,9 @@
                     document.getElementById('toggleTableFeature').checked = !!sys.toggleTableFeature;
                     document.getElementById('setTotalTables').value = sys.totalTables || 20;
                     document.getElementById('setTablePrefix').value = sys.tablePrefix || 'តុលេខ';
+                    if (document.getElementById('setCustomTables')) {
+                        document.getElementById('setCustomTables').value = sys.customTables !== undefined ? sys.customTables : 'VIP 1, VIP 2, VIP 3';
+                    }
 
                     if(sys.orderTelegramBotToken || d.telegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken || d.telegramBotToken || '';
                     if(sys.orderTelegramChatId || d.telegramChatId) document.getElementById('setOrderTelegramChatId').value = sys.orderTelegramChatId || d.telegramChatId || '';
@@ -683,7 +715,7 @@
         try {
             localStorage.setItem(`ks2_${BRANCH}_pos_scripts`, JSON.stringify(posScripts));
             let d = {};
-            if (supabaseClient) {
+            if (supabaseClient && navigator.onLine) {
                 try { let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle(); if (data && data.data_json) d = data.data_json; } catch(err) {}
             }
             if(!d.sysSettings) {
@@ -708,6 +740,7 @@
 
             d.sysSettings.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
             d.sysSettings.welcomeImg = document.getElementById('setWelcomeImg').value.trim();
+            d.sysSettings.popupRepeatInterval = parseInt(document.getElementById('setPopupRepeatInterval')?.value || '0') || 0;
             d.sysSettings.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
             d.sysSettings.openTime = document.getElementById('setOpenTime').value;
             d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
@@ -716,6 +749,7 @@
             d.sysSettings.toggleTableFeature = document.getElementById('toggleTableFeature').checked;
             d.sysSettings.totalTables = parseInt(document.getElementById('setTotalTables').value) || 20;
             d.sysSettings.tablePrefix = document.getElementById('setTablePrefix').value.trim() || 'តុលេខ';
+            d.sysSettings.customTables = document.getElementById('setCustomTables') ? document.getElementById('setCustomTables').value.trim() : 'VIP 1, VIP 2, VIP 3';
 
             let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim();
             let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
@@ -739,7 +773,7 @@
             if (orderTok) localStorage.setItem(`ks2_${BRANCH}_telegram_bot_token`, orderTok);
             if (orderChat) localStorage.setItem(`ks2_${BRANCH}_telegram_chat_id`, orderChat);
 
-            if (supabaseClient) {
+            if (supabaseClient && navigator.onLine) {
                 let { error } = await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
                 if (error) throw error;
             }
@@ -747,7 +781,6 @@
         } catch(e) { showToast('Save Failed: ' + e.message, true); console.error(e); }
     }
 
-    /* --- Promo Codes Manager Functions --- */
     function onPromoTypeChange() {
         const type = document.getElementById('newPromoType').value;
         const valInp = document.getElementById('newPromoValue');
@@ -885,7 +918,6 @@
         showToast('បានលុបកូដប្រូម៉ូសិន!');
     }
 
-    /* --- Banner Functions --- */
     function renderAdminBanners() {
         const container = document.getElementById('bannerListContainer'); container.innerHTML = '';
         if (adminBanners.length === 0) container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មាន Banner ទេ។ សូមចុច + បន្ថែម។</div>';
@@ -953,11 +985,56 @@
         }; reader.readAsDataURL(file);
     }
 
-    /* --- MENU CUSTOM JS --- */
+    function updateWelcomePreview(src) {
+        const box = document.getElementById('welcomeImgPreviewContainer');
+        const img = document.getElementById('welcomeImgPreview');
+        if (!box || !img) return;
+        if (src && src.trim() !== '') {
+            img.src = src;
+            box.style.display = 'block';
+        } else {
+            img.src = '';
+            box.style.display = 'none';
+        }
+    }
+
+    function uploadWelcomeImg(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                const maxW = 1200, maxH = 900;
+                let w = img.width, h = img.height;
+                if (w > maxW || h > maxH) {
+                    const ratio = Math.min(maxW / w, maxH / h);
+                    w = Math.round(w * ratio);
+                    h = Math.round(h * ratio);
+                }
+                canvas.width = w; canvas.height = h;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w, h);
+                const url = canvas.toDataURL('image/jpeg', 0.75);
+                document.getElementById('setWelcomeImg').value = url;
+                document.getElementById('toggleWelcomePopup').checked = true;
+                updateWelcomePreview(url);
+                saveAdminSettings();
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+    }
+
     function renderMenuScripts() {
-        const container = document.getElementById('menuScriptsListContainer'); const toggleContainer = document.getElementById('menuScriptsToggleContainer');
+        const container = document.getElementById('menuScriptsListContainer');
+        const toggleContainer = document.getElementById('menuScriptsToggleContainer');
+        if (!container || !toggleContainer) return;
         container.innerHTML = ''; toggleContainer.innerHTML = '';
-        if (menuScripts.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>'; return; }
+        if (menuScripts.length === 0) {
+            container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>';
+            return;
+        }
         let displayScripts = [...menuScripts].reverse();
         if (menuScripts.length > 3) {
             let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length})`;
@@ -989,9 +1066,9 @@
     function exportMenuScriptsBackup() { if(menuScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); a.download = `Menu_JS.json`; a.click(); }
     function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err){ showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
 
-    /* --- POS CUSTOM JS --- */
     function renderPosScripts() {
         const container = document.getElementById('posScriptsListContainer'); const toggleContainer = document.getElementById('posScriptsToggleContainer');
+        if (!container || !toggleContainer) return;
         container.innerHTML = ''; toggleContainer.innerHTML = '';
         if (posScripts.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដ (Script) ទេ</div>'; return; }
         let displayScripts = [...posScripts].reverse();
@@ -1026,39 +1103,39 @@
     function importPosScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err) { showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
 
     function getPageUrl(pageName) { let path = window.location.pathname; let lastSlash = path.lastIndexOf('/'); return window.location.origin + path.substring(0, lastSlash + 1) + pageName + '?branch=' + encodeURIComponent(BRANCH); }
-    function copyWelcomeLink() { navigator.clipboard.writeText(getPageUrl('welcome.html')); showToast('Copied Welcome Link!'); }
+    function copyTextSafe(txt) {
+        let ta = document.createElement('textarea');
+        ta.value = txt; ta.style.position = 'fixed'; document.body.appendChild(ta);
+        ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+    }
+    function copyWelcomeLink() { copyTextSafe(getPageUrl('welcome.html')); showToast('Copied Welcome Link!'); }
     function showWelcomeQR() { const url = getPageUrl('welcome.html'); const win = window.open('', '_blank', 'width=450,height=550'); if(!win) return; win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Welcome QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
     
-    // មុខងារបើកទំព័រថ្មី ទប់ស្កាត់បញ្ហាក្នុង Preview Mode
     function goToWelcome() { 
         if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
-            alert('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។ \nតំណភ្ជាប់គោលដៅ: ' + getPageUrl('welcome.html'));
+            showToast('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។');
         } else {
             window.open(getPageUrl('welcome.html'), '_blank'); 
         }
     }
     
-    function copyMenuLink() { navigator.clipboard.writeText(getPageUrl('menu.html')); showToast('Copied Menu Link!'); }
+    function copyMenuLink() { copyTextSafe(getPageUrl('menu.html')); showToast('Copied Menu Link!'); }
     function showMenuQR() { const url = getPageUrl('menu.html'); const win = window.open('', '_blank', 'width=450,height=550'); if(!win) return; win.document.write(`<body style="text-align:center;font-family:sans-serif;padding:20px;"><h2>Menu QR Code</h2><img src="https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}"><br><br><p>${url}</p><button onclick="window.print()">Print</button></body>`); win.document.close(); }
     
-    // មុខងារបើកទំព័រថ្មី ទប់ស្កាត់បញ្ហាក្នុង Preview Mode
     function goToMenu() { 
         if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
-            alert('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។ \nតំណភ្ជាប់គោលដៅ: ' + getPageUrl('menu.html'));
+            showToast('មុខងារបើកទំព័រថ្មីត្រូវបានបិទបណ្តោះអាសន្នក្នុងផ្ទាំង Preview នេះ។');
         } else {
             window.open(getPageUrl('menu.html'), '_blank'); 
         }
     }
 
-    /* 🌟 បន្ថែមថ្មី៖ អនុគមន៍ Archive Data ពេលអ្នកចុចប៊ូតុង */
     async function archiveOldData() {
         try {
             let invoices = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`)) || [];
             if (invoices.length === 0) return showToast("មិនមានវិក្កយបត្រដើម្បី Archive ទេ!", true);
 
-            // កំណត់រកវិក្កយបត្រដែលមានអាយុកាលលើសពី ៩០ ថ្ងៃ (៣ ខែ)
             const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-            
             let oldInvoices = [];
             let newInvoices = [];
 
@@ -1075,8 +1152,14 @@
                 return showToast("មិនមានវិក្កយបត្រចាស់ជាង ៣ខែ ដែលត្រូវ Archive ទេ!");
             }
 
-            if (confirm(`រកឃើញវិក្កយបត្រចាស់ចំនួន ${oldInvoices.length} វិក្កយបត្រ។\nតើអ្នកពិតជាចង់ទាញយកវាទុកជាឯកសារ Backup ហើយលុបវាចេញពីប្រព័ន្ធមែនទេ?`)) {
-                // 1. Download Backup of Old Invoices
+            const modal = document.getElementById('adminConfirmModal');
+            const txt = document.getElementById('adminConfirmText');
+            const okBtn = document.getElementById('adminConfirmOkBtn');
+            txt.innerText = `រកឃើញវិក្កយបត្រចាស់ចំនួន ${oldInvoices.length} វិក្កយបត្រ។ តើអ្នកពិតជាចង់ទាញយកវាទុកជាឯកសារ Backup ហើយលុបវាចេញពីប្រព័ន្ធមែនទេ?`;
+            modal.style.display = 'flex';
+
+            okBtn.onclick = async () => {
+                modal.style.display = 'none';
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(oldInvoices, null, 2));
                 const downloadAnchor = document.createElement('a');
                 downloadAnchor.setAttribute("href", dataStr);
@@ -1085,11 +1168,9 @@
                 downloadAnchor.click();
                 downloadAnchor.remove();
 
-                // 2. Save new (active) invoices back to localStorage
                 localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(newInvoices));
 
-                // 3. Sync to Supabase
-                if (supabaseClient) {
+                if (supabaseClient && navigator.onLine) {
                     let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
                     if (data && data.data_json) {
                         let d = data.data_json;
@@ -1098,8 +1179,8 @@
                     }
                 }
 
-                showToast(`✅ បាន Archive និងសម្អាតវិក្កយបត្រចំនួន ${oldInvoices.length} ចេញពីប្រព័ន្ធដោយជោគជ័យ!`);
-            }
+                showToast(`✅ បាន Archive និងសម្អាតវិក្កយបត្រចំនួន ${oldInvoices.length} ដោយជោគជ័យ!`);
+            };
         } catch (e) {
             console.error(e);
             showToast("❌ មានបញ្ហាក្នុងការ Archive: " + e.message, true);

@@ -123,16 +123,16 @@
                     <button id="grid-btn-unpaid" class="btn btn-warning" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('unpaid', '📝 វិក្កយបត្រ & ទូទាត់', document.getElementById('nav-unpaid'))"><i style="font-size: 30px; margin-bottom: 5px;">📝</i>វិក្កយបត្រ</button>
                     <button id="grid-btn-exp" class="btn btn-danger" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);" onclick="window.switchTab('expenses', '📉 ការចំណាយ (Expenses)', document.getElementById('nav-expenses'))"><i style="font-size: 30px; margin-bottom: 5px;">📉</i>ចំណាយ</button>
                     <button id="grid-btn-cust" class="btn btn-outline" style="flex-direction: column; padding: 15px; font-size: 16px; height: 100px; background: var(--bg-card); box-shadow: 0 4px 6px rgba(0,0,0,0.05);" onclick="window.switchTab('customers', '👥 គ្រប់គ្រងអតិថិជន', document.getElementById('nav-customers'))"><i style="font-size: 30px; margin-bottom: 5px;">👥</i>អតិថិជន</button>
-                </div>
-
-                <div class="toolbar" style="margin-bottom: 20px;">
-                    <span style="font-size: var(--fs-14); font-weight:bold; color: var(--text-main);">📅 ជ្រើសរើសកាលបរិច្ឆេទបង្ហាញ៖ </span>
-                    <input type="datetime-local" step="1" id="dashDateFrom" class="form-control" style="width: 210px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
-                    <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
-                    <input type="datetime-local" step="1" id="dashDateTo" class="form-control" style="width: 210px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
-                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
+                <div class="toolbar" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+                        <span style="font-size: var(--fs-14); font-weight:bold; color: var(--text-main);">📅 ជ្រើសរើសកាលបរិច្ឆេទបង្ហាញ៖ </span>
+                        <input type="datetime-local" step="1" id="dashDateFrom" class="form-control" style="width: 195px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
+                        <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
+                        <input type="datetime-local" step="1" id="dashDateTo" class="form-control" style="width: 195px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
+                        <button class="btn btn-outline" style="padding: 8px 14px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
+                    </div>
                     <!-- Z-Report Button -->
-                    <button class="btn btn-outline" style="padding: 6px 12px; font-size: var(--fs-12); border-color: #8b5cf6; color: #8b5cf6; margin-left: auto;" onclick="if(typeof window.printZReport === 'function') window.printZReport()">🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)</button>
+                    <button class="btn btn-outline" style="padding: 8px 14px; font-size: var(--fs-12); border-color: #8b5cf6; color: #8b5cf6;" onclick="if(typeof window.printZReport === 'function') window.printZReport()">🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)</button>
                 </div>
 
                 <div class="stats-grid">
@@ -285,25 +285,33 @@
                             <div class="summary-row summary-total"><span id="lblTotalText">សរុបទឹកប្រាក់:</span><span style="text-align:right;"><div id="cartTotalAmount">$0.00</div><div id="cartTotalAmountRiel" style="font-size: var(--fs-14); color: var(--text-muted); font-weight: normal; margin-top: 4px;"></div></span></div>
                             
                             <!-- ប្រអប់បញ្ចូលឈ្មោះអតិថិជន -->
-                            <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); transition: 0.3s;">
+                            <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); transition: 0.3s;">
                                 <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%; transition: 0.3s;">
                                 <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
                                 <datalist id="customerDatalist"></datalist>
                             </div>
 
-                            <!-- ប្រអប់ជ្រើសរើសលេខតុ (Table Management) -->
-                            <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 15px; border: 1px dashed var(--brand-cyan); display: none;">
-                                <label style="font-size: var(--fs-13); font-weight: bold; color: var(--brand-dark); display: block; margin-bottom: 5px;">🪑 ជ្រើសរើសលេខតុ (Table):</label>
-                                <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--brand-cyan);" onchange="window.handleTableSelectionChange()">
+                            <!-- ប្រអប់ជ្រើសរើសលេខតុ និងបន្ថែមតុ VIP (Table & VIP Management) -->
+                            <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed var(--primary); display: none;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 5px;">
+                                    <label style="font-size: var(--fs-13); font-weight: bold; color: var(--text-main); margin: 0;">🪑 ជ្រើសរើសតុ / VIP:</label>
+                                    <button type="button" class="btn btn-outline" style="padding: 3px 8px; font-size: 11px; border-color: var(--primary); color: var(--primary);" onclick="window.toggleAddCustomTableBox()">➕ ថែមតុ / VIP</button>
+                                </div>
+                                <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--primary);" onchange="window.handleTableSelectionChange()">
                                     <option value="">-- សូមជ្រើសរើសតុ --</option>
                                 </select>
+                                <!-- ប្រអប់បន្ថែមតុ VIP ឬតុថ្មីភ្លាមៗ -->
+                                <div id="posQuickAddTableBox" style="display: none; margin-top: 8px; gap: 6px; align-items: center;">
+                                    <input type="text" id="posNewCustomTableInput" class="form-control" placeholder="ឧ. VIP 1, បន្ទប់ VIP, តុថែម..." style="font-size: 12px; padding: 6px 10px; height: 34px;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.addQuickCustomTable();}">
+                                    <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 12px; height: 34px;" onclick="window.addQuickCustomTable()">រក្សាទុក</button>
+                                </div>
                             </div>
 
                             <!-- ប៊ូតុងគិតលុយ -->
-                            <div style="display: flex; gap: 10px; flex-shrink: 0;">
-                                <button id="btnCheckoutPreorder" class="btn" style="flex: 1; padding: 15px 0; font-size: var(--fs-15); background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
-                                <button id="btnCheckoutUnpaid" class="btn btn-warning" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
-                                <button id="btnCheckoutPaid" class="btn btn-success" style="flex: 1; padding: 15px 0; font-size: var(--fs-15);" onclick="window.validateTableAndProceed('paid')">💰 ទូទាត់រួច</button>
+                            <div class="pos-checkout-btns">
+                                <button id="btnCheckoutPreorder" class="btn" style="background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
+                                <button id="btnCheckoutUnpaid" class="btn btn-warning" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
+                                <button id="btnCheckoutPaid" class="btn btn-success" onclick="window.validateTableAndProceed('paid')">💰 ទូទាត់រួច</button>
                             </div>
                         </div>
                     </div>
@@ -947,35 +955,35 @@
         </div>
     </div>
 
-    <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile) -->
+    <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile - ពង្រីកទំហំឱ្យស្អាតមិនហៀរ) -->
     <div class="modal-overlay" id="shopNameModal" style="z-index: 9000;" onclick="if(event.target === this) window.closeShopNameModal()">
-        <div class="modal" style="max-width: 350px;">
+        <div class="modal" style="max-width: 440px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-18);">✏️ ប្តូរឈ្មោះហាង និង Logo</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeShopNameModal()">✕</button></div>
             <div class="modal-body">
                 <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">ឈ្មោះហាង:</label>
                 <input type="text" id="newShopNameInput" class="form-control" placeholder="វាយឈ្មោះហាងនៅទីនេះ..." style="text-align: center; font-size: var(--fs-16); width: 100%;">
                 
-                <div style="margin-top: 15px;">
+                <div style="margin-top: 12px;">
                     <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">លេខទូរស័ព្ទហាង:</label>
                     <input type="text" id="newShopPhoneInput" class="form-control" placeholder="ឧ. 012 345 678" style="font-size: var(--fs-14); width: 100%;">
                 </div>
-                <div style="margin-top: 15px;">
+                <div style="margin-top: 12px;">
                     <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">អាសយដ្ឋានហាង:</label>
-                    <textarea id="newShopAddressInput" class="form-control" placeholder="ឧ. ផ្ទះលេខ ១, ផ្លូវ ០០..." style="font-size: var(--fs-14); height: 60px; resize:none; width: 100%;"></textarea>
+                    <textarea id="newShopAddressInput" class="form-control" placeholder="ឧ. ផ្ទះលេខ ១, ផ្លូវ ០០..." style="font-size: var(--fs-14); height: 55px; resize:none; width: 100%;"></textarea>
                 </div>
 
-                <div style="margin-top: 15px; display: flex; gap: 10px; border-top: 1px dashed var(--border); padding-top: 15px;">
-                    <div style="flex: 1;">
-                        <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">ឡូហ្គោហាង:</label>
+                <div style="margin-top: 15px; display: flex; gap: 12px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                    <div style="flex: 1; min-width: 0; text-align: center;">
+                        <label style="font-size: var(--fs-13); display:block; margin-bottom: 6px;">ឡូហ្គោហាង:</label>
                         <input type="file" id="shopLogoInput" accept="image/*" style="display:none;" onchange="window.handleShopLogo(event)">
-                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopLogoInput').click()">📸 ឡូហ្គោ</button>
-                        <div style="text-align: center; margin-top: 10px;"><img id="shopLogoPreview" src="" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; display: none; margin: auto; border: 2px solid var(--border);"></div>
+                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12); padding: 8px;" onclick="document.getElementById('shopLogoInput').click()">📸 ឡូហ្គោ</button>
+                        <div style="text-align: center; margin-top: 10px;"><img id="shopLogoPreview" src="" style="width: 90px; height: 90px; object-fit: cover; border-radius: 50%; display: none; margin: auto; border: 2px solid var(--border);"></div>
                     </div>
-                    <div style="flex: 1;">
-                        <label style="font-size: var(--fs-14); display:block; margin-bottom: 5px;">QR ទូទាត់ប្រាក់:</label>
+                    <div style="flex: 1; min-width: 0; text-align: center;">
+                        <label style="font-size: var(--fs-13); display:block; margin-bottom: 6px;">QR ទូទាត់ប្រាក់:</label>
                         <input type="file" id="shopQRInput" accept="image/*" style="display:none;" onchange="window.handleShopQR(event)">
-                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12);" onclick="document.getElementById('shopQRInput').click()">📷 QR Code</button>
-                        <div style="text-align: center; margin-top: 10px;"><img id="shopQRPreview" src="" style="width: 120px; height: 120px; object-fit: contain; display: none; margin: auto; border: 2px solid var(--border);"></div>
+                        <button class="btn btn-outline" style="width:100%; font-size: var(--fs-12); padding: 8px;" onclick="document.getElementById('shopQRInput').click()">📷 QR Code</button>
+                        <div style="text-align: center; margin-top: 10px;"><img id="shopQRPreview" src="" style="width: 90px; height: 90px; object-fit: contain; border-radius: 10px; background: #fff; padding: 3px; display: none; margin: auto; border: 2px solid var(--border);"></div>
                     </div>
                 </div>
                 
@@ -1425,28 +1433,94 @@
 
         window.loadTableSettingsForPOS = function() {
             const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-            let sysSettings = {};
+            let sysSettings = window.sysSettings || {};
             try {
                 const raw = localStorage.getItem(`ks2_${branchId}_sys_settings`);
-                if (raw) sysSettings = JSON.parse(raw);
+                if (raw) sysSettings = Object.assign({}, sysSettings, JSON.parse(raw));
             } catch(e) {}
             
             const tableContainer = document.getElementById('posTableInputContainer');
             const tableSelect = document.getElementById('posTableSelect');
             
             if (sysSettings.toggleTableFeature && tableContainer && tableSelect) {
+                const prevSelected = tableSelect.value;
                 tableContainer.style.display = 'block'; 
                 let totalTables = parseInt(sysSettings.totalTables) || 20;
                 let prefix = sysSettings.tablePrefix || 'តុលេខ';
                 
-                tableSelect.innerHTML = '<option value="">-- សូមជ្រើសរើសតុ --</option>';
+                // បញ្ជីតុ VIP និងតុពិសេសបន្ថែម
+                let customTablesRaw = sysSettings.customTables !== undefined ? sysSettings.customTables : 'VIP 1, VIP 2, VIP 3';
+                let customTables = String(customTablesRaw)
+                    .split(',')
+                    .map(s => s.trim())
+                    .filter(Boolean);
+
+                let html = '<option value="">-- សូមជ្រើសរើសតុ / VIP --</option>';
+                if (customTables.length > 0) {
+                    html += '<optgroup label="🌟 តុ VIP / តុពិសេស">';
+                    customTables.forEach(ct => {
+                        const safeVal = ct.replace(/"/g, '&quot;');
+                        html += `<option value="${safeVal}">🌟 ${ct}</option>`;
+                    });
+                    html += '</optgroup>';
+                }
+
+                html += `<optgroup label="🪑 ${prefix} (១ ដល់ ${totalTables})">`;
                 for (let i = 1; i <= totalTables; i++) {
                     let tableName = `${prefix} ${i}`;
-                    tableSelect.innerHTML += `<option value="${tableName}">${tableName}</option>`;
+                    html += `<option value="${tableName}">${tableName}</option>`;
                 }
+                html += '</optgroup>';
+
+                tableSelect.innerHTML = html;
+                if (prevSelected) tableSelect.value = prevSelected;
             } else if (tableContainer) {
                 tableContainer.style.display = 'none'; 
             }
+        };
+
+        window.toggleAddCustomTableBox = function() {
+            const box = document.getElementById('posQuickAddTableBox');
+            const inp = document.getElementById('posNewCustomTableInput');
+            if (!box) return;
+            const isHidden = box.style.display === 'none';
+            box.style.display = isHidden ? 'flex' : 'none';
+            if (isHidden && inp) {
+                inp.value = '';
+                setTimeout(() => inp.focus(), 50);
+            }
+        };
+
+        window.addQuickCustomTable = async function() {
+            const inp = document.getElementById('posNewCustomTableInput');
+            const box = document.getElementById('posQuickAddTableBox');
+            const tableSelect = document.getElementById('posTableSelect');
+            if (!inp) return;
+            const newTable = inp.value.trim();
+            if (!newTable) return;
+
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            if (!window.sysSettings) window.sysSettings = {};
+            let currentCustom = window.sysSettings.customTables !== undefined ? window.sysSettings.customTables : 'VIP 1, VIP 2, VIP 3';
+            let list = String(currentCustom).split(',').map(s => s.trim()).filter(Boolean);
+
+            if (!list.some(t => t.toLowerCase() === newTable.toLowerCase())) {
+                list.push(newTable);
+            }
+            window.sysSettings.customTables = list.join(', ');
+            window.sysSettings.toggleTableFeature = true;
+            localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
+
+            window.loadTableSettingsForPOS();
+            if (tableSelect) {
+                tableSelect.value = newTable;
+                window.handleTableSelectionChange();
+            }
+            if (box) box.style.display = 'none';
+            inp.value = '';
+
+            if (typeof window.showToast === 'function') window.showToast(`✅ បានបន្ថែមតុ "${newTable}" រួចរាល់!`);
+            if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
         };
 
         window.handleTableSelectionChange = function() {

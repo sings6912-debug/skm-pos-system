@@ -10,9 +10,8 @@
     
     <style>
         :root {
-            /* Dynamic Brand Colors */
             --brand-dark: #1d162d; 
-            --brand-cyan: #06b6d4; /* Will change dynamically from Admin */
+            --brand-cyan: #06b6d4;
             --store-bg: #f3f4f6;
             --card-bg: #ffffff;
             --text-dark: #1e293b;
@@ -33,9 +32,6 @@
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Battambang', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background: var(--brand-dark); color: var(--text-dark); overflow-x: hidden; }
 
-        /* =========================================
-           1. SPLASH SCREEN
-           ========================================= */
         #splashScreen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--brand-dark); z-index: 9999; 
@@ -43,9 +39,6 @@
             color: white; transition: opacity 0.5s ease;
         }
 
-        /* =========================================
-           2. LANDING PAGE
-           ========================================= */
         #landingPage {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: var(--brand-dark); z-index: 1000; 
@@ -56,10 +49,9 @@
             width: 110px; height: 110px; border-radius: 50%; border: 3px solid white;
             object-fit: cover; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #fff;
         }
-        .lp-title { color: white; font-size: 22px; font-weight: 900; margin-top: 15px; letter-spacing: 0.5px; text-transform: uppercase;}
+        .lp-title { color: white; font-size: 22px; font-weight: 900; margin-top: 15px; letter-spacing: 0.5px; text-transform: uppercase; }
         
-        /* Dynamic Social Link */
-        .lp-yt { color: #a5b4fc; font-size: 13px; margin-top: 8px; display: flex; align-items: center; gap: 6px; text-decoration: none; padding: 6px 14px; background: rgba(255,255,255,0.1); border-radius: 20px;}
+        .lp-yt { color: #a5b4fc; font-size: 13px; margin-top: 8px; display: flex; align-items: center; gap: 6px; text-decoration: none; padding: 6px 14px; background: rgba(255,255,255,0.1); border-radius: 20px; }
         .lp-yt i { font-size: 16px; }
         
         .lp-btn {
@@ -75,10 +67,7 @@
             backdrop-filter: blur(5px);
         }
 
-        /* =========================================
-           3. STORE PAGE & NEW FEATURES
-           ========================================= */
-        #storePage { display: none; background: var(--store-bg); min-height: 100vh; padding-bottom: 100px;}
+        #storePage { display: none; background: var(--store-bg); min-height: 100vh; padding-bottom: 100px; }
         
         .top-bar {
             background: var(--brand-dark); color: white; padding: 15px 20px;
@@ -86,7 +75,7 @@
             position: sticky; top: 0; z-index: 50;
         }
         .top-bar i { font-size: 20px; cursor: pointer; }
-        .top-bar .title { font-weight: 900; font-size: 18px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;}
+        .top-bar .title { font-weight: 900; font-size: 18px; letter-spacing: 1px; display: flex; align-items: center; gap: 8px; }
         
         .cart-icon-wrapper { position: relative; cursor: pointer; }
         .cart-badge {
@@ -95,35 +84,44 @@
             border: 2px solid var(--brand-dark);
         }
 
-        /* Slider Banner (Multiple Images) - FIXED FOR ASPECT RATIO */
         .promo-banner {
             margin: 15px 20px 10px 20px;
+            width: calc(100% - 40px);
             border-radius: 16px;
             overflow: hidden;
             position: relative;
             background: var(--brand-dark);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-            aspect-ratio: 16 / 7;
-            max-height: 250px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.12);
+            aspect-ratio: 16 / 8;
+            max-height: 280px;
         }
         @media (min-width: 768px) {
             .promo-banner {
-                aspect-ratio: 21 / 9;
-                max-height: 350px;
+                aspect-ratio: 21 / 8;
+                max-height: 360px;
             }
         }
         #bannerSlider {
             display: flex;
+            width: 100%;
             height: 100%;
             transition: transform 0.5s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        #bannerSlider img { width: 100%; height: 100%; object-fit: cover; flex-shrink: 0; }
+        #bannerSlider img {
+            width: 100%;
+            min-width: 100%;
+            height: 100%;
+            object-fit: contain;
+            background: #110d1b;
+            flex-shrink: 0;
+            cursor: zoom-in;
+        }
         
         .slider-dots {
             position: absolute; bottom: 10px; right: 15px;
             display: flex; gap: 6px; z-index: 10;
         }
-        .slider-dot { width: 6px; height: 6px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: 0.3s; }
+        .slider-dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.4); transition: 0.3s; cursor: pointer; }
         .slider-dot.active { background: #fff; transform: scale(1.4); }
 
         .banner-overlay-badge {
@@ -131,11 +129,18 @@
             display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-end; z-index: 10;
         }
         .promo-tag {
-            background: rgba(0,0,0,0.7); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.2);
-            color: #fff; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: bold; display: inline-flex; align-items: center; gap: 5px;
+            background: rgba(0,0,0,0.78); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,0.3);
+            color: #fff; padding: 5px 11px; border-radius: 20px; font-size: 11px; font-weight: 800;
+            display: inline-flex; align-items: center; gap: 5px; cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+            box-shadow: 0 3px 8px rgba(0,0,0,0.3);
+        }
+        .promo-tag:hover, .promo-tag:active {
+            transform: scale(1.06);
+            background: var(--brand-cyan);
+            border-color: #fff;
         }
 
-        /* Marquee Ticker */
         .marquee-ticker {
             background: rgba(6, 182, 212, 0.15); color: var(--brand-cyan); padding: 8px 15px; font-size: 13px; font-weight: 900;
             margin: 0 20px 15px 20px; border-radius: 10px; overflow: hidden; white-space: nowrap; border: 1px dashed var(--brand-cyan);
@@ -153,7 +158,7 @@
         .search-wrapper input { flex: 1; border: none; background: transparent; outline: none; padding: 0 10px; font-size: 14px; color: var(--text-dark); }
         .search-wrapper i { color: var(--text-muted); }
 
-        .cat-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 15px 20px; scrollbar-width: none; cursor: grab;}
+        .cat-scroll { display: flex; gap: 10px; overflow-x: auto; padding: 0 20px 15px 20px; scrollbar-width: none; cursor: grab; }
         .cat-scroll:active { cursor: grabbing; }
         .cat-scroll::-webkit-scrollbar { display: none; }
         .cat-pill {
@@ -174,7 +179,7 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.04); border: 1px solid var(--border-color);
             display: flex; flex-direction: column; cursor: pointer; position: relative;
         }
-        .p-img-box { width: 100%; aspect-ratio: 1; background: #fff; padding: 5px; position: relative;}
+        .p-img-box { width: 100%; aspect-ratio: 1; background: #fff; padding: 5px; position: relative; }
         .p-img-box img { width: 100%; height: 100%; object-fit: contain; border-radius: 12px; }
         
         .p-badge {
@@ -188,8 +193,8 @@
         }
 
         .p-info { padding: 10px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; }
-        .p-title { font-size: 13px; font-weight: 800; color: var(--text-dark); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 5px;}
-        .p-price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto;}
+        .p-title { font-size: 13px; font-weight: 800; color: var(--text-dark); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 5px; }
+        .p-price-row { display: flex; justify-content: space-between; align-items: center; margin-top: auto; }
         .p-price { font-size: 15px; font-weight: 900; color: var(--text-dark); }
         
         .p-add-btn { 
@@ -204,24 +209,24 @@
         .modal-bg.show { opacity: 1; }
         .modal-content {
             background: var(--card-bg); width: 100%; max-width: 600px;
-            border-radius: 24px 24px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto;
+            border-radius: 24px 24px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;
             transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); color: var(--text-dark);
         }
         .modal-bg.show .modal-content { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .modal-header h3 { font-size: 18px; font-weight: 900; }
-        .modal-close { font-size: 20px; color: var(--text-muted); cursor: pointer; padding: 5px;}
+        .modal-close { font-size: 20px; color: var(--text-muted); cursor: pointer; padding: 5px; }
 
-        .cart-list { max-height: 30vh; overflow-y: auto; margin-bottom: 20px; padding-right: 5px;}
-        .c-item { display: flex; gap: 12px; margin-bottom: 15px; background: var(--store-bg); padding: 10px; border-radius: 16px; border: 1px solid var(--border-color);}
-        .c-img { width: 60px; height: 60px; border-radius: 10px; object-fit: contain; background: #fff;}
+        .cart-list { max-height: 30vh; overflow-y: auto; margin-bottom: 20px; padding-right: 5px; }
+        .c-item { display: flex; gap: 12px; margin-bottom: 15px; background: var(--store-bg); padding: 10px; border-radius: 16px; border: 1px solid var(--border-color); }
+        .c-img { width: 60px; height: 60px; border-radius: 10px; object-fit: contain; background: #fff; }
         .c-info { flex: 1; display: flex; flex-direction: column; justify-content: space-between; }
-        .c-row-top { display: flex; justify-content: space-between; align-items: flex-start;}
-        .c-title { font-size: 13px; font-weight: 800; line-height: 1.2; padding-right: 10px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;}
+        .c-row-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .c-title { font-size: 13px; font-weight: 800; line-height: 1.2; padding-right: 10px; display: -webkit-box; -webkit-line-clamp: 2; line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .c-price { font-size: 14px; font-weight: 900; white-space: nowrap; }
-        .c-row-bot { display: flex; justify-content: space-between; align-items: center; margin-top: 5px;}
+        .c-row-bot { display: flex; justify-content: space-between; align-items: center; margin-top: 5px; }
         .c-variant { background: var(--success); color: white; font-size: 10px; font-weight: 900; padding: 2px 8px; border-radius: 12px; }
-        .c-delete { color: var(--danger); font-size: 12px; font-weight: 800; cursor: pointer; border:none; background:none;}
+        .c-delete { color: var(--danger); font-size: 12px; font-weight: 800; cursor: pointer; border: none; background: none; }
 
         .input-st { 
             width: 100%; padding: 14px; border-radius: 14px; border: 1px solid var(--border-color); 
@@ -229,9 +234,9 @@
         }
         .input-st:focus { border-color: var(--success); }
 
-        .btn-act { padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 900; cursor: pointer; border: none; text-align: center;}
-        .btn-green { background: var(--success); color: white; flex: 2; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);}
-        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-dark); flex: 1;}
+        .btn-act { padding: 14px; border-radius: 14px; font-size: 15px; font-weight: 900; cursor: pointer; border: none; text-align: center; }
+        .btn-green { background: var(--success); color: white; flex: 2; box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3); }
+        .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-dark); flex: 1; }
 
         .bottom-nav {
             position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg);
@@ -265,7 +270,6 @@
         }
         .floating-chat:active { transform: scale(0.95); }
 
-        /* Welcome Popup & Store Closed Banner */
         #storeClosedBanner {
             position: fixed; top: 0; left: 0; width: 100%; background: var(--danger); color: white;
             text-align: center; padding: 10px; font-weight: 900; z-index: 6000; display: none; font-size: 13px;
@@ -275,14 +279,14 @@
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
             z-index: 7000; display: none; justify-content: center; align-items: center; padding: 20px;
         }
-        .welcome-popup-box { background: var(--card-bg); max-width: 400px; width: 100%; border-radius: 20px; overflow: hidden; position: relative; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
-        .welcome-popup-box img { width: 100%; max-height: 250px; object-fit: cover; }
+        .welcome-popup-box { background: var(--card-bg); max-width: 420px; width: 100%; border-radius: 20px; overflow: hidden; position: relative; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
+        .welcome-popup-box img { width: 100%; max-height: 260px; object-fit: contain; background: #110d1b; }
 
         .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--card-bg); z-index: 3000; transition: left 0.3s; box-shadow: 5px 0 25px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
         .sidebar.open { left: 0; }
         .sb-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2900; display: none; }
-        .sb-item { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; font-weight: 800; font-size: 14px; color: var(--text-dark); cursor: pointer;}
-        .sb-item i { color: var(--brand-cyan); font-size: 18px; width: 20px; text-align: center;}
+        .sb-item { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; font-weight: 800; font-size: 14px; color: var(--text-dark); cursor: pointer; }
+        .sb-item i { color: var(--brand-cyan); font-size: 18px; width: 20px; text-align: center; }
         
         .v-btn { background: var(--store-bg); border: 1px solid var(--border-color); color: var(--text-dark); padding: 8px 15px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; margin: 0 5px 5px 0; }
         .v-btn.active { background: var(--success); color: white; border-color: var(--success); }
@@ -295,9 +299,9 @@
         }
         #toast.show { transform: translate(-50%, 0); }
 
-        #lightboxModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.9); display: none; justify-content: center; align-items: center; z-index: 5000; opacity: 0; transition: opacity 0.3s; cursor: pointer; }
+        #lightboxModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.92); display: none; justify-content: center; align-items: center; z-index: 8000; opacity: 0; transition: opacity 0.3s; cursor: pointer; }
         #lightboxModal.show { opacity: 1; }
-        #lightboxImg { max-width: 90%; max-height: 90%; border-radius: 12px; object-fit: contain; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        #lightboxImg { max-width: 92%; max-height: 92%; border-radius: 12px; object-fit: contain; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
         #lightboxModal.show #lightboxImg { transform: scale(1); }
     </style>
 </head>
@@ -310,24 +314,24 @@
         <h2 style="font-weight: 900; letter-spacing: 1px;" id="splashName">Loading...</h2>
     </div>
 
-    <!-- Welcome Popup Modal -->
-    <div id="welcomePopupModal">
+    <!-- Welcome / Promo Repeat Popup Modal -->
+    <div id="welcomePopupModal" onclick="if(event.target === this) closeWelcomePopup()">
         <div class="welcome-popup-box">
-            <img id="welcomePopupImg" src="" alt="Welcome" onerror="this.src='https://placehold.co/400x250/1e293b/06b6d4?text=Welcome'">
+            <img id="welcomePopupImg" src="" alt="Welcome" style="cursor: zoom-in;" onclick="openLightbox(this.src)" onerror="this.style.display='none'">
             <div style="padding: 20px;">
-                <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px;">🎉 សេចក្តីជូនដំណឹងពិសេស</h3>
-                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">សូមរីករាយជាមួយការទស្សនា និងកុម្មង់ទំនិញពីហាងយើងខ្ញុំ!</p>
-                <button class="btn-act btn-green" style="width: 100%; padding: 12px;" onclick="closeWelcomePopup()">បន្តចូល Menu ➔</button>
+                <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px;">🎉 ប្រូម៉ូសិន & សេចក្តីជូនដំណឹងពិសេស</h3>
+                <p id="welcomePopupDesc" style="font-size: 13px; color: var(--text-muted); margin-bottom: 12px;">សូមចុចលើកូដបញ្ចុះតម្លៃខាងក្រោមដើម្បីប្រើប្រាស់ភ្លាមៗ!</p>
+                <div id="welcomePromoCodesBox" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 15px;"></div>
+                <button class="btn-act btn-green" style="width: 100%; padding: 12px;" onclick="closeWelcomePopup()">បន្តចូលមើលម៉ឺនុយ ➔</button>
             </div>
         </div>
     </div>
 
     <!-- 2. LANDING PAGE -->
     <div id="landingPage">
-        <img id="lpLogo" src="https://placehold.co/200x200" class="lp-profile-pic" alt="Logo">
+        <img id="lpLogo" src="https://placehold.co/200x200" class="lp-profile-pic" alt="Logo" onerror="this.src='https://placehold.co/200x200'">
         <h1 id="lpName" class="lp-title">Shop Name</h1>
         
-        <!-- Dynamic Social Media Link -->
         <a href="#" target="_blank" id="lpSocialLink" class="lp-yt" style="display: none;">
             <i id="lpSocialIcon" class="fa-brands fa-youtube"></i> 
             <span id="lpSocialLabel">Social Link</span>
@@ -341,9 +345,11 @@
     <div id="storePage">
         <div class="top-bar">
             <i class="fa-solid fa-bars" onclick="openSidebar()"></i>
-            <div class="title" style="display: flex; align-items: center; gap: 8px;">
-                menu 
-                <span id="tableBadgeDisplay" style="display:none; background: var(--danger); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 900; letter-spacing: 0.5px;"></span>
+            <div class="title" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: center;">
+                <span>menu</span>
+                <span id="tableBadgeDisplay" onclick="openModal('cartModal')" style="display:inline-flex; align-items:center; gap:4px; background: var(--brand-cyan); color: white; padding: 3px 10px; border-radius: 14px; font-size: 11px; font-weight: 900; letter-spacing: 0.3px; cursor: pointer;" title="ចុចដើម្បីជ្រើសរើស ឬប្តូរលេខតុ / VIP">
+                    <i class="fa-solid fa-chair" style="font-size: 11px;"></i> <span id="tableBadgeText">រើសតុ / VIP</span>
+                </span>
             </div>
             <div class="cart-icon-wrapper" onclick="openModal('cartModal')">
                 <i class="fa-solid fa-cart-shopping" style="font-size: 22px;"></i>
@@ -355,9 +361,7 @@
         <div class="promo-banner" id="promoBannerWrapper" style="display: none;">
             <div id="bannerSlider"></div>
             <div class="slider-dots" id="bannerDots"></div>
-            <div class="banner-overlay-badge" id="bannerBadgeContainer" style="display: none;">
-                <!-- Badges will be injected here -->
-            </div>
+            <div class="banner-overlay-badge" id="bannerBadgeContainer" style="display: none;"></div>
         </div>
 
         <!-- Marquee Announcement Ticker -->
@@ -399,7 +403,6 @@
                 <div class="nav-fab" id="bottomCartFab">
                     <i class="fa-solid fa-cart-shopping"></i>
                 </div>
-                <!-- Badge on Bottom Cart -->
                 <div class="cart-badge" id="cartBadgeBottom" style="top: -5px; right: -2px; z-index: 10;">0</div>
             </div>
             
@@ -464,13 +467,25 @@
             
             <div class="cart-list" id="cartList"></div>
             
-            <input type="text" id="cName" class="input-st" placeholder="Your Name *">
-            <input type="text" id="cPhone" class="input-st" placeholder="Phone Number...">
+            <!-- 🪑 ប្រអប់ជ្រើសរើសតុធម្មតា ឬ តុ VIP សម្រាប់អតិថិជន -->
+            <div id="customerTableBox" style="background: rgba(6, 182, 212, 0.08); padding: 12px; border-radius: 14px; border: 1px dashed var(--brand-cyan); margin-bottom: 12px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+                    <label style="font-size: 13px; font-weight: 900; color: var(--text-dark);"><i class="fa-solid fa-chair" style="color: var(--brand-cyan);"></i> ជ្រើសរើសលេខតុ / បន្ទប់ VIP:</label>
+                    <button type="button" style="background: transparent; border: 1px solid var(--brand-cyan); color: var(--brand-cyan); border-radius: 8px; padding: 2px 8px; font-size: 11px; font-weight: 800; cursor: pointer;" onclick="toggleCustomerCustomTableInp()">+ វាយឈ្មោះតុផ្ទាល់</button>
+                </div>
+                <select id="cTableSelect" class="input-st" style="margin-bottom: 0; background: var(--card-bg);" onchange="onCustomerTableSelectChange(this.value)">
+                    <option value="">-- សូមជ្រើសរើសតុ ឬ ទិញខ្ចប់ (Takeaway) --</option>
+                </select>
+                <input type="text" id="cCustomTableInp" class="input-st" style="display: none; margin-top: 8px; margin-bottom: 0; background: var(--card-bg);" placeholder="វាយលេខតុ ឬបន្ទប់ VIP (ឧ. VIP 1, កញ្ចុះ 2)..." oninput="onCustomerCustomTableInput(this.value)">
+            </div>
+
+            <input type="text" id="cName" class="input-st" placeholder="Your Name (ឈ្មោះអតិថិជន) *">
+            <input type="text" id="cPhone" class="input-st" placeholder="Phone Number (លេខទូរស័ព្ទ)...">
             
             <!-- QR Code Payment Box -->
             <div style="text-align: center; margin-bottom: 15px; padding: 15px; background: rgba(6, 182, 212, 0.05); border-radius: 14px; border: 1px dashed var(--brand-cyan);" id="qrBoxContainer">
-                <div style="font-size: 13px; font-weight: 900; color: var(--text-dark); margin-bottom: 8px;"><i class="fa-solid fa-qrcode"></i> ស្កេន QR កូដម្ចាស់ហាងដើម្បីបង់ប្រាក់</div>
-                <img id="shopQrImg" src="" style="width: 160px; height: 160px; object-fit: contain; border-radius: 12px; background: white; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+                <div style="font-size: 13px; font-weight: 900; color: var(--text-dark); margin-bottom: 8px;"><i class="fa-solid fa-qrcode"></i> ស្កេន QR កូដម្ចាស់ហាងដើម្បីបង់ប្រាក់ (ចុចលើរូបដើម្បីពង្រីក)</div>
+                <img id="shopQrImg" src="" style="width: 160px; height: 160px; object-fit: contain; border-radius: 12px; background: white; padding: 5px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); cursor: zoom-in;" onclick="openLightbox(this.src)">
             </div>
             
             <div style="font-size: 12px; font-weight: 800; color: var(--brand-cyan); margin-bottom: 10px; cursor: pointer;" onclick="document.getElementById('extraSys').style.display = document.getElementById('extraSys').style.display==='none'?'block':'none'">
@@ -568,7 +583,6 @@
     </div>
 
     <script>
-        // 💥 Menu Custom Script Loader (ទាញកូដ JS ពី Admin មកឲ្យដើរលើ Menu)
         try {
             const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             let localSys = JSON.parse(localStorage.getItem(`ks2_${branchId}_sys_settings`));
@@ -598,21 +612,166 @@
             });
         }
 
-        // Supabase DB connection
         const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
         
         let supabaseClient = null;
-        if (window.supabase && typeof window.supabase.createClient === 'function') {
+        if (window.supabase) {
             try {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
             } catch(e) {}
         }
         
         const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        const TABLE_NO = new URLSearchParams(window.location.search).get('table') || '';
+        let TABLE_NO = new URLSearchParams(window.location.search).get('table') || '';
+        let promoRepeatTimer = null;
 
-        // State Systems
+        function populateCustomerTables() {
+            const selectEl = document.getElementById('cTableSelect');
+            const badgeText = document.getElementById('tableBadgeText');
+            if (!selectEl) return;
+
+            let totalTables = parseInt(sys.totalTables) || 20;
+            let prefix = sys.tablePrefix || 'តុលេខ';
+            let customTablesRaw = sys.customTables !== undefined ? sys.customTables : 'VIP 1, VIP 2, VIP 3';
+            let customList = String(customTablesRaw).split(',').map(s => s.trim()).filter(Boolean);
+
+            let html = '<option value="">-- ជ្រើសរើសតុ / ទិញខ្ចប់ (Takeaway) --</option>';
+            if (customList.length > 0) {
+                html += '<optgroup label="🌟 តុ VIP / បន្ទប់ពិសេស">';
+                customList.forEach(ct => {
+                    const fullVal = ct;
+                    html += `<option value="${fullVal.replace(/"/g, '&quot;')}">🌟 ${ct}</option>`;
+                });
+                html += '</optgroup>';
+            }
+            html += `<optgroup label="🪑 ${prefix} (១ ដល់ ${totalTables})">`;
+            for (let i = 1; i <= totalTables; i++) {
+                let tName = `${prefix} ${i}`;
+                html += `<option value="${tName}">${tName}</option>`;
+            }
+            html += '</optgroup>';
+            selectEl.innerHTML = html;
+
+            if (TABLE_NO) {
+                let matched = Array.from(selectEl.options).find(opt => opt.value === TABLE_NO || opt.value === `${prefix} ${TABLE_NO}`);
+                if (matched) {
+                    selectEl.value = matched.value;
+                    TABLE_NO = matched.value;
+                } else {
+                    const opt = document.createElement('option');
+                    opt.value = TABLE_NO.startsWith('តុ') || TABLE_NO.toUpperCase().includes('VIP') ? TABLE_NO : `${prefix} ${TABLE_NO}`;
+                    opt.textContent = `📍 ${opt.value}`;
+                    selectEl.appendChild(opt);
+                    selectEl.value = opt.value;
+                    TABLE_NO = opt.value;
+                }
+                if (badgeText) badgeText.innerText = TABLE_NO;
+                const cNameInput = document.getElementById('cName');
+                if (cNameInput && !cNameInput.value.trim()) cNameInput.value = TABLE_NO;
+            } else {
+                if (badgeText) badgeText.innerText = 'រើសតុ / VIP';
+            }
+        }
+
+        function onCustomerTableSelectChange(val) {
+            TABLE_NO = val;
+            const badgeText = document.getElementById('tableBadgeText');
+            const cNameInput = document.getElementById('cName');
+            if (val) {
+                if (badgeText) badgeText.innerText = val;
+                if (cNameInput && (!cNameInput.value.trim() || cNameInput.value.startsWith('តុ') || cNameInput.toUpperCase().includes('VIP'))) {
+                    cNameInput.value = val;
+                }
+            } else {
+                if (badgeText) badgeText.innerText = 'រើសតុ / VIP';
+            }
+        }
+
+        function toggleCustomerCustomTableInp() {
+            const inp = document.getElementById('cCustomTableInp');
+            if (!inp) return;
+            inp.style.display = inp.style.display === 'none' ? 'block' : 'none';
+            if (inp.style.display === 'block') inp.focus();
+        }
+
+        function onCustomerCustomTableInput(val) {
+            const clean = val.trim();
+            TABLE_NO = clean;
+            const badgeText = document.getElementById('tableBadgeText');
+            const cNameInput = document.getElementById('cName');
+            if (clean) {
+                if (badgeText) badgeText.innerText = clean;
+                if (cNameInput) cNameInput.value = clean;
+            } else {
+                if (badgeText) badgeText.innerText = 'រើសតុ / VIP';
+            }
+        }
+
+        function quickUsePromoCode(codeStr) {
+            if (!codeStr) return;
+            const promoInp = document.getElementById('cPromo');
+            const extraSys = document.getElementById('extraSys');
+            if (promoInp) promoInp.value = codeStr;
+            if (extraSys) extraSys.style.display = 'block';
+            applyPromo();
+            closeWelcomePopup();
+        }
+
+        function showWelcomeOrPromoPopup() {
+            const modal = document.getElementById('welcomePopupModal');
+            const imgEl = document.getElementById('welcomePopupImg');
+            const promoBox = document.getElementById('welcomePromoCodesBox');
+            if (!modal) return;
+
+            const welcomeSrc = sys.welcomeImg || (bannerBgs.length > 0 ? bannerBgs[0] : '');
+            if (imgEl) {
+                if (welcomeSrc) {
+                    imgEl.src = welcomeSrc;
+                    imgEl.style.display = 'block';
+                } else {
+                    imgEl.style.display = 'none';
+                }
+            }
+
+            if (promoBox) {
+                const activePromos = (sys.promoCodes && Array.isArray(sys.promoCodes))
+                    ? sys.promoCodes.filter(p => !p.limit || (p.usedCount || 0) < p.limit)
+                    : [];
+                if (activePromos.length > 0) {
+                    promoBox.innerHTML = activePromos.map(p => {
+                        let pDesc = p.type === 'percent' ? `-${p.value}%` : (p.type === 'fixed' ? `-$${p.value}` : 'Free Ship');
+                        let safeCode = String(p.code).replace(/'/g, "\\'");
+                        return `<span class="promo-tag" onclick="quickUsePromoCode('${safeCode}')"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} (${pDesc}) - ចុចប្រើ</span>`;
+                    }).join('');
+                    promoBox.style.display = 'flex';
+                } else {
+                    promoBox.style.display = 'none';
+                }
+            }
+
+            if (sys.toggleWelcomePopup || (sys.promoCodes && sys.promoCodes.length > 0 && parseInt(sys.popupRepeatInterval) > 0)) {
+                modal.style.display = 'flex';
+            }
+        }
+
+        function setupPromoAndScriptRepeatTimer() {
+            if (promoRepeatTimer) clearInterval(promoRepeatTimer);
+            const intervalMins = parseInt(sys.popupRepeatInterval !== undefined ? sys.popupRepeatInterval : 0) || 0;
+            if (intervalMins > 0) {
+                promoRepeatTimer = setInterval(() => {
+                    const storeVisible = document.getElementById('storePage')?.style.display === 'block';
+                    const welcomeModal = document.getElementById('welcomePopupModal');
+                    if (storeVisible && welcomeModal && welcomeModal.style.display !== 'flex') {
+                        showWelcomeOrPromoPopup();
+                    }
+                    if (sys.customMenuScripts) {
+                        injectMenuScripts(sys.customMenuScripts);
+                    }
+                }, intervalMins * 60 * 1000);
+            }
+        }
+
         let inventory = [], cart = [], wishlist = [];
         try {
             wishlist = JSON.parse(localStorage.getItem('skm_wl')) || [];
@@ -629,7 +788,6 @@
         let selCat = 'all', selVar = '', curProd = null;
         let dynamicChatLink = '';
         
-        // Slider Variables
         let bannerBgs = [];
         let curBannerIdx = 0;
         let bannerTimerInterval;
@@ -640,7 +798,6 @@
             zh: { search: "搜索...", all: "全部" }
         };
 
-        // --- Core UI Functions ---
         function showToast(msg, isError = false) {
             const t = document.getElementById('toast'); 
             t.innerText = msg;
@@ -649,14 +806,14 @@
             setTimeout(() => t.classList.remove('show'), 2500);
         }
         
-        // ប្រើប្រាស់ Shared AudioContext ដើម្បីការពារបញ្ហាដាច់សំឡេងពេលចុចច្រើនដង
         let sharedMenuAudioCtx = null;
         function playDing() {
+            if (sys && sys.enableSound === false) return;
             try {
-                const AudioContext = window.AudioContext || window.webkitAudioContext;
-                if (!AudioContext) return;
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
                 if (!sharedMenuAudioCtx || sharedMenuAudioCtx.state === 'closed') {
-                    sharedMenuAudioCtx = new AudioContext();
+                    sharedMenuAudioCtx = new AudioCtx();
                 }
                 if (sharedMenuAudioCtx.state === 'suspended') {
                     sharedMenuAudioCtx.resume().catch(() => {});
@@ -665,12 +822,12 @@
                 const gain = sharedMenuAudioCtx.createGain();
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(880, sharedMenuAudioCtx.currentTime);
-                gain.gain.setValueAtTime(0.1, sharedMenuAudioCtx.currentTime);
-                gain.gain.exponentialRampToValueAtTime(0.001, sharedMenuAudioCtx.currentTime + 0.3);
+                gain.gain.setValueAtTime(0.08, sharedMenuAudioCtx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, sharedMenuAudioCtx.currentTime + 0.25);
                 osc.connect(gain);
                 gain.connect(sharedMenuAudioCtx.destination);
                 osc.start();
-                osc.stop(sharedMenuAudioCtx.currentTime + 0.3);
+                osc.stop(sharedMenuAudioCtx.currentTime + 0.25);
             } catch(e){}
         }
 
@@ -689,6 +846,10 @@
                 document.getElementById('landingPage').style.display = 'none';
                 document.getElementById('storePage').style.display = 'block';
                 window.scrollTo(0,0);
+                if (sys.toggleWelcomePopup) {
+                    showWelcomeOrPromoPopup();
+                }
+                setupPromoAndScriptRepeatTimer();
             }, 600);
         }
         
@@ -703,7 +864,7 @@
             closeSidebar();
             const m = document.getElementById(id); m.style.display = 'flex'; 
             setTimeout(() => m.classList.add('show'), 10);
-            if(id === 'cartModal') { renderCart(); updateTotal(); }
+            if(id === 'cartModal') { populateCustomerTables(); renderCart(); updateTotal(); }
             if(id === 'wishlistModal') renderWl();
         }
         function closeModal(id) { 
@@ -728,39 +889,13 @@
         function fmt(val) { return curr === 'KHR' ? `${Math.round(val * exRate).toLocaleString()} ៛` : `$${val.toFixed(2)}`; }
         function getPrc(p) { let u = parseFloat(p.price)||0, r = parseFloat(p.riel)||0; return u > 0 ? u : (r / exRate); }
 
-        // --- Data Fetch & Render ---
         async function init() {
             document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
             
-            if (TABLE_NO) {
-                const tbBadge = document.getElementById('tableBadgeDisplay');
-                if(tbBadge) {
-                    tbBadge.innerText = `តុលេខ ${TABLE_NO}`;
-                    tbBadge.style.display = 'inline-block';
-                }
-                
-                const cNameInput = document.getElementById('cName');
-                if(cNameInput) {
-                    cNameInput.value = `តុលេខ ${TABLE_NO}`;
-                    cNameInput.style.display = 'none'; 
-                }
-            }
-            
-            // ⚡ 1. Load Inventory & UI from LocalStorage First (Instant UI Loading / Offline mode)
+            // 1. Load Inventory & UI from LocalStorage First (Instant UI Loading / Offline mode)
             try {
                 let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`));
                 let localSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`));
-                let localShopName = localStorage.getItem(`ks2_${BRANCH}_shop_name`);
-                let localShopLogo = localStorage.getItem(`ks2_${BRANCH}_shop_logo`);
-                let localShopQr = localStorage.getItem(`ks2_${BRANCH}_shop_qr`);
-
-                if (localShopName) {
-                    document.getElementById('lpName').innerText = localShopName;
-                    document.getElementById('splashName').innerText = localShopName;
-                }
-                if (localShopLogo) {
-                    document.getElementById('lpLogo').src = localShopLogo;
-                }
                 
                 if (localSys) {
                     sys = localSys;
@@ -774,41 +909,33 @@
                     window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
                     window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
 
-                    // ភ្ជាប់អក្សររត់ (News Ticker) ទាំង tickerText និង tickerNews
                     const localTicker = sys.tickerText || sys.tickerNews || '';
                     if ((sys.toggleTicker || sys.tickerNews) && localTicker) {
                         document.getElementById('tickerContentText').innerText = localTicker;
                         document.getElementById('marqueeTickerBar').style.display = 'block';
                     }
-
-                    const shopQr = document.getElementById('shopQrImg');
-                    const qrSrc = sys.menuQR || localShopQr || '';
-                    if (shopQr && qrSrc) {
-                        shopQr.src = qrSrc;
-                        document.getElementById('qrBoxContainer').style.display = 'block';
-                    }
                 }
                 
                 if (localInv && Array.isArray(localInv)) {
-                    inventory = localInv.filter(p => p && (parseFloat(p.qty) > 0 || (sys && sys.preorder)));
+                    let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+                    inventory = localInv.filter(p => p && !deletedProd.includes(String(p.id)) && (parseFloat(p.qty) > 0 || (sys && sys.preorder)));
                     buildCats();
                     renderMenu();
                 }
+                populateCustomerTables();
             } catch(e) { console.warn("Local storage parse error:", e); }
 
-            // ⚡ 2. Fetch from Cloud (Supabase) in Background
+            // 2. Fetch from Cloud (Supabase) in Background
             try {
-                if (supabaseClient) {
+                if (supabaseClient && navigator.onLine) {
                     let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
                     if (data && data.data_json) {
                         let d = data.data_json;
                         if (d.sysSettings) {
                             sys = d.sysSettings;
                             
-                            // 1. Dynamic Theme Color
                             if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
                             
-                            // 2. Banner Slider (Multiple Images)
                             const promoBanner = document.getElementById('promoBannerWrapper');
                             const slider = document.getElementById('bannerSlider');
                             const dotsContainer = document.getElementById('bannerDots');
@@ -818,10 +945,10 @@
 
                             if (bannerBgs.length > 0) {
                                 promoBanner.style.display = 'block';
-                                slider.innerHTML = bannerBgs.map(b => `<img src="${b}" alt="Promo Banner" onerror="this.src='https://placehold.co/800x400/1d162d/ffffff?text=Promo+Banner'">`).join('');
+                                slider.innerHTML = bannerBgs.map(b => `<img src="${b}" alt="Promo Banner" title="ចុចដើម្បីពង្រីកមើលរូបភាពពេញ" onclick="openLightbox(this.src)" onerror="this.src='https://placehold.co/800x400/1d162d/ffffff?text=Promo+Banner'">`).join('');
                                 
                                 if (bannerBgs.length > 1) {
-                                    dotsContainer.innerHTML = bannerBgs.map((_, i) => `<div class="slider-dot ${i===0?'active':''}"></div>`).join('');
+                                    dotsContainer.innerHTML = bannerBgs.map((_, i) => `<div class="slider-dot ${i===0?'active':''}" onclick="curBannerIdx=${i}; document.getElementById('bannerSlider').style.transform='translateX(-${i*100}%)'; document.querySelectorAll('.slider-dot').forEach((d,idx)=>d.classList.toggle('active', idx===${i}));"></div>`).join('');
                                     clearInterval(bannerTimerInterval);
                                     bannerTimerInterval = setInterval(() => {
                                         curBannerIdx = (curBannerIdx + 1) % bannerBgs.length;
@@ -831,7 +958,6 @@
                                 } else dotsContainer.innerHTML = '';
                             } else promoBanner.style.display = 'none';
                             
-                            // Promo Badge on Banner (Supports new sys.promoCodes and legacy sys.promoCodeText)
                             const badgeContainer = document.getElementById('bannerBadgeContainer');
                             if (sys.promoCodes && Array.isArray(sys.promoCodes) && sys.promoCodes.length > 0) {
                                 const activePromos = sys.promoCodes.filter(p => !p.limit || (p.usedCount || 0) < p.limit);
@@ -839,19 +965,20 @@
                                     let badgeHtml = '';
                                     activePromos.forEach(p => {
                                         let pDesc = p.type === 'percent' ? `-${p.value}%` : (p.type === 'fixed' ? `-$${p.value}` : 'Free Ship');
-                                        badgeHtml += `<span class="promo-tag"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} (${pDesc})</span>`;
+                                        let safeCode = String(p.code).replace(/'/g, "\\'");
+                                        badgeHtml += `<span class="promo-tag" onclick="quickUsePromoCode('${safeCode}')" title="ចុចដើម្បីបញ្ចូលកូដប្រូម៉ូសិននេះ"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} (${pDesc})</span>`;
                                     });
                                     badgeContainer.innerHTML = badgeHtml;
                                     badgeContainer.style.display = 'flex';
                                 }
                             } else if (sys.togglePromoBadge && sys.promoCodeText) {
-                                badgeContainer.innerHTML = `<span class="promo-tag"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${sys.promoCodeText}</span>`;
+                                let safeCode = String(sys.promoCodeText).replace(/'/g, "\\'");
+                                badgeContainer.innerHTML = `<span class="promo-tag" onclick="quickUsePromoCode('${safeCode}')"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${sys.promoCodeText}</span>`;
                                 badgeContainer.style.display = 'flex';
                             } else {
                                 badgeContainer.style.display = 'none';
                             }
                             
-                            // Marquee Ticker (Supports both tickerText & tickerNews)
                             const cloudTicker = sys.tickerText || sys.tickerNews || '';
                             if ((sys.toggleTicker || sys.tickerNews) && cloudTicker) {
                                 document.getElementById('tickerContentText').innerText = cloudTicker;
@@ -860,13 +987,9 @@
                                 document.getElementById('marqueeTickerBar').style.display = 'none';
                             }
                             
-                            // Welcome Popup
-                            if (sys.toggleWelcomePopup && sys.welcomeImg) {
-                                document.getElementById('welcomePopupImg').src = sys.welcomeImg;
-                                document.getElementById('welcomePopupModal').style.display = 'flex';
-                            }
+                            populateCustomerTables();
+                            setupPromoAndScriptRepeatTimer();
                             
-                            // Store Hours check
                             if (sys.toggleStoreHours && sys.openTime && sys.closeTime) {
                                 const now = new Date();
                                 const currentTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
@@ -880,7 +1003,6 @@
                                 }
                             }
                             
-                            // QR Code
                             const shopQr = document.getElementById('shopQrImg');
                             const qrSrc = sys.menuQR || d.shopQR || '';
                             if (shopQr && qrSrc) {
@@ -892,12 +1014,10 @@
                             
                             if (sys.chatLink) dynamicChatLink = sys.chatLink;
 
-                            // 💥 Inject Custom Menu Scripts from Cloud
                             if (sys.customMenuScripts) {
                                 injectMenuScripts(sys.customMenuScripts);
                             }
                             
-                            // Social Media Link on Landing Page
                             if (sys.socialLabel && sys.socialLink) {
                                 const socialEl = document.getElementById('lpSocialLink');
                                 socialEl.href = sys.socialLink;
@@ -918,7 +1038,6 @@
                             }
                         }
                         
-                        // Delete Tracker Filtering
                         let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
                         if (d.deletedProducts) deletedProd = [...new Set([...deletedProd, ...d.deletedProducts])];
 
@@ -939,6 +1058,7 @@
                         
                         buildCats();
                         renderMenu();
+                        populateCustomerTables();
                         
                         localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
                         if(sys) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sys));
@@ -946,6 +1066,7 @@
                 }
             } catch (e) { console.log('DB error, using offline local data', e); }
             
+            populateCustomerTables();
             setTimeout(() => {
                 const sp = document.getElementById('splashScreen'); sp.style.opacity = '0';
                 setTimeout(() => sp.style.display = 'none', 500);
@@ -1017,12 +1138,12 @@
 
         function filterCat(c, el) {
             selCat = c; document.querySelectorAll('.cat-pill').forEach(t=>t.classList.remove('active'));
-            el.classList.add('active'); renderMenu();
+            if (el) el.classList.add('active'); renderMenu();
         }
 
         function renderMenu() {
             const grid = document.getElementById('productGrid');
-            const term = document.getElementById('searchInput').value.toLowerCase();
+            const term = document.getElementById('searchInput').value.toLowerCase().trim();
             let arr = inventory;
             if (selCat !== 'all') arr = arr.filter(p => p.category === selCat);
             if (term) arr = arr.filter(p => p.name && p.name.toLowerCase().includes(term));
@@ -1041,21 +1162,22 @@
                 }
                 
                 let conditionBadge = p.condition ? `<div style="position:absolute; top:8px; left:8px; background:rgba(255,255,255,0.9); color:#000; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; z-index:10;">${p.condition}</div>` : '';
-                
+                let safeId = String(p.id).replace(/'/g, "\\'");
+
                 return `
-                <div class="p-card" onclick="openDet('${p.id}')">
+                <div class="p-card" onclick="openDet('${safeId}')">
                     <div class="p-img-box">
                         <div class="p-badge">Sale</div>
                         ${urgencyHtml}
                         ${conditionBadge}
-                        <button style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:28px; height:28px; color:${isFav?'var(--danger)':'white'}; font-size:12px; z-index:10; cursor:pointer;" onclick="toggleWl('${p.id}', this, event)"><i class="fa-solid fa-heart"></i></button>
+                        <button style="position:absolute; bottom:8px; right:8px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:28px; height:28px; color:${isFav?'var(--danger)':'white'}; font-size:12px; z-index:10; cursor:pointer;" onclick="toggleWl('${safeId}', this, event)"><i class="fa-solid fa-heart"></i></button>
                         <img src="${p.image||'https://placehold.co/200'}" onerror="this.src='https://placehold.co/200'">
                     </div>
                     <div class="p-info">
                         <div class="p-title">${p.name}</div>
                         <div class="p-price-row">
                             <span class="p-price">${fmt(getPrc(p))}</span>
-                            <button class="p-add-btn" onclick="quickAdd('${p.id}', event)">Add</button>
+                            <button class="p-add-btn" onclick="quickAdd('${safeId}', event)">Add</button>
                         </div>
                     </div>
                 </div>
@@ -1063,25 +1185,26 @@
         }
 
         function quickAdd(id, e) {
-            e.stopPropagation(); const p = inventory.find(x=>x.id===id); if(!p) return;
+            e.stopPropagation(); const p = inventory.find(x=>String(x.id)===String(id)); if(!p) return;
             curProd = p; selVar = (p.variants && p.variants.length) ? p.variants[0] : 'Base';
             addCartLogic(true);
         }
 
         function openDet(id) {
-            const p = inventory.find(x=>x.id===id); if(!p) return;
+            const p = inventory.find(x=>String(x.id)===String(id)); if(!p) return;
             curProd = p; selVar = (p.variants && p.variants.length) ? p.variants[0] : 'Base';
             
             let vHtml = (p.variants || ['Base']).map(v => {
-                let safeVar = String(v).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
-                return `<button class="v-btn ${v===selVar?'active':''}" onclick="setVar(this, '${safeVar}')">${v}</button>`;
+                let safeV = String(v).replace(/'/g, "\\'");
+                return `<button class="v-btn ${v===selVar?'active':''}" onclick="setVar(this, '${safeV}')">${v}</button>`;
             }).join('');
             
-            let isFav = wishlist.some(w=>w.id===id);
+            let isFav = wishlist.some(w=>String(w.id)===String(id));
+            let safeId = String(id).replace(/'/g, "\\'");
             document.getElementById('dContent').innerHTML = `
                 <div style="position:relative;">
-                    <button style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:32px; height:32px; color:${isFav?'var(--danger)':'white'}; font-size:14px; z-index:10; cursor:pointer;" onclick="toggleWl('${id}', this, event)"><i class="fa-solid fa-heart"></i></button>
-                    <img src="${p.image||'https://placehold.co/200'}" style="width:100%; border-radius:16px; margin-bottom:15px; background:#fff; max-height:250px; object-fit:contain; cursor:zoom-in;" onclick="openLightbox(this.src)">
+                    <button style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:32px; height:32px; color:${isFav?'var(--danger)':'white'}; font-size:14px; z-index:10; cursor:pointer;" onclick="toggleWl('${safeId}', this, event)"><i class="fa-solid fa-heart"></i></button>
+                    <img src="${p.image||'https://placehold.co/200'}" onerror="this.src='https://placehold.co/200'" style="width:100%; border-radius:16px; margin-bottom:15px; background:#fff; max-height:250px; object-fit:contain; cursor:zoom-in;" onclick="openLightbox(this.src)">
                 </div>
                 <div style="font-size:16px; font-weight:800; margin-bottom:5px;">${p.name}</div>
                 <div style="font-size:20px; font-weight:900; color:var(--text-dark); margin-bottom:5px;">${fmt(getPrc(p))}</div>
@@ -1110,7 +1233,6 @@
             }
         }
 
-        // STRICT STOCK CHECK LOGIC (Synchronized cartQty & qty for POS)
         function addCartLogic(silent=false) {
             const cid = curProd.id + '_' + selVar;
             const ex = cart.find(c=>c.cartId === cid);
@@ -1139,10 +1261,10 @@
             if(cart.length===0) return list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-weight:800;">Cart is empty</div>`;
             
             list.innerHTML = cart.map(c => {
-                let safeCid = String(c.cartId).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+                let safeCid = String(c.cartId).replace(/'/g, "\\'");
                 return `
                 <div class="c-item">
-                    <img src="${c.image||'https://placehold.co/100'}" class="c-img" onerror="this.src='https://placehold.co/100'">
+                    <img src="${c.image||'https://placehold.co/100'}" onerror="this.src='https://placehold.co/100'" class="c-img">
                     <div class="c-info">
                         <div class="c-row-top">
                             <div class="c-title">${c.name} ${c.qty>1?`<span style="color:var(--brand-cyan);">x${c.qty}</span>`:''}</div>
@@ -1160,8 +1282,8 @@
 
         function toggleWl(id, btn, event) {
             if(event) event.stopPropagation();
-            const p = inventory.find(x=>x.id===id); if(!p) return;
-            const idx = wishlist.findIndex(w=>w.id===id);
+            const p = inventory.find(x=>String(x.id)===String(id)); if(!p) return;
+            const idx = wishlist.findIndex(w=>String(w.id)===String(id));
             if(idx>-1) { wishlist.splice(idx,1); btn.style.color='white'; showToast('Removed 🤍'); }
             else { wishlist.push(p); btn.style.color='var(--danger)'; showToast('Added ❤️'); }
             localStorage.setItem('skm_wl', JSON.stringify(wishlist));
@@ -1170,19 +1292,22 @@
         function renderWl() {
             const list = document.getElementById('wList');
             if(wishlist.length===0) return list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-weight:800;">Empty Wishlist</div>`;
-            list.innerHTML = wishlist.map(w => `
+            list.innerHTML = wishlist.map(w => {
+                let safeId = String(w.id).replace(/'/g, "\\'");
+                return `
                 <div class="c-item" style="align-items:center;">
-                    <img src="${w.image||'https://placehold.co/100'}" class="c-img" onerror="this.src='https://placehold.co/100'">
+                    <img src="${w.image||'https://placehold.co/100'}" onerror="this.src='https://placehold.co/100'" class="c-img">
                     <div style="flex:1;">
                         <div class="c-title" style="margin-bottom:4px;">${w.name}</div>
                         <div class="c-price">${fmt(getPrc(w))}</div>
                     </div>
-                    <button class="btn-act btn-outline" style="padding:8px 12px; font-size:12px;" onclick="openDet('${w.id}'); closeModal('wishlistModal')">View</button>
+                    <button class="btn-act btn-outline" style="padding:8px 12px; font-size:12px;" onclick="openDet('${safeId}'); closeModal('wishlistModal')">View</button>
                 </div>
-            `).join('');
+            `}).join('');
         }
 
         function openLightbox(src) {
+            if (!src) return;
             document.getElementById('lightboxImg').src = src;
             const modal = document.getElementById('lightboxModal');
             modal.style.display = 'flex';
@@ -1213,7 +1338,6 @@
             document.getElementById('qaInp').value=''; renderQA();
         }
 
-        // 🎟️ ប្រព័ន្ធគណនា Promo Codes ភ្ជាប់ជាមួយ admin_settings.html (sys.promoCodes)
         function applyPromo() {
             const c = document.getElementById('cPromo').value.trim().toUpperCase();
             const statusEl = document.getElementById('promoAppliedStatus');
@@ -1324,11 +1448,13 @@
             let note = document.getElementById('cNote').value.trim();
             
             if (TABLE_NO) {
-                if (!n) n = `តុលេខ ${TABLE_NO}`;
-                note = note ? `[តុលេខ ${TABLE_NO}] ${note}` : `[តុលេខ ${TABLE_NO}]`;
+                if (!n) n = TABLE_NO;
+                if (!note.includes(TABLE_NO)) {
+                    note = note ? `[${TABLE_NO}] ${note}` : `[${TABLE_NO}]`;
+                }
             }
 
-            if(!n) return showToast('Please enter your name!', true);
+            if(!n) return showToast('Please enter your name or select a table!', true);
             if(cart.length===0) return showToast('Cart is empty!', true);
 
             const { rawSub, discUsd, giftFee, finalTotal: tot } = calculateOrderBreakdown();
@@ -1345,7 +1471,6 @@
             let orderId = 'ORD-' + Date.now().toString().slice(-6);
             let nowDateStr = new Date().toLocaleDateString('km-KH') + ' ' + new Date().toLocaleTimeString('km-KH');
 
-            // បម្លែងទិន្នន័យទំនិញឱ្យមានទាំង qty និង cartQty ដើម្បីឱ្យ POS គណនាចំណូល-ចំណេញ និងទំនិញលក់ដាច់បាន ១០០%
             const normalizedItems = cart.map(c => ({
                 ...c,
                 price: getPrc(c),
@@ -1353,7 +1478,6 @@
                 cartQty: c.qty
             }));
 
-            // ប្រើ status: 'unpaid' ដើម្បីឱ្យ POS បង្ហាញក្នុងតារាងវិក្កយបត្រ និងគណនាប្រាក់រង់ចាំទូទាត់បានត្រឹមត្រូវ
             const ord = {
                 id: orderId,
                 invoiceNo: orderId,
@@ -1383,27 +1507,24 @@
             checkoutBtn.disabled = true;
 
             try {
-                let d = null;
+                let d = {
+                    invoices: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`) || '[]'),
+                    inventory: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`) || '[]'),
+                    customers: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_customers_pro`) || '[]'),
+                    sysSettings: sys || {}
+                };
+
                 if (supabaseClient && navigator.onLine) {
                     let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                    d = (data && data.data_json) ? data.data_json : null;
-                }
-
-                // ប្រសិនបើសាខានេះមិនទាន់មានលើ Cloud ឬកំពុង Offline ទាញយកទិន្នន័យពីម៉ាស៊ីន (LocalStorage) មកប្រើជាមូលដ្ឋាន
-                if (!d) {
-                    d = {
-                        inventory: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`)) || inventory || [],
-                        invoices: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`)) || [],
-                        customers: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_customers_pro`)) || [],
-                        sysSettings: sys || {}
-                    };
+                    if (data && data.data_json) {
+                        d = data.data_json;
+                    }
                 }
 
                 if(!d.invoices) d.invoices = [];
 
-                // ឆែកមើលសិទ្ធិប្រើកូដប្រូម៉ូសិន ១ដង/១លេខទូរស័ព្ទ
                 if (appliedPromo && appliedPromo.oneTimePerUser && ph) {
-                    const alreadyUsedByPhone = d.invoices.some(inv => inv && (inv.phone === ph || inv.customerPhone === ph) && String(inv.promoCode).toUpperCase() === String(appliedPromo.code).toUpperCase());
+                    const alreadyUsedByPhone = d.invoices.some(inv => inv && inv.phone === ph && String(inv.promoCode).toUpperCase() === String(appliedPromo.code).toUpperCase());
                     if (alreadyUsedByPhone) {
                         showToast('⚠️ លេខទូរស័ព្ទនេះធ្លាប់បានប្រើប្រាស់កូដប្រូម៉ូសិននេះរួចហើយ!', true);
                         checkoutBtn.innerText = 'Checkout';
@@ -1414,17 +1535,14 @@
 
                 d.invoices.unshift(ord);
 
-                // កាត់ស្តុកទំនិញដោយស្វ័យប្រវត្តិ
-                if (!d.inventory) d.inventory = inventory || [];
                 cart.forEach(c => {
-                    let i = d.inventory.find(x => x && x.id === c.id);
+                    let i = (d.inventory || []).find(x => x && String(x.id) === String(c.id));
                     if(i) i.qty = Math.max(0, (parseFloat(i.qty) || 0) - c.qty);
                 });
 
-                // បន្ថែមឈ្មោះអតិថិជនចូលបញ្ជីអតិថិជនស្វ័យប្រវត្តិ (បើមិនមែនជាឈ្មោះតុ)
                 if (!TABLE_NO && n && n !== 'អតិថិជនទូទៅ') {
                     if (!d.customers) d.customers = [];
-                    const existingCust = d.customers.find(c => c && String(c.name).trim().toLowerCase() === n.toLowerCase());
+                    const existingCust = d.customers.find(c => c && String(c.name).toLowerCase() === n.toLowerCase());
                     if (!existingCust) {
                         d.customers.push({ id: 'C_' + Date.now(), name: n, phone: ph || '' });
                     } else if (!existingCust.phone && ph) {
@@ -1432,7 +1550,6 @@
                     }
                 }
 
-                // បូកចំនួនដងប្រើប្រាស់ (usedCount) នៃ Promo Code
                 if (appliedPromo && d.sysSettings && Array.isArray(d.sysSettings.promoCodes)) {
                     const pIdx = d.sysSettings.promoCodes.findIndex(p => p && String(p.code).toUpperCase() === String(appliedPromo.code).toUpperCase());
                     if (pIdx !== -1) {
@@ -1448,7 +1565,6 @@
                     }
                 }
 
-                // Sync ឡើងទៅ Supabase (ប្រើ upsert ដើម្បីគាំទ្រសាខាថ្មីដែលមិនទាន់មាន Row)
                 if (supabaseClient && navigator.onLine) {
                     await supabaseClient.from('branch_store').upsert({
                         branch_id: BRANCH,
@@ -1457,7 +1573,6 @@
                     }, { onConflict: 'branch_id' });
                 }
 
-                // Sync ចូល LocalStorage ដើម្បីឱ្យ POS លើឧបករណ៍ដូចគ្នាទទួលបានភ្លាមៗ
                 localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(d.invoices));
                 localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
                 if (d.customers) localStorage.setItem(`ks2_${BRANCH}_customers_pro`, JSON.stringify(d.customers));
@@ -1467,11 +1582,10 @@
                 document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
                 playDing();
 
-                // 🌟 ប្រើប្រាស់ Order Bot Token ដើម្បីបាញ់សារចូល Group កុម្ម៉ង់
                 if(orderBotToken && orderChatId && navigator.onLine) {
                     let itxt = ord.items.map((i,x)=>`${x+1}. ${i.name} [${i.cartVar}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
                     let discTxt = discUsd > 0 ? `\n🏷️ បញ្ចុះតម្លៃ: <b>-$${discUsd.toFixed(2)}</b>` : '';
-                    let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n🧾 លេខកូដ: <code>${orderId}</code>\n👤 អតិថិជន: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}${discTxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
+                    let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n🧾 លេខកូដ: <code>${orderId}</code>\n👤 អតិថិជន/តុ: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}${discTxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
                     fetch(`https://api.telegram.org/bot${orderBotToken}/sendMessage`, {
                         method: 'POST', headers: {'Content-Type':'application/json'},
                         body: JSON.stringify({chat_id: orderChatId, text: msg, parse_mode: 'HTML'})
@@ -1501,18 +1615,14 @@
             if(!ph) return showToast('Enter phone number!', true);
             res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">Searching...</div>';
             try {
-                let allInvoices = [];
+                let invoicesList = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`) || '[]');
                 if (supabaseClient && navigator.onLine) {
                     let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                    if (data && data.data_json && Array.isArray(data.data_json.invoices)) {
-                        allInvoices = data.data_json.invoices;
+                    if (data && data.data_json && data.data_json.invoices) {
+                        invoicesList = data.data_json.invoices;
                     }
                 }
-                if (allInvoices.length === 0) {
-                    allInvoices = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`)) || [];
-                }
-
-                let uOrds = allInvoices.filter(i => i && (i.phone === ph || i.customerPhone === ph));
+                let uOrds = invoicesList.filter(i => i && (i.phone === ph || i.customerPhone === ph));
                 if(uOrds.length===0) return res.innerHTML = '<div style="text-align:center; font-size:12px; color:var(--text-muted);">No orders found.</div>';
                 res.innerHTML = uOrds.map(o => {
                     const st = String(o.status || 'unpaid').toLowerCase();
@@ -1522,7 +1632,7 @@
 
                     return `
                     <div style="background:var(--store-bg); padding:12px; border-radius:12px; margin-bottom:10px; border:1px solid var(--border-color);">
-                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px;"><span>${o.id}</span> <span style="color:var(--brand-cyan);">$${parseFloat(o.totalAmount || 0).toFixed(2)}</span></div>
+                        <div style="display:flex; justify-content:space-between; font-weight:900; font-size:14px;"><span>${o.id}</span> <span style="color:var(--brand-cyan);">$${parseFloat(o.totalAmount || o.total || 0).toFixed(2)}</span></div>
                         <div style="font-size:11px; color:var(--text-muted); margin:4px 0;">${o.date}</div>
                         <div style="font-size:12px; font-weight:800;">Status: ${statusHtml}</div>
                     </div>
@@ -1535,12 +1645,12 @@
             const n = document.getElementById('rName').value.trim();
             if(!n) return showToast('Name required!', true);
             try {
-                if (!supabaseClient || !navigator.onLine) return showToast('Offline Mode', true);
+                if (!supabaseClient || !navigator.onLine) return showToast('Thanks for your rating!', false);
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
                 let d = (data && data.data_json) ? data.data_json : {};
                 if(!d.reviews) d.reviews=[];
                 d.reviews.unshift({ name:n, comment:document.getElementById('rCom').value, rating:rateStar, date:new Date().toLocaleString() });
-                await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
+                await supabaseClient.from('branch_store').upsert({branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString()}, {onConflict: 'branch_id'});
                 showToast('Thanks for your rating!'); closeModal('reviewModal');
             } catch(e) {}
         }

@@ -138,7 +138,11 @@ window.renderPOSProducts = function() {
                 }
 
                 let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<div class="badge-cat" style="background: #38bdf8; color: #fff; top: 8px; right: 8px; padding: 3px 6px; font-size: 10px; border-radius: 4px;">${p.condition}</div>` : '';
-                let expiryBadge = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<div style="font-size:10px; color:var(--warning); margin-top:2px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</div>` : '';
+                
+                // ការពារកុំឱ្យលោត Invalid Date ពេលទំនិញគ្មានថ្ងៃផុតកំណត់ត្រឹមត្រូវ
+                let expDateObj = p.expiry ? new Date(p.expiry) : null;
+                let isValidExp = expDateObj && !isNaN(expDateObj.getTime());
+                let expiryBadge = (window.sysSettings && window.sysSettings.expiry && isValidExp) ? `<div style="font-size:10px; color:var(--warning); margin-top:2px;">📅 ផុតកំណត់: ${expDateObj.toLocaleDateString('km-KH')}</div>` : '';
 
                 let cItem = (window.cart || []).find(c => c && c.id === p.id); 
                 let qtyInCart = cItem ? cItem.cartQty : 0;
@@ -167,7 +171,10 @@ window.renderPOSProducts = function() {
                 let rielHtml = pRiel > 0 ? `<br><span style="font-size:var(--fs-11); color:var(--text-muted);">${pRiel.toLocaleString()} ៛</span>` : '';
                 let itemOpacity = pQty <= 0 ? 'opacity: 0.6;' : '';
                 let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<span style="font-size:10px; background:#38bdf8; color:#fff; padding:2px 4px; border-radius:4px; margin-left:4px;">${p.condition}</span>` : '';
-                let expiryDisplay = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<br><span style="color:var(--warning); font-size:10px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</span>` : '';
+                
+                let expDateObj = p.expiry ? new Date(p.expiry) : null;
+                let isValidExp = expDateObj && !isNaN(expDateObj.getTime());
+                let expiryDisplay = (window.sysSettings && window.sysSettings.expiry && isValidExp) ? `<br><span style="color:var(--warning); font-size:10px;">📅 ផុតកំណត់: ${expDateObj.toLocaleDateString('km-KH')}</span>` : '';
 
                 tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" onerror="this.src='https://placehold.co/100?text=Img'" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${effectiveUsd}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(effectiveUsd)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">➕ បន្ថែម</button></td></tr>`;
             });
