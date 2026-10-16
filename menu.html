@@ -31,13 +31,40 @@
         }
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Battambang', sans-serif; -webkit-tap-highlight-color: transparent; }
-        body { background: var(--brand-dark); color: var(--text-dark); overflow-x: hidden; }
+        
+        /* 🔑 កូដ Centered Layout សម្រាប់ផ្ទៃខាងក្រៅ (កុំព្យូទ័រ) */
+        html {
+            background-color: #111827; /* ពណ៌ងងឹតសម្រាប់ចន្លោះសងខាងនៅលើ Desktop */
+        }
+
+        body { 
+            background: var(--brand-dark); 
+            color: var(--text-dark); 
+            overflow-x: hidden; 
+            
+            /* 🔑 កូដគន្លឹះ៖ ធ្វើឱ្យ Menu ទាំងមូលតម្រឹមនៅចំកណ្តាលអេក្រង់ និងមិនធំពេក */
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            position: relative;
+            min-height: 100vh;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); /* ស្រមោលសងខាង */
+        }
+
+        /* 🔑 កំណត់ទំហំធាតុ Fixed ឱ្យរត់តាមទំហំកណ្តាល 900px ដែរ កុំឱ្យវារត់ពេញអេក្រង់កុំព្យូទ័រ */
+        #splashScreen, #landingPage, #storeClosedBanner, .top-bar, .bottom-nav,
+        .modal-bg, .sb-overlay, #welcomePopupModal, #lightboxModal {
+            max-width: 900px;
+            margin: 0 auto;
+            left: 0;
+            right: 0;
+        }
 
         /* =========================================
            1. SPLASH SCREEN
            ========================================= */
         #splashScreen {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; height: 100%;
             background: var(--brand-dark); z-index: 9999; 
             display: flex; flex-direction: column; justify-content: center; align-items: center;
             color: white; transition: opacity 0.5s ease;
@@ -47,7 +74,7 @@
            2. LANDING PAGE
            ========================================= */
         #landingPage {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; height: 100%;
             background: var(--brand-dark); z-index: 1000; 
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.6s;
@@ -135,18 +162,23 @@
         .slider-dot.active { background: #fff; transform: scale(1.4); }
 
         .banner-overlay-badge {
-            position: absolute; bottom: 10px; left: 10px;
+            position: absolute; bottom: 12px; left: 12px;
             max-width: calc(100% - 90px);
             display: flex; align-items: center; z-index: 10;
         }
         .promo-tag {
-            background: rgba(0,0,0,0.75); backdrop-filter: blur(4px); border: 1px solid rgba(255,255,255,0.25);
-            color: #fff; padding: 5px 12px; border-radius: 20px; font-size: 11px; font-weight: 800;
-            display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+            background: rgba(0,0,0,0.85); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.2);
+            color: #fff; padding: 8px 16px; border-radius: 30px; font-size: 13px; font-weight: 900;
+            display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-            transition: opacity 0.3s ease, transform 0.2s ease;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
-        .promo-tag:active { transform: scale(0.96); }
+        .promo-tag:active { transform: scale(0.95); }
+        .promo-tag:hover { border-color: var(--brand-cyan); }
+        
+        .promo-fade-out { opacity: 0; transform: translateY(10px) scale(0.95); pointer-events: none; }
+        .promo-fade-in { opacity: 1; transform: translateY(0) scale(1); }
 
         .marquee-ticker {
             background: rgba(6, 182, 212, 0.15); color: var(--brand-cyan); padding: 8px 15px; font-size: 13px; font-weight: 900;
@@ -233,6 +265,7 @@
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
             gap: 15px; 
             padding: 0; 
+            justify-content: center; /* 🔑 ជួយទាញកាតមកកណ្តាលពេលមានទំនិញតិច មិនពេញជួរ */
         }
         
         .p-card {
@@ -264,14 +297,15 @@
         }
 
         .modal-bg {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            position: fixed; top: 0; height: 100%;
             background: rgba(0,0,0,0.6); backdrop-filter: blur(3px); z-index: 2000; display: none; justify-content: center; align-items: flex-end; opacity: 0; transition: opacity 0.3s;
         }
         .modal-bg.show { opacity: 1; }
         .modal-content {
-            background: var(--card-bg); width: 100%; max-width: 600px;
+            background: var(--card-bg); width: 100%; max-width: 600px; /* Content ផ្នែកខាងក្នុងនៅរក្សាទំហំដើម */
             border-radius: 24px 24px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;
             transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); color: var(--text-dark);
+            margin: 0 auto; /* តម្រឹម Content ក្នុង Modal ចូលកណ្តាលដែរ */
         }
         .modal-bg.show .modal-content { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -300,7 +334,7 @@
         .btn-outline { background: transparent; border: 1px solid var(--border-color); color: var(--text-dark); flex: 1;}
 
         .bottom-nav {
-            position: fixed; bottom: 0; left: 0; width: 100%; background: var(--card-bg);
+            position: fixed; bottom: 0; background: var(--card-bg);
             display: flex; justify-content: space-around; align-items: center; padding: 10px 0 20px 0;
             box-shadow: 0 -5px 20px rgba(0,0,0,0.05); z-index: 900; border-radius: 24px 24px 0 0;
         }
@@ -324,10 +358,10 @@
         .pop-anim { animation: popBounce 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 
         .floating-chat {
-            position: fixed; bottom: 95px; right: 20px; width: 50px; height: 50px;
+            position: absolute; bottom: 95px; right: 20px; width: 50px; height: 50px;
             background: var(--brand-cyan); color: white; border-radius: 50%; display: flex;
             align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 4px 15px rgba(6, 182, 212, 0.4);
-            z-index: 850; cursor: pointer; transition: transform 0.2s;
+            cursor: pointer; transition: transform 0.2s; pointer-events: auto;
         }
         .floating-chat:active { transform: scale(0.95); }
 
@@ -344,22 +378,21 @@
         .welcome-popup-box { background: var(--card-bg); max-width: 400px; width: 100%; border-radius: 20px; overflow: hidden; position: relative; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
         .welcome-popup-box img { width: 100%; max-height: 250px; object-fit: cover; }
 
-        .sidebar { position: fixed; top: 0; left: -300px; width: 280px; height: 100%; background: var(--card-bg); z-index: 3000; transition: left 0.3s; box-shadow: 5px 0 25px rgba(0,0,0,0.1); display: flex; flex-direction: column; }
-        .sidebar.open { left: 0; }
+        /* 🔑 Fixed Layout Wrapper: ស៊ុម 900px សម្រាប់ទប់របស់ដែល Fixed */
+        .fixed-layout-wrapper {
+            position: fixed; top: 0; left: 50%; transform: translateX(-50%);
+            width: 100%; max-width: 900px; height: 100%;
+            pointer-events: none; z-index: 3000;
+        }
+
+        .sidebar { position: absolute; top: 0; left: -320px; width: 280px; height: 100%; background: var(--card-bg); transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 5px 0 25px rgba(0,0,0,0.5); display: flex; flex-direction: column; pointer-events: auto; opacity: 0; visibility: hidden; z-index: -1; }
+        .sidebar.open { left: 0; opacity: 1; visibility: visible; z-index: 3100; }
         .sb-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2900; display: none; }
         .sb-item { padding: 15px 20px; border-bottom: 1px solid var(--border-color); display: flex; align-items: center; gap: 15px; font-weight: 800; font-size: 14px; color: var(--text-dark); cursor: pointer;}
         .sb-item i { color: var(--brand-cyan); font-size: 18px; width: 20px; text-align: center;}
         
         .v-btn { background: var(--store-bg); border: 1px solid var(--border-color); color: var(--text-dark); padding: 8px 15px; border-radius: 10px; font-size: 12px; font-weight: 800; cursor: pointer; margin: 0 5px 5px 0; }
         .v-btn.active { background: var(--success); color: white; border-color: var(--success); }
-
-        #toast {
-            position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px);
-            background: var(--success); color: white; padding: 10px 20px; border-radius: 20px;
-            font-size: 13px; font-weight: 800; z-index: 999999; transition: transform 0.3s;
-            box-shadow: 0 4px 15px rgba(34,197,94,0.4); text-align: center;
-        }
-        #toast.show { transform: translate(-50%, 0); }
 
         #lightboxModal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.92); display: none; justify-content: center; align-items: center; z-index: 8000; opacity: 0; transition: opacity 0.3s; cursor: pointer; }
         #lightboxModal.show { opacity: 1; }
@@ -442,11 +475,6 @@
         <!-- Product Sections & Grid Container -->
         <div class="menu-sections-container" id="productGrid"></div>
 
-        <!-- Floating Chat Button -->
-        <div class="floating-chat" onclick="openChat()">
-            <i class="fa-solid fa-comment-dots"></i>
-        </div>
-
         <!-- Bottom Navigation Bar -->
         <div class="bottom-nav">
             <div class="nav-item active" onclick="window.scrollTo(0,0)">
@@ -478,41 +506,49 @@
 
     <!-- Sidebar -->
     <div class="sb-overlay" id="sbOverlay" onclick="closeSidebar()"></div>
-    <div class="sidebar" id="sidebar">
-        <div style="padding: 20px; background: var(--brand-dark); color: white; display: flex; justify-content: space-between; align-items: center;">
-            <h2 style="font-size: 18px; font-weight: 900;">Settings & Systems</h2>
-            <i class="fa-solid fa-xmark" style="font-size: 20px; cursor: pointer;" onclick="closeSidebar()"></i>
-        </div>
-        
-        <div style="padding: 15px 20px; background: rgba(34,197,94,0.1); color: var(--success); font-weight: 900; font-size: 14px; text-align: center; border-bottom: 1px solid var(--border-color);" id="ptsDisplay">
-            ⭐ Points: 0
+    
+    <div class="fixed-layout-wrapper">
+        <div class="sidebar" id="sidebar">
+            <div style="padding: 20px; background: var(--brand-dark); color: white; display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 18px; font-weight: 900;">Settings & Systems</h2>
+                <i class="fa-solid fa-xmark" style="font-size: 20px; cursor: pointer;" onclick="closeSidebar()"></i>
+            </div>
+            
+            <div style="padding: 15px 20px; background: rgba(34,197,94,0.1); color: var(--success); font-weight: 900; font-size: 14px; text-align: center; border-bottom: 1px solid var(--border-color);" id="ptsDisplay">
+                ⭐ Points: 0
+            </div>
+
+            <div class="sb-item" onclick="toggleTheme()">
+                <i class="fa-solid fa-moon"></i> Toggle Dark Mode
+            </div>
+            <div class="sb-item">
+                <i class="fa-solid fa-coins"></i> 
+                <select id="currSelect" onchange="changeSystem('curr', this.value)" style="border:none; background:transparent; font-weight:800; outline:none; color:var(--text-dark);">
+                    <option value="USD">Currency: USD ($)</option>
+                    <option value="KHR">Currency: KHR (៛)</option>
+                </select>
+            </div>
+            <div class="sb-item">
+                <i class="fa-solid fa-globe"></i> 
+                <select id="langSelect" onchange="changeSystem('lang', this.value)" style="border:none; background:transparent; font-weight:800; outline:none; color:var(--text-dark);">
+                    <option value="en">Lang: English</option>
+                    <option value="km">Lang: ខ្មែរ</option>
+                </select>
+            </div>
+            <div class="sb-item" onclick="closeSidebar(); openModal('trackerModal')">
+                <i class="fa-solid fa-box"></i> Track Order
+            </div>
+            <div class="sb-item" onclick="closeSidebar(); openModal('wishlistModal')">
+                <i class="fa-solid fa-heart"></i> Wishlist
+            </div>
+            <div class="sb-item" onclick="closeSidebar(); openModal('reviewModal')">
+                <i class="fa-solid fa-star"></i> Rate Shop
+            </div>
         </div>
 
-        <div class="sb-item" onclick="toggleTheme()">
-            <i class="fa-solid fa-moon"></i> Toggle Dark Mode
-        </div>
-        <div class="sb-item">
-            <i class="fa-solid fa-coins"></i> 
-            <select id="currSelect" onchange="changeSystem('curr', this.value)" style="border:none; background:transparent; font-weight:800; outline:none; color:var(--text-dark);">
-                <option value="USD">Currency: USD ($)</option>
-                <option value="KHR">Currency: KHR (៛)</option>
-            </select>
-        </div>
-        <div class="sb-item">
-            <i class="fa-solid fa-globe"></i> 
-            <select id="langSelect" onchange="changeSystem('lang', this.value)" style="border:none; background:transparent; font-weight:800; outline:none; color:var(--text-dark);">
-                <option value="en">Lang: English</option>
-                <option value="km">Lang: ខ្មែរ</option>
-            </select>
-        </div>
-        <div class="sb-item" onclick="closeSidebar(); openModal('trackerModal')">
-            <i class="fa-solid fa-box"></i> Track Order
-        </div>
-        <div class="sb-item" onclick="closeSidebar(); openModal('wishlistModal')">
-            <i class="fa-solid fa-heart"></i> Wishlist
-        </div>
-        <div class="sb-item" onclick="closeSidebar(); openModal('reviewModal')">
-            <i class="fa-solid fa-star"></i> Rate Shop
+        <!-- Floating Chat Button -->
+        <div class="floating-chat" onclick="openChat()">
+            <i class="fa-solid fa-comment-dots"></i>
         </div>
     </div>
 
@@ -789,6 +825,7 @@
             if (promoInp) promoInp.value = codeStr;
             if (extraSys) extraSys.style.display = 'block';
             applyPromo();
+            openModal('cartModal'); // លោតទៅផ្ទាំងកន្ត្រកស្វ័យប្រវត្តិពេលចុចយកកូដ
         }
 
         function renderSingleBannerPromoBadge() {
@@ -807,21 +844,38 @@
                 : [];
 
             if (activePromos.length > 0) {
+                badgeContainer.style.display = 'flex';
+                currentPromoIdx = 0;
+
                 const showOnePromo = (idx) => {
                     const p = activePromos[idx % activePromos.length];
                     if (!p) return;
+                    
                     let pDesc = p.type === 'percent' ? `-${p.value}%` : (p.type === 'fixed' ? `-$${p.value}` : 'Free Ship');
                     let safeCode = String(p.code).replace(/'/g, "\\'");
-                    badgeContainer.innerHTML = `<span class="promo-tag" onclick="quickUsePromoCode('${safeCode}')" title="ចុចដើម្បីប្រើកូដនេះ"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} (${pDesc})</span>`;
-                    badgeContainer.style.display = 'flex';
+                    
+                    const existingTag = badgeContainer.querySelector('.promo-tag');
+                    
+                    if (existingTag) {
+                        // ធ្វើចលនា Fade Out មុននឹងប្តូរ
+                        existingTag.classList.remove('promo-fade-in');
+                        existingTag.classList.add('promo-fade-out');
+                        
+                        setTimeout(() => {
+                            badgeContainer.innerHTML = `<span class="promo-tag promo-fade-in" onclick="quickUsePromoCode('${safeCode}')" title="ចុចដើម្បីប្រើកូដនេះ"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} <span style="color:var(--success); margin-left:2px;">(${pDesc})</span></span>`;
+                        }, 300);
+                    } else {
+                        badgeContainer.innerHTML = `<span class="promo-tag promo-fade-in" onclick="quickUsePromoCode('${safeCode}')" title="ចុចដើម្បីប្រើកូដនេះ"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} <span style="color:var(--success); margin-left:2px;">(${pDesc})</span></span>`;
+                    }
                 };
 
-                currentPromoIdx = 0;
                 showOnePromo(currentPromoIdx);
 
                 if (activePromos.length > 1) {
+                    // ទាញយកនាទីពី Settings (បំប្លែងទៅជាវិនាទី) បើអត់ដាក់យក 5 វិនាទី
                     const repeatCfg = parseInt(sys.popupRepeatInterval || sys.popupRepeatMinutes) || 0;
-                    const intervalSec = (repeatCfg > 0) ? (repeatCfg * 60) : 6;
+                    const intervalSec = (repeatCfg > 0) ? (repeatCfg * 60) : 5; 
+                    
                     singlePromoTimer = setInterval(() => {
                         currentPromoIdx = (currentPromoIdx + 1) % activePromos.length;
                         showOnePromo(currentPromoIdx);
@@ -912,13 +966,7 @@
         
         function closeWelcomePopup() {
             document.getElementById('welcomePopupModal').style.display = 'none';
-            // Auto-repeat popup setup
-            const intervalMin = parseInt(sys.popupRepeatInterval || sys.popupRepeatMinutes) || 0;
-            if (intervalMin > 0 && sys.toggleWelcomePopup && sys.welcomeImg) {
-                setTimeout(() => {
-                    document.getElementById('welcomePopupModal').style.display = 'flex';
-                }, intervalMin * 60000);
-            }
+            // 🔑 បានលុបមុខងារដែលធ្វើឱ្យវាលោតសារចុះឡើងចេញ ដើម្បីឱ្យវាចេញតែម្តងគត់តាមការស្នើសុំ
         }
 
         function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sbOverlay').style.display='block'; }
@@ -1008,8 +1056,12 @@
 
                     if (sys.chatLink) dynamicChatLink = sys.chatLink;
                     if (sys.toggleWelcomePopup && sys.welcomeImg) {
-                        document.getElementById('welcomePopupImg').src = sys.welcomeImg;
-                        document.getElementById('welcomePopupModal').style.display = 'flex';
+                        // 🔑 ឱ្យវាលោតមកតែម្តងគត់ ក្នុងមួយវគ្គ (Session) នៃការចូលមើល
+                        if (!sessionStorage.getItem('welcomePopupShown')) {
+                            document.getElementById('welcomePopupImg').src = sys.welcomeImg;
+                            document.getElementById('welcomePopupModal').style.display = 'flex';
+                            sessionStorage.setItem('welcomePopupShown', 'true');
+                        }
                     }
                     if (sys.socialLabel && sys.socialLink) {
                         const socialEl = document.getElementById('lpSocialLink');
@@ -1080,8 +1132,12 @@
                             }
 
                             if (sys.toggleWelcomePopup && sys.welcomeImg) {
-                                document.getElementById('welcomePopupImg').src = sys.welcomeImg;
-                                document.getElementById('welcomePopupModal').style.display = 'flex';
+                                // 🔑 ឱ្យវាលោតមកតែម្តងគត់ ក្នុងមួយវគ្គ (Session) នៃការចូលមើល (ទិន្នន័យ Cloud)
+                                if (!sessionStorage.getItem('welcomePopupShown')) {
+                                    document.getElementById('welcomePopupImg').src = sys.welcomeImg;
+                                    document.getElementById('welcomePopupModal').style.display = 'flex';
+                                    sessionStorage.setItem('welcomePopupShown', 'true');
+                                }
                             } else {
                                 document.getElementById('welcomePopupModal').style.display = 'none';
                             }
