@@ -1,12 +1,3 @@
-/* ==========================================================================
-ឯកសារ print.css - គាំទ្រខ្នាត 57x40mm (58mm), 80mm, និង A4
-========================================================================== /
-/ STREAMING_CHUNK:Configuring print media rules for receipt container and fallback area... */
-@media print {
-@page {
-margin: 0;
-}
-
 html, body {
     background: #ffffff !important;
     color: #000000 !important;
@@ -31,7 +22,7 @@ body * {
     font-family: 'Kantumruy Pro', 'Battambang', 'Khmer OS Battambang', sans-serif !important;
 }
 
-/* STREAMING_CHUNK:Styling receipt container layout and typography... */
+/* STREAMING_CHUNK:Styling receipt container layout and header typography... */
 #receipt-container,
 #printReceiptArea {
     display: block !important;
@@ -66,7 +57,7 @@ body * {
     font-size: 12px;
 }
 
-/* STREAMING_CHUNK:Styling receipt tables and totals... */
+/* STREAMING_CHUNK:Formatting receipt item tables, totals, and footer... */
 .receipt-table,
 #receipt-container table,
 #printReceiptArea table {
@@ -100,7 +91,4 @@ body * {
     text-align: center;
     margin-top: 15px;
     font-size: 11px;
-}
-
-
 }
