@@ -32,26 +32,22 @@
 
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Nunito', 'Battambang', sans-serif; -webkit-tap-highlight-color: transparent; }
         
-        /* 🔑 កូដ Centered Layout សម្រាប់ផ្ទៃខាងក្រៅ (កុំព្យូទ័រ) */
         html {
-            background-color: #111827; /* ពណ៌ងងឹតសម្រាប់ចន្លោះសងខាងនៅលើ Desktop */
+            background-color: #111827; 
         }
 
         body { 
             background: var(--brand-dark); 
             color: var(--text-dark); 
             overflow-x: hidden; 
-            
-            /* 🔑 កូដគន្លឹះ៖ ធ្វើឱ្យ Menu ទាំងមូលតម្រឹមនៅចំកណ្តាលអេក្រង់ និងមិនធំពេក */
             width: 100%;
             max-width: 900px;
             margin: 0 auto;
             position: relative;
             min-height: 100vh;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5); /* ស្រមោលសងខាង */
+            box-shadow: 0 0 50px rgba(0,0,0,0.5); 
         }
 
-        /* 🔑 កំណត់ទំហំធាតុ Fixed ឱ្យរត់តាមទំហំកណ្តាល 900px ដែរ កុំឱ្យវារត់ពេញអេក្រង់កុំព្យូទ័រ */
         #splashScreen, #landingPage, #storeClosedBanner, .top-bar, .bottom-nav,
         .modal-bg, .sb-overlay, #welcomePopupModal, #lightboxModal {
             max-width: 900px;
@@ -60,9 +56,7 @@
             right: 0;
         }
 
-        /* =========================================
-           1. SPLASH SCREEN
-           ========================================= */
+        /* 1. SPLASH SCREEN */
         #splashScreen {
             position: fixed; top: 0; height: 100%;
             background: var(--brand-dark); z-index: 9999; 
@@ -70,9 +64,7 @@
             color: white; transition: opacity 0.5s ease;
         }
 
-        /* =========================================
-           2. LANDING PAGE
-           ========================================= */
+        /* 2. LANDING PAGE */
         #landingPage {
             position: fixed; top: 0; height: 100%;
             background: var(--brand-dark); z-index: 1000; 
@@ -101,9 +93,7 @@
             backdrop-filter: blur(5px);
         }
 
-        /* =========================================
-           3. STORE PAGE
-           ========================================= */
+        /* 3. STORE PAGE */
         #storePage { display: none; background: var(--store-bg); min-height: 100vh; padding-bottom: 100px;}
         
         .top-bar {
@@ -265,7 +255,7 @@
             grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); 
             gap: 15px; 
             padding: 0; 
-            justify-content: center; /* 🔑 ជួយទាញកាតមកកណ្តាលពេលមានទំនិញតិច មិនពេញជួរ */
+            justify-content: center;
         }
         
         .p-card {
@@ -302,10 +292,10 @@
         }
         .modal-bg.show { opacity: 1; }
         .modal-content {
-            background: var(--card-bg); width: 100%; max-width: 600px; /* Content ផ្នែកខាងក្នុងនៅរក្សាទំហំដើម */
+            background: var(--card-bg); width: 100%; max-width: 600px;
             border-radius: 24px 24px 0 0; padding: 20px; max-height: 90vh; overflow-y: auto; overflow-x: hidden;
             transform: translateY(100%); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); color: var(--text-dark);
-            margin: 0 auto; /* តម្រឹម Content ក្នុង Modal ចូលកណ្តាលដែរ */
+            margin: 0 auto;
         }
         .modal-bg.show .modal-content { transform: translateY(0); }
         .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
@@ -370,7 +360,6 @@
             text-align: center; padding: 10px; font-weight: 900; z-index: 6000; display: none; font-size: 13px;
         }
 
-        /* Welcome Image Popup Only (No Promos) */
         #welcomePopupModal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8);
             z-index: 7000; display: none; justify-content: center; align-items: center; padding: 20px;
@@ -378,7 +367,6 @@
         .welcome-popup-box { background: var(--card-bg); max-width: 400px; width: 100%; border-radius: 20px; overflow: hidden; position: relative; text-align: center; box-shadow: 0 20px 40px rgba(0,0,0,0.5); }
         .welcome-popup-box img { width: 100%; max-height: 250px; object-fit: cover; }
 
-        /* 🔑 Fixed Layout Wrapper: ស៊ុម 900px សម្រាប់ទប់របស់ដែល Fixed */
         .fixed-layout-wrapper {
             position: fixed; top: 0; left: 50%; transform: translateX(-50%);
             width: 100%; max-width: 900px; height: 100%;
@@ -409,7 +397,7 @@
         <h2 style="font-weight: 900; letter-spacing: 1px;" id="splashName">Loading...</h2>
     </div>
 
-    <!-- Welcome Image Popup Modal (NO PROMOS) -->
+    <!-- Welcome Image Popup Modal -->
     <div id="welcomePopupModal" onclick="if(event.target === this) closeWelcomePopup()">
         <div class="welcome-popup-box">
             <img id="welcomePopupImg" src="" alt="Welcome" onerror="this.src='https://placehold.co/400x250/1e293b/06b6d4?text=Welcome'">
@@ -562,7 +550,6 @@
             
             <div class="cart-list" id="cartList"></div>
             
-            <!-- 🪑 ប្រអប់ជ្រើសរើសតុធម្មតា ឬ តុ VIP សម្រាប់អតិថិជន -->
             <div id="customerTableBox" style="display: none; background: rgba(6, 182, 212, 0.08); padding: 12px; border-radius: 14px; border: 1px dashed var(--brand-cyan); margin-bottom: 12px;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
                     <label style="font-size: 13px; font-weight: 900; color: var(--text-dark);"><i class="fa-solid fa-chair" style="color: var(--brand-cyan);"></i> ជ្រើសរើសលេខតុ / VIP:</label>
@@ -669,7 +656,6 @@
         </div>
     </div>
 
-    <!-- Custom Global Toast -->
     <div id="toast">Message here!</div>
 
     <!-- Lightbox Modal -->
@@ -678,6 +664,15 @@
     </div>
 
     <script>
+        // 🛡️ សុវត្ថិភាព Escape សម្រាប់ Telegram HTML Messages
+        function escapeTelegramHTML(text) {
+            if (!text) return '';
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+        }
+
         try {
             const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             let localSys = JSON.parse(localStorage.getItem(`ks2_${branchId}_sys_settings`));
@@ -825,7 +820,7 @@
             if (promoInp) promoInp.value = codeStr;
             if (extraSys) extraSys.style.display = 'block';
             applyPromo();
-            openModal('cartModal'); // លោតទៅផ្ទាំងកន្ត្រកស្វ័យប្រវត្តិពេលចុចយកកូដ
+            openModal('cartModal');
         }
 
         function renderSingleBannerPromoBadge() {
@@ -857,7 +852,6 @@
                     const existingTag = badgeContainer.querySelector('.promo-tag');
                     
                     if (existingTag) {
-                        // ធ្វើចលនា Fade Out មុននឹងប្តូរ
                         existingTag.classList.remove('promo-fade-in');
                         existingTag.classList.add('promo-fade-out');
                         
@@ -872,7 +866,6 @@
                 showOnePromo(currentPromoIdx);
 
                 if (activePromos.length > 1) {
-                    // ទាញយកនាទីពី Settings (បំប្លែងទៅជាវិនាទី) បើអត់ដាក់យក 5 វិនាទី
                     const repeatCfg = parseInt(sys.popupRepeatInterval || sys.popupRepeatMinutes) || 0;
                     const intervalSec = (repeatCfg > 0) ? (repeatCfg * 60) : 5; 
                     
@@ -966,7 +959,6 @@
         
         function closeWelcomePopup() {
             document.getElementById('welcomePopupModal').style.display = 'none';
-            // 🔑 បានលុបមុខងារដែលធ្វើឱ្យវាលោតសារចុះឡើងចេញ ដើម្បីឱ្យវាចេញតែម្តងគត់តាមការស្នើសុំ
         }
 
         function openSidebar() { document.getElementById('sidebar').classList.add('open'); document.getElementById('sbOverlay').style.display='block'; }
@@ -1056,7 +1048,6 @@
 
                     if (sys.chatLink) dynamicChatLink = sys.chatLink;
                     if (sys.toggleWelcomePopup && sys.welcomeImg) {
-                        // 🔑 ឱ្យវាលោតមកតែម្តងគត់ ក្នុងមួយវគ្គ (Session) នៃការចូលមើល
                         if (!sessionStorage.getItem('welcomePopupShown')) {
                             document.getElementById('welcomePopupImg').src = sys.welcomeImg;
                             document.getElementById('welcomePopupModal').style.display = 'flex';
@@ -1132,7 +1123,6 @@
                             }
 
                             if (sys.toggleWelcomePopup && sys.welcomeImg) {
-                                // 🔑 ឱ្យវាលោតមកតែម្តងគត់ ក្នុងមួយវគ្គ (Session) នៃការចូលមើល (ទិន្នន័យ Cloud)
                                 if (!sessionStorage.getItem('welcomePopupShown')) {
                                     document.getElementById('welcomePopupImg').src = sys.welcomeImg;
                                     document.getElementById('welcomePopupModal').style.display = 'flex';
@@ -1799,15 +1789,22 @@
                 document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
                 playDing();
 
+                // 🚀 កែសម្រួលការផ្ញើសារ Telegram Bot (លុប Tag <big> និងបន្ថែម Safe Escaping)
                 if(orderBotToken && orderChatId && navigator.onLine) {
-                    let itxt = ord.items.map((i,x)=>`${x+1}. ${i.name} [${i.cartVar}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
+                    let itxt = ord.items.map((i,x)=>`${x+1}. ${escapeTelegramHTML(i.name)} [${escapeTelegramHTML(i.cartVar)}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
                     let discTxt = discUsd > 0 ? `\n🏷️ បញ្ចុះតម្លៃ: <b>-$${discUsd.toFixed(2)}</b>` : '';
-                    let msg = `🛒 <b><big>ការកុម្ម៉ង់ថ្មី (New Order)</big></b>\n🧾 លេខកូដ: <code>${orderId}</code>\n👤 អតិថិជន: <b>${n}</b>\n📞 លេខទូរស័ព្ទ: <b>${ph || 'គ្មាន'}</b>\n📝 ចំណាំ: <i>${ord.note || 'គ្មាន'}</i>\n\n🛍 ទំនិញ:\n${itxt}${discTxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
+                    let safeNote = escapeTelegramHTML(ord.note) || 'គ្មាន';
+                    let safeCustName = escapeTelegramHTML(n);
+                    let safePhone = escapeTelegramHTML(ph) || 'គ្មាន';
+
+                    let msg = `🔔 <b>ការកុម្ម៉ង់ថ្មី (New Order)</b>\n🧾 លេខកូដ: <code>${orderId}</code>\n👤 អតិថិជន: <b>${safeCustName}</b>\n📞 លេខទូរស័ព្ទ: <b>${safePhone}</b>\n📝 ចំណាំ: <i>${safeNote}</i>\n\n🛍 ទំនិញ:\n${itxt}${discTxt}\n💰 <b>សរុប: $${tot.toFixed(2)}</b>`;
+                    
                     fetch(`https://api.telegram.org/bot${orderBotToken}/sendMessage`, {
                         method: 'POST', headers: {'Content-Type':'application/json'},
                         body: JSON.stringify({chat_id: orderChatId, text: msg, parse_mode: 'HTML'})
-                    }).catch(() => {});
+                    }).catch(err => console.warn("Telegram fetch warning:", err));
                 }
+
                 showToast(`Order Success! ID: ${orderId}`);
                 cart = [];
                 appliedPromo = null;

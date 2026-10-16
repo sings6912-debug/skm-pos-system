@@ -19,11 +19,17 @@ window.urlParams = new URLSearchParams(window.location.search);
 window.SHOP_BRANCH_ID = window.urlParams.get('branch') || 'branch_1';
 window.getBranchKey = (key) => `ks2_${window.SHOP_BRANCH_ID}_${key}`;
 
-// ១. ទាញយកទិន្នន័យពី LocalStorage ភ្លាមៗតាំងពីដើមទី (Synchronous Load)
+// ១. ទាញយកទិន្នន័យពី LocalStorage ភ្លាមៗតាំងពីដើមទី (Synchronous Load with Null Cleaner)
 const getLocalData = (key, defaultVal) => {
     try {
         const val = localStorage.getItem(window.getBranchKey(key));
-        return val ? JSON.parse(val) : defaultVal;
+        if (!val) return defaultVal;
+        const parsed = JSON.parse(val);
+        // បើជា Array ត្រូវច្រោះសម្អាតធាតុ null ចោល ការពារកុំឱ្យគាំង Render
+        if (Array.isArray(parsed)) {
+            return parsed.filter(item => item !== null && typeof item === 'object');
+        }
+        return parsed || defaultVal;
     } catch (e) {
         return defaultVal;
     }
@@ -44,6 +50,7 @@ window.shopTelegram = localStorage.getItem(window.getBranchKey('shop_telegram'))
 window.telegramBotToken = localStorage.getItem(window.getBranchKey('telegram_bot_token')) || ''; 
 window.telegramChatId = localStorage.getItem(window.getBranchKey('telegram_chat_id')) || ''; 
 
+// ⚡ បន្ថែម Key លំនាំដើមឱ្យគ្រប់គ្រាន់ (Table Management, Multi-Printer, និង Receipt Presets)
 const defaultSysSettings = { 
     cust: true, 
     unpaid: true, 
@@ -60,7 +67,14 @@ const defaultSysSettings = {
     expiry: true,
     storePin: '1234',
     enableSound: true,
-    receiptFooter: 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។'
+    receiptFooter: 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។',
+    receiptSize: '80mm',
+    toggleTableFeature: false,
+    totalTables: 20,
+    tablePrefix: 'តុលេខ',
+    customTables: 'VIP 1, VIP 2, VIP 3',
+    toggleMultiPrinter: false,
+    printAllSync: false
 };
 
 window.sysSettings = Object.assign({}, defaultSysSettings, getLocalData('sys_settings', {}));
@@ -151,14 +165,29 @@ window.playOrderSound = function() {
     } catch (e) {} 
 };
 
-window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = false, onConfirm = null) { 
+// ⚡ ធ្វើបច្ចុប្បន្នភាព ksMsg ឱ្យស្គាល់ពហុភាសា និងគាំទ្រការ Auto-Focus លើប៊ូតុងយល់ព្រម
+window.ksMsgOpenedAt = 0;
+window.ksMsg = function(text, title, isConfirm = false, onConfirm = null) { 
     const titleEl = document.getElementById('ksMsgTitle');
     const textEl = document.getElementById('ksMsgText');
     const actionContainer = document.getElementById('ksMsgActions');
     const msgBox = document.getElementById('ksMsgBox');
-    if (!titleEl || !textEl || !actionContainer || !msgBox) return;
+    if (!titleEl || !textEl || !actionContainer || !msgBox) {
+        if (typeof window.showToast === 'function') window.showToast(text);
+        if (!isConfirm && typeof onConfirm === 'function') onConfirm();
+        return;
+    }
 
-    titleEl.innerText = title; 
+    const lang = localStorage.getItem('app_lang') || 'km';
+    const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
+
+    let finalTitle = title || d.confirmNoticeTitle || 'ជូនដំណឹង';
+    if (title === 'បញ្ជាក់ការលុប' || title === 'Confirm Action' || title === '确认操作') finalTitle = d.confirmDeleteTitle || 'បញ្ជាក់ការលុប';
+    if (title === 'ជូនដំណឹង' || title === 'Notice' || title === '系统提示') finalTitle = d.confirmNoticeTitle || 'ជូនដំណឹង';
+    if (title === 'ជោគជ័យ' || title === 'Success' || title === '成功') finalTitle = d.successTitle || 'ជោគជ័យ';
+    if (title === 'គ្មានសិទ្ធិ' || title === 'Access Denied' || title === '权限不足') finalTitle = d.errNoPermission || 'គ្មានសិទ្ធិ';
+
+    titleEl.innerText = finalTitle; 
     textEl.innerHTML = text; 
     actionContainer.innerHTML = '';
     
@@ -167,14 +196,14 @@ window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = fa
         const cancelBtn = document.createElement('button'); 
         cancelBtn.type = 'button';
         cancelBtn.className = 'btn btn-outline'; 
-        cancelBtn.innerText = 'បោះបង់'; 
+        cancelBtn.innerText = d.btnCancel || 'បោះបង់'; 
         cancelBtn.onclick = () => { msgBox.style.display = 'none'; }; 
         actionContainer.appendChild(cancelBtn); 
 
         const okBtn = document.createElement('button'); 
         okBtn.type = 'button';
-        okBtn.className = 'btn btn-primary'; 
-        okBtn.innerText = 'យល់ព្រម'; 
+        okBtn.className = 'btn btn-success'; 
+        okBtn.innerText = d.btnConfirmOk || 'យល់ព្រម'; 
         okBtn.onclick = () => { 
             msgBox.style.display = 'none'; 
             if (typeof onConfirm === 'function') onConfirm(); 
@@ -185,7 +214,7 @@ window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = fa
         const okBtn = document.createElement('button'); 
         okBtn.type = 'button';
         okBtn.className = 'btn btn-primary'; 
-        okBtn.innerText = 'យល់ព្រម'; 
+        okBtn.innerText = d.btnConfirmOk || 'យល់ព្រម'; 
         okBtn.onclick = () => { 
             msgBox.style.display = 'none'; 
             if (typeof onConfirm === 'function') onConfirm(); 
@@ -193,6 +222,7 @@ window.ksMsg = function(text, title = 'ជូនដំណឹង', isConfirm = fa
         actionContainer.appendChild(okBtn); 
         primaryBtn = okBtn;
     }
+
     window.ksMsgOpenedAt = Date.now();
     msgBox.style.display = 'flex';
     setTimeout(() => {

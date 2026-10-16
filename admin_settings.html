@@ -514,7 +514,7 @@
                 <i class="fa-solid fa-database"></i> ការគ្រប់គ្រងទិន្នន័យ (Data Management)
             </div>
             
-            <!-- កន្លែង Backup & Restore ទាំងអស់ដែលទើបបន្ថែម -->
+            <!-- កន្លែង Backup & Restore ទាំងអស់ -->
             <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-bottom: 15px;">
                 <h3 style="font-size: 16px; color: var(--success); margin-bottom: 8px;"><i class="fa-solid fa-cloud-arrow-down"></i> Backup & Restore (ទិន្នន័យទាំងអស់)</h3>
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">ទាញយកទិន្នន័យប្រព័ន្ធទាំងមូល (ស្តុក, អតិថិជន, វិក្កយបត្រ, ការកំណត់) រក្សាទុកជាឯកសារយោង និងអាចទាញបញ្ចូលមកវិញនៅពេលក្រោយ។</p>
@@ -531,7 +531,7 @@
 
             <!-- មុខងារ Archive សម្អាតទិន្នន័យចាស់ -->
             <div class="section-title" style="color: var(--danger); border-bottom: 2px dashed var(--danger); padding-bottom: 10px;">
-                <i class="fa-solid fa-database"></i> ការគ្រប់គ្រងទិន្នន័យ (Data Management)
+                <i class="fa-solid fa-box-archive"></i> សម្អាត និងពន្លឿនប្រព័ន្ធ (Data Archive)
             </div>
             <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--danger);">
                 <h3 style="font-size: 16px; color: var(--danger); margin-bottom: 8px;"><i class="fa-solid fa-broom"></i> សម្អាតទិន្នន័យចាស់ៗ (Data Archive)</h3>
@@ -675,7 +675,7 @@
                         </button>
                     </div>
 
-                    <!-- ទម្រង់បញ្ចូលម៉ាស៊ីនថ្មី (លាក់សិន) -->
+                    <!-- ទម្រង់បញ្ចូលម៉ាស៊ីនថ្មី -->
                     <div id="addPrinterForm" style="display: none; background: rgba(0,0,0,0.02); padding: 12px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 15px;">
                         <input type="text" id="newPrinterName" class="input-st" placeholder="ឈ្មោះម៉ាស៊ីន (ឧ. Kitchen)" style="margin-bottom: 8px; padding: 8px; font-size: 13px;">
                         <select id="newPrinterType" class="input-st" style="margin-bottom: 8px; padding: 8px; font-size: 13px;" onchange="document.getElementById('newPrinterIpContainer').style.display = this.value === 'network' ? 'block' : 'none'">
@@ -691,9 +691,7 @@
                         </div>
                     </div>
                     
-                    <div id="departmentPrintersList" style="display: flex; flex-direction: column; gap: 10px;">
-                        <!-- JS Will render printers here -->
-                    </div>
+                    <div id="departmentPrintersList" style="display: flex; flex-direction: column; gap: 10px;"></div>
                 </div>
 
                 <!-- ផ្នែកទី២៖ ភ្ជាប់ប្រភេទទៅម៉ាស៊ីនព្រីន -->
@@ -709,9 +707,7 @@
                                     <th style="padding: 8px 4px;">ម៉ាស៊ីនគោលដៅ (Send to)</th>
                                 </tr>
                             </thead>
-                            <tbody id="categoryRoutingList">
-                                <!-- JS Will render categories here -->
-                            </tbody>
+                            <tbody id="categoryRoutingList"></tbody>
                         </table>
                     </div>
                     
@@ -748,13 +744,15 @@
 <script>
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
+    // 🔒 ជួសជុលសន្តិសុខ៖ ផ្ទៀងផ្ទាត់យ៉ាងម៉ឺងម៉ាត់ទាំង Store PIN និងសិទ្ធិ Admin
     (function verifyAdminAccess() {
         const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
         try {
             activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`));
         } catch(e) {}
-        if (authPassed !== 'true' && (!activeUser || String(activeUser.role).toLowerCase() !== 'admin')) {
+
+        if (authPassed !== 'true' || !activeUser || String(activeUser.role).toLowerCase() !== 'admin') {
             if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
                 console.warn("Preview Environment Detected: Authentication redirect bypassed.");
             } else {
@@ -790,9 +788,6 @@
         catch (err) { console.error("Supabase init error:", err); }
     }
 
-    // ============================================
-    // ☁️ មុខងារ Upload ទៅ Supabase Storage (កែថ្មី)
-    // ============================================
     async function uploadToSupabaseStorage(canvasBlob, folderName) {
         if (!supabaseClient || !navigator.onLine) throw new Error("Offline or no DB connected");
         
@@ -986,7 +981,7 @@
                 <span>សរុបប្រាក់:</span>
                 <span>$5.50 (22,000 ៛)</span>
             </div>
-            ${qrSrc ? `<div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 8px;"><div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">ស្កេនទូទាត់ប្រាក់</div><img src="${qrSrc}" style="width: ${cfg.qrPx}px; height: ${cfg.qrPx}px; object-fit: contain;"></div>` : ''}
+            ${qrSrc ? `<div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 8px;"><div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">ស្កេនទូទាត់ប្រាក់</div><img src="${qrSrc}" style="width: ${cfg.qrPx}px; height:${cfg.qrPx}px; object-fit: contain;"></div>` : ''}
             <div style="text-align: center; margin-top: 10px; font-weight: bold; font-size: ${Math.max(10, cfg.fontPx - 1)}px;">${footerTxt}</div>
         `;
     }
@@ -1113,9 +1108,7 @@
         const limit = parseInt(limitInp.value) || 0;
         const oneTimePerUser = perUserInp.checked;
 
-        if(!code) {
-            return showToast('សូមបំពេញឈ្មោះកូដបញ្ចុះតម្លៃ!', true);
-        }
+        if(!code) return showToast('សូមបំពេញឈ្មោះកូដបញ្ចុះតម្លៃ!', true);
 
         if(type !== 'freeship' && (isNaN(value) || value <= 0)) {
             return showToast('សូមបញ្ចូលតម្លៃបញ្ចុះឱ្យបានត្រឹមត្រូវ!', true);
@@ -1125,18 +1118,14 @@
             if(promoCodesList.some(p => p.code === code)) {
                 return showToast('កូដនេះមានរួចហើយ!', true);
             }
-            promoCodesList.push({ 
-                code, type, value, limit, usedCount: 0, oneTimePerUser
-            });
+            promoCodesList.push({ code, type, value, limit, usedCount: 0, oneTimePerUser });
             showToast('បានបន្ថែមរក្សាទុកកូដប្រូម៉ូសិនជោគជ័យ!');
         } else {
             if(promoCodesList.some((p, idx) => p.code === code && idx !== editPromoIndex)) {
                 return showToast('កូដនេះជាន់គ្នាជាមួយកូដផ្សេង!', true);
             }
             const currentUsedCount = promoCodesList[editPromoIndex].usedCount || 0;
-            promoCodesList[editPromoIndex] = { 
-                code, type, value, limit, usedCount: currentUsedCount, oneTimePerUser
-            };
+            promoCodesList[editPromoIndex] = { code, type, value, limit, usedCount: currentUsedCount, oneTimePerUser };
             showToast('បានកែប្រែកូដប្រូម៉ូសិនជោគជ័យ!');
         }
 
@@ -1172,7 +1161,6 @@
     function removeAdminBanner(index) { adminBanners.splice(index, 1); renderAdminBanners(); }
     function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); }
     
-    // ☁️ Upload Banner to Supabase
     function uploadAdminBanner(e, index) {
         const file = e.target.files[0]; if(!file) return; 
         showToast("កំពុង Upload រូបភាពចូល Cloud...", false);
@@ -1200,7 +1188,7 @@
                     showToast("✅ Upload Cloud ជោគជ័យ!");
                 } catch(err) {
                     console.warn("Cloud storage failed, falling back to Base64:", err);
-                    adminBanners[index] = canvas.toDataURL('image/jpeg', 0.6); // Compress for local fallback
+                    adminBanners[index] = canvas.toDataURL('image/jpeg', 0.6);
                     renderAdminBanners();
                     saveAdminSettings();
                     showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
@@ -1211,7 +1199,6 @@
         reader.readAsDataURL(file);
     }
 
-    // ☁️ Upload QR to Supabase
     function uploadQR(e) {
         const file = e.target.files[0]; if(!file) return; 
         showToast("កំពុង Upload QR ចូល Cloud...", false);
@@ -1252,7 +1239,6 @@
         else { img.src = ''; box.style.display = 'none'; }
     }
 
-    // ☁️ Upload Welcome Image to Supabase
     function uploadWelcomeImg(e) {
         const file = e.target.files[0]; if (!file) return;
         showToast("កំពុង Upload រូបស្វាគមន៍ចូល Cloud...", false);
@@ -1359,7 +1345,7 @@
         try {
             let localSys = {}; let localPosScripts = [];
             try { const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`); if (rawSys) localSys = JSON.parse(rawSys); } catch(e) {}
-            try { const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`); if (rawPos) localPosScripts = JSON.parse(rawPos); } catch(e) {}
+            try { const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`); if (rawPos) localPosScripts = JSON.parse(rawPos);} catch(e) {}
             
             if (localSys.customMenuScripts) menuScripts = localSys.customMenuScripts;
             if (localSys.promoCodes) promoCodesList = localSys.promoCodes;
@@ -1536,7 +1522,6 @@
         } catch(e) { console.error("Init admin error:", e); }
     }
 
-    // ⚙️ Modular Save Payload Builder
     function buildSysSettingsPayload(existingSys) {
         let sys = existingSys || {};
         
@@ -1658,7 +1643,35 @@
     function toggleAllMenuScripts() { if (menuScripts.length === 0) return; let targetState = menuScripts.some(s => !s.isActive); menuScripts.forEach(s => s.isActive = targetState); renderMenuScripts(); saveAdminSettings(); }
     function deleteMenuScript(id) { menuScripts = menuScripts.filter(x => x.id !== id); renderMenuScripts(); saveAdminSettings(); }
     function deleteAllMenuScripts() { if (menuScripts.length === 0) return; menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
-    function uploadMenuScripts(e) { /* existing logic */ }
+    
+    function uploadMenuScripts(e) {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+        
+        let loadedCount = 0;
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const scriptContent = evt.target.result;
+                const newScript = {
+                    id: 'menu_js_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                    name: file.name,
+                    code: scriptContent,
+                    isActive: true
+                };
+                menuScripts.push(newScript);
+                loadedCount++;
+                if (loadedCount === files.length) {
+                    renderMenuScripts();
+                    saveAdminSettings();
+                    showToast(`✅ បានបញ្ចូល Menu Custom JS ចំនួន ${loadedCount} ឯកសារ!`);
+                }
+            };
+            reader.readAsText(file);
+        });
+        e.target.value = '';
+    }
+
     function exportMenuScriptsBackup() { if(menuScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); a.download = `Menu_JS.json`; a.click(); }
     function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err){ showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
 
@@ -1682,7 +1695,35 @@
     function toggleAllPosScripts() { if (posScripts.length === 0) return; let targetState = posScripts.some(s => !s.isActive); posScripts.forEach(s => s.isActive = targetState); renderPosScripts(); saveAdminSettings(); }
     function deletePosScript(id) { posScripts = posScripts.filter(x => x.id !== id); renderPosScripts(); saveAdminSettings(); }
     function deleteAllPosScripts() { if (posScripts.length === 0) return; posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
-    function uploadPosScripts(e) { /* existing logic */ }
+    
+    function uploadPosScripts(e) {
+        const files = Array.from(e.target.files);
+        if (!files.length) return;
+
+        let loadedCount = 0;
+        files.forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const scriptContent = evt.target.result;
+                const newScript = {
+                    id: 'pos_js_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                    name: file.name,
+                    code: scriptContent,
+                    isActive: true
+                };
+                posScripts.push(newScript);
+                loadedCount++;
+                if (loadedCount === files.length) {
+                    renderPosScripts();
+                    saveAdminSettings();
+                    showToast(`✅ បានបញ្ចូល POS Custom JS ចំនួន ${loadedCount} ឯកសារ!`);
+                }
+            };
+            reader.readAsText(file);
+        });
+        e.target.value = '';
+    }
+
     function exportPosScriptsBackup() { if(posScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); a.download = `POS_JS.json`; a.click(); }
     function importPosScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err) { showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
 
@@ -1764,21 +1805,17 @@
         } catch (e) { showToast("❌ មានបញ្ហាក្នុងការ Archive: " + e.message, true); }
     }
 
-    // 🚀 មុខងារប្រមូល និងចងក្រងកូដប្រព័ន្ធទាំងមូលទៅជា File តែមួយ (System Shell Backup)
     async function downloadSystemShell() {
         showToast("កំពុងប្រមូលកូដ និងចងក្រងជា File តែ១... សូមរង់ចាំ!", false);
         try {
-            // ទាញយកឯកសារកូដគោល (index.html)
             let htmlRaw = await fetch('index.html').then(r => r.text());
             
-            // ១. រកមើល និងទាញយកកូដ CSS ដែលភ្ជាប់ពីខាងក្រៅមកដាក់បញ្ចូលផ្ទាល់ (Inline Style)
             const cssMatch = htmlRaw.match(/<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/gi);
             if (cssMatch) {
                 for (let linkTag of cssMatch) {
                     const hrefMatch = linkTag.match(/href="([^"]+)"/i);
                     if (hrefMatch && hrefMatch[1]) {
                         const href = hrefMatch[1];
-                        // មិនទាញយក Link ពី Internet (CDN) ទេ
                         if (!href.startsWith('http') && !href.startsWith('//')) {
                             try {
                                 const cssContent = await fetch(href).then(r => r.text());
@@ -1789,14 +1826,12 @@
                 }
             }
 
-            // ២. រកមើល និងទាញយកកូដ JS ដែលភ្ជាប់ពីខាងក្រៅមកដាក់បញ្ចូលផ្ទាល់ (Inline Script)
             const jsMatch = htmlRaw.match(/<script[^>]*src="([^"]+)"[^>]*><\/script>/gi);
             if (jsMatch) {
                 for (let scriptTag of jsMatch) {
                     const srcMatch = scriptTag.match(/src="([^"]+)"/i);
                     if (srcMatch && srcMatch[1]) {
                         const src = srcMatch[1];
-                        // មិនទាញយក Link ពី Internet (CDN) ទេ
                         if (!src.startsWith('http') && !src.startsWith('//')) {
                             try {
                                 const jsContent = await fetch(src).then(r => r.text());
@@ -1807,7 +1842,6 @@
                 }
             }
 
-            // ៣. បង្កើតឯកសារ និងបញ្ជាឱ្យ Download
             const blob = new Blob([htmlRaw], { type: 'text/html' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
@@ -1821,7 +1855,6 @@
             showToast("✅ ទាញយកសំបកប្រព័ន្ធ POS (1 File) ជោគជ័យ!");
         } catch (error) {
             console.error(error);
-            // ក្រើនរំលឹកប្រសិនបើគាត់បើកតាមរយៈ file:/// ដែលវាមិនអនុញ្ញាតឱ្យ fetch ឯកសារផ្សេង
             showToast("❌ បរាជ័យ! សូមប្រាកដថាប្រព័ន្ធកំពុងដំណើរការលើ Server (http/https)", true);
         }
     }

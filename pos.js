@@ -743,11 +743,11 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         window.routeOrderToPrinters(newInvoice, printerJobs);
     }
 
-    // 🚀 Enterprise Async Save Strategy (ត្រៀមសម្រាប់ Tables ថ្មី)
+    // 🚀 Enterprise Async Save Strategy (ត្រៀមសម្រាប់ Tables ថ្មី - ជួសជុល bug ត្រង់ supabaseClient)
     setTimeout(() => {
-        if (window.supabase && navigator.onLine) {
+        if (window.supabaseClient && navigator.onLine) {
             // សាកល្បងបញ្ចូលទៅ Table `orders` ដាច់ដោយឡែក (បើបានបង្កើត Table ហើយ)
-            window.supabase.from('orders').insert([{
+            window.supabaseClient.from('orders').insert([{
                 id: newInvId,
                 branch_id: window.BRANCH || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
                 customer_name: newInvoice.customerName,
@@ -757,13 +757,14 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
                 order_data: newInvoice.items
             }]).then(({error}) => {
                 if (error) {
-                    console.warn("មិនទាន់មាន Table 'orders' ក្នុង DB ទេ។ កំពុងប្រើប្រាស់មុខងារ Save ចាស់ (JSON Data)...");
-                    if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+                    console.warn("មិនទាន់មាន Table 'orders' ក្នុង DB ទេ។ កំពុងប្រើប្រាស់មុខងារ Save តាម JSON Backup...");
                 } else {
                     console.log("ជោគជ័យ! ទិន្នន័យវិក្កយបត្របានរក្សាទុកក្នុង Table 'orders' ដាច់ដោយឡែក។");
-                    // Update ស្តុកនៅក្នុង JSON ចាស់ (ដើម្បីកុំឱ្យដាច់តំណភ្ជាប់ជាមួយ Menu និង POS ចាស់)
-                    if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
                 }
+                if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+            }).catch(err => {
+                console.warn("Supabase order insert error:", err);
+                if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
             });
         } else {
             // Offline Mode Fallback

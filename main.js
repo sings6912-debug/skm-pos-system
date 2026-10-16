@@ -4,7 +4,6 @@
 // 0. POS CUSTOM SCRIPT LOADER (Runs automatically)
 // ==========================================
 
-// Load from LocalStorage first for instant UI (With Try/Catch Protection)
 try {
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
     const localPosScripts = JSON.parse(localStorage.getItem(`ks2_${branchId}_pos_scripts`));
@@ -21,12 +20,10 @@ function injectPosScripts() {
     window.customPosScripts.forEach(scriptObj => {
         if (scriptObj && scriptObj.isActive && scriptObj.code) {
             try {
-                // Remove existing script if any to prevent duplicate execution
                 const existingScript = document.getElementById(scriptObj.id);
                 if (existingScript) existingScript.remove();
 
                 const scriptEl = document.createElement('script');
-                // 🔒 ប្តូរពី innerHTML ទៅ textContent ដើម្បីឱ្យ Browser យល់ព្រម Execute កូដ
                 scriptEl.textContent = scriptObj.code;
                 scriptEl.id = scriptObj.id;
                 document.body.appendChild(scriptEl);
@@ -38,89 +35,102 @@ function injectPosScripts() {
     });
 }
 
-// ដំណើរការភ្លាមៗពេលបើកទំព័រ
 injectPosScripts();
 
 // ==========================================
-// 1. BIND UTILS & CONFIGS TO WINDOW
+// 1. BIND UTILS & CONFIGS TO WINDOW (Fallback safe)
 // ==========================================
-window.fDate = function() { 
-    const d = new Date(); 
-    return d.toLocaleDateString('km-KH') + ' ' + d.toLocaleTimeString('km-KH'); 
-}; 
+if (typeof window.fDate !== 'function') {
+    window.fDate = function() { 
+        const d = new Date(); 
+        return d.toLocaleDateString('km-KH') + ' ' + d.toLocaleTimeString('km-KH'); 
+    };
+}
 
-window.fMoney = function(num) { 
-    return '$' + parseFloat(num || 0).toFixed(2); 
-};
+if (typeof window.fMoney !== 'function') {
+    window.fMoney = function(num) { 
+        return '$' + parseFloat(num || 0).toFixed(2); 
+    };
+}
 
-window.showToast = function(msg, isError = false) {
-    const toast = document.getElementById('toastNotification'); 
-    if(!toast) return;
-    toast.style.background = isError ? 'var(--danger)' : 'var(--success)'; 
-    toast.innerHTML = msg; 
-    toast.style.display = 'block'; 
-    toast.style.opacity = '1'; 
-    setTimeout(() => { 
-        toast.style.opacity = '0'; 
-        setTimeout(() => toast.style.display = 'none', 300); 
-    }, 2000);
-};
+if (typeof window.showToast !== 'function') {
+    window.showToast = function(msg, isError = false) {
+        const toast = document.getElementById('toastNotification'); 
+        if(!toast) return;
+        toast.style.background = isError ? 'var(--danger)' : 'var(--success)'; 
+        toast.innerHTML = msg; 
+        toast.style.display = 'block'; 
+        toast.style.opacity = '1'; 
+        setTimeout(() => { 
+            toast.style.opacity = '0'; 
+            setTimeout(() => toast.style.display = 'none', 300); 
+        }, 2000);
+    };
+}
 
-window.playBeep = function() { 
-    if(window.sysSettings && window.sysSettings.enableSound === false) return;
-    try { 
-        const ctx = typeof window.getSharedAudioContext === 'function' ? window.getSharedAudioContext() : null; 
-        if(!ctx) return; 
-        const osc = ctx.createOscillator(); 
-        const gain = ctx.createGain(); 
-        osc.connect(gain); 
-        gain.connect(ctx.destination); 
-        osc.type = 'sine'; 
-        osc.frequency.setValueAtTime(850, ctx.currentTime); 
-        gain.gain.setValueAtTime(0.05, ctx.currentTime); 
-        osc.start(); 
-        osc.stop(ctx.currentTime + 0.1); 
-    } catch(e) {} 
-};
+if (typeof window.playBeep !== 'function') {
+    window.playBeep = function() { 
+        if(window.sysSettings && window.sysSettings.enableSound === false) return;
+        try { 
+            const ctx = typeof window.getSharedAudioContext === 'function' ? window.getSharedAudioContext() : null; 
+            if(!ctx) return; 
+            const osc = ctx.createOscillator(); 
+            const gain = ctx.createGain(); 
+            osc.connect(gain); 
+            gain.connect(ctx.destination); 
+            osc.type = 'sine'; 
+            osc.frequency.setValueAtTime(850, ctx.currentTime); 
+            gain.gain.setValueAtTime(0.05, ctx.currentTime); 
+            osc.start(); 
+            osc.stop(ctx.currentTime + 0.1); 
+        } catch(e) {} 
+    };
+}
 
-window.playOrderSound = function() {
-    if(window.sysSettings && window.sysSettings.enableSound === false) return;
-    try {
-        const ctx = typeof window.getSharedAudioContext === 'function' ? window.getSharedAudioContext() : null;
-        if(!ctx) return;
-        for (let i = 0; i < 3; i++) {
-            setTimeout(() => {
-                const osc = ctx.createOscillator();
-                const gain = ctx.createGain();
-                osc.connect(gain);
-                gain.connect(ctx.destination);
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(800, ctx.currentTime);
-                gain.gain.setValueAtTime(0.1, ctx.currentTime);
-                osc.start();
-                osc.stop(ctx.currentTime + 0.2);
-            }, i * 300);
-        }
-    } catch(e) {} 
-};
+if (typeof window.playOrderSound !== 'function') {
+    window.playOrderSound = function() {
+        if(window.sysSettings && window.sysSettings.enableSound === false) return;
+        try {
+            const ctx = typeof window.getSharedAudioContext === 'function' ? window.getSharedAudioContext() : null;
+            if(!ctx) return;
+            for (let i = 0; i < 3; i++) {
+                setTimeout(() => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(800, ctx.currentTime);
+                    gain.gain.setValueAtTime(0.1, ctx.currentTime);
+                    osc.start();
+                    osc.stop(ctx.currentTime + 0.2);
+                }, i * 300);
+            }
+        } catch(e) {} 
+    };
+}
 
-window.generateInvoiceId = function() {
-    let counters = JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) || { lastDate: '', seq: 0 };
-    let d = new Date(); 
-    let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
-    if (counters.lastDate === todayStr) counters.seq += 1; else { counters.lastDate = todayStr; counters.seq = 1; }
-    localStorage.setItem(window.getBranchKey('invoice_counter'), JSON.stringify(counters)); 
-    return `INV-${todayStr}-${String(counters.seq).padStart(3, '0')}`;
-};
+if (typeof window.generateInvoiceId !== 'function') {
+    window.generateInvoiceId = function() {
+        let counters = JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) || { lastDate: '', seq: 0 };
+        let d = new Date(); 
+        let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+        if (counters.lastDate === todayStr) counters.seq += 1; else { counters.lastDate = todayStr; counters.seq = 1; }
+        localStorage.setItem(window.getBranchKey('invoice_counter'), JSON.stringify(counters)); 
+        return `INV-${todayStr}-${String(counters.seq).padStart(3, '0')}`;
+    };
+}
 
-window.logAction = function(type, itemName, qty, note, activeUserRef) { 
-    if(!window.sysSettings || !window.sysSettings.logs) return; 
-    let executor = activeUserRef ? (activeUserRef.fullName ? activeUserRef.fullName : activeUserRef.username) : 'system'; 
-    let dateStr = typeof window.fDate==='function' ? window.fDate() : new Date().toLocaleString();
-    if (!window.historyLog) window.historyLog = [];
-    window.historyLog.unshift({ id: Date.now(), date: dateStr, type, itemName, qty, note: `${note} (${executor})` }); 
-    if(window.historyLog.length > 500) window.historyLog.pop(); 
-};
+if (typeof window.logAction !== 'function') {
+    window.logAction = function(type, itemName, qty, note, activeUserRef) { 
+        if(!window.sysSettings || !window.sysSettings.logs) return; 
+        let executor = activeUserRef ? (activeUserRef.fullName ? activeUserRef.fullName : activeUserRef.username) : 'system'; 
+        let dateStr = typeof window.fDate==='function' ? window.fDate() : new Date().toLocaleString('km-KH');
+        if (!window.historyLog) window.historyLog = [];
+        window.historyLog.unshift({ id: Date.now(), date: dateStr, type, itemName, qty, note: `${note} (${executor})` }); 
+        if(window.historyLog.length > 500) window.historyLog.pop(); 
+    };
+}
 
 // ==========================================
 // 2. 🌐 FULL 3-LANGUAGE SYSTEM DICTIONARY
@@ -1071,7 +1081,7 @@ window.changeAppLanguage = function(lang) {
     setText('btnClearCartBtn', d.cartClear || '🗑️ បោះបង់');
     setText('lblSellerText', d.lblSeller || 'អ្នកលក់ (Seller):');
     setText('lblRateText', d.lblRate || 'អត្រាប្តូរប្រាក់ (Rate):');
-    setText('lblQtyText', d.lblTotalQty || 'សរុបចំនួន (Qty):');
+    setText('lblTotalQty', d.lblTotalQty || 'សរុបចំនួន (Qty):');
     setText('lblDiscountText', d.lblDiscount || 'បញ្ចុះតម្លៃ:');
     setText('lblTaxText', d.lblTax || 'ពន្ធអាករ:');
     setText('lblTotalText', d.lblGrandTotal || 'សរុបទឹកប្រាក់:');
@@ -1212,7 +1222,7 @@ window.changeAppLanguage = function(lang) {
 };
 
 // ==========================================
-// 4. SMART MULTI-LANGUAGE ALERT & CONFIRM DIALOG (WITH ENTER KEY SUPPORT)
+// 4. SMART MULTI-LANGUAGE ALERT & CONFIRM DIALOG
 // ==========================================
 window.ksMsgOpenedAt = 0;
 
@@ -1277,7 +1287,6 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
     window.ksMsgOpenedAt = Date.now();
     box.style.display = 'flex';
 
-    // ផ្តោត (Focus) ទៅលើប៊ូតុង "យល់ព្រម" ដោយស្វ័យប្រវត្តិ ដើម្បីឱ្យចុច Enter បានភ្លាមៗ
     setTimeout(() => {
         if (primaryBtn && box.style.display !== 'none') {
             primaryBtn.focus();
@@ -1285,7 +1294,6 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
     }, 60);
 };
 
-// ប្រព័ន្ធចាប់យកប៊ូតុង Enter និង Escape គ្រប់ពេលដែលផ្ទាំង #ksMsgBox លោតឡើង (ទោះហៅចេញពី auth.js ឬ config.js ក៏ដើរដែរ)
 (function setupGlobalKsMsgKeyboardSupport() {
     window.addEventListener('keydown', function(e) {
         const box = document.getElementById('ksMsgBox');
@@ -1296,12 +1304,10 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 e.stopPropagation();
-                // ការពារកុំឱ្យការចុច Enter ពីប្រអប់ Login រំលងផ្ទាំងសារលឿនពេកមុន 120ms
                 if (Date.now() - (window.ksMsgOpenedAt || 0) < 120) return;
 
                 const buttons = box.querySelectorAll('#ksMsgActions button');
                 if (buttons.length > 0) {
-                    // ប៊ូតុងចុងក្រោយគឺជាប៊ូតុង "យល់ព្រម" ជានិច្ច
                     buttons[buttons.length - 1].click();
                 } else {
                     box.style.display = 'none';
@@ -1311,7 +1317,6 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
                 e.stopPropagation();
                 const buttons = box.querySelectorAll('#ksMsgActions button');
                 if (buttons.length > 0) {
-                    // ប៊ូតុងទីមួយគឺជាប៊ូតុង "បោះបង់" (ឬ "យល់ព្រម" បើមានតែ១ប៊ូតុង)
                     buttons[0].click();
                 } else {
                     box.style.display = 'none';
@@ -1320,7 +1325,6 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
             return;
         }
 
-        // គាំទ្រការចុច Enter នៅក្នុងប្រអប់ Login (Username / Password)
         const authScreen = document.getElementById('authScreen');
         if (authScreen && window.getComputedStyle(authScreen).display !== 'none') {
             if (e.key === 'Enter') {
@@ -1338,7 +1342,6 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
         }
     }, true);
 
-    // តាមដានរាល់ពេល #ksMsgBox បង្ហាញខ្លួន (MutationObserver) ដើម្បី Auto-Focus ប៊ូតុង "យល់ព្រម" ជានិច្ច
     const attachObserver = () => {
         const box = document.getElementById('ksMsgBox');
         if (!box) return;
@@ -1401,7 +1404,7 @@ window.setSyncStatus = function(status, text) {
 };
 
 // ==========================================
-// 6. MASTER REAL-TIME DATA SAVE & SYNC (SMART MERGE FIX)
+// 6. MASTER REAL-TIME DATA SAVE & SYNC
 // ==========================================
 window.saveData = async function(userAccountsRef, renderAllCallback) {
     window.setSyncStatus('syncing');
@@ -1416,33 +1419,50 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
 
     try {
         if(window.supabaseClient && navigator.onLine) {
-            let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).single();
+            // ⚡ ប្រើ maybeSingle() ដើម្បីការពារ Error PGRST116 ពេលមិនទាន់មាន Record
+            let { data } = await window.supabaseClient
+                .from('branch_store')
+                .select('data_json')
+                .eq('branch_id', window.SHOP_BRANCH_ID)
+                .maybeSingle();
+                
             let cloudData = (data && data.data_json) ? data.data_json : {};
 
-            // ⚡ ទាញយកបញ្ជីខ្មៅពី LocalStorage
             let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
             let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
             let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
             let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
 
-            // ⚡ បញ្ចូលគ្នាជាមួយ Cloud ដើម្បីការពារកុំឲ្យបាត់ប្រវត្តិលុប
             if (cloudData.deletedInvoices) deletedInv = [...new Set([...deletedInv, ...cloudData.deletedInvoices])];
             if (cloudData.deletedExpenses) deletedExp = [...new Set([...deletedExp, ...cloudData.deletedExpenses])];
             if (cloudData.deletedCustomers) deletedCust = [...new Set([...deletedCust, ...cloudData.deletedCustomers])];
             if (cloudData.deletedProducts) deletedProd = [...new Set([...deletedProd, ...cloudData.deletedProducts])];
 
-            // ⚡ Save ចូល LocalStorage វិញភ្លាមៗ
             localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedInv));
             localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExp));
             localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
             localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProd));
 
-            // 🌟 1. Merge Invoices & Prevent Zombies
+            // 🌟 1. Merge Invoices & Prevent Overwriting Updated Status
             if (cloudData.invoices) {
                 cloudData.invoices.forEach(cInv => {
-                    let cId = String(cInv.id || cInv.invoiceNo).trim().toLowerCase();
-                    if (!deletedInv.includes(cId) && !window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
+                    let cId = String(cInv.id || cInv.invoiceNo || '').trim().toLowerCase();
+                    if (!cId || deletedInv.includes(cId)) return;
+
+                    let localInv = window.invoices.find(lInv => 
+                        String(lInv.id || lInv.invoiceNo || '').trim().toLowerCase() === cId
+                    );
+
+                    if (!localInv) {
                         window.invoices.push(cInv);
+                    } else {
+                        // បើ Cloud មានការ Update ស្ថានភាពថ្មី (ឧ. ពី unpaid ទៅជា ready ឬ paid)
+                        if (cInv.status !== localInv.status || (cInv.paidUsd || 0) > (localInv.paidUsd || 0)) {
+                            localInv.status = cInv.status;
+                            localInv.paidUsd = cInv.paidUsd;
+                            localInv.paidAmount = cInv.paidAmount;
+                            localInv.remainingAmount = cInv.remainingAmount;
+                        }
                     }
                 });
                 window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
@@ -1451,27 +1471,32 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             // 🌟 2. Merge Customers
             if (cloudData.customers) {
                 cloudData.customers.forEach(cC => {
-                    if (!deletedCust.includes(String(cC.id)) && !window.customers.find(lC => String(lC.name).toLowerCase() === String(cC.name).toLowerCase())) window.customers.push(cC);
+                    let cName = String(cC.name || '').trim().toLowerCase();
+                    if (!deletedCust.includes(String(cC.id)) && !window.customers.find(lC => String(lC.name || '').trim().toLowerCase() === cName)) {
+                        window.customers.push(cC);
+                    }
                 });
             }
 
             // 🌟 3. Merge Inventory
             if (cloudData.inventory) {
                 cloudData.inventory.forEach(pCloud => {
-                    if (!deletedProd.includes(String(pCloud.id)) && !cleanInventory.find(pLoc => pLoc.id === pCloud.id)) cleanInventory.push(pCloud);
+                    if (!deletedProd.includes(String(pCloud.id)) && !cleanInventory.find(pLoc => pLoc.id === pCloud.id)) {
+                        cleanInventory.push(pCloud);
+                    }
                 });
             }
 
             // ⚡ 4. Merge Expenses & Prevent Zombies
             if (cloudData.expenses) {
                 cloudData.expenses.forEach(eCloud => {
-                    if (!deletedExp.includes(String(eCloud.id)) && !window.expenses.find(eLoc => eLoc.id === eCloud.id)) {
+                    if (!deletedExp.includes(String(eCloud.id)) && !window.expenses.find(eLoc => String(eLoc.id) === String(eCloud.id))) {
                         window.expenses.push(eCloud);
                     }
                 });
             }
 
-            // ⚡ 5. Merge History Logs (ការពារកុំឲ្យលោតមកវិញក្រោយពេលលុប)
+            // ⚡ 5. Merge History Logs
             if (cloudData.historyLog) {
                 let clearTime = parseInt(localStorage.getItem('history_cleared_time')) || 0;
                 cloudData.historyLog.forEach(hCloud => {
@@ -1482,13 +1507,12 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 window.historyLog.sort((a, b) => b.id - a.id);
             }
 
-            // ⚡ 6. Preserve Custom Scripts & Admin Menu Settings (CRITICAL FIX)
+            // ⚡ 6. Preserve Custom Scripts & Admin Menu Settings
             if (cloudData.customPosScripts && (!window.customPosScripts || window.customPosScripts.length === 0)) {
                 window.customPosScripts = cloudData.customPosScripts;
             }
             if (cloudData.sysSettings) {
                 if (!window.sysSettings) window.sysSettings = {};
-                // រក្សាទុកការកំណត់ពិសេសរបស់ admin_settings.html ដូចជា Promo Codes, Menu Scripts, Banners
                 const preserveKeys = ['customMenuScripts', 'promoCodes', 'menuBanners', 'menuBanner', 'menuThemeColor', 'menuQR', 'chatLink', 'socialIcon', 'socialLabel', 'socialLink', 'toggleWelcomePopup', 'welcomeImg', 'toggleStoreHours', 'openTime', 'closeTime', 'toggleTableFeature', 'totalTables', 'tablePrefix', 'customTables', 'customTablesList', 'hideBannerPromoBadge', 'hidePromoOnBanner', 'popupRepeatInterval', 'popupRepeatMinutes', 'receiptSize', 'customReceiptConfig', 'customPrinterPresets', 'deptPrinters', 'categoryRouting', 'toggleMultiPrinter', 'printAllSync', 'orderTelegramBotToken', 'orderTelegramChatId', 'serviceTelegramBotToken', 'serviceTelegramChatId'];
                 preserveKeys.forEach(k => {
                     if (window.sysSettings[k] === undefined && cloudData.sysSettings[k] !== undefined) {
@@ -1497,9 +1521,8 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 });
             }
 
-            // ⚡ អាប់ដេត Memory ម៉ាស៊ីនជាមួយនឹងទិន្នន័យដែលបាន Merge និងត្រងចោលទិន្នន័យក្នុងបញ្ជីខ្មៅ
             window.inventory = cleanInventory.filter(p => !deletedProd.includes(String(p.id)));
-            window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i?.id || i?.invoiceNo).trim().toLowerCase()));
+            window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i?.id || i?.invoiceNo || '').trim().toLowerCase()));
             window.expenses = window.expenses.filter(e => !deletedExp.includes(String(e.id)));
             window.customers = window.customers.filter(c => !deletedCust.includes(String(c.id)));
 
@@ -1522,7 +1545,6 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 telegramChatId: window.telegramChatId || '',
                 invoiceCounter: JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) || {seq:0, lastDate:''},
                 
-                // ⚡ Upload បញ្ជីខ្មៅទៅកាន់ Cloud!
                 deletedInvoices: deletedInv,
                 deletedExpenses: deletedExp,
                 deletedCustomers: deletedCust,
@@ -1546,7 +1568,6 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         window.setSyncStatus('error', 'Sync បរាជ័យ');
     }
 
-    // ⚡ រក្សាទុកគ្រប់ព័ត៌មានហាងចូល LocalStorage បន្ទាប់ពីការ Merge រួចរាល់ (ចំណុចទី ៧)
     localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory || []));
     localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog || []));
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices || []));
@@ -1575,12 +1596,11 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             .from('branch_store')
             .select('data_json')
             .eq('branch_id', window.SHOP_BRANCH_ID)
-            .single();
+            .maybeSingle();
 
         if (data && data.data_json) {
             let d = data.data_json;
             
-            // ⚡ ទាញយក និងបញ្ចូលគ្នានូវបញ្ជីខ្មៅពី Cloud & Local
             let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
             let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
             let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
@@ -1596,7 +1616,6 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
             localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProd));
 
-            // ⚡ ត្រងទំនិញ (Inventory) និងធ្វើបច្ចុប្បន្នភាពស្តុក (Sync Updates)
             if (d.inventory) {
                 d.inventory.forEach(pCloud => {
                     if (!pCloud || !pCloud.id || deletedProd.includes(String(pCloud.id))) return;
@@ -1610,29 +1629,37 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             }
             window.inventory = window.inventory.filter(p => !deletedProd.includes(String(p.id)));
             
-            // ⚡ ត្រង History ចាស់ៗចោល
             let clearTime = parseInt(localStorage.getItem('history_cleared_time')) || 0;
             let validHistory = (d.historyLog || []).filter(h => h.id > clearTime);
             window.historyLog.splice(0, window.historyLog.length, ...validHistory);
             window.historyLog.sort((a,b) => b.id - a.id);
 
-            // ⚡ ត្រងវិក្កយបត្រ (Invoices)
             (d.invoices || []).forEach(cInv => {
-                let tempId = String(cInv?.id || cInv?.invoiceNo).trim().toLowerCase();
-                if (!deletedInv.includes(tempId) && !window.invoices.some(lInv => String(lInv.id) === String(cInv.id))) {
+                let tempId = String(cInv?.id || cInv?.invoiceNo || '').trim().toLowerCase();
+                if (!tempId || deletedInv.includes(tempId)) return;
+
+                let localInv = window.invoices.find(lInv => 
+                    String(lInv?.id || lInv?.invoiceNo || '').trim().toLowerCase() === tempId
+                );
+                if (!localInv) {
                     window.invoices.push(cInv);
+                } else {
+                    if (cInv.status !== localInv.status || (cInv.paidUsd || 0) > (localInv.paidUsd || 0)) {
+                        localInv.status = cInv.status;
+                        localInv.paidUsd = cInv.paidUsd;
+                        localInv.paidAmount = cInv.paidAmount;
+                        localInv.remainingAmount = cInv.remainingAmount;
+                    }
                 }
             });
-            window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i?.id || i?.invoiceNo).trim().toLowerCase()));
+            window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i?.id || i?.invoiceNo || '').trim().toLowerCase()));
             window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             
-            // ⚡ ត្រងការចំណាយ (Expenses)
             let validExpenses = (d.expenses || []).filter(e => !deletedExp.includes(String(e.id)));
             window.expenses.splice(0, window.expenses.length, ...validExpenses);
             
-            // ⚡ ត្រងអតិថិជន (Customers)
             (d.customers || []).forEach(cCloud => {
-                if (cCloud && cCloud.name && !deletedCust.includes(String(cCloud.id)) && !window.customers.some(cLoc => String(cLoc.name).toLowerCase() === String(cCloud.name).toLowerCase())) {
+                if (cCloud && cCloud.name && !deletedCust.includes(String(cCloud.id)) && !window.customers.some(cLoc => String(cLoc.name || '').trim().toLowerCase() === String(cCloud.name || '').trim().toLowerCase())) {
                     window.customers.push(cCloud);
                 }
             });
@@ -1650,7 +1677,6 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             if(d.sysSettings) {
                 if(!window.sysSettings) window.sysSettings = {};
                 Object.assign(window.sysSettings, d.sysSettings);
-                // ភ្ជាប់ tickerNews និង tickerText ឱ្យស្គាល់គ្នា
                 const syncedTicker = window.sysSettings.tickerNews || window.sysSettings.tickerText || '';
                 if (syncedTicker) {
                     window.sysSettings.tickerNews = syncedTicker;
@@ -1661,13 +1687,11 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
                 userAccountsRef.splice(0, userAccountsRef.length, ...d.userAccounts);
             }
 
-            // 💥 អនុវត្តកូដ POS Custom JS ដែលបានទាញពី Supabase
             if (d.customPosScripts && Array.isArray(d.customPosScripts)) {
                 window.customPosScripts = d.customPosScripts;
                 injectPosScripts(); 
             }
 
-            // Save to LocalStorage instantly
             localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
             localStorage.setItem(window.getBranchKey('hist_pro'), JSON.stringify(window.historyLog));
             localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
@@ -1736,7 +1760,6 @@ window.switchTab = function(tabId, title, elem) {
     if (tabId === 'about' && typeof window.displayLicenseInfo === 'function') window.displayLicenseInfo();
 };
 
-// ⚡ FIX (ចំណុចទី ៨): ទាញសិទ្ធិអ្នកប្រើប្រាស់ពី window.activeUser និង active_user_obj ឱ្យស៊ីគ្នាជាមួយ auth.js
 window.applyPermissions = function() {
     try {
         if (window.activeUser && window.activeUser.role) {
@@ -1830,7 +1853,6 @@ window.applyPermissions = function() {
     }
 };
 
-// ⚡ FIX (ចំណុចទី ៦): ភ្ជាប់អក្សររត់ទាំង tickerNews និង tickerText
 window.loadSettingsToUI = function() { 
     if(!window.sysSettings) return;
     if(document.getElementById('setCust')) document.getElementById('setCust').checked = window.sysSettings.cust; 
@@ -1907,7 +1929,6 @@ window.saveSysSettings = async function() {
     if(!window.sysSettings) window.sysSettings = {};
     window.sysSettings.storePin = newStorePin || '1234';
 
-    // ⚡ ភ្ជាប់អក្សររត់ទាំង tickerNews និង tickerText ឱ្យដូចគ្នា ១០០%
     if(document.getElementById('setTickerText')) {
         const tickerVal = document.getElementById('setTickerText').value.trim();
         window.sysSettings.tickerNews = tickerVal;
@@ -1983,7 +2004,7 @@ window.checkLicense = async function() {
             .select('*')
             .eq('branch_id', window.SHOP_BRANCH_ID)
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
 
         if (error || !data) { 
             if (lockScreen) lockScreen.style.display = 'flex'; 
@@ -2043,7 +2064,7 @@ window.verifyAndSaveLicense = async function() {
             .eq('branch_id', window.SHOP_BRANCH_ID)
             .eq('license_key', inputKey)
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
 
         if (error || !data) { 
             if (btnUnlock) { btnUnlock.innerText = '🔓 បើកដំណើរការ'; btnUnlock.disabled = false; }
@@ -2093,7 +2114,7 @@ window.verifyAndSaveLicenseFromAbout = async function() {
             .eq('branch_id', window.SHOP_BRANCH_ID)
             .eq('license_key', inputKey)
             .eq('is_active', true)
-            .single();
+            .maybeSingle();
 
         if (error || !data) { 
             if(typeof window.ksMsg==='function') return window.ksMsg('❌ លេខកូដ License មិនត្រឹមត្រូវ ឬមិនទាន់ត្រូវបានបើកសិទ្ធិ!', 'បរាជ័យ'); 
@@ -2152,7 +2173,7 @@ window.displayLicenseInfo = async function() {
                 .from('branch_licenses')
                 .select('*')
                 .eq('branch_id', window.SHOP_BRANCH_ID)
-                .single();
+                .maybeSingle();
             if (data) {
                 license = data;
                 window.activeLicenseData = data;
@@ -2295,7 +2316,6 @@ window.saveShopName = async function() {
             window.telegramChatId = newChatId;
         }
 
-        // Sync QR & Telegram Settings with sysSettings for Digital Menu compatibility
         if (!window.sysSettings) window.sysSettings = {};
         if (window.shopQR && !window.sysSettings.menuQR) window.sysSettings.menuQR = window.shopQR;
         if (newBotToken) {
@@ -2324,7 +2344,7 @@ window.saveShopName = async function() {
 };
 
 window.renderAll = function() { 
-    // ⚡ FIX: លែងគូរទាំងអស់ហើយ។ យើងពឹងលើ switchTab ឲ្យគូរម្តងមួយៗជំនួសវិញ ដើម្បីកុំឲ្យម៉ាស៊ីនគាំង។
+    // Handled dynamically per active tab via switchTab
 };
 
 window.resetDashboardDate = function() { 
@@ -2334,7 +2354,7 @@ window.resetDashboardDate = function() {
 };
 
 // ==========================================
-// 16. DASHBOARD & REPORTING (WITH EXPIRY ALERT FIX)
+// 16. DASHBOARD & REPORTING
 // ==========================================
 window.renderDashboard = function() {
     try {
@@ -2350,7 +2370,6 @@ window.renderDashboard = function() {
             estRev += (priceVal * q); 
             if(q <= 5) lowItems.push(p); 
 
-            // 🚨 ពិនិត្យថ្ងៃផុតកំណត់ទំនិញ (Expiry Date Alert - ចំណុចទី ៥)
             if (window.sysSettings && window.sysSettings.expiry !== false && p.expiry) {
                 const expDateObj = new Date(p.expiry);
                 if (!isNaN(expDateObj.getTime())) {
@@ -2388,10 +2407,13 @@ window.renderDashboard = function() {
                         if(!item) return;
                         let pId = item.id ? String(item.id) : (item.name || 'unknown');
                         if(!salesMap[pId]) salesMap[pId] = { name: item.name || item.title || 'ទំនិញ', qty: 0, revenue: 0 }; 
-                        // ⚡ គាំទ្រទាំង cartQty (POS) និង qty (Digital Menu)
                         let qty = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 0;
                         let price = parseFloat(item.price) || 0;
-                        let cost = parseFloat(item.cost) || 0;
+                        
+                        // ⚡ ពិនិត្យថ្លៃដើម៖ បើគ្មានក្នុងវិក្កយបត្រ (ករណីមកពី Menu) ត្រូវទាញពី Inventory មកជំនួស
+                        let realProd = (window.inventory || []).find(p => p && (String(p.id) === String(item.id) || p.name === item.name));
+                        let cost = parseFloat(item.cost) || (realProd ? parseFloat(realProd.cost) || 0 : 0);
+
                         salesMap[pId].qty += qty;
                         salesMap[pId].revenue += (price * qty);
                         totalCOGS += (cost * qty);
@@ -2423,7 +2445,6 @@ window.renderDashboard = function() {
         const lang = localStorage.getItem('app_lang') || 'km';
         const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
 
-        // 🚨 គូរតារាងជូនដំណឹងទំនិញជិតផុតកំណត់ ឬផុតកំណត់ (Expiry Alert Table)
         const expSection = document.getElementById('expiryAlertSection');
         const expTbody = document.getElementById('expiryAlertTable');
         if (expSection && expTbody) {
@@ -2477,7 +2498,6 @@ window.renderDashboard = function() {
 // ==========================================
 // 16.5 HISTORY LOG WITH PAGINATION
 // ==========================================
-
 window.histCurrentPage = 1;
 window.histItemsPerPage = 20;
 
@@ -2519,7 +2539,6 @@ window.renderHistory = function() {
         return;
     }
 
-    // ការគណនា Pagination សម្រាប់ History
     let totalItems = filtered.length;
     let totalPages = 1;
     let displayItems = filtered;
@@ -2548,7 +2567,6 @@ window.renderHistory = function() {
     
     hTable.innerHTML = fHtml;
     
-    // Render ប៊ូតុង Pagination ខាងក្រោមតារាង History
     if (pageContainer) {
         if (window.histItemsPerPage === 'all' || totalItems <= window.histItemsPerPage) {
             pageContainer.innerHTML = '';
@@ -2568,12 +2586,8 @@ window.clearHistory = function() {
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
     if(typeof window.ksMsg==='function') {
         window.ksMsg(d.confirmClearHistory || 'តើអ្នកពិតជាចង់លុបប្រវត្តិប្រតិបត្តិការទាំងអស់មែនទេ?', d.confirmDeleteTitle || 'បញ្ជាក់ការលុប', true, async () => { 
-            
             window.historyLog.length = 0; 
-            
-            // ⚡ កត់ត្រាម៉ោងដែលបានលុបប្រវត្តិ ដើម្បីកុំឲ្យ Cloud ទាញប្រវត្តិមុនម៉ោងនេះមកវិញ
             localStorage.setItem('history_cleared_time', Date.now());
-            
             if(typeof window.saveData==='function') await window.saveData(window.userAccounts); 
             window.renderHistory();
         }); 
@@ -2681,14 +2695,14 @@ window.importData = function(e) {
                 window.customers.splice(0, window.customers.length, ...(data.customers||[])); 
                 window.expenses.splice(0, window.expenses.length, ...(data.expenses||[]));
                 
-                if(data.shopName) globalThis.shopName = data.shopName; 
-                if(data.shopLogo) globalThis.shopLogo = data.shopLogo; 
-                if(data.shopQR) globalThis.shopQR = data.shopQR; 
-                if(data.shopPhone) globalThis.shopPhone = data.shopPhone; 
-                if(data.shopAddress) globalThis.shopAddress = data.shopAddress;
-                if(data.shopTelegram) globalThis.shopTelegram = data.shopTelegram;
-                if(data.telegramBotToken) globalThis.telegramBotToken = data.telegramBotToken;
-                if(data.telegramChatId) globalThis.telegramChatId = data.telegramChatId;
+                if(data.shopName) window.shopName = data.shopName; 
+                if(data.shopLogo) window.shopLogo = data.shopLogo; 
+                if(data.shopQR) window.shopQR = data.shopQR; 
+                if(data.shopPhone) window.shopPhone = data.shopPhone; 
+                if(data.shopAddress) window.shopAddress = data.shopAddress;
+                if(data.shopTelegram) window.shopTelegram = data.shopTelegram;
+                if(data.telegramBotToken) window.telegramBotToken = data.telegramBotToken;
+                if(data.telegramChatId) window.telegramChatId = data.telegramChatId;
                 
                 if(data.sysSettings) Object.assign(window.sysSettings, data.sysSettings); 
                 if(data.userAccounts) window.userAccounts.splice(0, window.userAccounts.length, ...data.userAccounts); 
@@ -2733,10 +2747,8 @@ window.toggleLowStockSection = function() {
     }
 };
 
-/* 🌟 បន្ថែមថ្មី៖ ប្រព័ន្ធថែទាំទិន្នន័យស្វ័យប្រវត្តិ (Auto Backup & DB Cleanup) */
 window.runSmartDatabaseMaintenance = function() {
     try {
-        // ១. ធ្វើការ Backup ទិន្នន័យដោយស្វ័យប្រវត្តិជារៀងរាល់ថ្ងៃ
         const today = new Date().toISOString().split('T')[0];
         const lastBackup = localStorage.getItem('skm_last_auto_backup_date');
         
@@ -2752,7 +2764,6 @@ window.runSmartDatabaseMaintenance = function() {
             localStorage.setItem(`skm_auto_backup_${today}`, JSON.stringify(backupData));
             localStorage.setItem('skm_last_auto_backup_date', today);
             
-            // លុប Backup ចាស់ៗដែលលើសពី ៧ ថ្ងៃ ដើម្បីកុំឱ្យធ្ងន់ម៉ាស៊ីន (រក្សាទុកតែ ៧ ថ្ងៃចុងក្រោយ)
             for (let i = 0; i < localStorage.length; i++) {
                 const key = localStorage.key(i);
                 if (key && key.startsWith('skm_auto_backup_')) {
@@ -2766,7 +2777,6 @@ window.runSmartDatabaseMaintenance = function() {
             console.log("✅ Daily Auto-Backup Completed.");
         }
 
-        // ២. ជូនដំណឹងឱ្យ Admin សម្អាតទិន្នន័យ ពេលវិក្កយបត្រកើនឡើងច្រើនពេក (>3000)
         if (window.invoices && window.invoices.length > 3000) {
             if (window.currentRole === 'admin') {
                 setTimeout(() => {
@@ -2787,7 +2797,6 @@ window.runSmartDatabaseMaintenance = function() {
 window.onload = async () => {
     if(typeof window.loadThemeSettings==='function') window.loadThemeSettings(); 
     
-    // 🌐 1. កំណត់ និងប្តូរភាសាភ្លាមៗនៅដើមទី
     const savedLang = localStorage.getItem('app_lang') || 'km';
     const langSel = document.getElementById('globalLangSelect');
     if (langSel) langSel.value = savedLang;
@@ -2797,13 +2806,11 @@ window.onload = async () => {
         window.checkAuthentication(); 
     }
     
-    // ២. ផ្ទៀងផ្ទាត់ License ជាមួយ Supabase (Smart Cloud Check)
     if(typeof window.checkLicense==='function') {
         const isLicenseValid = await window.checkLicense();
         if (!isLicenseValid) return; 
     }
 
-    // ៣. ទាញទិន្នន័យពី Supabase
     if(typeof window.loadDataFromSupabase==='function') {
         await window.loadDataFromSupabase(window.userAccounts);
     }
@@ -2833,36 +2840,54 @@ window.onload = async () => {
     if(typeof window.setInventoryView==='function') window.setInventoryView(window.currentInventoryView, true); 
     if(typeof window.setPOSView==='function') window.setPOSView(window.currentPOSView, true); 
     
-    // 💡 Render ផ្ទាំង Dashboard ដំបូងគេ
     if(typeof window.renderDashboard === 'function') window.renderDashboard(); 
 
     const header = document.getElementById('topHeaderBar'); 
     if (header) { header.classList.remove('hidden-header'); } 
     window.lastInvoiceCount = window.invoices ? window.invoices.length : 0; 
     
-    // ⚡ FIX: Auto Real-time Update Sync Listener
+    // ⚡ Auto Real-time Update Sync Listener
     setInterval(async () => {
         try {
             if(!window.supabaseClient || !navigator.onLine) return;
-            let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).single();
+            let { data } = await window.supabaseClient
+                .from('branch_store')
+                .select('data_json')
+                .eq('branch_id', window.SHOP_BRANCH_ID)
+                .maybeSingle();
+                
             if (data && data.data_json) {
                 let cloudData = data.data_json;
                 let hasNewOrder = false;
                 let shouldRenderInventory = false;
                 
-                // ⚡ 1. ត្រួតពិនិត្យវិក្កយបត្រថ្មី (Orders)
+                // ⚡ 1. ត្រួតពិនិត្យវិក្កយបត្រថ្មី និង Update ស្ថានភាពវិក្កយបត្រពី Cloud
                 if (cloudData.invoices) {
                     let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
                     cloudData.invoices.forEach(cInv => {
-                        let cId = String(cInv.id || cInv.invoiceNo).trim().toLowerCase();
-                        if (!deletedTracker.includes(cId) && !window.invoices.find(lInv => String(lInv.id) === String(cInv.id))) {
+                        let cId = String(cInv.id || cInv.invoiceNo || '').trim().toLowerCase();
+                        if (!cId || deletedTracker.includes(cId)) return;
+
+                        let localInv = window.invoices.find(lInv => 
+                            String(lInv.id || lInv.invoiceNo || '').trim().toLowerCase() === cId
+                        );
+
+                        if (!localInv) {
                             window.invoices.push(cInv);
                             hasNewOrder = true;
+                        } else {
+                            if (cInv.status !== localInv.status || (cInv.paidUsd || 0) > (localInv.paidUsd || 0)) {
+                                localInv.status = cInv.status;
+                                localInv.paidUsd = cInv.paidUsd;
+                                localInv.paidAmount = cInv.paidAmount;
+                                localInv.remainingAmount = cInv.remainingAmount;
+                                hasNewOrder = true; // ឱ្យវា Render ឡើងវិញពេលមានការប្តូរស្ថានភាព
+                            }
                         }
                     });
                 }
 
-                // ⚡ 2. ត្រួតពិនិត្យស្តុកទំនិញដែលបានអាប់ដេតពីម៉ាស៊ីនផ្សេង (Real-time Inventory Sync)
+                // ⚡ 2. ត្រួតពិនិត្យស្តុកទំនិញ
                 if (cloudData.inventory) {
                     let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
                     cloudData.inventory.forEach(pCloud => {
@@ -2881,7 +2906,6 @@ window.onload = async () => {
                     window.inventory = window.inventory.filter(p => !deletedProd.includes(String(p.id)));
                 }
 
-                // ដំណើរការលោតសារបញ្ជាក់មានការកម្ម៉ង់
                 if (hasNewOrder) {
                     window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
                     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
@@ -2901,7 +2925,6 @@ window.onload = async () => {
                     }
                 }
 
-                // ដំណើរការគូរអេក្រង់ឡើងវិញពេលមានការកាត់ស្តុក
                 if (shouldRenderInventory) {
                     localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
                     const activeTab = document.querySelector('.tab-content.active');
@@ -2913,7 +2936,6 @@ window.onload = async () => {
         } catch(e) {}
     }, 30000); 
 
-    /* 🌟 បន្ថែមថ្មី៖ ដំណើរការប្រព័ន្ធថែទាំទិន្នន័យស្វ័យប្រវត្តិពេលបើកវេបសាយ ៣ វិនាទីក្រោយ */
     setTimeout(() => {
         if(typeof window.runSmartDatabaseMaintenance === 'function') {
             window.runSmartDatabaseMaintenance();

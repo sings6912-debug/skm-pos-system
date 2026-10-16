@@ -170,9 +170,7 @@ input:checked + .slider:before { transform: translateX(20px); }
 
         <div class="form-group">
             <label><i class="fa-solid fa-palette"></i> ជ្រើសរើសស្ទីលអាជីវកម្ម (Themes):</label>
-            <div class="theme-selector-grid" id="themeGrid">
-                <!-- Theme Options injected by JS -->
-            </div>
+            <div class="theme-selector-grid" id="themeGrid"></div>
         </div>
 
         <div class="form-group row-flex">
@@ -654,7 +652,6 @@ function handleLogoUpload(event) {
     reader.readAsDataURL(file);
 }
 
-// ប្រើ FileReader (DataURL) ជំនួស ObjectURL ដើម្បីឱ្យ htmlToImage ថតជាប់រូបផ្ទៃខាងក្រោយ ១០០% លើ Safari/iOS
 function handleBgUpload(event) {
     const file = event.target.files[0];
     if (!file) return;
@@ -906,7 +903,7 @@ async function downloadCard() {
     try {
         const dataUrl = await htmlToImage.toPng(card, { 
             quality: 1.0, 
-            pixelRatio: 4, 
+            pixelRatio: 3, 
             width: 360,
             height: 540,
             style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } 
@@ -921,6 +918,7 @@ async function downloadCard() {
     }
 }
 
+// 🚀 កែសម្រួលប្រព័ន្ធ Print A4 Grid ដោយប្រើ pixelRatio: 2 ដើម្បីការពារ Memory Crash
 async function printA4Grid() {
     let win = window.open('', '_blank');
     if (!win) {
@@ -948,7 +946,7 @@ async function printA4Grid() {
         win.document.write(`
         <html><head><title>SKM Batch A4 Print</title>
         <style>
-            @page { size: A4; margin: 5mm; }
+            @page { size: A4 portrait; margin: 5mm; }
             body { margin: 0; padding: 0; display: grid; grid-template-columns: repeat(${cols}, 1fr); grid-auto-rows: minmax(min-content, max-content); gap: 4mm; align-items: center; justify-items: center; }
             img { max-width: 100%; height: auto; object-fit: contain; box-shadow: 0 0 5px rgba(0,0,0,0.1); border-radius: 12px; page-break-inside: avoid; image-rendering: high-quality; image-rendering: -webkit-optimize-contrast; }
         </style></head><body>`);
@@ -957,16 +955,16 @@ async function printA4Grid() {
         if (autoNumbering && autoLimit < tableCount) {
             document.getElementById('tableInput').value = "";
             updateQR();
-            await new Promise(r => setTimeout(r, 200));
-            blankDataUrl = await htmlToImage.toPng(card, { quality: 1.0, pixelRatio: 4, width: 360, height: 540, style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } });
+            await new Promise(r => setTimeout(r, 150));
+            blankDataUrl = await htmlToImage.toPng(card, { quality: 0.95, pixelRatio: 2, width: 360, height: 540, style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } });
         }
 
         let identicalDataUrl = "";
         if (!autoNumbering) {
             document.getElementById('tableInput').value = originalTableInput;
             updateQR();
-            await new Promise(r => setTimeout(r, 200));
-            identicalDataUrl = await htmlToImage.toPng(card, { quality: 1.0, pixelRatio: 4, width: 360, height: 540, style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } });
+            await new Promise(r => setTimeout(r, 150));
+            identicalDataUrl = await htmlToImage.toPng(card, { quality: 0.95, pixelRatio: 2, width: 360, height: 540, style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } });
         }
 
         for (let i = 1; i <= tableCount; i++) {
@@ -975,11 +973,11 @@ async function printA4Grid() {
                     let displayVal = originalTableInput ? originalTableInput + " " + i : i.toString();
                     document.getElementById('tableInput').value = displayVal; 
                     updateQR();
-                    await new Promise(r => setTimeout(r, 200)); 
+                    await new Promise(r => setTimeout(r, 120)); 
                     
                     let dataUrl = await htmlToImage.toPng(card, { 
-                        quality: 1.0, 
-                        pixelRatio: 4, 
+                        quality: 0.95, 
+                        pixelRatio: 2, 
                         width: 360,
                         height: 540,
                         style: { transform: 'scale(1)', transformOrigin: 'top left', margin: '0' } 
@@ -1001,7 +999,7 @@ async function printA4Grid() {
             updateQR();
         }
         
-        setTimeout(() => { win.print(); }, 1500); 
+        setTimeout(() => { win.print(); }, 1200); 
     } catch (error) {
         console.error(error);
         showToast('❌ មានបញ្ហាក្នុងការរៀបចំ Grid Print');
@@ -1013,6 +1011,5 @@ async function printA4Grid() {
 
 window.onload = initGenerator;
 </script>
-
 </body>
 </html>
