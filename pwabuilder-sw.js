@@ -1,5 +1,6 @@
 // pwabuilder-sw.js
-const CACHE_NAME = "skm-integrate-pos-offline-v5";
+// ⚡ ធ្វើបច្ចុប្បន្នភាពទៅ v6 ដើម្បីបង្ខំឱ្យ Browser សម្អាត Cache ចាស់ៗចោល
+const CACHE_NAME = "skm-integrate-pos-offline-v6";
 
 // បញ្ជីឯកសារទាំងអស់ក្នុងប្រព័ន្ធដែលត្រូវរក្សាទុកសម្រាប់ប្រើប្រាស់ពេលគ្មានអ៊ីនធឺណិត (Offline Mode)
 const FILES_TO_CACHE = [
@@ -25,6 +26,7 @@ const FILES_TO_CACHE = [
   "./logo1.png"
 ];
 
+// ១. ដំណាក់កាល Install: ដោនឡូដ និងផ្ទុកឯកសារទាំងអស់ចូល Cache
 self.addEventListener("install", (evt) => {
   evt.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
@@ -33,27 +35,33 @@ self.addEventListener("install", (evt) => {
       );
     })
   );
+  // បង្ខំឱ្យ Service Worker ថ្មីចូលកាន់តំណែងភ្លាមៗដោយមិនបាច់រង់ចាំបិទ Tab
   self.skipWaiting();
 });
 
+// ២. ដំណាក់កាល Activate: លុប Cache កំណែចាស់ៗចោលទាំងអស់
 self.addEventListener("activate", (evt) => {
   evt.waitUntil(
     caches.keys().then((keyList) => {
       return Promise.all(
         keyList.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log("🧹 កំពុងលុប Cache ចាស់:", key);
             return caches.delete(key);
           }
         })
       );
     })
   );
+  // គ្រប់គ្រងគ្រប់ផ្ទាំងទំព័រទាំងអស់ភ្លាមៗ
   self.clients.claim();
 });
 
+// ៣. ដំណាក់កាល Fetch: ប្រើប្រាស់យុទ្ធសាស្ត្រ Network-First (ទាញពី Server មុន បើដាច់ Network ទើបប្រើ Cache)
 self.addEventListener("fetch", (evt) => {
-  // មិនលូកដៃក្នុងការហៅទិន្នន័យទៅកាន់ Supabase ឬ Telegram API ឡើយ
   const reqUrl = evt.request.url;
+
+  // មិនលូកដៃក្នុងការហៅទិន្នន័យទៅកាន់ Supabase ឬ Telegram API ឡើយ
   if (
     evt.request.method !== "GET" ||
     reqUrl.includes("supabase.co") ||
@@ -63,41 +71,29 @@ self.addEventListener("fetch", (evt) => {
   }
 
   evt.respondWith(
-    // ប្រើ ignoreSearch: true ដើម្បីឱ្យទំព័រដែលមានភ្ជាប់ ?branch=... នៅតែអាចបើក Offline បានធម្មតា
-    caches.match(evt.request, { ignoreSearch: true }).then((cachedResponse) => {
-      if (cachedResponse) {
-        // ទាញយកកំណែថ្មីពីអ៊ីនធឺណិតនៅខាងក្រោយ (Stale-While-Revalidate) ប្រសិនបើមានអ៊ីនធឺណិត
-        fetch(evt.request)
-          .then((networkResponse) => {
-            if (networkResponse && networkResponse.status === 200) {
-              caches.open(CACHE_NAME).then((cache) => {
-                cache.put(evt.request, networkResponse.clone());
-              });
-            }
-          })
-          .catch(() => {});
-        return cachedResponse;
-      }
-
-      return fetch(evt.request)
-        .then((networkResponse) => {
-          if (
-            networkResponse &&
-            networkResponse.status === 200 &&
-            networkResponse.type === "basic"
-          ) {
-            const responseToCache = networkResponse.clone();
-            caches.open(CACHE_NAME).then((cache) => {
-              cache.put(evt.request, responseToCache);
-            });
+    // 🌐 ជំហានទី ១៖ ព្យាយាមទាញយកឯកសារថ្មីពី Network ជាមុនសិន
+    fetch(evt.request)
+      .then((networkResponse) => {
+        // ប្រសិនបើទាញយកពី Network ជោគជ័យ ត្រូវ Update ឯកសារថ្មីនេះចូលក្នុង Cache ភ្លាមៗ
+        if (networkResponse && networkResponse.status === 200 && networkResponse.type === "basic") {
+          const responseToCache = networkResponse.clone();
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(evt.request, responseToCache);
+          });
+        }
+        return networkResponse;
+      })
+      .catch(() => {
+        // 📴 ជំហានទី ២៖ ប្រសិនបើដាច់អ៊ីនធឺណិត (Offline) ទើបទាញយកឯកសារពី Cache មកប្រើ
+        return caches.match(evt.request, { ignoreSearch: true }).then((cachedResponse) => {
+          if (cachedResponse) {
+            return cachedResponse;
           }
-          return networkResponse;
-        })
-        .catch(() => {
+          // ប្រសិនបើរុករកទំព័រផ្សេងមិនឃើញពេល Offline ត្រូវបញ្ជូនទៅ welcome.html
           if (evt.request.mode === "navigate") {
             return caches.match("./welcome.html", { ignoreSearch: true });
           }
         });
-    })
+      })
   );
 });
