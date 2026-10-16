@@ -509,12 +509,11 @@
 
             <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
 
-            <!-- មុខងារ Data Management ថ្មី ដែលមានទាំង Archive និង Backup/Restore All -->
+            <!-- មុខងារ Backup & Restore All -->
             <div class="section-title" style="color: var(--success); border-bottom: 2px dashed var(--success); padding-bottom: 10px;">
-                <i class="fa-solid fa-database"></i> ការគ្រប់គ្រងទិន្នន័យ (Data Management)
+                <i class="fa-solid fa-cloud-arrow-down"></i> ការគ្រប់គ្រងទិន្នន័យ (Data Management)
             </div>
             
-            <!-- កន្លែង Backup & Restore ទាំងអស់ -->
             <div style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-bottom: 15px;">
                 <h3 style="font-size: 16px; color: var(--success); margin-bottom: 8px;"><i class="fa-solid fa-cloud-arrow-down"></i> Backup & Restore (ទិន្នន័យទាំងអស់)</h3>
                 <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">ទាញយកទិន្នន័យប្រព័ន្ធទាំងមូល (ស្តុក, អតិថិជន, វិក្កយបត្រ, ការកំណត់) រក្សាទុកជាឯកសារយោង និងអាចទាញបញ្ចូលមកវិញនៅពេលក្រោយ។</p>
@@ -531,7 +530,7 @@
 
             <!-- មុខងារ Archive សម្អាតទិន្នន័យចាស់ -->
             <div class="section-title" style="color: var(--danger); border-bottom: 2px dashed var(--danger); padding-bottom: 10px;">
-                <i class="fa-solid fa-box-archive"></i> សម្អាត និងពន្លឿនប្រព័ន្ធ (Data Archive)
+                <i class="fa-solid fa-broom"></i> សម្អាត និងពន្លឿនប្រព័ន្ធ (Data Archive)
             </div>
             <div style="background: rgba(239, 68, 68, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--danger);">
                 <h3 style="font-size: 16px; color: var(--danger); margin-bottom: 8px;"><i class="fa-solid fa-broom"></i> សម្អាតទិន្នន័យចាស់ៗ (Data Archive)</h3>
@@ -545,7 +544,7 @@
             </div>
             <div style="background: rgba(59, 130, 246, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed #3b82f6;">
                 <h3 style="font-size: 16px; color: #3b82f6; margin-bottom: 8px;"><i class="fa-solid fa-laptop-code"></i> Download POS Shell (HTML + JS)</h3>
-                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">ប្រមូលយកកូដ HTML, CSS និង Javascript (pos.js, inventory.js, config.js...) ទាំងអស់របស់ប្រព័ន្ធលក់ បញ្ចូលគ្នាជា File តែមួយ (Single File) ដើម្បីទុកជាទម្រង់ដើម (Template)។ ទិន្នន័យលក់នឹងមិនជាប់មកជាមួយទេ។</p>
+                <p style="color: var(--text-muted); font-size: 13px; margin-bottom: 15px;">ប្រមូលយកកូដ HTML, CSS និង Javascript ទាំងអស់របស់ប្រព័ន្ធលក់ បញ្ចូលគ្នាជា File តែមួយ (Single File) ដើម្បីទុកជាទម្រង់ដើម (Template)។ ទិន្នន័យលក់នឹងមិនជាប់មកជាមួយទេ។</p>
                 <button type="button" class="btn-action" style="background: #3b82f6; color: white; padding: 10px 20px; font-weight: bold; border-radius: 8px; cursor: pointer; border: none;" onclick="downloadSystemShell()"><i class="fa-solid fa-download"></i> ទាញយកសំបក POS (1 File)</button>
             </div>
         </div>
@@ -675,7 +674,6 @@
                         </button>
                     </div>
 
-                    <!-- ទម្រង់បញ្ចូលម៉ាស៊ីនថ្មី -->
                     <div id="addPrinterForm" style="display: none; background: rgba(0,0,0,0.02); padding: 12px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 15px;">
                         <input type="text" id="newPrinterName" class="input-st" placeholder="ឈ្មោះម៉ាស៊ីន (ឧ. Kitchen)" style="margin-bottom: 8px; padding: 8px; font-size: 13px;">
                         <select id="newPrinterType" class="input-st" style="margin-bottom: 8px; padding: 8px; font-size: 13px;" onchange="document.getElementById('newPrinterIpContainer').style.display = this.value === 'network' ? 'block' : 'none'">
@@ -744,7 +742,7 @@
 <script>
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
-    // 🔒 ជួសជុលសន្តិសុខ៖ ផ្ទៀងផ្ទាត់យ៉ាងម៉ឺងម៉ាត់ទាំង Store PIN និងសិទ្ធិ Admin
+    // 🔒 ផ្ទៀងផ្ទាត់យ៉ាងម៉ឺងម៉ាត់ទាំង Store PIN និងសិទ្ធិ Admin
     (function verifyAdminAccess() {
         const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
@@ -981,7 +979,7 @@
                 <span>សរុបប្រាក់:</span>
                 <span>$5.50 (22,000 ៛)</span>
             </div>
-            ${qrSrc ? `<div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 8px;"><div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">ស្កេនទូទាត់ប្រាក់</div><img src="${qrSrc}" style="width: ${cfg.qrPx}px; height:${cfg.qrPx}px; object-fit: contain;"></div>` : ''}
+            ${qrSrc ? `<div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 8px;"><div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">ស្កេនទូទាត់ប្រាក់</div><img src="${qrSrc}" style="width: ${cfg.qrPx}px; height: ${cfg.qrPx}px; object-fit: contain;"></div>` : ''}
             <div style="text-align: center; margin-top: 10px; font-weight: bold; font-size: ${Math.max(10, cfg.fontPx - 1)}px;">${footerTxt}</div>
         `;
     }
@@ -1345,7 +1343,7 @@
         try {
             let localSys = {}; let localPosScripts = [];
             try { const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`); if (rawSys) localSys = JSON.parse(rawSys); } catch(e) {}
-            try { const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`); if (rawPos) localPosScripts = JSON.parse(rawPos);} catch(e) {}
+            try { const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`); if (rawPos) localPosScripts = JSON.parse(rawPos); } catch(e) {}
             
             if (localSys.customMenuScripts) menuScripts = localSys.customMenuScripts;
             if (localSys.promoCodes) promoCodesList = localSys.promoCodes;
@@ -1805,11 +1803,13 @@
         } catch (e) { showToast("❌ មានបញ្ហាក្នុងការ Archive: " + e.message, true); }
     }
 
+    // 🚀 កែសម្រួល downloadSystemShell() ដោយប្រើ Replacer function ដើម្បីការពារការធ្លាយកូដ
     async function downloadSystemShell() {
         showToast("កំពុងប្រមូលកូដ និងចងក្រងជា File តែ១... សូមរង់ចាំ!", false);
         try {
             let htmlRaw = await fetch('index.html').then(r => r.text());
             
+            // ១. ទាញយក CSS
             const cssMatch = htmlRaw.match(/<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/gi);
             if (cssMatch) {
                 for (let linkTag of cssMatch) {
@@ -1819,13 +1819,14 @@
                         if (!href.startsWith('http') && !href.startsWith('//')) {
                             try {
                                 const cssContent = await fetch(href).then(r => r.text());
-                                htmlRaw = htmlRaw.replace(linkTag, `<style>\n/* --- ${href} --- */\n${cssContent}\n</style>`);
+                                htmlRaw = htmlRaw.replace(linkTag, () => `<style>\n/* --- ${href} --- */\n${cssContent}\n</style>`);
                             } catch(e) { console.warn('Could not fetch CSS:', href); }
                         }
                     }
                 }
             }
 
+            // ២. ទាញយក JS
             const jsMatch = htmlRaw.match(/<script[^>]*src="([^"]+)"[^>]*><\/script>/gi);
             if (jsMatch) {
                 for (let scriptTag of jsMatch) {
@@ -1834,15 +1835,17 @@
                         const src = srcMatch[1];
                         if (!src.startsWith('http') && !src.startsWith('//')) {
                             try {
-                                const jsContent = await fetch(src).then(r => r.text());
-                                htmlRaw = htmlRaw.replace(scriptTag, `<script>\n/* --- ${src} --- */\n${jsContent}\n<\/script>`);
+                                let jsContent = await fetch(src).then(r => r.text());
+                                jsContent = jsContent.replace(/<\/script>/gi, '<\\/script>');
+                                htmlRaw = htmlRaw.replace(scriptTag, () => `<script>\n/* --- ${src} --- */\n${jsContent}\n<\/script>`);
                             } catch(e) { console.warn('Could not fetch JS:', src); }
                         }
                     }
                 }
             }
 
-            const blob = new Blob([htmlRaw], { type: 'text/html' });
+            // ៣. បង្កើត និងបញ្ជាឱ្យ Download
+            const blob = new Blob([htmlRaw], { type: 'text/html;charset=utf-8' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
