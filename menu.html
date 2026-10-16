@@ -697,7 +697,7 @@
 
             let totalTables = parseInt(sys.totalTables) || 20;
             let prefix = sys.tablePrefix || 'តុលេខ';
-            let customTablesRaw = sys.customTablesList !== undefined ? sys.customTablesList : 'VIP 1, VIP 2, VIP 3';
+            let customTablesRaw = sys.customTables !== undefined ? sys.customTables : (sys.customTablesList !== undefined ? sys.customTablesList : 'VIP 1, VIP 2, VIP 3');
             let customList = String(customTablesRaw).split(',').map(s => s.trim()).filter(Boolean);
 
             let html = '<option value="">-- ជ្រើសរើសតុ / ទិញខ្ចប់ (Takeaway) --</option>';
@@ -796,7 +796,7 @@
             if (!badgeContainer) return;
             if (singlePromoTimer) clearInterval(singlePromoTimer);
 
-            if (sys.hidePromoOnBanner) {
+            if (sys.hideBannerPromoBadge || sys.hidePromoOnBanner) {
                 badgeContainer.style.display = 'none';
                 badgeContainer.innerHTML = '';
                 return;
@@ -820,7 +820,8 @@
                 showOnePromo(currentPromoIdx);
 
                 if (activePromos.length > 1) {
-                    const intervalSec = (parseInt(sys.popupRepeatMinutes) > 0) ? (parseInt(sys.popupRepeatMinutes) * 60) : 6;
+                    const repeatCfg = parseInt(sys.popupRepeatInterval || sys.popupRepeatMinutes) || 0;
+                    const intervalSec = (repeatCfg > 0) ? (repeatCfg * 60) : 6;
                     singlePromoTimer = setInterval(() => {
                         currentPromoIdx = (currentPromoIdx + 1) % activePromos.length;
                         showOnePromo(currentPromoIdx);
@@ -912,7 +913,7 @@
         function closeWelcomePopup() {
             document.getElementById('welcomePopupModal').style.display = 'none';
             // Auto-repeat popup setup
-            const intervalMin = parseInt(sys.popupRepeatMinutes) || 0;
+            const intervalMin = parseInt(sys.popupRepeatInterval || sys.popupRepeatMinutes) || 0;
             if (intervalMin > 0 && sys.toggleWelcomePopup && sys.welcomeImg) {
                 setTimeout(() => {
                     document.getElementById('welcomePopupModal').style.display = 'flex';
@@ -970,6 +971,54 @@
                     
                     window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
                     window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
+
+                    const localShopName = localStorage.getItem(`ks2_${BRANCH}_shop_name`) || 'Shop Name';
+                    const localShopLogo = localStorage.getItem(`ks2_${BRANCH}_shop_logo`) || '';
+                    document.getElementById('lpName').innerText = localShopName;
+                    document.getElementById('splashName').innerText = localShopName;
+                    if (localShopLogo) document.getElementById('lpLogo').src = localShopLogo;
+
+                    const promoBanner = document.getElementById('promoBannerWrapper');
+                    const slider = document.getElementById('bannerSlider');
+                    const dotsContainer = document.getElementById('bannerDots');
+                    if (sys.menuBanners && sys.menuBanners.length > 0) bannerBgs = sys.menuBanners.filter(b => b && b.trim() !== '');
+                    else if (sys.menuBanner) bannerBgs = [sys.menuBanner];
+                    if (bannerBgs.length > 0) {
+                        promoBanner.style.display = 'block';
+                        slider.innerHTML = bannerBgs.map(b => `<img src="${b}" alt="Promo Banner" onclick="openLightbox(this.src)" onerror="this.src='https://placehold.co/800x400/1d162d/ffffff?text=Promo+Banner'">`).join('');
+                        if (bannerBgs.length > 1) {
+                            dotsContainer.innerHTML = bannerBgs.map((_, i) => `<div class="slider-dot ${i===0?'active':''}" onclick="curBannerIdx=${i}; document.getElementById('bannerSlider').style.transform='translateX(-${i*100}%)'; document.querySelectorAll('.slider-dot').forEach((d,idx)=>d.classList.toggle('active', idx===${i}));"></div>`).join('');
+                            clearInterval(bannerTimerInterval);
+                            bannerTimerInterval = setInterval(() => {
+                                curBannerIdx = (curBannerIdx + 1) % bannerBgs.length;
+                                slider.style.transform = `translateX(-${curBannerIdx * 100}%)`;
+                                document.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === curBannerIdx));
+                            }, 3500);
+                        } else dotsContainer.innerHTML = '';
+                    }
+
+                    const localQr = sys.menuQR || localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '';
+                    const shopQr = document.getElementById('shopQrImg');
+                    if (shopQr && localQr) {
+                        shopQr.src = localQr;
+                        document.getElementById('qrBoxContainer').style.display = 'block';
+                    } else if (document.getElementById('qrBoxContainer')) {
+                        document.getElementById('qrBoxContainer').style.display = 'none';
+                    }
+
+                    if (sys.chatLink) dynamicChatLink = sys.chatLink;
+                    if (sys.toggleWelcomePopup && sys.welcomeImg) {
+                        document.getElementById('welcomePopupImg').src = sys.welcomeImg;
+                        document.getElementById('welcomePopupModal').style.display = 'flex';
+                    }
+                    if (sys.socialLabel && sys.socialLink) {
+                        const socialEl = document.getElementById('lpSocialLink');
+                        socialEl.href = sys.socialLink;
+                        socialEl.style.display = 'flex';
+                        const iconEl = document.getElementById('lpSocialIcon');
+                        iconEl.className = sys.socialIcon || 'fa-brands fa-youtube';
+                        document.getElementById('lpSocialLabel').innerText = sys.socialLabel;
+                    }
 
                     const localTicker = sys.tickerText || sys.tickerNews || '';
                     if ((sys.toggleTicker || sys.tickerNews) && localTicker) {

@@ -840,7 +840,7 @@ window.reprintInvoice = function() {
     if (typeof window.executePrint === 'function') {
         window.executePrint(receiptHTML);
     } else {
-        const printWindow = window.open('', '', 'width=300,height=600');
+        const printWindow = window.open('', '', 'width=380,height=650');
         if(!printWindow) return;
         printWindow.document.write('<html><head><title>Print Receipt</title>');
         printWindow.document.write('<style>@media print { body { width: 80mm; font-family: sans-serif; } table { width: 100%; border-collapse: collapse; } }</style>');
@@ -861,12 +861,25 @@ window.downloadInvoicePNG = function() {
         return notifyFinanceUser("❌ បណ្ណាល័យ html2canvas មិនទាន់បានផ្ទុកទេ!", "បរាជ័យ", true);
     }
 
-    html2canvas(captureArea, { scale: 2, backgroundColor: '#ffffff' }).then(canvas => {
+    const cfg = typeof window.getActiveReceiptConfig === 'function'
+        ? window.getActiveReceiptConfig()
+        : { downloadWidthPx: 380, downloadScale: 2, fontPx: 12 };
+
+    const origMaxWidth = captureArea.style.maxWidth;
+    const origWidth = captureArea.style.width;
+    captureArea.style.maxWidth = `${cfg.downloadWidthPx || 380}px`;
+    captureArea.style.width = `${cfg.downloadWidthPx || 380}px`;
+
+    html2canvas(captureArea, { scale: cfg.downloadScale || 2, backgroundColor: '#ffffff', useCORS: true }).then(canvas => {
+        captureArea.style.maxWidth = origMaxWidth;
+        captureArea.style.width = origWidth;
         const link = document.createElement('a');
         link.download = `Invoice_${window.currentActiveInvoiceId || 'Receipt'}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
     }).catch(err => {
+        captureArea.style.maxWidth = origMaxWidth;
+        captureArea.style.width = origWidth;
         notifyFinanceUser("❌ មានបញ្ហាក្នុងការទាញយករូបភាព: " + err.message, "បរាជ័យ", true);
     });
 };

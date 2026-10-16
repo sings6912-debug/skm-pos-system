@@ -69,9 +69,8 @@ window.showToast = function(msg, isError = false) {
 window.playBeep = function() { 
     if(window.sysSettings && window.sysSettings.enableSound === false) return;
     try { 
-        const AudioContext = window.AudioContext || window.webkitAudioContext; 
-        if(!AudioContext) return; 
-        const ctx = new AudioContext(); 
+        const ctx = typeof window.getSharedAudioContext === 'function' ? window.getSharedAudioContext() : null; 
+        if(!ctx) return; 
         const osc = ctx.createOscillator(); 
         const gain = ctx.createGain(); 
         osc.connect(gain); 
@@ -87,9 +86,8 @@ window.playBeep = function() {
 window.playOrderSound = function() {
     if(window.sysSettings && window.sysSettings.enableSound === false) return;
     try {
-        const AudioContext = window.AudioContext || window.webkitAudioContext;
-        if(!AudioContext) return;
-        const ctx = new AudioContext();
+        const ctx = typeof window.getSharedAudioContext === 'function' ? window.getSharedAudioContext() : null;
+        if(!ctx) return;
         for (let i = 0; i < 3; i++) {
             setTimeout(() => {
                 const osc = ctx.createOscillator();
@@ -1491,7 +1489,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             if (cloudData.sysSettings) {
                 if (!window.sysSettings) window.sysSettings = {};
                 // រក្សាទុកការកំណត់ពិសេសរបស់ admin_settings.html ដូចជា Promo Codes, Menu Scripts, Banners
-                const preserveKeys = ['customMenuScripts', 'promoCodes', 'menuBanners', 'menuBanner', 'menuThemeColor', 'menuQR', 'chatLink', 'socialIcon', 'socialLabel', 'socialLink', 'toggleWelcomePopup', 'welcomeImg', 'toggleStoreHours', 'openTime', 'closeTime', 'toggleTableFeature', 'totalTables', 'tablePrefix', 'orderTelegramBotToken', 'orderTelegramChatId', 'serviceTelegramBotToken', 'serviceTelegramChatId'];
+                const preserveKeys = ['customMenuScripts', 'promoCodes', 'menuBanners', 'menuBanner', 'menuThemeColor', 'menuQR', 'chatLink', 'socialIcon', 'socialLabel', 'socialLink', 'toggleWelcomePopup', 'welcomeImg', 'toggleStoreHours', 'openTime', 'closeTime', 'toggleTableFeature', 'totalTables', 'tablePrefix', 'customTables', 'customTablesList', 'hideBannerPromoBadge', 'hidePromoOnBanner', 'popupRepeatInterval', 'popupRepeatMinutes', 'receiptSize', 'customReceiptConfig', 'customPrinterPresets', 'deptPrinters', 'categoryRouting', 'toggleMultiPrinter', 'printAllSync', 'orderTelegramBotToken', 'orderTelegramChatId', 'serviceTelegramBotToken', 'serviceTelegramChatId'];
                 preserveKeys.forEach(k => {
                     if (window.sysSettings[k] === undefined && cloudData.sysSettings[k] !== undefined) {
                         window.sysSettings[k] = cloudData.sysSettings[k];
@@ -1862,6 +1860,29 @@ window.loadSettingsToUI = function() {
     if(document.getElementById('setTickerText')) {
         document.getElementById('setTickerText').value = window.sysSettings.tickerNews || window.sysSettings.tickerText || '';
     }
+    const receiptSel = document.getElementById('setReceiptSize');
+    if (receiptSel) {
+        receiptSel.querySelectorAll('option[data-custom-preset="true"]').forEach(o => o.remove());
+        if (Array.isArray(window.sysSettings.customPrinterPresets)) {
+            window.sysSettings.customPrinterPresets.forEach(p => {
+                if (p && p.id && p.name) {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.setAttribute('data-custom-preset', 'true');
+                    opt.textContent = `🖨️ ${p.name} (${p.paperMm}mm)`;
+                    receiptSel.appendChild(opt);
+                }
+            });
+        }
+        if (window.sysSettings.receiptSize === 'custom' && ![...receiptSel.options].some(o => o.value === 'custom')) {
+            const cOpt = document.createElement('option');
+            cOpt.value = 'custom';
+            cOpt.setAttribute('data-custom-preset', 'true');
+            cOpt.textContent = '⚙️ ខ្នាតសេរេផ្ទាល់ខ្លួន (Custom)';
+            receiptSel.appendChild(cOpt);
+        }
+        receiptSel.value = window.sysSettings.receiptSize || '80mm';
+    }
 };
 
 window.saveSysSettings = async function() { 
@@ -1905,6 +1926,21 @@ window.saveSysSettings = async function() {
     
     if(document.getElementById('setEnableSound')) window.sysSettings.enableSound = document.getElementById('setEnableSound').checked;
     if(document.getElementById('setReceiptFooter')) window.sysSettings.receiptFooter = document.getElementById('setReceiptFooter').value.trim();
+    if(document.getElementById('setReceiptSize')) {
+        const selSize = document.getElementById('setReceiptSize').value || '80mm';
+        window.sysSettings.receiptSize = selSize;
+        const defaultPresets = {
+            '80mm': { mode: '80mm', paperMm: 80, bodyMm: 76, padMm: 4, downloadWidthPx: 380, downloadScale: 2, fontPx: 12, titlePx: 16, logoPx: 100, qrPx: 170 },
+            '58mm': { mode: '58mm', paperMm: 57, bodyMm: 54, padMm: 2, downloadWidthPx: 260, downloadScale: 2, fontPx: 10, titlePx: 13, logoPx: 65, qrPx: 125 },
+            'A4':   { mode: 'A4', paperMm: 210, bodyMm: 190, padMm: 10, downloadWidthPx: 720, downloadScale: 2, fontPx: 14, titlePx: 20, logoPx: 120, qrPx: 190 }
+        };
+        if (defaultPresets[selSize]) {
+            window.sysSettings.customReceiptConfig = defaultPresets[selSize];
+        } else if (selSize.startsWith('preset_') && Array.isArray(window.sysSettings.customPrinterPresets)) {
+            const foundPreset = window.sysSettings.customPrinterPresets.find(p => p && p.id === selSize);
+            if (foundPreset) window.sysSettings.customReceiptConfig = { ...foundPreset, mode: selSize };
+        }
+    }
 
     if(document.getElementById('setCondition')) window.sysSettings.condition = document.getElementById('setCondition').checked;
     if(document.getElementById('setConditionList')) window.sysSettings.conditionList = document.getElementById('setConditionList').value || 'MISB, Loose, New, Used';

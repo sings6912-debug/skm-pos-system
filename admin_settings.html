@@ -1014,6 +1014,30 @@
             if (localSys.promoCodes) promoCodesList = localSys.promoCodes;
             if (localPosScripts.length > 0) posScripts = localPosScripts;
             
+            if (localSys.menuThemeColor) document.getElementById('setMenuThemeColor').value = localSys.menuThemeColor;
+            if (localSys.menuBanners && localSys.menuBanners.length > 0) adminBanners = localSys.menuBanners;
+            else if (localSys.menuBanner) adminBanners = [localSys.menuBanner];
+            renderAdminBanners();
+
+            const localQr = localSys.menuQR || localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '';
+            if (localQr) {
+                document.getElementById('setMenuQR').value = localQr;
+                const qp = document.getElementById('menuQRPreview'); qp.src = localQr; qp.style.display = 'block';
+                document.getElementById('qrPreviewContainer').style.display = 'block';
+            }
+            if (localSys.chatLink) document.getElementById('setChatLink').value = localSys.chatLink;
+            if (localSys.socialIcon) document.getElementById('setSocialIcon').value = localSys.socialIcon;
+            if (localSys.socialLabel) document.getElementById('setSocialLabel').value = localSys.socialLabel;
+            if (localSys.socialLink) document.getElementById('setSocialLink').value = localSys.socialLink;
+
+            document.getElementById('toggleWelcomePopup').checked = !!localSys.toggleWelcomePopup;
+            document.getElementById('setWelcomeImg').value = localSys.welcomeImg || '';
+            if (localSys.welcomeImg) updateWelcomePreview(localSys.welcomeImg);
+            document.getElementById('toggleStoreHours').checked = !!localSys.toggleStoreHours;
+            document.getElementById('setOpenTime').value = localSys.openTime || '08:00';
+            document.getElementById('setCloseTime').value = localSys.closeTime || '21:00';
+            document.getElementById('togglePreorder').checked = localSys.preorder !== undefined ? localSys.preorder : true;
+
             if (localSys.orderTelegramBotToken) document.getElementById('setOrderTelegramBotToken').value = localSys.orderTelegramBotToken;
             if (localSys.orderTelegramChatId) document.getElementById('setOrderTelegramChatId').value = localSys.orderTelegramChatId;
             if (localSys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = localSys.serviceTelegramBotToken;
@@ -1025,15 +1049,16 @@
             document.getElementById('setTotalTables').value = localSys.totalTables || 20;
             document.getElementById('setTablePrefix').value = localSys.tablePrefix || 'តុលេខ';
             if (document.getElementById('setCustomTables')) {
-                document.getElementById('setCustomTables').value = localSys.customTables !== undefined ? localSys.customTables : 'VIP 1, VIP 2, VIP 3';
+                const cTables = localSys.customTables !== undefined ? localSys.customTables : (localSys.customTablesList !== undefined ? localSys.customTablesList : 'VIP 1, VIP 2, VIP 3');
+                document.getElementById('setCustomTables').value = cTables;
             }
             if (document.getElementById('toggleHideBannerPromoBadge')) {
-                document.getElementById('toggleHideBannerPromoBadge').checked = !!localSys.hideBannerPromoBadge;
+                document.getElementById('toggleHideBannerPromoBadge').checked = !!(localSys.hideBannerPromoBadge || localSys.hidePromoOnBanner);
             }
             if (document.getElementById('setPopupRepeatInterval')) {
-                document.getElementById('setPopupRepeatInterval').value = localSys.popupRepeatInterval ? String(localSys.popupRepeatInterval) : '1';
+                const pInt = localSys.popupRepeatInterval || localSys.popupRepeatMinutes || '1';
+                document.getElementById('setPopupRepeatInterval').value = String(pInt);
             }
-            if (localSys.welcomeImg) updateWelcomePreview(localSys.welcomeImg);
 
             if (localSys.customPrinterPresets && Array.isArray(localSys.customPrinterPresets)) {
                 customPrinterPresets = localSys.customPrinterPresets;
@@ -1060,7 +1085,12 @@
             
             try {
                 let cats = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_categories`));
-                if (cats && Array.isArray(cats)) posCategories = cats;
+                if (cats && Array.isArray(cats) && cats.length > 0) {
+                    posCategories = cats;
+                } else {
+                    let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`)) || [];
+                    posCategories = [...new Set(localInv.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))];
+                }
             } catch(e) {}
             
             renderDeptPrinters();
@@ -1137,7 +1167,11 @@
                     if (document.getElementById('toggleMultiPrinter')) document.getElementById('toggleMultiPrinter').checked = !!sys.toggleMultiPrinter;
                     if (document.getElementById('printAllSync')) document.getElementById('printAllSync').checked = !!sys.printAllSync;
                     
-                    if (d.categories && Array.isArray(d.categories)) posCategories = d.categories;
+                    if (d.categories && Array.isArray(d.categories) && d.categories.length > 0) {
+                        posCategories = d.categories;
+                    } else if (d.inventory && Array.isArray(d.inventory)) {
+                        posCategories = [...new Set(d.inventory.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))];
+                    }
                     renderDeptPrinters();
 
                     if(sys.orderTelegramBotToken || d.telegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken || d.telegramBotToken || '';
@@ -1170,7 +1204,9 @@
             d.sysSettings.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
             d.sysSettings.menuBanners = adminBanners.filter(b => b.trim() !== '');
             d.sysSettings.promoCodes = promoCodesList;
-            d.sysSettings.hideBannerPromoBadge = document.getElementById('toggleHideBannerPromoBadge')?.checked || false;
+            const hideBadgeVal = document.getElementById('toggleHideBannerPromoBadge')?.checked || false;
+            d.sysSettings.hideBannerPromoBadge = hideBadgeVal;
+            d.sysSettings.hidePromoOnBanner = hideBadgeVal;
             d.sysSettings.menuQR = document.getElementById('setMenuQR').value.trim();
             d.sysSettings.chatLink = document.getElementById('setChatLink').value.trim();
             d.sysSettings.socialIcon = document.getElementById('setSocialIcon').value;
@@ -1184,7 +1220,9 @@
 
             d.sysSettings.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
             d.sysSettings.welcomeImg = document.getElementById('setWelcomeImg').value.trim();
-            d.sysSettings.popupRepeatInterval = parseInt(document.getElementById('setPopupRepeatInterval')?.value || '1') || 1;
+            const repeatMinVal = parseInt(document.getElementById('setPopupRepeatInterval')?.value || '1') || 1;
+            d.sysSettings.popupRepeatInterval = repeatMinVal;
+            d.sysSettings.popupRepeatMinutes = repeatMinVal;
             d.sysSettings.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
             d.sysSettings.openTime = document.getElementById('setOpenTime').value;
             d.sysSettings.closeTime = document.getElementById('setCloseTime').value;
@@ -1193,7 +1231,9 @@
             d.sysSettings.toggleTableFeature = document.getElementById('toggleTableFeature').checked;
             d.sysSettings.totalTables = parseInt(document.getElementById('setTotalTables').value) || 20;
             d.sysSettings.tablePrefix = document.getElementById('setTablePrefix').value.trim() || 'តុលេខ';
-            d.sysSettings.customTables = document.getElementById('setCustomTables') ? document.getElementById('setCustomTables').value.trim() : 'VIP 1, VIP 2, VIP 3';
+            const customTablesVal = document.getElementById('setCustomTables') ? document.getElementById('setCustomTables').value.trim() : 'VIP 1, VIP 2, VIP 3';
+            d.sysSettings.customTables = customTablesVal;
+            d.sysSettings.customTablesList = customTablesVal;
 
             // 🖨️ រក្សាទុកការកំណត់ខ្នាតម៉ាស៊ីនព្រីន និងទំហំទាញយករូបវិក្កយបត្រ (Tab 8)
             if (document.getElementById('setAdminReceiptSize')) {

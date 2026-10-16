@@ -466,11 +466,55 @@ window.processPreorder = function() {
     window.checkout('preorder', depositUsd, depositRiel, 0, 0); 
 };
 
-window.executePrint = function(htmlContent) {
-    const printWindow = window.open('', '', 'width=300,height=600');
-    if(!printWindow) return;
-    printWindow.document.write('<html><head><title>Print Receipt</title>');
+window.getActiveReceiptConfig = function() {
+    const defaults = {
+        '80mm': { mode: '80mm', paperMm: 80, bodyMm: 76, padMm: 4, downloadWidthPx: 380, downloadScale: 2, fontPx: 12, titlePx: 16, logoPx: 100, qrPx: 170 },
+        '58mm': { mode: '58mm', paperMm: 57, bodyMm: 54, padMm: 2, downloadWidthPx: 260, downloadScale: 2, fontPx: 10, titlePx: 13, logoPx: 65, qrPx: 125 },
+        'A4':   { mode: 'A4', paperMm: 210, bodyMm: 190, padMm: 10, downloadWidthPx: 720, downloadScale: 2, fontPx: 14, titlePx: 20, logoPx: 120, qrPx: 190 }
+    };
+    const sys = window.sysSettings || {};
+    const sizeKey = sys.receiptSize || '80mm';
+    if (sys.customReceiptConfig && typeof sys.customReceiptConfig === 'object') {
+        if (sizeKey === 'custom' || sys.customReceiptConfig.mode === sizeKey) {
+            return Object.assign({}, defaults['80mm'], sys.customReceiptConfig);
+        }
+    }
+    if (sizeKey.startsWith('preset_') && Array.isArray(sys.customPrinterPresets)) {
+        const found = sys.customPrinterPresets.find(p => p && p.id === sizeKey);
+        if (found) return Object.assign({}, defaults['80mm'], found);
+    }
+    return defaults[sizeKey] || defaults['80mm'];
+};
+
+window.executePrint = function(htmlContent, customTitle = 'Print Receipt') {
+    const cfg = window.getActiveReceiptConfig();
+    const isLarge = cfg.paperMm >= 150 || cfg.mode === 'A4';
+    const winFeatures = isLarge ? 'width=850,height=900' : 'width=380,height=650';
+    const pageCss = cfg.mode === 'A4'
+        ? `@page { size: A4 portrait; margin: ${cfg.padMm}mm; }`
+        : `@page { size: ${cfg.paperMm}mm auto; margin: 0; }`;
+
+    const printWindow = window.open('', '', winFeatures);
+    if (!printWindow) {
+        const fallbackArea = document.getElementById('printReceiptArea');
+        if (fallbackArea) {
+            fallbackArea.style.maxWidth = `${cfg.bodyMm}mm`;
+            fallbackArea.style.fontSize = `${cfg.fontPx}px`;
+            fallbackArea.innerHTML = htmlContent;
+            window.print();
+        }
+        return;
+    }
+    printWindow.document.write(`<html><head><title>${customTitle}</title>`);
     printWindow.document.write('<link rel="stylesheet" href="print.css" type="text/css">');
+    printWindow.document.write(`<style>
+        ${pageCss}
+        body { margin: 0; padding: 0; background: #fff; color: #000; font-family: 'Kantumruy Pro', 'Battambang', sans-serif; }
+        #receipt-container { width: ${cfg.bodyMm}mm; max-width: 100%; margin: 0 auto; padding: ${cfg.padMm}mm; font-size: ${cfg.fontPx}px; line-height: 1.4; box-sizing: border-box; }
+        #receipt-container h2 { font-size: ${cfg.titlePx}px !important; }
+        #receipt-container img.receipt-logo { width: ${cfg.logoPx}px !important; height: ${cfg.logoPx}px !important; }
+        #receipt-container img.receipt-qr { width: ${cfg.qrPx}px !important; height: ${cfg.qrPx}px !important; }
+    </style>`);
     printWindow.document.write('</head><body>');
     printWindow.document.write('<div id="receipt-container">');
     printWindow.document.write(htmlContent);
@@ -503,7 +547,8 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     let timestampNow = Date.now(); 
 
     let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
-    if(window.shopLogo) receiptHTML += `<img src="${window.shopLogo}" style="width: 120px; height: 120px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
+    const rCfg = window.getActiveReceiptConfig();
+    if(window.shopLogo) receiptHTML += `<img class="receipt-logo" src="${window.shopLogo}" style="width: ${rCfg.logoPx}px; height: ${rCfg.logoPx}px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
     receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.shopName}</h2>`; 
     if(window.shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${window.shopPhone}</p>`; 
     if(window.shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${window.shopAddress}</p>`; 
@@ -610,7 +655,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
 
     let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
     
-    if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img src="${window.shopQR}" style="width: 180px; height: 180px; object-fit: contain; filter: grayscale(100%);"></div>`;
+    if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img class="receipt-qr" src="${window.shopQR}" style="width: ${rCfg.qrPx}px; height: ${rCfg.qrPx}px; object-fit: contain; filter: grayscale(100%);"></div>`;
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">${footerText}</p>`; 
     
     window.cart = []; 
