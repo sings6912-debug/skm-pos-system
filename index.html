@@ -204,7 +204,6 @@
                             <option value="qty_asc">ស្តុកតិចទៅច្រើន</option>
                             <option value="qty_desc">ស្តុកច្រើនទៅតិច</option>
                         </select>
-                        <!-- បន្ថែមប្រអប់រើសចំនួនទំព័រ Pagination -->
                         <select id="itemsPerPageSelect" class="form-control" onchange="window.changeItemsPerPage(this.value)" style="flex: 1; min-width: 100px; height: 50px;">
                             <option value="10">បង្ហាញ 10</option>
                             <option value="20" selected>បង្ហាញ 20</option>
@@ -226,7 +225,6 @@
                 
                 <div id="productGridContainer"></div>
                 
-                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) -->
                 <div id="inventoryPagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 20px; padding-bottom: 20px;"></div>
             </div>
 
@@ -286,14 +284,12 @@
 
                             <div class="summary-row summary-total"><span id="lblTotalText">សរុបទឹកប្រាក់:</span><span style="text-align:right;"><div id="cartTotalAmount">$0.00</div><div id="cartTotalAmountRiel" style="font-size: var(--fs-14); color: var(--text-muted); font-weight: normal; margin-top: 4px;"></div></span></div>
                             
-                            <!-- ប្រអប់បញ្ចូលឈ្មោះអតិថិជន -->
                             <div id="posCustomerInputContainer" style="background: rgba(128,128,128,0.05); padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px solid var(--border); transition: 0.3s;">
                                 <input type="text" id="posCustomerName" class="form-control" placeholder="ឈ្មោះអតិថិជន (ចាំបាច់បើមិនទាន់ទូទាត់)" list="customerDatalist" onchange="window.autoFillCustomerPhone('pos')" style="margin-bottom: 8px; font-size: var(--fs-13); width: 100%; transition: 0.3s;">
                                 <input type="text" id="posCustomerPhone" class="form-control" placeholder="លេខទូរស័ព្ទ (ជាជម្រើស)" style="font-size: var(--fs-13); width: 100%;">
                                 <datalist id="customerDatalist"></datalist>
                             </div>
 
-                            <!-- ប្រអប់ជ្រើសរើសលេខតុ និងបន្ថែមតុ VIP (Table & VIP Management) -->
                             <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed var(--primary); display: none;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 5px;">
                                     <label style="font-size: var(--fs-13); font-weight: bold; color: var(--text-main); margin: 0;">🪑 ជ្រើសរើសតុ / VIP:</label>
@@ -302,14 +298,12 @@
                                 <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--primary);" onchange="window.handleTableSelectionChange()">
                                     <option value="">-- សូមជ្រើសរើសតុ --</option>
                                 </select>
-                                <!-- ប្រអប់បន្ថែមតុ VIP ឬតុថ្មីភ្លាមៗ -->
                                 <div id="posQuickAddTableBox" style="display: none; margin-top: 8px; gap: 6px; align-items: center;">
                                     <input type="text" id="posNewCustomTableInput" class="form-control" placeholder="ឧ. VIP 1, បន្ទប់ VIP, តុថែម..." style="font-size: 12px; padding: 6px 10px; height: 34px;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.addQuickCustomTable();}">
                                     <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 12px; height: 34px;" onclick="window.addQuickCustomTable()">រក្សាទុក</button>
                                 </div>
                             </div>
 
-                            <!-- ប៊ូតុងគិតលុយ -->
                             <div class="pos-checkout-btns">
                                 <button id="btnCheckoutPreorder" class="btn" style="background: #8b5cf6; color: white; display: none;" onclick="window.validateTableAndProceed('preorder')">📝 កក់ប្រាក់</button>
                                 <button id="btnCheckoutUnpaid" class="btn btn-warning" onclick="window.validateTableAndProceed('unpaid')">📝 រង់ចាំទូទាត់</button>
@@ -330,7 +324,6 @@
                         <input type="datetime-local" step="1" id="invoiceDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     </div>
                     
-                    <!-- បន្ថែម Pagination Select សម្រាប់ Invoices -->
                     <select id="invoiceItemsPerPageSelect" class="form-control" onchange="window.changeInvoiceItemsPerPage(this.value)" style="width: 120px;">
                         <option value="10">បង្ហាញ 10</option>
                         <option value="20" selected>បង្ហាញ 20</option>
@@ -370,7 +363,6 @@
                     </table>
                 </div>
                 
-                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) សម្រាប់ Invoices -->
                 <div id="invoicePagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
                 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 20px;">
@@ -390,7 +382,6 @@
                         <input type="datetime-local" step="1" id="expenseDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderExpenses()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     </div>
 
-                    <!-- បន្ថែម Pagination Select សម្រាប់ Expenses -->
                     <select id="expenseItemsPerPageSelect" class="form-control" onchange="window.changeExpenseItemsPerPage(this.value)" style="width: 120px;">
                         <option value="10">បង្ហាញ 10</option>
                         <option value="20" selected>បង្ហាញ 20</option>
@@ -424,7 +415,6 @@
                     </table>
                 </div>
                 
-                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) សម្រាប់ Expenses -->
                 <div id="expensePagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
 
                 <div style="margin-top: 15px; padding: 15px; background: rgba(0,0,0,0.05); border-radius: 8px; border: 1px solid var(--border); display: flex; justify-content: flex-end;">
@@ -437,7 +427,6 @@
                 <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
                     <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceCustomerSearch ? window.debounceCustomerSearch() : window.renderCustomers()" style="flex: 1; min-width: 200px;">
                     
-                    <!-- បន្ថែម Pagination Select សម្រាប់ Customers -->
                     <select id="customerItemsPerPageSelect" class="form-control" onchange="window.changeCustomerItemsPerPage(this.value)" style="width: 120px;">
                         <option value="10">បង្ហាញ 10</option>
                         <option value="20" selected>បង្ហាញ 20</option>
@@ -475,7 +464,6 @@
                     </table>
                 </div>
                 
-                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) សម្រាប់ Customers -->
                 <div id="customerPagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
             </div>
 
@@ -489,7 +477,6 @@
                         <input type="datetime-local" step="1" id="historyDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
                     </div>
                     
-                    <!-- បន្ថែម Pagination Select សម្រាប់ History Log -->
                     <select id="historyItemsPerPageSelect" class="form-control" onchange="window.changeHistoryItemsPerPage(this.value)" style="width: 120px;">
                         <option value="10">បង្ហាញ 10</option>
                         <option value="20" selected>បង្ហាញ 20</option>
@@ -524,7 +511,6 @@
                     </table>
                 </div>
                 
-                <!-- ទីតាំងបង្ហាញប៊ូតុងកាត់ទំព័រ (Pagination) សម្រាប់ History Log -->
                 <div id="historyPagination" style="display: flex; justify-content: center; align-items: center; gap: 15px; margin-top: 15px;"></div>
             </div>
 
@@ -606,7 +592,6 @@
                             <textarea id="setReceiptFooter" class="form-control" rows="2" placeholder="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
                         </div>
 
-                        <!-- 🖨️ ជម្រើសទំហំក្រដាសព្រីន និងទាញយករូបវិក្កយបត្រ (80mm, 57x40mm, A4) -->
                         <div style="margin-top: 18px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
                             <label for="setReceiptSize" style="font-size: var(--fs-15);"><strong style="color:var(--text-main);">🖨️ ទំហំក្រដាសវិក្កយបត្រ (ព្រីន & ទាញយករូប)៖</strong></label>
                             <select id="setReceiptSize" class="form-control" style="width: 260px; font-weight: bold; border-color: var(--primary);" onchange="window.saveSysSettings()">
@@ -691,13 +676,11 @@
                         
                         <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 10px;">ផ្នែកនេះត្រូវបានចាក់សោរជាពិសេស។ សូមចុចប៊ូតុងដោះសោខាងលើដើម្បីបង្ហាញប៊ូតុងគ្រប់គ្រង។</p>
                         
-                        <!-- ប្រអប់វាយពាក្យសម្ងាត់ដោះសោ (Inline Password Unlock Box) -->
                         <div id="quickToolsPassBox" style="display: none; gap: 10px; align-items: center; margin-top: 12px; margin-bottom: 12px; background: rgba(6, 182, 212, 0.08); padding: 12px; border-radius: 10px; border: 1px dashed #06b6d4;">
                             <input type="password" id="quickToolsMasterPassInput" class="form-control" placeholder="🔐 បញ្ចូលលេខកូដសម្ងាត់ពិសេស (Master Password)..." style="flex: 1;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.verifyQuickToolsPass();}">
                             <button type="button" class="btn btn-primary" onclick="window.verifyQuickToolsPass()">✅ យល់ព្រម</button>
                         </div>
 
-                        <!-- ផ្នែកប៊ូតុងដែលត្រូវលាក់ (Display: None) -->
                         <div id="protectedQuickToolsPanel" style="display: none; margin-top: 15px;">
                             <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px;">
                                 <button type="button" class="btn" style="background: #06b6d4; color: #fff; padding: 14px; justify-content: center;" onclick="window.open('admin_settings.html?branch=' + (window.SHOP_BRANCH_ID || 'branch_1'), '_blank')">⚙️ គ្រប់គ្រង Digital Menu</button>
@@ -715,7 +698,7 @@
                 <div style="display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: auto;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center;">
                         <h1 style="color: var(--primary); font-size: var(--fs-28); margin-bottom: 5px;">SKM <span style="color: var(--warning);">INTEGRATE</span></h1>
-                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 8.0 (Multi-Size Print, Debounce & Performance Edition)</p>
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 8.0 (Multi-Size Print, Enterprise Edition)</p>
                         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
                             <span class="badge" style="background: rgba(56, 189, 248, 0.1); color: var(--primary); padding: 6px 12px; font-size: var(--fs-13);">ERP System</span>
                             <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 6px 12px; font-size: var(--fs-13);">POS Ready</span>
@@ -737,7 +720,7 @@
 
                     <div style="background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid var(--primary);">
                         <h2 style="font-size: var(--fs-18); margin-bottom: 15px; border-bottom: 1px solid var(--border); padding-bottom: 10px;">💾 គ្រប់គ្រងទិន្នន័យ (Backup & Restore All)</h2>
-                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 15px;">ទាញយកទិន្នន័យទាំងអស់ក្នុង App នេះ (ស្តុក, ប្រវត្តិ, វិក្កយបត្រ, អតិថិជន) រក្សាទុក ដើម្បីការពារការបាត់បង់ ឬផ្ទេរទៅឧបករណ៍ផ្សេង។</p>
+                        <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 15px;">ទាញយកទិន្នន័យទាំងអស់ក្នុង App នេះ (ស្តុក, ប្រវត្តិ, វិក្កយបត្រ, អតិថិជន) រក្សាទុក ដើម្បីការពារការបាត់បង់ ឬផ្ទេរទៅឧបករណ៍ផ្សេង។ <br><span style="color: var(--warning); font-size: 12px;">⚠️ ចំណាំ៖ ការ Restore មុខងារថ្មីត្រូវធ្វើឡើងដោយប្រុងប្រយ័ត្ន ប្រសិនបើអ្នកផ្លាស់ប្តូរទៅប្រើប្រព័ន្ធបំបែក Table ។</span></p>
                         
                         <div style="display: flex; gap: 12px; flex-wrap: wrap; align-items: center;">
                             <button type="button" class="btn btn-primary" style="padding: 10px 18px; font-weight: bold; border-radius: 8px;" onclick="window.triggerAppBackup()">💾 Backup ទិន្នន័យទាំងអស់</button>
@@ -773,7 +756,7 @@
                 </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display:block; margin-bottom: 5px;">លេខកូដសម្ងាត់ (Password):</label>
-                    <input type="text" id="nuPassword" class="form-control" placeholder="******" style="width: 100%;">
+                    <input type="password" id="nuPassword" class="form-control" placeholder="******" style="width: 100%;">
                 </div>
                 <div style="margin-bottom: 15px;">
                     <label style="display:block; margin-bottom: 5px;">លេខ PIN សម្រាប់សង្គ្រោះគណនី (Recovery PIN):</label>
@@ -800,7 +783,7 @@
         </div>
     </div>
 
-    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) VVIP ថ្មី (គាំទ្រការចុច Enter គិតលុយភ្លាមៗ) -->
+    <!-- Modal: Premium Checkout (ទូទាត់ប្រាក់) VVIP ថ្មី -->
     <div class="modal-overlay" id="checkoutModal" style="z-index: 100005; backdrop-filter: blur(5px);" onclick="if(event.target === this) document.getElementById('checkoutModal').style.display='none'">
         <style>
             .skm-checkout-glass {
@@ -957,7 +940,7 @@
         </div>
     </div>
 
-    <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile - ពង្រីកទំហំឱ្យស្អាតមិនហៀរ) -->
+    <!-- Modal: ប្តូរឈ្មោះហាង និង QR Code (Shop Profile) -->
     <div class="modal-overlay" id="shopNameModal" style="z-index: 9000;" onclick="if(event.target === this) window.closeShopNameModal()">
         <div class="modal" style="max-width: 440px;">
             <div class="modal-header"><h2 style="font-size: var(--fs-18);">✏️ ប្តូរឈ្មោះហាង និង Logo</h2><button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeShopNameModal()">✕</button></div>
@@ -1222,6 +1205,8 @@
         };
 
         // 📂 មុខងារ Restore ទិន្នន័យ (Import JSON)
+        // ⚠️ ចំណាំ៖ កូដនេះកំពុងប្រើទម្រង់ចាស់ (branch_store) ក្នុង Supabase។ 
+        // ថ្ងៃមុខបើយើងប្តូរទៅ Table ថ្មី (orders, products) ត្រូវតែលុបកូដនេះចោល ឬកែតម្រូវ។
         window.triggerAppRestore = function() {
             const fileInput2 = document.getElementById('importBackupFile2');
             if (fileInput2) {
@@ -1257,6 +1242,7 @@
                             throw new Error("ទ្រង់ទ្រាយឯកសារមិនត្រឹមត្រូវ");
                         }
 
+                        // Save ចូល LocalStorage សិន
                         Object.keys(backupData).forEach(key => {
                             localStorage.setItem(key, backupData[key]);
                         });
@@ -1268,6 +1254,7 @@
                                 Object.keys(backupData).forEach(k => {
                                     try { payload[k] = JSON.parse(backupData[k]); } catch(err) { payload[k] = backupData[k]; }
                                 });
+                                // ⚠️ ដាស់តឿន: នៅកំពុងបាញ់ចូលប្រអប់ json ធំ
                                 await window.supabaseClient.from('branch_store').upsert({
                                     branch_id: branchId,
                                     data_json: payload,
@@ -1315,6 +1302,7 @@
                 filterInputs.forEach((input, index) => {
                     const filterValue = input.value.toLowerCase();
                     if (filterValue && cells[index]) {
+                        // ប្រើ textContent ដើម្បីសុវត្ថិភាពពី XSS
                         let cellText = cells[index].textContent || cells[index].innerText;
                         if (input.tagName === 'SELECT') {
                             if (input.value && cellText.trim() !== input.value) {
@@ -1400,9 +1388,9 @@
                 const span = th.querySelector('span');
                 if (span) {
                     if (index === n) {
-                        span.innerHTML = dir === 1 ? '↑' : '↓';
+                        span.textContent = dir === 1 ? '↑' : '↓';
                     } else {
-                        span.innerHTML = '⬍';
+                        span.textContent = '⬍';
                     }
                 }
             });

@@ -1,5 +1,5 @@
 /**
- * pos.js - គ្រប់គ្រងប្រព័ន្ធលក់ កន្ត្រកទំនិញ ការស្កេនបាកូដ និងការបោះពុម្ពវិក្កយបត្រ (Point of Sale)
+ * pos.js - គ្រប់គ្រងប្រព័ន្ធលក់ កន្ត្រកទំនិញ ការស្កេនបាកូដ ការព្រីនបំបែក (Routing) និងសុវត្ថិភាពទិន្នន័យ (Enterprise Point of Sale)
  */
 
 window.currentPOSView = 'grid';
@@ -7,6 +7,14 @@ window.currentPosCategory = 'all';
 window.cartFinalUsd = 0;
 window.cartFinalRiel = 0;
 window.cartRate = 4000;
+
+// 🛡️ សុវត្ថិភាព XSS: ការពារការបន្លំកូដអាក្រក់តាមរយៈឈ្មោះទំនិញ ឬឈ្មោះអតិថិជន
+window.escapeHTML = function(str) {
+    if (typeof str !== 'string') return str;
+    return str.replace(/[&<>'"]/g, tag => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+    }[tag]));
+};
 
 // អនុគមន៍ជំនួយសម្រាប់បង្ហាញសារជូនដំណឹងដោយសុវត្ថិភាព
 function notifyPosUser(msg, title = 'ជូនដំណឹង', isError = false) {
@@ -28,18 +36,17 @@ window.setPosCategory = function(cat) {
 window.updateCategories = function() {
     // ត្រងយកតែទំនិញដែលមានក្នុងស្តុក និងមិនមែនជាទិន្នន័យទទេ
     let activeItems = (window.inventory || []).filter(p => p !== null && typeof p === 'object');
-    
     const cats = [...new Set(activeItems.filter(p => p.category).map(p => p.category))];
     
     const filter = document.getElementById('filterCategory'); 
-    if(filter) filter.innerHTML = '<option value="all">គ្រប់ប្រភេទ</option>' + cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    if(filter) filter.innerHTML = '<option value="all">គ្រប់ប្រភេទ</option>' + cats.map(c => `<option value="${window.escapeHTML(c)}">${window.escapeHTML(c)}</option>`).join('');
     
     const catList = document.getElementById('catList');
-    if(catList) catList.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+    if(catList) catList.innerHTML = cats.map(c => `<option value="${window.escapeHTML(c)}">${window.escapeHTML(c)}</option>`).join('');
     
     const units = [...new Set(activeItems.filter(p => p.unit).map(p => p.unit))];
     const unitList = document.getElementById('unitList');
-    if(unitList) unitList.innerHTML = units.map(u => `<option value="${u}">${u}</option>`).join('');
+    if(unitList) unitList.innerHTML = units.map(u => `<option value="${window.escapeHTML(u)}">${window.escapeHTML(u)}</option>`).join('');
     
     const posTabs = document.getElementById('posCategoryTabs');
     if(posTabs) { 
@@ -54,16 +61,13 @@ window.updateCategories = function() {
         let tabsHtml = `<button class="pos-tab ${activeCat === 'all' ? 'active' : ''}" onclick="window.setPosCategory('all')">${allLabel} (${allCount})</button>`; 
         
         cats.forEach(c => { 
-            // រាប់ចំនួនទំនិញក្នុងប្រភេទនីមួយៗ
             let catCount = activeItems.filter(p => p.category === c).length;
-            tabsHtml += `<button class="pos-tab ${activeCat === c ? 'active' : ''}" onclick="window.setPosCategory('${c}')">${c} (${catCount})</button>`; 
+            tabsHtml += `<button class="pos-tab ${activeCat === c ? 'active' : ''}" onclick="window.setPosCategory('${window.escapeHTML(c)}')">${window.escapeHTML(c)} (${catCount})</button>`; 
         }); 
         posTabs.innerHTML = tabsHtml; 
         
         // ដំណើរការមុខងារអូសដោយប្រើ Mouse (Drag to scroll)
-        if(typeof window.initPosTabScroll === 'function') {
-            window.initPosTabScroll();
-        }
+        if(typeof window.initPosTabScroll === 'function') window.initPosTabScroll();
     }
 };
 
@@ -119,7 +123,8 @@ window.renderPOSProducts = function() {
                 if (pQty <= 0) stockBadge = `<div class="badge-cat" style="background: var(--danger); color: #fff; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">❌ អស់ស្តុក</div>`;
                 else stockBadge = `<div class="badge-cat" style="background: ${pQty<=5?'var(--warning)':'var(--primary)'}; color: ${pQty<=5?'#000':'#fff'}; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">📦 សល់: ${pQty}</div>`;
 
-                let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<div class="badge-cat" style="background: #38bdf8; color: #fff; top: 8px; right: 8px; padding: 3px 6px; font-size: 10px; border-radius: 4px;">${p.condition}</div>` : '';
+                let safeCondition = window.escapeHTML(p.condition);
+                let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<div class="badge-cat" style="background: #38bdf8; color: #fff; top: 8px; right: 8px; padding: 3px 6px; font-size: 10px; border-radius: 4px;">${safeCondition}</div>` : '';
                 let expiryBadge = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<div style="font-size:10px; color:var(--warning); margin-top:2px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</div>` : '';
 
                 let cItem = (window.cart || []).find(c => c && c.id === p.id); 
@@ -128,7 +133,8 @@ window.renderPOSProducts = function() {
                 let rielHtml = (parseFloat(p.riel)||0) > 0 ? `<span style="font-size:var(--fs-11); color:var(--text-muted); font-weight:normal;">| ${parseFloat(p.riel).toLocaleString()} ៛</span>` : '';
                 let itemOpacity = pQty <= 0 ? 'opacity: 0.6; filter: grayscale(50%);' : '';
                 
-                finalHtml += `<div class="pos-item" style="${itemOpacity}" onclick="window.addToCart('${p.id}')"><div class="pos-item-img-container">${stockBadge}${conditionBadge}<img src="${p.image||'https://placehold.co/200?text=No+Img'}" alt="Product">${btnHtml}</div><div class="pos-item-details"><div class="pos-item-price">${window.fMoney(p.price)} ${rielHtml}</div><div class="pos-item-name" title="${p.name}">${p.name}</div>${expiryBadge}</div></div>`; 
+                let safeName = window.escapeHTML(p.name);
+                finalHtml += `<div class="pos-item" style="${itemOpacity}" onclick="window.addToCart('${p.id}')"><div class="pos-item-img-container">${stockBadge}${conditionBadge}<img src="${p.image||'https://placehold.co/200?text=No+Img'}" alt="Product">${btnHtml}</div><div class="pos-item-details"><div class="pos-item-price">${window.fMoney(p.price)} ${rielHtml}</div><div class="pos-item-name" title="${safeName}">${safeName}</div>${expiryBadge}</div></div>`; 
             });
             container.innerHTML = finalHtml + `</div>`;
         } else {
@@ -137,13 +143,15 @@ window.renderPOSProducts = function() {
             availableItems.forEach(p => {
                 if(!p) return;
                 let pQty = parseFloat(p.qty) || 0;
-                let stockText = pQty <= 0 ? `<span style="color:var(--danger); font-weight:bold;">អស់ស្តុក</span>` : `<span style="color:${pQty<=5?'var(--warning)':'var(--success)'}">${pQty}</span> ${p.unit||''}`;
+                let stockText = pQty <= 0 ? `<span style="color:var(--danger); font-weight:bold;">អស់ស្តុក</span>` : `<span style="color:${pQty<=5?'var(--warning)':'var(--success)'}">${pQty}</span> ${window.escapeHTML(p.unit)||''}`;
                 let rielHtml = (parseFloat(p.riel)||0) > 0 ? `<br><span style="font-size:var(--fs-11); color:var(--text-muted);">${parseFloat(p.riel).toLocaleString()} ៛</span>` : '';
                 let itemOpacity = pQty <= 0 ? 'opacity: 0.6;' : '';
-                let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<span style="font-size:10px; background:#38bdf8; color:#fff; padding:2px 4px; border-radius:4px; margin-left:4px;">${p.condition}</span>` : '';
+                let safeCondition = window.escapeHTML(p.condition);
+                let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<span style="font-size:10px; background:#38bdf8; color:#fff; padding:2px 4px; border-radius:4px; margin-left:4px;">${safeCondition}</span>` : '';
                 let expiryDisplay = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<br><span style="color:var(--warning); font-size:10px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</span>` : '';
+                let safeName = window.escapeHTML(p.name);
 
-                tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${p.name} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${p.price}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">➕ បន្ថែម</button></td></tr>`;
+                tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeName} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${p.price}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">➕ បន្ថែម</button></td></tr>`;
             });
             container.innerHTML = tableHTML + `</tbody></table></div>`;
         }
@@ -163,7 +171,6 @@ window.addToCart = function(id) {
     const executeAddToCart = () => {
         let globalRateEl = document.getElementById('globalExchangeRate'); 
         let currentRate = parseFloat(globalRateEl ? globalRateEl.value : window.cartRate) || 4000;
-        // ⚡ FIX: គណនាតម្លៃដុល្លារស្វ័យប្រវត្តិប្រសិនបើទំនិញដាក់តែតម្លៃរៀល (៛)
         let effectiveUsdPrice = parseFloat(p.price) > 0 ? parseFloat(p.price) : ((parseFloat(p.riel) || 0) / currentRate);
 
         if (cItem) { 
@@ -172,7 +179,7 @@ window.addToCart = function(id) {
                 cItem.qty = cItem.cartQty;
                 if (effectiveUsdPrice > 0 && !(parseFloat(cItem.price) > 0)) cItem.price = effectiveUsdPrice;
             } else { 
-                notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+                notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${window.escapeHTML(p.unit)||'ឯកតា'} ប៉ុណ្ណោះ!`); 
             } 
         } else { 
             window.cart.push({
@@ -190,7 +197,7 @@ window.addToCart = function(id) {
         if (cItem) {
             executeAddToCart();
         } else if (typeof window.ksMsg === 'function') {
-            window.ksMsg(`ទំនិញ "${p.name}" អស់ពីស្តុកហើយ! តើអ្នកចង់កត់ត្រាវាជាការកុម្ម៉ង់ទុកមុន (Pre-order) មែនទេ?`, 'បញ្ជាក់ Pre-order', true, executeAddToCart);
+            window.ksMsg(`ទំនិញ "${window.escapeHTML(p.name)}" អស់ពីស្តុកហើយ! តើអ្នកចង់កត់ត្រាវាជាការកុម្ម៉ង់ទុកមុន (Pre-order) មែនទេ?`, 'បញ្ជាក់ Pre-order', true, executeAddToCart);
         } else {
             executeAddToCart();
         }
@@ -212,7 +219,7 @@ window.updateCartQty = function(id, change) {
     
     if(cItem.cartQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
         cItem.cartQty = stockQty; 
-        notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+        notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${window.escapeHTML(p.unit)||'ឯកតា'} ប៉ុណ្ណោះ!`); 
     } 
     
     cItem.qty = cItem.cartQty;
@@ -237,7 +244,7 @@ window.setCartQtyManually = function(id, val) {
         
         if(newQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
             cItem.cartQty = stockQty; 
-            notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${p.unit||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+            notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${window.escapeHTML(p.unit)||'ឯកតា'} ប៉ុណ្ណោះ!`); 
         } else {
             cItem.cartQty = newQty;
         }
@@ -274,7 +281,10 @@ window.renderCart = function() {
 
             let priceDisplay = origUsd > 0 ? window.fMoney(origUsd) : (pRiel > 0 ? pRiel.toLocaleString()+' ៛' : window.fMoney(pUsd)); 
             let totalDisplay = origUsd > 0 ? window.fMoney(origUsd * c.cartQty) : (pRiel > 0 ? (pRiel * c.cartQty).toLocaleString()+' ៛' : window.fMoney(pUsd * c.cartQty));
-            finalCartHtml += `<div class="cart-item"><img src="${c.image||'https://placehold.co/100?text=Img'}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 10px; border: 1px solid var(--border);"><div style="flex:1;"><div style="font-weight:bold; font-size:var(--fs-14); margin-bottom:2px; line-height: 1.2; color: var(--text-main);">${c.name}</div><div style="color:var(--success); font-size:var(--fs-12);">${priceDisplay} <small style="color:var(--text-muted);">/ ${c.unit||'ឯកតា'}</small></div></div><div style="display:flex; align-items:center; gap:4px; background:var(--bg-dark); padding:2px; border-radius:6px; border:1px solid var(--border);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-14);"> - </button><input type="number" class="cart-qty-input" value="${c.cartQty}" onchange="window.setCartQtyManually('${c.id}', this.value)" style="width: 35px; height:22px; text-align: center; background: transparent; border: none; font-weight: bold; color: var(--text-main); outline:none; font-size: var(--fs-13);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-14);"> + </button></div><div style="width:70px; text-align:right; font-weight:bold; font-size:var(--fs-14); margin-left: 10px; color: var(--text-main);">${totalDisplay}</div></div>`;
+            
+            let safeName = window.escapeHTML(c.name);
+            let safeUnit = window.escapeHTML(c.unit) || 'ឯកតា';
+            finalCartHtml += `<div class="cart-item"><img src="${c.image||'https://placehold.co/100?text=Img'}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 10px; border: 1px solid var(--border);"><div style="flex:1;"><div style="font-weight:bold; font-size:var(--fs-14); margin-bottom:2px; line-height: 1.2; color: var(--text-main);">${safeName}</div><div style="color:var(--success); font-size:var(--fs-12);">${priceDisplay} <small style="color:var(--text-muted);">/ ${safeUnit}</small></div></div><div style="display:flex; align-items:center; gap:4px; background:var(--bg-dark); padding:2px; border-radius:6px; border:1px solid var(--border);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-14);"> - </button><input type="number" class="cart-qty-input" value="${c.cartQty}" onchange="window.setCartQtyManually('${c.id}', this.value)" style="width: 35px; height:22px; text-align: center; background: transparent; border: none; font-weight: bold; color: var(--text-main); outline:none; font-size: var(--fs-13);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-14);"> + </button></div><div style="width:70px; text-align:right; font-weight:bold; font-size:var(--fs-14); margin-left: 10px; color: var(--text-main);">${totalDisplay}</div></div>`;
         });
         cHTML.innerHTML = finalCartHtml;
     }
@@ -377,7 +387,6 @@ window.openCheckoutModal = function() {
     
     document.getElementById('checkoutTotalDisplay').innerHTML = displayHtml; 
 
-    /* 🌟 បន្ថែមថ្មី៖ បង្ហាញ QR Code ក្នុងផ្ទាំងគិតលុយពេលចុច Checkout */
     const qrContainer = document.getElementById('checkoutQrContainer');
     const qrImage = document.getElementById('checkoutQrImage');
     if (window.shopQR && qrContainer && qrImage) {
@@ -528,12 +537,44 @@ window.executePrint = function(htmlContent, customTitle = 'Print Receipt') {
     }, 500);
 };
 
+// 🖨️ Multi-Printer Feature: បាញ់បញ្ជាទៅម៉ាស៊ីនព្រីនផ្ទះបាយ / បារ / ផ្នែករៀបចំ
+window.routeOrderToPrinters = function(order, printerJobs) {
+    const sys = window.sysSettings || {};
+    const deptPrinters = sys.deptPrinters || [];
+
+    for (const [printerId, items] of Object.entries(printerJobs)) {
+        if (printerId === 'cashier' || printerId === 'none') continue; // Cashier ព្រីនវិក្កយបត្រដើមរួចហើយ
+
+        const printerInfo = deptPrinters.find(p => p.id === printerId);
+        if (!printerInfo) continue;
+
+        // បង្កើតវិក្កយបត្របញ្ជា (Kitchen Ticket / Bar Ticket)
+        let ticketHTML = `<div style="text-align:center; font-family:'Kantumruy Pro', sans-serif;">`;
+        ticketHTML += `<h2 style="border: 2px solid #000; padding: 4px; display:inline-block; margin-bottom:5px;">${printerInfo.name}</h2>`;
+        ticketHTML += `<h3>តុ: ${window.escapeHTML(order.customerName)}</h3>`;
+        ticketHTML += `<p style="font-size:12px;">លេខបញ្ជា: ${order.id} | ${order.date}</p>`;
+        if(order.note) ticketHTML += `<p style="font-size:12px; font-style:italic;">ចំណាំ: ${window.escapeHTML(order.note)}</p>`;
+        ticketHTML += `<hr style="border-top:1px dashed #000;"><table style="width:100%; text-align:left; font-size:14px; font-weight:bold; margin-top: 10px;">`;
+        
+        items.forEach(item => {
+            ticketHTML += `<tr><td style="padding:6px 0; border-bottom: 1px solid #ccc;"><span style="font-size: 16px;">[ ${item.cartQty} ]</span> x ${window.escapeHTML(item.name)}</td></tr>`;
+        });
+        
+        ticketHTML += `</table><hr style="border-top:1px dashed #000; margin-top:10px;"><p style="font-size: 10px;">បោះពុម្ពម៉ោង: ${new Date().toLocaleTimeString('km-KH')}</p></div>`;
+
+        // ព្រីនចេញ
+        window.executePrint(ticketHTML, `Ticket - ${printerInfo.name}`);
+    }
+};
+
 window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!');
-    const custNameInput = document.getElementById('posCustomerName').value.trim(); 
-    const custPhoneInput = document.getElementById('posCustomerPhone').value.trim();
+    
+    // 🛡️ សុវត្ថិភាពទិន្នន័យ (XSS Protection)
+    const custNameInput = window.escapeHTML(document.getElementById('posCustomerName').value.trim()); 
+    const custPhoneInput = window.escapeHTML(document.getElementById('posCustomerPhone').value.trim());
     const tableSelectEl = document.getElementById('posTableSelect');
-    const selectedTable = (tableSelectEl && tableSelectEl.value) ? tableSelectEl.value.trim() : '';
+    const selectedTable = (tableSelectEl && tableSelectEl.value) ? window.escapeHTML(tableSelectEl.value.trim()) : '';
 
     if((status === 'unpaid' || status === 'preorder') && !custNameInput) return notifyPosUser('សុំបញ្ចូលឈ្មោះអតិថិជនសិន!');
     
@@ -542,29 +583,30 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     let appliedTaxRate = (window.sysSettings && window.sysSettings.tax) ? (parseFloat(window.sysSettings.taxRate) || 0) : 0;
     
     let docType = status === 'paid' ? 'បង្កាន់ដៃទទួលប្រាក់ / Receipt' : (status === 'preorder' ? 'បង្កាន់ដៃកក់ប្រាក់ / Pre-order Receipt' : 'វិក្កយបត្រ / Invoice'); 
-    let currentSellerName = window.activeUser ? (window.activeUser.fullName ? window.activeUser.fullName : window.activeUser.username) : 'System'; 
+    let currentSellerName = window.activeUser ? window.escapeHTML(window.activeUser.fullName || window.activeUser.username) : 'System'; 
     let newInvId = window.generateInvoiceId(); 
     let timestampNow = Date.now(); 
 
     let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
     const rCfg = window.getActiveReceiptConfig();
     if(window.shopLogo) receiptHTML += `<img class="receipt-logo" src="${window.shopLogo}" style="width: ${rCfg.logoPx}px; height: ${rCfg.logoPx}px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
-    receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.shopName}</h2>`; 
-    if(window.shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${window.shopPhone}</p>`; 
-    if(window.shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${window.shopAddress}</p>`; 
+    receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.escapeHTML(window.shopName)}</h2>`; 
+    if(window.shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${window.escapeHTML(window.shopPhone)}</p>`; 
+    if(window.shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${window.escapeHTML(window.shopAddress)}</p>`; 
     receiptHTML += `<div class="print-dashed-line"></div><p style="margin:4px 0; font-size:14px; font-weight:bold;">${docType}</p><p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${window.fDate()}</p><p style="margin:2px 0; font-size:11px; text-align:left;">លេខវិក្កយបត្រ: ${newInvId}</p><p style="margin:2px 0; font-size:11px; text-align:left;">អ្នកលក់: ${currentSellerName}</p>`;
     if(custNameInput) receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${custNameInput}</b> ${custPhoneInput?`(${custPhoneInput})`:''}</p>`;
     if(selectedTable && selectedTable !== custNameInput) receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left; font-weight:bold;">តុ: ${selectedTable}</p>`;
     receiptHTML += `<div class="print-dashed-line"></div></div><table style="width:100%; text-align:left; font-size: 12px; table-layout: fixed;"><thead><tr><th style="width: 50%; border-bottom: 1px solid #000; padding-bottom: 4px;">ទំនិញ</th><th style="width: 20%; text-align:center; border-bottom: 1px solid #000; padding-bottom: 4px;">ចំនួន</th><th style="width: 30%; text-align:right; border-bottom: 1px solid #000; padding-bottom: 4px;">សរុប</th></tr></thead><tbody>`;
 
     const normalizedCartItems = [];
+    const printerRouting = (window.sysSettings && window.sysSettings.categoryRouting) ? window.sysSettings.categoryRouting : {};
+    let printerJobs = {}; // កន្លែងផ្ទុកមុខម្ហូបបែងចែកតាមម៉ាស៊ីន
 
     window.cart.forEach((c, index) => {
         if(!c) return; 
         const idx = (window.inventory || []).findIndex(p => p && p.id === c.id);
         let origUsd = (idx !== -1 && parseFloat(window.inventory[idx].price) > 0) ? parseFloat(window.inventory[idx].price) : (parseFloat(c.price) || 0);
         let pRiel = parseFloat(c.riel) || 0;
-        // ⚡ FIX: ធានាថា item.price តែងតែមានតម្លៃជាដុល្លារ (បម្លែងពីរៀលបើដាក់តែតម្លៃរៀល)
         let effectiveUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / window.cartRate) : 0);
 
         normalizedCartItems.push({
@@ -573,6 +615,14 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
             cartQty: c.cartQty,
             qty: c.cartQty
         });
+
+        // 🖨️ តម្រៀបចូលប្រអប់តាមម៉ាស៊ីនព្រីនផ្ទះបាយ
+        let cat = c.category || 'Unknown';
+        let routeId = printerRouting[cat] || 'none';
+        if (routeId !== 'none' && window.sysSettings.toggleMultiPrinter) {
+            if (!printerJobs[routeId]) printerJobs[routeId] = [];
+            printerJobs[routeId].push(c);
+        }
 
         if(idx !== -1) {
             if (status !== 'preorder') {
@@ -585,7 +635,10 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         if(origUsd > 0) { lineStr = window.fMoney(origUsd * c.cartQty); uPriceStr = window.fMoney(origUsd); } 
         else if(pRiel > 0) { lineStr = (pRiel * c.cartQty).toLocaleString() + '៛'; uPriceStr = pRiel.toLocaleString() + '៛'; } 
         else { lineStr = window.fMoney(effectiveUsd * c.cartQty); uPriceStr = window.fMoney(effectiveUsd); } 
-        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${c.name}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${c.unit||''}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
+        
+        let safeItemName = window.escapeHTML(c.name);
+        let safeItemUnit = window.escapeHTML(c.unit) || '';
+        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${safeItemName}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${safeItemUnit}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
     });
     receiptHTML += `</tbody></table><div class="print-dashed-line"></div>`;
 
@@ -624,9 +677,13 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         paidAmount: paidUsdAmount
     }; 
     
+    // 🚀 កន្លែងរក្សាទុកទិន្នន័យ (Database Save Strategy)
     if(!window.invoices) window.invoices = [];
     window.invoices.unshift(newInvoice); 
+    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+    if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
     
+    // ការចុះឈ្មោះអតិថិជនស្វ័យប្រវត្តិ
     if(custNameInput && custNameInput !== selectedTable && typeof window.setAutoRegisterCustomer === 'function') {
         window.setAutoRegisterCustomer(custNameInput, custPhoneInput);
     }
@@ -653,25 +710,19 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     }
     receiptHTML += `</table>`;
 
-    let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+    let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? window.escapeHTML(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
     
     if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img class="receipt-qr" src="${window.shopQR}" style="width: ${rCfg.qrPx}px; height: ${rCfg.qrPx}px; object-fit: contain; filter: grayscale(100%);"></div>`;
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">${footerText}</p>`; 
     
+    // Clear Input
     window.cart = []; 
-    
     const cNameInputEl = document.getElementById('posCustomerName'); 
-    if(cNameInputEl) {
-        cNameInputEl.value = ''; 
-        cNameInputEl.style.borderLeft = '1px solid var(--border)';
-    }
+    if(cNameInputEl) { cNameInputEl.value = ''; cNameInputEl.style.borderLeft = '1px solid var(--border)'; }
     const cPhoneInputEl = document.getElementById('posCustomerPhone'); if(cPhoneInputEl) cPhoneInputEl.value = ''; 
     if(tableSelectEl) tableSelectEl.value = '';
     const posDiscEl = document.getElementById('posDiscount'); if (posDiscEl) posDiscEl.value = ''; 
     const mobileContainer = document.getElementById('mobileCartContainer'); if(mobileContainer) mobileContainer.classList.remove('open'); 
-    
-    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
-    if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
     
     const dateFromInput = document.getElementById('invoiceDateFrom');
     const dateToInput = document.getElementById('invoiceDateTo');
@@ -684,11 +735,39 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(typeof window.renderCustomers === 'function') window.renderCustomers();
     if(typeof window.renderDashboard === 'function') window.renderDashboard();
     
-    window.executePrint(receiptHTML);
+    // 🖨️ បញ្ជាបោះពុម្ព
+    window.executePrint(receiptHTML, `Receipt - ${newInvId}`);
+    
+    // 🖨️ បាញ់ទិន្នន័យទៅផ្ទះបាយ / បារ
+    if (window.sysSettings && window.sysSettings.toggleMultiPrinter && Object.keys(printerJobs).length > 0) {
+        window.routeOrderToPrinters(newInvoice, printerJobs);
+    }
 
+    // 🚀 Enterprise Async Save Strategy (ត្រៀមសម្រាប់ Tables ថ្មី)
     setTimeout(() => {
-        if (typeof window.saveData === 'function') {
-            window.saveData(window.userAccounts); 
+        if (window.supabase && navigator.onLine) {
+            // សាកល្បងបញ្ចូលទៅ Table `orders` ដាច់ដោយឡែក (បើបានបង្កើត Table ហើយ)
+            window.supabase.from('orders').insert([{
+                id: newInvId,
+                branch_id: window.BRANCH || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                customer_name: newInvoice.customerName,
+                customer_phone: newInvoice.customerPhone,
+                total_amount: newInvoice.totalAmount,
+                status: newInvoice.status,
+                order_data: newInvoice.items
+            }]).then(({error}) => {
+                if (error) {
+                    console.warn("មិនទាន់មាន Table 'orders' ក្នុង DB ទេ។ កំពុងប្រើប្រាស់មុខងារ Save ចាស់ (JSON Data)...");
+                    if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+                } else {
+                    console.log("ជោគជ័យ! ទិន្នន័យវិក្កយបត្របានរក្សាទុកក្នុង Table 'orders' ដាច់ដោយឡែក។");
+                    // Update ស្តុកនៅក្នុង JSON ចាស់ (ដើម្បីកុំឱ្យដាច់តំណភ្ជាប់ជាមួយ Menu និង POS ចាស់)
+                    if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+                }
+            });
+        } else {
+            // Offline Mode Fallback
+            if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
         }
     }, 100);
 };
@@ -717,9 +796,6 @@ window.handleBarcodeScan = function(e) {
     }
 };
 
-// ==========================================
-// DRAG TO SCROLL FOR POS CATEGORY TABS
-// ==========================================
 let isPosTabScrollInitialized = false;
 
 window.initPosTabScroll = function() {
