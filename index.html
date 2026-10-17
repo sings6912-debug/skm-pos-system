@@ -698,7 +698,8 @@
                 <div style="display: flex; flex-direction: column; gap: 20px; max-width: 800px; margin: auto;">
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); text-align: center;">
                         <h1 style="color: var(--primary); font-size: var(--fs-28); margin-bottom: 5px;">SKM <span style="color: var(--warning);">INTEGRATE</span></h1>
-                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: var(--fs-14);">Version 8.0 (Multi-Size Print, Enterprise Edition)</p>
+                        <p style="color: var(--text-muted); margin-bottom: 5px; font-size: var(--fs-14);">Version 8.0 (Multi-Size Print, Enterprise Edition)</p>
+                        <p style="color: var(--primary); margin-bottom: 20px; font-size: var(--fs-14); font-weight: bold;">👨‍💻 Created by: TANG SOPHENG</p>
                         <div style="display: flex; justify-content: center; gap: 10px; margin-bottom: 25px; flex-wrap: wrap;">
                             <span class="badge" style="background: rgba(56, 189, 248, 0.1); color: var(--primary); padding: 6px 12px; font-size: var(--fs-13);">ERP System</span>
                             <span class="badge" style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 6px 12px; font-size: var(--fs-13);">POS Ready</span>
@@ -1155,7 +1156,7 @@
             const panel = document.getElementById('protectedQuickToolsPanel');
             if (!passInput) return;
 
-            if (passInput.value === 'tang sopheng') {
+            if (passInput.value.toLowerCase() === 'tang sopheng') {
                 if (passBox) passBox.style.display = 'none';
                 if (panel) panel.style.display = 'block';
                 passInput.value = '';

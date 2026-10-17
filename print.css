@@ -22,7 +22,6 @@ body * {
     font-family: 'Kantumruy Pro', 'Battambang', 'Khmer OS Battambang', sans-serif !important;
 }
 
-/* STREAMING_CHUNK:Styling receipt container layout and header typography... */
 #receipt-container,
 #printReceiptArea {
     display: block !important;
@@ -57,7 +56,6 @@ body * {
     font-size: 12px;
 }
 
-/* STREAMING_CHUNK:Formatting receipt item tables, totals, and footer... */
 .receipt-table,
 #receipt-container table,
 #printReceiptArea table {

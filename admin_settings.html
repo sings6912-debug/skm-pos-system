@@ -202,6 +202,12 @@
             <i class="fa-solid fa-arrow-left"></i> ត្រឡប់ទៅប្រព័ន្ធលក់
         </button>
         
+        <!-- 🛡️ RLS Security Warning -->
+        <div style="background: rgba(239, 68, 68, 0.05); border: 1px solid var(--danger); padding: 12px; border-radius: 12px; margin-bottom: 15px; font-size: 12px;">
+            <strong style="color: var(--danger);"><i class="fa-solid fa-shield-halved"></i> សុវត្ថិភាព Database:</strong> 
+            <span style="color: var(--text-dark);">សូមប្រាកដថាអ្នកបានបើក <b>Row Level Security (RLS)</b> នៅក្នុង Supabase Dashboard ដើម្បីការពារការលួចកែប្រែទិន្នន័យពីជនខិលខូច។</span>
+        </div>
+        
         <!-- 🎨 THEME SWITCHER -->
         <div class="theme-selector" style="margin-bottom: 15px; padding: 10px;">
             <span style="font-size: 11px; font-weight: 900; color: var(--text-muted); width: 100%; text-align: center; margin-bottom: 5px;">🎨 ជ្រើសរើស ស្បែក Admin៖</span>
@@ -742,15 +748,37 @@
 <script>
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
-    // 🔒 ផ្ទៀងផ្ទាត់យ៉ាងម៉ឺងម៉ាត់ទាំង Store PIN និងសិទ្ធិ Admin
-    (function verifyAdminAccess() {
+    // 🔗 កំណត់ Supabase នៅទីនេះសិន ដើម្បីអាចយកមកឆែកសិទ្ធិ Auth បាន
+    const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+    
+    let supabaseClient = null;
+    if (window.supabase) {
+        try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } 
+        catch (err) { console.error("Supabase init error:", err); }
+    }
+
+    // 🔒 ផ្ទៀងផ្ទាត់សិទ្ធិ Admin ដោយបូកបញ្ចូលទាំង Supabase Auth
+    (async function verifyAdminAccess() {
+        let isSupabaseAuthed = false;
+        
+        // ឆែកមើល Session របស់ Supabase (សុវត្ថិភាពខ្ពស់)
+        if (supabaseClient) {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session) isSupabaseAuthed = true;
+            } catch(e) { console.warn("Supabase auth check failed", e); }
+        }
+
+        // ប្រព័ន្ធផ្ទៀងផ្ទាត់ចាស់ (Local Storage + Session Storage)
         const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
         try {
             activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`));
         } catch(e) {}
 
-        if (authPassed !== 'true' || !activeUser || String(activeUser.role).toLowerCase() !== 'admin') {
+        // បើមិនជាប់ Supabase Auth ទេ ត្រូវឆែក Local
+        if (!isSupabaseAuthed && (authPassed !== 'true' || !activeUser || String(activeUser.role).toLowerCase() !== 'admin')) {
             if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
                 console.warn("Preview Environment Detected: Authentication redirect bypassed.");
             } else {
@@ -758,6 +786,24 @@
             }
         }
     })();
+
+    // 🛡️ មុខងារការពារកុំឱ្យពេញ LocalStorage
+    function checkStorageQuota(newBase64Str) {
+        try {
+            let total = 0;
+            for (let i = 0; i < localStorage.length; i++) {
+                total += localStorage.getItem(localStorage.key(i)).length;
+            }
+            let incoming = newBase64Str.length;
+            // គិតជាមេកាបៃ (MB), កំណត់អតិបរមាត្រឹម 4.5MB ដើម្បីកុំឱ្យ Crash
+            let totalMB = (total + incoming) / 1024 / 1024;
+            if (totalMB > 4.5) {
+                showToast("⚠️ ប្រយ័ត្ន៖ ទំហំផ្ទុករបស់អ្នកជិតពេញហើយ! សូមប្រើ Cloud ដើម្បី Save រូបភាព។", true);
+                return false;
+            }
+            return true;
+        } catch(e) { return true; }
+    }
 
     function switchTab(tabId) {
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
@@ -776,15 +822,6 @@
     }
     const savedTheme = localStorage.getItem('skm_admin_theme') || 'standard';
     setAdminTheme(savedTheme);
-
-    const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
-    
-    let supabaseClient = null;
-    if (window.supabase) {
-        try { supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY); } 
-        catch (err) { console.error("Supabase init error:", err); }
-    }
 
     async function uploadToSupabaseStorage(canvasBlob, folderName) {
         if (!supabaseClient || !navigator.onLine) throw new Error("Offline or no DB connected");
@@ -1186,10 +1223,13 @@
                     showToast("✅ Upload Cloud ជោគជ័យ!");
                 } catch(err) {
                     console.warn("Cloud storage failed, falling back to Base64:", err);
-                    adminBanners[index] = canvas.toDataURL('image/jpeg', 0.6);
-                    renderAdminBanners();
-                    saveAdminSettings();
-                    showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
+                    const base64Str = canvas.toDataURL('image/jpeg', 0.6);
+                    if (checkStorageQuota(base64Str)) {
+                        adminBanners[index] = base64Str;
+                        renderAdminBanners();
+                        saveAdminSettings();
+                        showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
+                    }
                 }
             }; 
             img.src = ev.target.result;
@@ -1219,11 +1259,13 @@
                     showToast("✅ Upload QR ជោគជ័យ!");
                 } catch (err) {
                     const url = canvas.toDataURL('image/jpeg', 0.8); 
-                    document.getElementById('setMenuQR').value = url;
-                    const qp = document.getElementById('menuQRPreview'); qp.src = url; qp.style.display = 'block'; 
-                    document.getElementById('qrPreviewContainer').style.display = 'block'; 
-                    saveAdminSettings();
-                    showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
+                    if (checkStorageQuota(url)) {
+                        document.getElementById('setMenuQR').value = url;
+                        const qp = document.getElementById('menuQRPreview'); qp.src = url; qp.style.display = 'block'; 
+                        document.getElementById('qrPreviewContainer').style.display = 'block'; 
+                        saveAdminSettings();
+                        showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
+                    }
                 }
             }; img.src = ev.target.result;
         }; reader.readAsDataURL(file);
@@ -1263,11 +1305,13 @@
                     showToast("✅ Upload រូបស្វាគមន៍ជោគជ័យ!");
                 } catch(err) {
                     const url = canvas.toDataURL('image/jpeg', 0.75);
-                    document.getElementById('setWelcomeImg').value = url;
-                    document.getElementById('toggleWelcomePopup').checked = true;
-                    updateWelcomePreview(url);
-                    saveAdminSettings();
-                    showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
+                    if (checkStorageQuota(url)) {
+                        document.getElementById('setWelcomeImg').value = url;
+                        document.getElementById('toggleWelcomePopup').checked = true;
+                        updateWelcomePreview(url);
+                        saveAdminSettings();
+                        showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
+                    }
                 }
             };
             img.src = ev.target.result;
@@ -1803,7 +1847,7 @@
         } catch (e) { showToast("❌ មានបញ្ហាក្នុងការ Archive: " + e.message, true); }
     }
 
-    // 🚀 កែសម្រួល downloadSystemShell() ដោយប្រើ Replacer function ដើម្បីការពារការធ្លាយកូដ
+    // 🛡️ បន្ថែមមុខងារចាប់កំហុស (Error Handling) ពេលទាញយកឯកសារ Local
     async function downloadSystemShell() {
         showToast("កំពុងប្រមូលកូដ និងចងក្រងជា File តែ១... សូមរង់ចាំ!", false);
         try {
@@ -1820,7 +1864,10 @@
                             try {
                                 const cssContent = await fetch(href).then(r => r.text());
                                 htmlRaw = htmlRaw.replace(linkTag, () => `<style>\n/* --- ${href} --- */\n${cssContent}\n</style>`);
-                            } catch(e) { console.warn('Could not fetch CSS:', href); }
+                            } catch(e) { 
+                                console.warn('Could not fetch CSS:', href); 
+                                showToast(`⚠️ មិនអាចទាញយកឯកសារ Local: ${href}`, true);
+                            }
                         }
                     }
                 }
@@ -1838,7 +1885,10 @@
                                 let jsContent = await fetch(src).then(r => r.text());
                                 jsContent = jsContent.replace(/<\/script>/gi, '<\\/script>');
                                 htmlRaw = htmlRaw.replace(scriptTag, () => `<script>\n/* --- ${src} --- */\n${jsContent}\n<\/script>`);
-                            } catch(e) { console.warn('Could not fetch JS:', src); }
+                            } catch(e) { 
+                                console.warn('Could not fetch JS:', src); 
+                                showToast(`⚠️ មិនអាចទាញយកឯកសារ Local: ${src}`, true);
+                            }
                         }
                     }
                 }

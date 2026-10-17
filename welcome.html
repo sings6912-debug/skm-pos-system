@@ -816,10 +816,32 @@
             } catch(err) {}
         }
 
+        // 🌟 មុខងារ Upload រូបភាព Wallpaper ទៅកាន់ Supabase Storage
+        async function uploadToSupabaseStorage(canvasBlob, folderName) {
+            if (!supabaseClient || !navigator.onLine) throw new Error("Offline or no DB connected");
+            
+            const fileName = `${folderName}/${SHOP_BRANCH_ID}_${Date.now()}_${Math.random().toString(36).substring(2)}.jpg`;
+            const { data, error } = await supabaseClient.storage
+                .from('shop_assets')
+                .upload(fileName, canvasBlob, { contentType: 'image/jpeg', upsert: true });
+
+            if (error) throw error;
+            const { data: publicData } = supabaseClient.storage.from('shop_assets').getPublicUrl(fileName);
+            return publicData.publicUrl;
+        }
+
+        function getCanvasBlob(canvas, quality = 0.75) {
+            return new Promise((resolve) => {
+                canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
+            });
+        }
+
         function handleCustomBgUpload(e) {
             const file = e.target.files[0];
             if (!file) return;
             playClickSound();
+            
+            showWelcomeToast("កំពុង Upload រូបភាព... (Uploading...)");
 
             const reader = new FileReader();
             reader.onload = function(evt) {
@@ -834,8 +856,18 @@
                     const ctx = canvas.getContext('2d');
                     ctx.drawImage(img, 0, 0, w, h);
                     
-                    const compressedBg = `url("${canvas.toDataURL('image/jpeg', 0.75)}")`;
-                    applyAndSaveWallpaper(compressedBg, null);
+                    try {
+                        const blob = await getCanvasBlob(canvas, 0.75);
+                        const cloudUrl = await uploadToSupabaseStorage(blob, 'wallpapers');
+                        const bgStyle = `url("${cloudUrl}")`;
+                        applyAndSaveWallpaper(bgStyle, null);
+                        showWelcomeToast("✅ Upload រូបភាពចូល Cloud ជោគជ័យ!");
+                    } catch (err) {
+                        console.warn("Cloud upload failed, using Base64 fallback:", err);
+                        const compressedBg = `url("${canvas.toDataURL('image/jpeg', 0.75)}")`;
+                        applyAndSaveWallpaper(compressedBg, null);
+                        showWelcomeToast("⚠️ អ៊ីនធឺណិតខ្សោយ! បានរក្សាទុកជា Base64 ជាបណ្តោះអាសន្ន។");
+                    }
                 };
                 img.src = evt.target.result;
             };
@@ -999,7 +1031,6 @@
 
         window.onload = loadShopProfile;
         
-        // 🌟 មុខងារចុចតាម Keyboard លើផ្ទាំង PIN Pad
         window.addEventListener('keydown', function(e) {
             const pinModal = document.getElementById('pinModal');
             if (!pinModal || !pinModal.classList.contains('show')) return;
