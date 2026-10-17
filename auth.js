@@ -24,7 +24,8 @@ window.checkAuthentication = function(applyPermissionsCallback) {
     const authPassed = sessionStorage.getItem('ks2_auth_passed');
     if (authPassed !== 'true') {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:') {
+        // 💡 ដំណោះស្រាយ៖ បន្ថែម `window.location.protocol !== 'file:'` ដើម្បីឱ្យ Single File បើកបានធម្មតាដោយមិនលោត Error
+        if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:' && window.location.protocol !== 'file:') {
             window.location.href = `welcome.html?branch=${encodeURIComponent(branchId)}`;
             return;
         }
@@ -120,7 +121,8 @@ window.handleLogout = function() {
         sessionStorage.removeItem('ks2_auth_passed');
 
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:') {
+        // 💡 ដំណោះស្រាយ៖ បន្ថែម `window.location.protocol !== 'file:'` ត្រង់នេះដូចគ្នា
+        if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:' && window.location.protocol !== 'file:') {
             window.location.href = `welcome.html?branch=${encodeURIComponent(branchId)}`;
         } else {
             window.checkAuthentication();
