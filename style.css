@@ -89,7 +89,8 @@ body { background: var(--bg-dark); color: var(--text-main); display: flex; font-
     z-index: 10; 
     position: sticky; 
     top: 0; 
-    height: 60px;
+    min-height: 60px;
+    height: auto;
     box-sizing: border-box;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), margin-bottom 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     will-change: transform;
@@ -293,12 +294,15 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
 @media (max-width: 900px) { .pos-cart { flex: 0 0 300px; width: 300px; } }
 @media (max-width: 768px) {
     body { overflow: hidden; } .main-content { overflow: hidden; } 
-    .sidebar-toggle-btn { display: inline-block; }
+    .sidebar-toggle-btn { display: inline-block; margin-right: 10px; }
     .sidebar { position: fixed; left: 0; top: 0; height: 100vh; transform: translateX(-100%); box-shadow: 5px 0 15px rgba(0,0,0,0.5); width: 250px;}
     .sidebar.active-mobile { transform: translateX(0); }
     .sidebar-overlay.active { display: block; }
-    .header { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 15px;}
-    .header > div { display: flex; justify-content: space-between; align-items: center; width: 100%; }
+    
+    .header { flex-direction: column; align-items: stretch; gap: 10px; padding: 10px 15px; min-height: auto;}
+    .header > div { display: flex; justify-content: space-between; align-items: center; width: 100%; flex-wrap: wrap; gap: 8px;}
+    .header-controls { justify-content: flex-start !important; }
+    
     .content-body { padding: 10px 10px 90px 10px; display: flex; flex-direction: column; }
     .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
     .stat-card:nth-child(odd):last-child { grid-column: span 2; }

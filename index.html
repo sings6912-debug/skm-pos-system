@@ -98,7 +98,7 @@
                 </div>
             </div>
             
-            <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+            <div class="header-controls" style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap; justify-content: flex-end;">
                 <select id="globalLangSelect" onchange="if(typeof window.changeAppLanguage === 'function') window.changeAppLanguage(this.value)" style="background: rgba(0,0,0,0.25); color: #fff; border: 1px solid rgba(255,255,255,0.4); border-radius: 20px; padding: 5px 12px; font-size: 13px; font-weight: bold; cursor: pointer; outline: none;">
                     <option value="km" style="color: #000;">🇰🇭 ខ្មែរ</option>
                     <option value="en" style="color: #000;">🇬🇧 English</option>
@@ -108,14 +108,14 @@
                 <div style="font-size: var(--fs-13); color: #fff; font-weight: bold; padding: 5px 12px; background: rgba(0,0,0,0.25); border-radius: 20px; display: flex; align-items: center; gap: 6px;" id="currentUserDisplay">
                     <span>👤</span> អ្នកគ្រប់គ្រងប្រព័ន្ធ
                 </div>
-                <div style="font-size: var(--fs-13); color: #fff;" id="currentDate"></div>
+                <div style="font-size: var(--fs-13); color: #fff; display: none;" id="currentDate"></div>
                 
                 <!-- ប៊ូតុង Sync ទិន្នន័យពី Cloud -->
                 <button onclick="window.manualCloudSync()" class="btn btn-outline" style="border-color: #fde047; color: #fde047; padding: 4px 12px; font-size: 12px; border-radius: 20px; display: flex; align-items: center; gap: 5px; background: rgba(0,0,0,0.25);" title="ចុចដើម្បីទាញទិន្នន័យពី Cloud">
-                    <i class="fa-solid fa-rotate"></i> Sync ទិន្នន័យ
+                    <i class="fa-solid fa-rotate"></i> Sync
                 </button>
                 
-                <div id="globalSyncBadge" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid rgba(255,255,255,0.4);">🟢 ទិន្នន័យទាន់សម័យ</div>
+                <div id="globalSyncBadge" style="display: inline-flex; align-items: center; gap: 6px; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; background: rgba(0,0,0,0.3); color: #fff; border: 1px solid rgba(255,255,255,0.4);">🟢 Synced</div>
             </div>
         </div>
 
