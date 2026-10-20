@@ -265,7 +265,7 @@ window.sysI18n = {
         btnExportJson: '📤 Export JSON',
         btnImportJson: '📥 Import JSON',
         thCustName: 'ឈ្មោះអតិថិជន',
-        thCustPhone: '联系电话',
+        thCustPhone: 'លេខទូរស័ព្ទ',
         thCustPaid: 'សរុបទិញ (Paid)',
         thCustUnpaid: 'រង់ចាំទូទាត់ (Unpaid)',
         noCustData: 'មិនមានអតិថិជនទេ',
@@ -1608,6 +1608,9 @@ window.switchTab = function(tabId, title, elem) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); 
     if(elem) elem.classList.add('active'); 
 
+    // ចងចាំឈ្មោះផ្ទាំង (Tab) ចុងក្រោយទុកក្នុង localStorage
+    localStorage.setItem('skm_last_active_tab', tabId);
+
     const lang = localStorage.getItem('app_lang') || 'km';
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
     const titleMap = {
@@ -2728,7 +2731,13 @@ window.onload = async () => {
     if(typeof window.setInventoryView==='function') window.setInventoryView(window.currentInventoryView, true); 
     if(typeof window.setPOSView==='function') window.setPOSView(window.currentPOSView, true); 
     
-    if(typeof window.renderDashboard === 'function') window.renderDashboard(); 
+    const savedTab = localStorage.getItem('skm_last_active_tab') || 'dashboard';
+    const navElem = document.getElementById('nav-' + savedTab);
+    if (typeof window.switchTab === 'function') {
+        window.switchTab(savedTab, '', navElem);
+    } else if(typeof window.renderDashboard === 'function') {
+        window.renderDashboard();
+    }
 
     const header = document.getElementById('topHeaderBar'); 
     if (header) { header.classList.remove('hidden-header'); } 
