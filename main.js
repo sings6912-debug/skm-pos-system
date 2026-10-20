@@ -1462,6 +1462,30 @@ window.manualCloudSync = async function(isAuto = false) {
                 window.sysSettings = Object.assign({}, window.sysSettings, d.sysSettings);
                 localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings));
             }
+
+            // 🌟 ទាញយកទិន្នន័យហាងត្រឡប់មកវិញ (Shop Profile)
+            if (d.shopName) window.shopName = d.shopName;
+            if (d.shopLogo) window.shopLogo = d.shopLogo;
+            if (d.shopQR) window.shopQR = d.shopQR;
+            if (d.shopPhone) window.shopPhone = d.shopPhone;
+            if (d.shopAddress) window.shopAddress = d.shopAddress;
+            if (d.shopTelegram) window.shopTelegram = d.shopTelegram;
+            if (d.telegramBotToken) window.telegramBotToken = d.telegramBotToken;
+            if (d.telegramChatId) window.telegramChatId = d.telegramChatId;
+
+            localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
+            localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
+            localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
+            localStorage.setItem(window.getBranchKey('shop_phone'), window.shopPhone || '');
+            localStorage.setItem(window.getBranchKey('shop_address'), window.shopAddress || '');
+            localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram || '');
+            localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken || '');
+            localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId || '');
+
+            const dispName = document.getElementById('displayShopName');
+            if(dispName) dispName.innerHTML = `${window.shopName || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
+            const sideLogo = document.getElementById('sidebarLogo');
+            if(window.shopLogo && sideLogo) { sideLogo.src = window.shopLogo; sideLogo.style.display = 'block'; }
         }
 
         // 2. Fetch Products from pos_products table
@@ -1593,6 +1617,14 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     if (window.customPosScripts) {
         localStorage.setItem(window.getBranchKey('pos_scripts'), JSON.stringify(window.customPosScripts));
     }
+    localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
+    localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
+    localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
+    localStorage.setItem(window.getBranchKey('shop_phone'), window.shopPhone || '');
+    localStorage.setItem(window.getBranchKey('shop_address'), window.shopAddress || '');
+    localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram || '');
+    localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken || '');
+    localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId || '');
 
     if(typeof renderAllCallback === 'function') renderAllCallback();
 };
@@ -2716,6 +2748,15 @@ window.onload = async () => {
         window.currentPOSView = localStorage.getItem(window.getBranchKey('pos_view_mode')) || 'grid'; 
     } catch(e) {}
     
+    window.shopName = localStorage.getItem(window.getBranchKey('shop_name')) || '';
+    window.shopLogo = localStorage.getItem(window.getBranchKey('shop_logo')) || '';
+    window.shopQR = localStorage.getItem(window.getBranchKey('shop_qr')) || '';
+    window.shopPhone = localStorage.getItem(window.getBranchKey('shop_phone')) || '';
+    window.shopAddress = localStorage.getItem(window.getBranchKey('shop_address')) || '';
+    window.shopTelegram = localStorage.getItem(window.getBranchKey('shop_telegram')) || '';
+    window.telegramBotToken = localStorage.getItem(window.getBranchKey('telegram_bot_token')) || '';
+    window.telegramChatId = localStorage.getItem(window.getBranchKey('telegram_chat_id')) || '';
+
     const dispName = document.getElementById('displayShopName');
     if(dispName) dispName.innerHTML = `${window.shopName || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
     
