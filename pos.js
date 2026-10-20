@@ -743,29 +743,50 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         window.routeOrderToPrinters(newInvoice, printerJobs);
     }
 
-    // 🚀 Enterprise Async Save Strategy (ត្រៀមសម្រាប់ Tables ថ្មី - ជួសជុល bug ត្រង់ supabaseClient)
-    setTimeout(() => {
+    // 🚀 Enterprise Async Save Strategy (ប្រើ Tables ថ្មី pos_orders និង RPC deduct_stock_safely)
+    setTimeout(async () => {
         if (window.supabaseClient && navigator.onLine) {
-            // សាកល្បងបញ្ចូលទៅ Table `orders` ដាច់ដោយឡែក (បើបានបង្កើត Table ហើយ)
-            window.supabaseClient.from('orders').insert([{
-                id: newInvId,
-                branch_id: window.BRANCH || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
-                customer_name: newInvoice.customerName,
-                customer_phone: newInvoice.customerPhone,
-                total_amount: newInvoice.totalAmount,
-                status: newInvoice.status,
-                order_data: newInvoice.items
-            }]).then(({error}) => {
-                if (error) {
-                    console.warn("មិនទាន់មាន Table 'orders' ក្នុង DB ទេ។ កំពុងប្រើប្រាស់មុខងារ Save តាម JSON Backup...");
-                } else {
-                    console.log("ជោគជ័យ! ទិន្នន័យវិក្កយបត្របានរក្សាទុកក្នុង Table 'orders' ដាច់ដោយឡែក។");
+            try {
+                // ១. រក្សាទុកវិក្កយបត្រថ្មីចូល Table 'pos_orders'
+                const { error: orderError } = await window.supabaseClient
+                    .from('pos_orders')
+                    .insert([{
+                        id: newInvId,
+                        branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                        customer_name: newInvoice.customerName,
+                        customer_phone: newInvoice.customerPhone,
+                        total_amount: newInvoice.totalAmount,
+                        paid_amount: newInvoice.paidUsd || 0,
+                        status: newInvoice.status,
+                        seller: newInvoice.seller,
+                        order_data: newInvoice.items,
+                        note: newInvoice.note,
+                        timestamp: newInvoice.timestamp
+                    }]);
+
+                if (orderError) throw orderError;
+                console.log("✅ វិក្កយបត្រត្រូវបានរក្សាទុកចូល pos_orders");
+
+                // ២. កាត់ស្តុកទំនិញដោយប្រើ Function ពិសេស (RPC) លើ Cloud
+                if (status !== 'preorder') {
+                    for (let item of normalizedCartItems) {
+                        const deductQty = parseInt(item.cartQty) || 1;
+                        const { error: stockError } = await window.supabaseClient.rpc('deduct_stock_safely', {
+                            p_product_id: item.id,
+                            p_branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                            deduct_qty: deductQty
+                        });
+                        if (stockError) console.warn("បញ្ហាកាត់ស្តុកលើ Cloud:", stockError);
+                    }
                 }
+                
+                // Save Local និង Data ដទៃទៀត
                 if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
-            }).catch(err => {
-                console.warn("Supabase order insert error:", err);
+
+            } catch (err) {
+                console.error("Supabase Save Error:", err);
                 if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
-            });
+            }
         } else {
             // Offline Mode Fallback
             if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
