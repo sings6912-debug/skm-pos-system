@@ -2918,22 +2918,40 @@ window.printZReport = function() {
 // 20. UI/UX PATCHES & BUG FIXES (Import/Export UI & PIN Pad)
 // ==========================================
 (function applyGlobalFixes() {
-    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export
+    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export ជាដាច់ខាត (Aggressive CSS Force)
     const styleFix = document.createElement('style');
     styleFix.innerHTML = `
+        /* Excel Buttons Fix */
+        #inventoryExcelAction {
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 8px !important;
+            width: 100% !important;
+            padding: 5px 0 !important;
+        }
         #inventoryExcelAction button {
-            display: inline-flex !important;
+            flex: 1 !important;
+            display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            gap: 8px !important;
-            padding: 8px 12px !important;
-            white-space: nowrap !important;
+            gap: 5px !important;
+            padding: 10px 5px !important;
+            white-space: normal !important; /* អនុញ្ញាតឱ្យអក្សរចុះបន្ទាត់បានបើអេក្រង់តូច */
+            word-break: break-word !important;
+            position: relative !important;
+            overflow: hidden !important;
+            min-width: 0 !important; /* អនុញ្ញាតឱ្យប៊ូតុងរួញតាមអេក្រង់ */
+            border-radius: 8px !important;
+            font-size: 12px !important; /* បន្ថយទំហំអក្សរបន្តិចកុំឱ្យចង្អៀត */
+            line-height: 1.3 !important;
         }
         #inventoryExcelAction button img,
-        #inventoryExcelAction button i {
+        #inventoryExcelAction button i,
+        #inventoryExcelAction button svg {
             position: static !important;
+            display: block !important;
+            flex-shrink: 0 !important; /* ការពារកុំឱ្យ Icon ត្រូវគាបខូចទ្រង់ទ្រាយ */
             margin: 0 !important;
-            transform: none !important;
         }
     `;
     document.head.appendChild(styleFix);
