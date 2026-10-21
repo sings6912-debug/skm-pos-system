@@ -15,7 +15,6 @@ try {
 // ==========================================
 // 0.5 POS CUSTOM SCRIPT LOADER (Runs automatically)
 // ==========================================
-
 try {
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
     const localPosScripts = JSON.parse(localStorage.getItem(`ks2_${branchId}_pos_scripts`));
@@ -318,7 +317,7 @@ window.sysI18n = {
         cantDeleteAdmin: 'មិនអាចលុប',
         setSysTitle: '⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)',
         setSysSub: 'កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។',
-        setStorePinLabel: '🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖',
+        setStorePinLabel: '🔐 លេខសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖',
         setTickerNewsLabel: '📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖',
         setCustLabel: 'អតិថិជន (Customers): អនុញ្ញាតឲ្យកត់ត្រា និងគ្រប់គ្រងទិន្នន័យអតិថិជន។',
         setUnpaidLabel: 'រង់ចាំទូទាត់ (Unpaid Invoices): អនុញ្ញាតឲ្យរក្សាទុកវិក្កយបត្រមិនទាន់ទូទាត់។',
@@ -1166,7 +1165,7 @@ window.changeAppLanguage = function(lang) {
         if (pSys) pSys.innerText = d.setSysSub || 'កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។';
         const formGroups = settingsCards[3].querySelectorAll('.form-group label');
         if (formGroups.length >= 2) {
-            formGroups[0].innerText = d.setStorePinLabel || '🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖';
+            formGroups[0].innerText = d.setStorePinLabel || '🔐 លេខសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖';
             formGroups[1].innerText = d.setTickerNewsLabel || '📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖';
         }
         const sysLabels = settingsCards[3].querySelectorAll('label span');
@@ -1418,7 +1417,6 @@ window.setSyncStatus = function(status, text) {
 // ==========================================
 // 6. MASTER REAL-TIME DATA SAVE & SYNC (Unified Sync to DB)
 // ==========================================
-
 window.manualCloudSync = async function(isAuto = false) {
     if (!window.supabaseClient || !navigator.onLine) {
         if (!isAuto) window.setSyncStatus('error', 'គ្មានអ៊ីនធឺណិត (Offline)');
@@ -1881,17 +1879,29 @@ window.saveSysSettings = async function() {
         return;
     }
     
-    const newStorePin = document.getElementById('setStorePin') ? document.getElementById('setStorePin').value.trim() : '1234';
-    const adminAccount = window.userAccounts ? window.userAccounts.find(x => x.username === 'admin') : null;
+    // 🌟 ការពារការ Reset ទៅ 1234 ពេលទុក Input ចោល
+    if (!window.sysSettings) window.sysSettings = {};
+    let currentSavedPin = window.sysSettings.storePin || '1234';
+    let pinInputEl = document.getElementById('setStorePin');
+    let newStorePin = pinInputEl ? pinInputEl.value.trim() : currentSavedPin;
+    if (!newStorePin || newStorePin === '') {
+        newStorePin = currentSavedPin; // យកកូដចាស់មកវិញ បើអត់វាយអី
+    }
 
-    if (adminAccount && String(adminAccount.pin).trim() === newStorePin) {
+    const adminAccount = window.userAccounts ? window.userAccounts.find(x => x.username === 'admin') : null;
+    if (adminAccount && String(adminAccount.pin).trim() === newStorePin && newStorePin !== '1234') {
         if(typeof window.ksMsg==='function') return window.ksMsg("❌ លេខកូដហាង (Store PIN) មិនអាចដូចលេខ PIN របស់ Admin បានទេ! សូមជ្រើសរើសលេខផ្សេង។", "បម្រាមសុវត្ថិភាព");
         else if(typeof window.showToast==='function') return window.showToast("❌ លេខកូដហាង (Store PIN) មិនអាចដូចលេខ PIN របស់ Admin បានទេ!", true);
         return;
     }
 
-    if(!window.sysSettings) window.sysSettings = {};
-    window.sysSettings.storePin = newStorePin || '1234';
+    window.sysSettings.storePin = newStorePin;
+    
+    // 🌟 ធានាថាវាត្រូវសរសេរចូល LocalStorage គ្រប់កន្លែងទាំងអស់កុំឱ្យកូដចាស់រករឿង
+    try {
+        localStorage.setItem(window.getBranchKey('store_pin'), newStorePin);
+        localStorage.setItem('store_pin', newStorePin);
+    } catch(e){}
 
     if(document.getElementById('setTickerText')) {
         const tickerVal = document.getElementById('setTickerText').value.trim();
@@ -2767,9 +2777,6 @@ window.onload = async () => {
     window.expenses = JSON.parse(localStorage.getItem(window.getBranchKey('expenses_pro'))) || [];
     window.customers = JSON.parse(localStorage.getItem(window.getBranchKey('customers_pro'))) || [];
 
-    // 🌟 [FIX PIN] ទាញយក Settings លេខកូដថ្មីមកប្រើភ្លាមៗ មុនពេលផ្ទាំងកូដលោតឡើង!
-    window.sysSettings = JSON.parse(localStorage.getItem(window.getBranchKey('sys_settings'))) || {};
-
     const savedLang = localStorage.getItem('app_lang') || 'km';
     const langSel = document.getElementById('globalLangSelect');
     if (langSel) langSel.value = savedLang;
@@ -2933,7 +2940,7 @@ window.printZReport = function() {
 // 20. UI/UX PATCHES & BUG FIXES (Import/Export UI & PIN Pad)
 // ==========================================
 (function applyGlobalFixes() {
-    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export ជាដាច់ខាត
+    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export ជាដាច់ខាត (Aggressive CSS Force)
     const styleFix = document.createElement('style');
     styleFix.innerHTML = `
         /* Excel Buttons Fix */
@@ -2941,23 +2948,22 @@ window.printZReport = function() {
             display: flex !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
-            gap: 8px !important;
+            gap: 10px !important;
             width: 100% !important;
             padding: 5px 0 !important;
         }
         #inventoryExcelAction button {
             flex: 1 !important;
-            min-width: 130px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 8px !important;
-            padding: 10px !important;
+            padding: 12px 10px !important;
             white-space: nowrap !important;
             position: relative !important;
             overflow: hidden !important;
+            min-width: 140px !important;
             border-radius: 8px !important;
-            font-size: 12px !important;
         }
         #inventoryExcelAction button img,
         #inventoryExcelAction button i,
@@ -2966,49 +2972,9 @@ window.printZReport = function() {
             left: auto !important;
             right: auto !important;
             top: auto !important;
-            display: block !important;
-            flex-shrink: 0 !important;
             margin: 0 !important;
             transform: none !important;
-        }
-
-        /* ៤. កែសម្រួលតារាង POS លើទូរសព្ទកុំឱ្យអូសឆ្វេងស្តាំ (Mobile POS Table Fix) */
-        @media (max-width: 768px) {
-            #tab-pos .table-responsive,
-            #tab-pos .table-container {
-                overflow-x: hidden !important;
-            }
-            #tab-pos table {
-                width: 100% !important;
-                table-layout: fixed !important;
-            }
-            #tab-pos table th, 
-            #tab-pos table td {
-                padding: 8px 4px !important;
-                font-size: 11px !important;
-                white-space: normal !important;
-                word-wrap: break-word !important;
-                vertical-align: middle !important;
-            }
-            /* កំណត់ទំហំកូឡោនឱ្យល្មមអេក្រង់ទូរសព្ទ */
-            #tab-pos table th:nth-child(1), #tab-pos table td:nth-child(1) { width: 40px !important; text-align: center !important; } /* រូបភាព */
-            #tab-pos table th:nth-child(2), #tab-pos table td:nth-child(2) { width: auto !important; } /* ឈ្មោះ */
-            #tab-pos table th:nth-child(3), #tab-pos table td:nth-child(3) { width: 55px !important; text-align: right !important; } /* តម្លៃលក់ */
-            #tab-pos table th:nth-child(4), #tab-pos table td:nth-child(4) { width: 65px !important; text-align: center !important; } /* ប៊ូតុងសកម្មភាព */
-            
-            #tab-pos table td button {
-                padding: 5px 4px !important;
-                font-size: 11px !important;
-                width: 100% !important;
-                min-width: 0 !important;
-                border-radius: 6px !important;
-            }
-            #tab-pos table td img {
-                width: 32px !important;
-                height: 32px !important;
-                border-radius: 4px !important;
-                object-fit: cover !important;
-            }
+            display: block !important;
         }
     `;
     document.head.appendChild(styleFix);
@@ -3039,13 +3005,12 @@ window.printZReport = function() {
             // បើជាប៊ូតុងលេខកូដ (មានអក្សរតែ ១ ឬប៊ូតុងលុប X)
             if (txt.length === 1 || txt === 'X' || txt === '⌫' || txt.includes('Del')) {
                 const now = Date.now();
-                // ទប់ស្កាត់លុះត្រាតែចុចប៉ះ "លេខដដែល" លឿនជាង 0.25 វិនាទី ទើបហាមឃាត់! (ចុចលេខផ្សេងលឿនៗអត់បញ្ហាទេ)
-                if (txt === lastPinKey && (now - lastClickTime < 250)) { 
+                if (now - lastClickTime < 50) { 
+                    // បើចុចលឿនជាង 0.05 វិនាទី គឺហាមវា (ទប់ជាប់មិនអោយលោត២លេខ)
                     e.preventDefault();
                     e.stopPropagation();
                     return false;
                 }
-                lastPinKey = txt;
                 lastClickTime = now;
             }
         }
