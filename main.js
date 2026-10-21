@@ -2973,22 +2973,66 @@ window.printZReport = function() {
 
     // ៣. បង្ការការចុចមួយលោតពីរលេខ (Double-fire prevention លើទូរសព្ទ)
     let lastClickTime = 0;
-    let lastClickTarget = null;
     document.addEventListener('click', function(e) {
         // ស្វែងរកប៊ូតុងដែលត្រូវបានចុច
         const btn = e.target.closest('button');
-        if (btn) {
-            const now = Date.now();
-            // ការពារ Ghost Click: បើចុចលើប៊ូតុង "ដដែល" លឿនជាង ៥០ មីលីវិនាទី (0.05 វិនាទី) ទើបវាទប់
-            if (lastClickTarget === btn && now - lastClickTime < 50) { 
-                e.preventDefault();
-                e.stopPropagation();
-                return false;
+        if (btn && btn.innerText) {
+            let txt = btn.innerText.trim();
+            // បើជាប៊ូតុងលេខកូដ (មានអក្សរតែ ១ ឬប៊ូតុងលុប X)
+            if (txt.length === 1 || txt === 'X' || txt === '⌫' || txt.includes('Del')) {
+                const now = Date.now();
+                if (now - lastClickTime < 50) { 
+                    // បើចុចលឿនជាង 0.05 វិនាទី (មានន័យថាទូរសព្ទវា error លោត២ដង) គឺហាមវា (ទប់ជាប់)
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                lastClickTime = now;
             }
-            lastClickTime = now;
-            lastClickTarget = btn;
         }
     }, true);
+
+    // ៤. កែសម្រួលតារាង POS លើទូរសព្ទកុំឱ្យអូសឆ្វេងស្តាំ (Mobile POS Table Fix)
+    const posStyleFix = document.createElement('style');
+    posStyleFix.innerHTML = `
+        @media (max-width: 768px) {
+            #tab-pos .table-responsive,
+            #tab-pos .table-container {
+                overflow-x: hidden !important;
+            }
+            #tab-pos table {
+                width: 100% !important;
+                table-layout: fixed !important;
+            }
+            #tab-pos table th, 
+            #tab-pos table td {
+                padding: 8px 4px !important;
+                font-size: 11px !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+                vertical-align: middle !important;
+            }
+            /* កំណត់ទំហំកូឡោនឱ្យល្មមអេក្រង់ទូរសព្ទ */
+            #tab-pos table th:nth-child(1), #tab-pos table td:nth-child(1) { width: 45px !important; text-align: center !important; } /* រូបភាព */
+            #tab-pos table th:nth-child(3), #tab-pos table td:nth-child(3) { width: 60px !important; text-align: right !important; } /* តម្លៃលក់ */
+            #tab-pos table th:nth-child(4), #tab-pos table td:nth-child(4) { width: 70px !important; text-align: center !important; } /* ប៊ូតុងសកម្មភាព */
+            
+            #tab-pos table td button {
+                padding: 5px 4px !important;
+                font-size: 11px !important;
+                width: 100% !important;
+                min-width: 0 !important;
+                border-radius: 6px !important;
+            }
+            #tab-pos table td img {
+                width: 35px !important;
+                height: 35px !important;
+                border-radius: 4px !important;
+                object-fit: cover !important;
+            }
+        }
+    `;
+    document.head.appendChild(posStyleFix);
 
     // ដំណើរការកូដនេះពេលទំព័រដើរចប់
     if (document.readyState === 'loading') {
