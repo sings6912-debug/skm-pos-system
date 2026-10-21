@@ -1,7 +1,19 @@
 // main.js
 
 // ==========================================
-// 0. POS CUSTOM SCRIPT LOADER (Runs automatically)
+// 0. EARLY SETTINGS LOAD (FIX PIN CACHE ISSUE)
+// ==========================================
+try {
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    const sysKey = `ks2_${branchId}_sys_settings`;
+    const loadedSys = JSON.parse(localStorage.getItem(sysKey));
+    if (loadedSys) window.sysSettings = loadedSys; // Force load new PIN instantly!
+} catch(e) {
+    console.warn("Early sysSettings load skipped.");
+}
+
+// ==========================================
+// 0.5 POS CUSTOM SCRIPT LOADER (Runs automatically)
 // ==========================================
 
 try {
@@ -1154,8 +1166,8 @@ window.changeAppLanguage = function(lang) {
         if (pSys) pSys.innerText = d.setSysSub || 'កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។';
         const formGroups = settingsCards[3].querySelectorAll('.form-group label');
         if (formGroups.length >= 2) {
-            formGroups[0].innerText = d.setStorePinLabel || '🔐 លេខសម្ងាត់ហាង (Store PIN ៤ ខ្ទង់)៖';
-            formGroups[1].innerText = d.setTickerNewsLabel || '📢 សេចក្តីជូនដំណឹងរត់ខាងក្រោម (News Ticker)៖';
+            formGroups[0].innerText = d.setStorePinLabel || '🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖';
+            formGroups[1].innerText = d.setTickerNewsLabel || '📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖';
         }
         const sysLabels = settingsCards[3].querySelectorAll('label span');
         if (sysLabels.length >= 6) {
@@ -2755,6 +2767,9 @@ window.onload = async () => {
     window.expenses = JSON.parse(localStorage.getItem(window.getBranchKey('expenses_pro'))) || [];
     window.customers = JSON.parse(localStorage.getItem(window.getBranchKey('customers_pro'))) || [];
 
+    // 🌟 [FIX PIN] ទាញយក Settings លេខកូដថ្មីមកប្រើភ្លាមៗ មុនពេលផ្ទាំងកូដលោតឡើង!
+    window.sysSettings = JSON.parse(localStorage.getItem(window.getBranchKey('sys_settings'))) || {};
+
     const savedLang = localStorage.getItem('app_lang') || 'km';
     const langSel = document.getElementById('globalLangSelect');
     if (langSel) langSel.value = savedLang;
@@ -2918,83 +2933,46 @@ window.printZReport = function() {
 // 20. UI/UX PATCHES & BUG FIXES (Import/Export UI & PIN Pad)
 // ==========================================
 (function applyGlobalFixes() {
-    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export ជាដាច់ខាត (Aggressive CSS Force)
+    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export ជាដាច់ខាត
     const styleFix = document.createElement('style');
     styleFix.innerHTML = `
         /* Excel Buttons Fix */
         #inventoryExcelAction {
             display: flex !important;
             flex-direction: row !important;
+            flex-wrap: wrap !important;
             gap: 8px !important;
             width: 100% !important;
             padding: 5px 0 !important;
         }
         #inventoryExcelAction button {
             flex: 1 !important;
+            min-width: 130px !important;
             display: flex !important;
             align-items: center !important;
             justify-content: center !important;
-            gap: 5px !important;
-            padding: 10px 5px !important;
-            white-space: normal !important; /* អនុញ្ញាតឱ្យអក្សរចុះបន្ទាត់បានបើអេក្រង់តូច */
-            word-break: break-word !important;
+            gap: 8px !important;
+            padding: 10px !important;
+            white-space: nowrap !important;
             position: relative !important;
             overflow: hidden !important;
-            min-width: 0 !important; /* អនុញ្ញាតឱ្យប៊ូតុងរួញតាមអេក្រង់ */
             border-radius: 8px !important;
-            font-size: 12px !important; /* បន្ថយទំហំអក្សរបន្តិចកុំឱ្យចង្អៀត */
-            line-height: 1.3 !important;
+            font-size: 12px !important;
         }
         #inventoryExcelAction button img,
         #inventoryExcelAction button i,
         #inventoryExcelAction button svg {
             position: static !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
             display: block !important;
-            flex-shrink: 0 !important; /* ការពារកុំឱ្យ Icon ត្រូវគាបខូចទ្រង់ទ្រាយ */
+            flex-shrink: 0 !important;
             margin: 0 !important;
+            transform: none !important;
         }
-    `;
-    document.head.appendChild(styleFix);
 
-    // ២. ជួសជុលបញ្ហា Store PIN (ការពារការលោតជាប់លេខចាស់ Autofill)
-    const fixPinInputs = () => {
-        const pinInputs = document.querySelectorAll('input[type="password"], input[id*="pin" i], input[id*="Pin" i]');
-        pinInputs.forEach(input => {
-            input.setAttribute('autocomplete', 'new-password'); // ប្រាប់ Browser កុំឱ្យទន្ទេញលេខកូដ
-            input.setAttribute('spellcheck', 'false');
-            
-            // ការពារ Browser ទម្លាក់លេខកូដចាស់ចូលភ្លាមៗពេលចុច
-            input.addEventListener('focus', function() {
-                this.setAttribute('readonly', 'readonly');
-                setTimeout(() => this.removeAttribute('readonly'), 50);
-            });
-        });
-    };
-
-    // ៣. បង្ការការចុចមួយលោតពីរលេខ (Double-fire prevention លើទូរសព្ទ)
-    let lastClickTime = 0;
-    document.addEventListener('click', function(e) {
-        // ស្វែងរកប៊ូតុងដែលត្រូវបានចុច
-        const btn = e.target.closest('button');
-        if (btn && btn.innerText) {
-            let txt = btn.innerText.trim();
-            // បើជាប៊ូតុងលេខកូដ (មានអក្សរតែ ១ ឬប៊ូតុងលុប X)
-            if (txt.length === 1 || txt === 'X' || txt === '⌫' || txt.includes('Del')) {
-                const now = Date.now();
-                if (now - lastClickTime < 50) { 
-                    // បើចុចលឿនជាង 0.05 វិនាទី (មានន័យថាទូរសព្ទវា error លោត២ដង) គឺហាមវា (ទប់ជាប់)
-                    e.preventDefault();
-                    e.stopPropagation();
-                    return false;
-                }
-                lastClickTime = now;
-            }
-        }
-    }, true);
-
-    // ៤. កែសម្រួលតារាង POS លើទូរសព្ទកុំឱ្យអូសឆ្វេងស្តាំ (Mobile POS Table Fix)
-    const posStyleFix = document.createElement('style');
-    posStyleFix.innerHTML = `
+        /* ៤. កែសម្រួលតារាង POS លើទូរសព្ទកុំឱ្យអូសឆ្វេងស្តាំ (Mobile POS Table Fix) */
         @media (max-width: 768px) {
             #tab-pos .table-responsive,
             #tab-pos .table-container {
@@ -3013,9 +2991,10 @@ window.printZReport = function() {
                 vertical-align: middle !important;
             }
             /* កំណត់ទំហំកូឡោនឱ្យល្មមអេក្រង់ទូរសព្ទ */
-            #tab-pos table th:nth-child(1), #tab-pos table td:nth-child(1) { width: 45px !important; text-align: center !important; } /* រូបភាព */
-            #tab-pos table th:nth-child(3), #tab-pos table td:nth-child(3) { width: 60px !important; text-align: right !important; } /* តម្លៃលក់ */
-            #tab-pos table th:nth-child(4), #tab-pos table td:nth-child(4) { width: 70px !important; text-align: center !important; } /* ប៊ូតុងសកម្មភាព */
+            #tab-pos table th:nth-child(1), #tab-pos table td:nth-child(1) { width: 40px !important; text-align: center !important; } /* រូបភាព */
+            #tab-pos table th:nth-child(2), #tab-pos table td:nth-child(2) { width: auto !important; } /* ឈ្មោះ */
+            #tab-pos table th:nth-child(3), #tab-pos table td:nth-child(3) { width: 55px !important; text-align: right !important; } /* តម្លៃលក់ */
+            #tab-pos table th:nth-child(4), #tab-pos table td:nth-child(4) { width: 65px !important; text-align: center !important; } /* ប៊ូតុងសកម្មភាព */
             
             #tab-pos table td button {
                 padding: 5px 4px !important;
@@ -3025,14 +3004,52 @@ window.printZReport = function() {
                 border-radius: 6px !important;
             }
             #tab-pos table td img {
-                width: 35px !important;
-                height: 35px !important;
+                width: 32px !important;
+                height: 32px !important;
                 border-radius: 4px !important;
                 object-fit: cover !important;
             }
         }
     `;
-    document.head.appendChild(posStyleFix);
+    document.head.appendChild(styleFix);
+
+    // ២. ជួសជុលបញ្ហា Store PIN (ការពារការលោតជាប់លេខចាស់ Autofill)
+    const fixPinInputs = () => {
+        const pinInputs = document.querySelectorAll('input[type="password"], input[type="number"], input[id*="pin" i], input[id*="Pin" i]');
+        pinInputs.forEach(input => {
+            input.setAttribute('autocomplete', 'new-password'); // ប្រាប់ Browser កុំឱ្យទន្ទេញលេខកូដ
+            input.setAttribute('spellcheck', 'false');
+            
+            // ការពារ Browser ទម្លាក់លេខកូដចាស់ចូលភ្លាមៗពេលចុច
+            input.addEventListener('focus', function() {
+                this.setAttribute('readonly', 'readonly');
+                setTimeout(() => this.removeAttribute('readonly'), 100);
+            });
+        });
+    };
+
+    // ៣. បង្ការការចុចមួយលោតពីរលេខ (Double-fire prevention លើទូរសព្ទ)
+    let lastPinKey = '';
+    let lastClickTime = 0;
+    document.addEventListener('click', function(e) {
+        // ស្វែងរកប៊ូតុងដែលត្រូវបានចុច
+        const btn = e.target.closest('button');
+        if (btn && btn.innerText) {
+            let txt = btn.innerText.trim();
+            // បើជាប៊ូតុងលេខកូដ (មានអក្សរតែ ១ ឬប៊ូតុងលុប X)
+            if (txt.length === 1 || txt === 'X' || txt === '⌫' || txt.includes('Del')) {
+                const now = Date.now();
+                // ទប់ស្កាត់លុះត្រាតែចុចប៉ះ "លេខដដែល" លឿនជាង 0.25 វិនាទី ទើបហាមឃាត់! (ចុចលេខផ្សេងលឿនៗអត់បញ្ហាទេ)
+                if (txt === lastPinKey && (now - lastClickTime < 250)) { 
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
+                lastPinKey = txt;
+                lastClickTime = now;
+            }
+        }
+    }, true);
 
     // ដំណើរការកូដនេះពេលទំព័រដើរចប់
     if (document.readyState === 'loading') {
