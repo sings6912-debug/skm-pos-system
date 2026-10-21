@@ -1,9 +1,20 @@
 // main.js
 
 // ==========================================
-// 0. POS CUSTOM SCRIPT LOADER (Runs automatically)
+// 0. EARLY SETTINGS LOAD (FIX PIN CACHE ISSUE)
 // ==========================================
+try {
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    const sysKey = `ks2_${branchId}_sys_settings`;
+    const loadedSys = JSON.parse(localStorage.getItem(sysKey));
+    if (loadedSys) window.sysSettings = loadedSys; // Force load new PIN instantly!
+} catch(e) {
+    console.warn("Early sysSettings load skipped.");
+}
 
+// ==========================================
+// 0.5 POS CUSTOM SCRIPT LOADER (Runs automatically)
+// ==========================================
 try {
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
     const localPosScripts = JSON.parse(localStorage.getItem(`ks2_${branchId}_pos_scripts`));
@@ -1406,7 +1417,6 @@ window.setSyncStatus = function(status, text) {
 // ==========================================
 // 6. MASTER REAL-TIME DATA SAVE & SYNC (Unified Sync to DB)
 // ==========================================
-
 window.manualCloudSync = async function(isAuto = false) {
     if (!window.supabaseClient || !navigator.onLine) {
         if (!isAuto) window.setSyncStatus('error', 'គ្មានអ៊ីនធឺណិត (Offline)');
@@ -2918,29 +2928,48 @@ window.printZReport = function() {
 // 20. UI/UX PATCHES & BUG FIXES (Import/Export UI & PIN Pad)
 // ==========================================
 (function applyGlobalFixes() {
-    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export
+    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export ជាដាច់ខាត (Aggressive CSS Force)
     const styleFix = document.createElement('style');
     styleFix.innerHTML = `
+        /* Excel Buttons Fix */
+        #inventoryExcelAction {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            gap: 10px !important;
+            width: 100% !important;
+            padding: 5px 0 !important;
+        }
         #inventoryExcelAction button {
-            display: inline-flex !important;
+            flex: 1 !important;
+            display: flex !important;
             align-items: center !important;
             justify-content: center !important;
             gap: 8px !important;
-            padding: 8px 12px !important;
+            padding: 12px 10px !important;
             white-space: nowrap !important;
+            position: relative !important;
+            overflow: hidden !important;
+            min-width: 140px !important;
+            border-radius: 8px !important;
         }
         #inventoryExcelAction button img,
-        #inventoryExcelAction button i {
+        #inventoryExcelAction button i,
+        #inventoryExcelAction button svg {
             position: static !important;
+            left: auto !important;
+            right: auto !important;
+            top: auto !important;
             margin: 0 !important;
             transform: none !important;
+            display: block !important;
         }
     `;
     document.head.appendChild(styleFix);
 
     // ២. ជួសជុលបញ្ហា Store PIN (ការពារការលោតជាប់លេខចាស់ Autofill)
     const fixPinInputs = () => {
-        const pinInputs = document.querySelectorAll('input[type="password"], input[id*="pin" i], input[id*="Pin" i]');
+        const pinInputs = document.querySelectorAll('input[type="password"], input[type="number"], input[id*="pin" i], input[id*="Pin" i]');
         pinInputs.forEach(input => {
             input.setAttribute('autocomplete', 'new-password'); // ប្រាប់ Browser កុំឱ្យទន្ទេញលេខកូដ
             input.setAttribute('spellcheck', 'false');
@@ -2948,7 +2977,7 @@ window.printZReport = function() {
             // ការពារ Browser ទម្លាក់លេខកូដចាស់ចូលភ្លាមៗពេលចុច
             input.addEventListener('focus', function() {
                 this.setAttribute('readonly', 'readonly');
-                setTimeout(() => this.removeAttribute('readonly'), 50);
+                setTimeout(() => this.removeAttribute('readonly'), 100);
             });
         });
     };
@@ -2956,15 +2985,19 @@ window.printZReport = function() {
     // ៣. បង្ការការចុចមួយលោតពីរលេខ (Double-fire prevention លើទូរសព្ទ)
     let lastClickTime = 0;
     document.addEventListener('click', function(e) {
-        // សន្មតថាបងចុចលើប៊ូតុងលេខកូដ
+        // ស្វែងរកប៊ូតុងដែលត្រូវបានចុច
         const btn = e.target.closest('button');
-        if (btn && btn.innerText && !isNaN(btn.innerText.trim()) && btn.innerText.trim().length === 1) {
-            const now = Date.now();
-            if (now - lastClickTime < 200) { 
-                // បើចុចលឿនជាង 0.2 វិនាទី (មានន័យថាទូរសព្ទវា error លោត២ដង) គឺហាមវា
-                e.preventDefault();
-                e.stopPropagation();
-            } else {
+        if (btn && btn.innerText) {
+            let txt = btn.innerText.trim();
+            // បើជាប៊ូតុងលេខកូដ (មានអក្សរតែ ១ ឬប៊ូតុងលុប X)
+            if (txt.length === 1 || txt === 'X' || txt === '⌫' || txt.includes('Del')) {
+                const now = Date.now();
+                if (now - lastClickTime < 250) { 
+                    // បើចុចលឿនជាង 0.25 វិនាទី (មានន័យថាទូរសព្ទវា error លោត២ដង) គឺហាមវា (ទប់ជាប់)
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return false;
+                }
                 lastClickTime = now;
             }
         }
@@ -2977,3 +3010,4 @@ window.printZReport = function() {
         fixPinInputs();
     }
 })();
+```eof
