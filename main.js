@@ -1578,9 +1578,16 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(userAccountsRef));
     }
     
-    // Save Settings & Offline Data back to JSON
+    // 🌟 [FIX] រក្សាទុកទិន្នន័យស្តុកនិងវិក្កយបត្រទៅ LocalStorage ដើម្បីកុំឱ្យបាត់ពេលទើបតែបញ្ចូលថ្មី
+    if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+    if (window.invoices) localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+    if (window.expenses) localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
+    if (window.customers) localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
+
+    // Save Settings & Offline Data back to JSON (Supabase Cloud)
     try {
         if(window.supabaseClient && navigator.onLine) {
+            // ១. រក្សាទុកទិន្នន័យទូទៅទៅ branch_store
             let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).maybeSingle();
             let cloudData = (data && data.data_json) ? data.data_json : {};
 
@@ -1610,8 +1617,30 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 data_json: packageData,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'branch_id' });
+
+            // ២. 🌟 [FIX] រក្សាទុកទំនិញចូលតារាង pos_products ថ្មីក្នុង Supabase
+            if (window.inventory && window.inventory.length > 0) {
+                const formattedProductsForDB = window.inventory.map(p => ({
+                    id: p.id,
+                    branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                    custom_id: p.customId || p.id,
+                    name: p.name,
+                    category: p.category,
+                    cost: p.cost,
+                    price: p.price,
+                    riel: p.riel,
+                    qty: p.qty,
+                    unit: p.unit,
+                    condition: p.condition,
+                    expiry: p.expiry,
+                    image: p.image
+                }));
+                
+                const { error: upsertErr } = await window.supabaseClient.from('pos_products').upsert(formattedProductsForDB);
+                if(upsertErr) console.warn("Supabase Products Upsert Error:", upsertErr);
+            }
         }
-    } catch(e) {}
+    } catch(e) { console.warn("Cloud Sync saving failed:", e); }
 
     localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings || {}));
     if (window.customPosScripts) {
@@ -2720,6 +2749,12 @@ window.runSmartDatabaseMaintenance = function() {
 window.onload = async () => {
     if(typeof window.loadThemeSettings==='function') window.loadThemeSettings(); 
     
+    // 🌟 [FIX] ទាញយកទិន្នន័យពី LocalStorage មកប្រើមុនពេល Cloud Sync ដើរ (ការពារកុំឱ្យបាត់ទិន្នន័យពេល Offline)
+    window.inventory = JSON.parse(localStorage.getItem(window.getBranchKey('inv_pro'))) || [];
+    window.invoices = JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
+    window.expenses = JSON.parse(localStorage.getItem(window.getBranchKey('expenses_pro'))) || [];
+    window.customers = JSON.parse(localStorage.getItem(window.getBranchKey('customers_pro'))) || [];
+
     const savedLang = localStorage.getItem('app_lang') || 'km';
     const langSel = document.getElementById('globalLangSelect');
     if (langSel) langSel.value = savedLang;
