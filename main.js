@@ -1471,6 +1471,32 @@ window.manualCloudSync = async function(isAuto = false) {
                 localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings));
             }
 
+            // 🌟 ដំណោះស្រាយ (Hybrid Sync): ស្វែងរកវិក្កយបត្រចាស់ៗពីក្នុងប្រអប់ JSON មកវិញ
+            if (d.invoices && Array.isArray(d.invoices)) {
+                if (!window.invoices) window.invoices = [];
+                let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+                
+                d.invoices.forEach(cInv => {
+                    let tempId = String(cInv.id || cInv.invoiceNo).trim().toLowerCase();
+                    if (!tempId || deletedInv.includes(tempId)) return;
+                    let localInv = window.invoices.find(lInv => String(lInv.id || lInv.invoiceNo).trim().toLowerCase() === tempId);
+                    
+                    if (!localInv) {
+                        window.invoices.push(cInv);
+                        hasChanges = true;
+                    } else {
+                        if (cInv.status !== localInv.status || (cInv.paidUsd || 0) > (localInv.paidUsd || 0)) {
+                            Object.assign(localInv, cInv);
+                            hasChanges = true;
+                        }
+                    }
+                });
+                // រៀបចំតាមកាលបរិច្ឆេទ
+                window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i.id || i.invoiceNo).trim().toLowerCase()));
+                window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+                localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+            }
+
             // 🌟 ទាញយកទិន្នន័យហាងត្រឡប់មកវិញ (Shop Profile)
             if (d.shopName) window.shopName = d.shopName;
             if (d.shopLogo) window.shopLogo = d.shopLogo;
@@ -1520,9 +1546,10 @@ window.manualCloudSync = async function(isAuto = false) {
             hasChanges = true;
         }
 
-        // 3. Fetch Orders from pos_orders table
-        let { data: ordersData } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
+        // 3. Fetch Orders from pos_orders table (SQL)
+        let { data: ordersData, error: ordersError } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
         if (ordersData && ordersData.length > 0) {
+            if (!window.invoices) window.invoices = [];
             let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
             let formattedOrders = ordersData.map(o => ({
                 id: o.id,
@@ -1603,6 +1630,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
 
             let packageData = {
+                invoices: window.invoices || [], // 🌟 [RESTORED] បញ្ចូលវិក្កយបត្រទៅក្នុង JSON វិញ ដើម្បីធ្វើជា Backup
                 expenses: window.expenses,
                 shopName: window.shopName, 
                 shopLogo: window.shopLogo, 
@@ -2204,6 +2232,11 @@ window.openShopNameModal = function() {
     const qrPreview = document.getElementById('shopQRPreview'); 
     if(window.shopQR) { qrPreview.src = window.shopQR; qrPreview.style.display = 'block'; } else qrPreview.style.display = 'none'; 
     
+    if(document.getElementById('newBakongIdInput') && window.sysSettings) {
+        document.getElementById('newBakongIdInput').value = window.sysSettings.bakongId || '';
+        document.getElementById('newBakongNameInput').value = window.sysSettings.bakongName || '';
+    }
+    
     if(typeof window.changeAppLanguage==='function') window.changeAppLanguage(lang);
     document.getElementById('shopNameModal').style.display = 'flex'; 
 };
@@ -2265,6 +2298,13 @@ window.saveShopName = async function() {
     const newBotToken = document.getElementById('newBotTokenInput').value.trim(); 
     const newChatId = document.getElementById('newChatIdInput').value.trim(); 
     
+    let bakongId = '';
+    let bakongName = '';
+    if (document.getElementById('newBakongIdInput')) {
+        bakongId = document.getElementById('newBakongIdInput').value.trim();
+        bakongName = document.getElementById('newBakongNameInput').value.trim().toUpperCase();
+    }
+    
     if(newName !== "") { 
         if(typeof window.updateShopInfo === 'function') {
             window.updateShopInfo(
@@ -2298,6 +2338,10 @@ window.saveShopName = async function() {
             window.sysSettings.telegramChatId = newChatId;
             if (!window.sysSettings.orderTelegramChatId) window.sysSettings.orderTelegramChatId = newChatId;
         }
+        
+        // Save Bakong info to sysSettings
+        window.sysSettings.bakongId = bakongId;
+        window.sysSettings.bakongName = bakongName;
         
         const dispName = document.getElementById('displayShopName');
         if(dispName) dispName.innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
@@ -2983,11 +3027,8 @@ window.printZReport = function() {
         const pinInputs = document.querySelectorAll('input[type="password"], input[id*="pin" i], input[id*="Pin" i]');
         pinInputs.forEach(input => {
             // ការពារ Autofill លោតរំខាន តែមិនត្រូវបិទ Keyboard (readonly) ទេ
-            input.setAttribute('autocomplete', 'off');
+            input.setAttribute('autocomplete', 'new-password');
             input.setAttribute('spellcheck', 'false');
-            
-            // លុបកូដដែលធ្វើអោយបាត់ Keyboard ចោល
-            // (កូដចាស់មាន input.setAttribute('readonly', 'readonly') ធ្វើអោយទូរស័ព្ទខ្លះគាំង Keyboard)
         });
     };
 
