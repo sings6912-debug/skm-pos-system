@@ -223,7 +223,7 @@
             <button class="tab-btn" onclick="switchTab('tab-banner')"><i class="fa-solid fa-images"></i> 2. ផ្ទាំងផ្សាយ & ប្រូម៉ូសិន</button>
             <button class="tab-btn" onclick="switchTab('tab-ticker')"><i class="fa-solid fa-bullhorn"></i> 3. អត្ថបទរត់ (Ticker)</button>
             <button class="tab-btn" onclick="switchTab('tab-store')"><i class="fa-solid fa-store"></i> 4. ម៉ោងបើក & ស្វាគមន៍</button>
-            <button class="tab-btn" onclick="switchTab('tab-social')"><i class="fa-solid fa-share-nodes"></i> 5. បណ្តាញ & បូត</button>
+            <button class="tab-btn" onclick="switchTab('tab-social')"><i class="fa-solid fa-share-nodes"></i> 5. បណ្តាញ & បង់ប្រាក់</button>
             <button class="tab-btn" onclick="switchTab('tab-customjs')"><i class="fa-solid fa-file-code"></i> 6. កូដបន្ថែម (Custom JS)</button>
             <button class="tab-btn" onclick="switchTab('tab-tables')"><i class="fa-solid fa-chair"></i> 7. លេខតុ & ទិន្នន័យ</button>
             <button class="tab-btn" onclick="switchTab('tab-printer')"><i class="fa-solid fa-print"></i> 8. ខ្នាតម៉ាស៊ីនព្រីន & រូប</button>
@@ -401,8 +401,9 @@
                 <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL (Link)..." onchange="saveAdminSettings()">
             </div>
 
+            <!-- 🌟 បន្ថែមប្រព័ន្ធ KHQR Dynamic និងរក្សារូបភាព QR ជា Fallback -->
             <div class="form-group">
-                <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ABA / ACLEDA)</label>
+                <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ជំនួស/Fallback)</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 8px;">
                     <input type="text" id="setMenuQR" class="input-st" placeholder="Link ឬ Base64..." style="margin-bottom:0;" onchange="saveAdminSettings()">
                     <input type="file" id="qrFile" accept="image/*" style="display:none;" onchange="uploadQR(event)">
@@ -412,8 +413,19 @@
                     <img id="menuQRPreview" src="" alt="QR Preview" style="display: none;">
                 </div>
             </div>
+            
+            <div class="form-group" style="background: rgba(16, 185, 129, 0.05); padding: 15px; border-radius: 12px; border: 1px dashed var(--success); margin-top: 15px;">
+                <label style="color: var(--success); font-size: 14px; font-weight: 900;"><i class="fa-solid fa-qrcode"></i> ប្រព័ន្ធ KHQR លោតទឹកលុយស្វ័យប្រវត្តិ (Dynamic QR)</label>
+                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 10px;">ប្រសិនបើអ្នកបញ្ចូល Bakong ID ទីនេះ ប្រព័ន្ធនឹងបង្កើត QR ថ្មីដែលមានទឹកលុយអូតូ ជំនួសរូបភាព QR ខាងលើ។</p>
+                <div style="margin-bottom: 10px;">
+                    <input type="text" id="setBakongId" class="input-st" placeholder="Bakong ID (ឧ. 123456789@aba ឬ name@acleda)" onchange="saveAdminSettings()">
+                </div>
+                <div>
+                    <input type="text" id="setBakongName" class="input-st" placeholder="ឈ្មោះម្ចាស់គណនី (ឧ. SOK DARA)" style="text-transform: uppercase;" onchange="saveAdminSettings()">
+                </div>
+            </div>
 
-            <div class="form-group">
+            <div class="form-group" style="margin-top: 20px;">
                 <label><i class="fa-brands fa-telegram"></i> តំណភ្ជាប់ Chat សម្រាប់ប៊ូតុងអណ្តែត (Floating Chat)</label>
                 <input type="text" id="setChatLink" class="input-st" placeholder="ឧ. https://t.me/yourusername" onchange="saveAdminSettings()">
             </div>
@@ -1404,6 +1416,10 @@
                 const qp = document.getElementById('menuQRPreview'); qp.src = localQr; qp.style.display = 'block';
                 document.getElementById('qrPreviewContainer').style.display = 'block';
             }
+            
+            if (localSys.bakongId) document.getElementById('setBakongId').value = localSys.bakongId;
+            if (localSys.bakongName) document.getElementById('setBakongName').value = localSys.bakongName;
+
             if (localSys.chatLink) document.getElementById('setChatLink').value = localSys.chatLink;
             if (localSys.socialIcon) document.getElementById('setSocialIcon').value = localSys.socialIcon;
             if (localSys.socialLabel) document.getElementById('setSocialLabel').value = localSys.socialLabel;
@@ -1495,6 +1511,9 @@
                         document.getElementById('qrPreviewContainer').style.display = 'block';
                     }
                     
+                    if(sys.bakongId) document.getElementById('setBakongId').value = sys.bakongId;
+                    if(sys.bakongName) document.getElementById('setBakongName').value = sys.bakongName;
+                    
                     if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
                     if(sys.socialIcon) document.getElementById('setSocialIcon').value = sys.socialIcon;
                     if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
@@ -1576,6 +1595,10 @@
         sys.hidePromoOnBanner = hideBadgeVal;
         
         sys.menuQR = document.getElementById('setMenuQR').value.trim();
+        
+        sys.bakongId = document.getElementById('setBakongId') ? document.getElementById('setBakongId').value.trim() : '';
+        sys.bakongName = document.getElementById('setBakongName') ? document.getElementById('setBakongName').value.trim().toUpperCase() : '';
+
         sys.chatLink = document.getElementById('setChatLink').value.trim();
         sys.socialIcon = document.getElementById('setSocialIcon').value;
         sys.socialLabel = document.getElementById('setSocialLabel').value.trim();

@@ -996,104 +996,31 @@
         async function init() {
             document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
             
-            try {
-                let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`));
-                let localSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`));
-                
-                if (localSys) {
-                    sys = localSys;
-                    if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
-                    
-                    orderBotToken = sys.orderTelegramBotToken || sys.telegramBotToken || '';
-                    orderChatId = sys.orderTelegramChatId || sys.telegramChatId || '';
-                    serviceBotToken = sys.serviceTelegramBotToken || orderBotToken;
-                    serviceChatId = sys.serviceTelegramChatId || orderChatId;
-                    
-                    window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
-                    window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
-
-                    const localShopName = localStorage.getItem(`ks2_${BRANCH}_shop_name`) || 'Shop Name';
-                    const localShopLogo = localStorage.getItem(`ks2_${BRANCH}_shop_logo`) || '';
-                    document.getElementById('lpName').innerText = localShopName;
-                    document.getElementById('splashName').innerText = localShopName;
-                    if (localShopLogo) document.getElementById('lpLogo').src = localShopLogo;
-
-                    const promoBanner = document.getElementById('promoBannerWrapper');
-                    const slider = document.getElementById('bannerSlider');
-                    const dotsContainer = document.getElementById('bannerDots');
-                    if (sys.menuBanners && sys.menuBanners.length > 0) bannerBgs = sys.menuBanners.filter(b => b && b.trim() !== '');
-                    else if (sys.menuBanner) bannerBgs = [sys.menuBanner];
-                    if (bannerBgs.length > 0) {
-                        promoBanner.style.display = 'block';
-                        slider.innerHTML = bannerBgs.map(b => `<img src="${b}" alt="Promo Banner" onclick="openLightbox(this.src)" onerror="this.src='https://placehold.co/800x400/1d162d/ffffff?text=Promo+Banner'">`).join('');
-                        if (bannerBgs.length > 1) {
-                            dotsContainer.innerHTML = bannerBgs.map((_, i) => `<div class="slider-dot ${i===0?'active':''}" onclick="curBannerIdx=${i}; document.getElementById('bannerSlider').style.transform='translateX(-${i*100}%)'; document.querySelectorAll('.slider-dot').forEach((d,idx)=>d.classList.toggle('active', idx===${i}));"></div>`).join('');
-                            clearInterval(bannerTimerInterval);
-                            bannerTimerInterval = setInterval(() => {
-                                curBannerIdx = (curBannerIdx + 1) % bannerBgs.length;
-                                slider.style.transform = `translateX(-${curBannerIdx * 100}%)`;
-                                document.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === curBannerIdx));
-                            }, 3500);
-                        } else dotsContainer.innerHTML = '';
-                    }
-
-                    const localQr = sys.menuQR || localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '';
-                    const shopQr = document.getElementById('shopQrImg');
-                    if (shopQr && localQr) {
-                        shopQr.src = localQr;
-                        document.getElementById('qrBoxContainer').style.display = 'block';
-                    } else if (document.getElementById('qrBoxContainer')) {
-                        document.getElementById('qrBoxContainer').style.display = 'none';
-                    }
-
-                    if (sys.chatLink) dynamicChatLink = sys.chatLink;
-                    if (sys.toggleWelcomePopup && sys.welcomeImg) {
-                        if (!sessionStorage.getItem('welcomePopupShown')) {
-                            document.getElementById('welcomePopupImg').src = sys.welcomeImg;
-                            document.getElementById('welcomePopupModal').style.display = 'flex';
-                            sessionStorage.setItem('welcomePopupShown', 'true');
-                        }
-                    }
-                    if (sys.socialLabel && sys.socialLink) {
-                        const socialEl = document.getElementById('lpSocialLink');
-                        socialEl.href = sys.socialLink;
-                        socialEl.style.display = 'flex';
-                        const iconEl = document.getElementById('lpSocialIcon');
-                        iconEl.className = sys.socialIcon || 'fa-brands fa-youtube';
-                        document.getElementById('lpSocialLabel').innerText = sys.socialLabel;
-                    }
-
-                    const localTicker = sys.tickerText || sys.tickerNews || '';
-                    if ((sys.toggleTicker || sys.tickerNews) && localTicker) {
-                        document.getElementById('tickerContentText').innerText = localTicker;
-                        document.getElementById('marqueeTickerBar').style.display = 'block';
-                    }
-                    renderSingleBannerPromoBadge();
-                }
-                
-                if (localInv && Array.isArray(localInv)) {
-                    let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
-                    inventory = localInv.filter(p => p && !deletedProd.includes(String(p.id)) && (parseFloat(p.qty) > 0 || (sys && sys.preorder)));
-                    buildCats();
-                    renderMenu();
-                }
-                populateCustomerTables();
-            } catch(e) { console.warn("Local storage parse error:", e); }
-
+            // 🚀 អនុគមន៍ជំនួយថ្មី៖ Fetch ទិន្នន័យព្រមគ្នា ដើម្បីដើរលឿន និងទាញយកពី Table ថ្មី `pos_products`
             try {
                 if (supabaseClient && navigator.onLine) {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                    if (data && data.data_json) {
-                        let d = data.data_json;
+                    const fetchSettings = supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                    const fetchProducts = supabaseClient.from('pos_products').select('*').eq('branch_id', BRANCH);
+                    
+                    const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 6000));
+                    
+                    let [settingsRes, productsRes] = await Promise.race([
+                        Promise.all([fetchSettings, fetchProducts]),
+                        timeoutPromise
+                    ]);
+
+                    let d = {};
+                    if (settingsRes && settingsRes.data && settingsRes.data.data_json) {
+                        d = settingsRes.data.data_json;
+                        
+                        // ចាប់ផ្តើម Apply Settings
                         if (d.sysSettings) {
                             sys = d.sysSettings;
-                            
                             if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
                             
                             const promoBanner = document.getElementById('promoBannerWrapper');
                             const slider = document.getElementById('bannerSlider');
                             const dotsContainer = document.getElementById('bannerDots');
-                            
                             if (sys.menuBanners && sys.menuBanners.length > 0) bannerBgs = sys.menuBanners.filter(b => b && b.trim() !== '');
                             else if (sys.menuBanner) bannerBgs = [sys.menuBanner];
 
@@ -1132,8 +1059,6 @@
                                 document.getElementById('welcomePopupModal').style.display = 'none';
                             }
                             
-                            populateCustomerTables();
-                            
                             if (sys.toggleStoreHours && sys.openTime && sys.closeTime) {
                                 const now = new Date();
                                 const currentTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
@@ -1157,45 +1082,60 @@
                             }
                             
                             if (sys.chatLink) dynamicChatLink = sys.chatLink;
-
-                            if (sys.customMenuScripts) {
-                                injectMenuScripts(sys.customMenuScripts);
-                            }
+                            if (sys.customMenuScripts) injectMenuScripts(sys.customMenuScripts);
                             
                             if (sys.socialLabel && sys.socialLink) {
                                 const socialEl = document.getElementById('lpSocialLink');
                                 socialEl.href = sys.socialLink;
                                 socialEl.style.display = 'flex';
-                                
                                 const iconEl = document.getElementById('lpSocialIcon');
                                 iconEl.className = sys.socialIcon || 'fa-brands fa-youtube';
-                                
                                 let iconColor = '#ef4444';
                                 if (sys.socialIcon === 'fa-brands fa-facebook' || sys.socialIcon === 'fa-brands fa-telegram') iconColor = '#3b82f6';
                                 else if (sys.socialIcon === 'fa-brands fa-tiktok') iconColor = '#ffffff';
                                 else if (sys.socialIcon === 'fa-brands fa-instagram') iconColor = '#e1306c';
-                                
                                 iconEl.style.color = iconColor;
                                 document.getElementById('lpSocialLabel').innerText = sys.socialLabel;
                             } else {
                                 document.getElementById('lpSocialLink').style.display = 'none';
                             }
                         }
-                        
+
+                        // 🌟 Process Products (ពី Table 'pos_products') 
                         let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
                         if (d.deletedProducts) deletedProd = [...new Set([...deletedProd, ...d.deletedProducts])];
 
-                        inventory = (d.inventory || []).filter(p => p && !deletedProd.includes(String(p.id)) && (parseFloat(p.qty) > 0 || sys.preorder));
+                        if (productsRes && productsRes.data && productsRes.data.length > 0) {
+                            let dbProducts = productsRes.data.map(p => ({
+                                id: p.id,
+                                customId: p.custom_id || p.id,
+                                name: p.name,
+                                category: p.category,
+                                cost: p.cost,
+                                price: p.price,
+                                riel: p.riel,
+                                qty: p.qty,
+                                unit: p.unit,
+                                condition: p.condition,
+                                expiry: p.expiry,
+                                image: p.image,
+                                desc: p.desc || '' 
+                            }));
+                            inventory = dbProducts.filter(p => p && !deletedProd.includes(String(p.id)));
+                        } else if (d.inventory && Array.isArray(d.inventory)) {
+                            // Fallback to JSON Format
+                            inventory = d.inventory.filter(p => p && !deletedProd.includes(String(p.id)));
+                        }
                         
                         const nm = d.shopName || 'Shop Name';
                         document.getElementById('lpName').innerText = nm;
                         document.getElementById('splashName').innerText = nm;
                         if (d.shopLogo) document.getElementById('lpLogo').src = d.shopLogo;
                         
-                        orderBotToken = sys.orderTelegramBotToken || sys.telegramBotToken || d.telegramBotToken || '';
-                        orderChatId = sys.orderTelegramChatId || sys.telegramChatId || d.telegramChatId || '';
-                        serviceBotToken = sys.serviceTelegramBotToken || orderBotToken;
-                        serviceChatId = sys.serviceTelegramChatId || orderChatId;
+                        orderBotToken = (sys.orderTelegramBotToken || sys.telegramBotToken || d.telegramBotToken || '').trim();
+                        orderChatId = (sys.orderTelegramChatId || sys.telegramChatId || d.telegramChatId || '').trim();
+                        serviceBotToken = (sys.serviceTelegramBotToken || orderBotToken).trim();
+                        serviceChatId = (sys.serviceTelegramChatId || orderChatId).trim();
                         
                         window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
                         window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
@@ -1204,13 +1144,25 @@
                         renderMenu();
                         populateCustomerTables();
                         
-                        localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
+                        localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(inventory));
                         if(sys) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sys));
                     }
+                } else {
+                    throw new Error("Offline or no Supabase Client");
                 }
-            } catch (e) { console.log('DB error, using offline local data', e); }
+            } catch (e) { 
+                console.log('DB error, using offline local data', e); 
+                // Fallback to local storage if offline or error
+                let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`));
+                if (localInv && Array.isArray(localInv)) {
+                    let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+                    inventory = localInv.filter(p => p && !deletedProd.includes(String(p.id)));
+                    buildCats();
+                    renderMenu();
+                }
+                populateCustomerTables();
+            }
             
-            populateCustomerTables();
             setTimeout(() => {
                 const sp = document.getElementById('splashScreen'); sp.style.opacity = '0';
                 setTimeout(() => sp.style.display = 'none', 500);
@@ -1299,14 +1251,21 @@
             let pQty = parseFloat(p.qty) || 0;
             let urgencyHtml = '';
             
+            // 🌟 កែសម្រួល Badge បង្ហាញស្តុក
             if (pQty <= 3 && pQty > 0) {
                 urgencyHtml = `<div class="p-urgency">Only ${pQty} left!</div>`;
             } else if (pQty <= 0) {
-                urgencyHtml = `<div class="p-urgency" style="background:var(--danger)">Out of Stock (Pre-order)</div>`;
+                let oosTxt = (sys && sys.preorder) ? 'Out of Stock (Pre-order)' : 'Out of Stock';
+                urgencyHtml = `<div class="p-urgency" style="background:var(--danger)">${oosTxt}</div>`;
             }
             
             let conditionBadge = p.condition ? `<div style="position:absolute; top:8px; left:8px; background:rgba(255,255,255,0.9); color:#000; font-size:10px; font-weight:bold; padding:2px 6px; border-radius:4px; z-index:10;">${p.condition}</div>` : '';
             let safeId = String(p.id).replace(/'/g, "\\'");
+            
+            // 🌟 បិទប៊ូតុង Add បើទំនិញអស់ស្តុក ហើយមិនបើក Pre-order
+            let canAdd = pQty > 0 || (sys && sys.preorder);
+            let btnStyle = canAdd ? '' : 'opacity:0.4; cursor:not-allowed;';
+            let btnClick = canAdd ? `onclick="quickAdd('${safeId}', event)"` : `onclick="event.stopPropagation(); showToast('⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!', true);"`;
 
             return `
             <div class="p-card" onclick="openDet('${safeId}')">
@@ -1321,7 +1280,7 @@
                     <div class="p-title">${p.name}</div>
                     <div class="p-price-row">
                         <span class="p-price">${fmt(getPrc(p))}</span>
-                        <button class="p-add-btn" onclick="quickAdd('${safeId}', event)">Add</button>
+                        <button class="p-add-btn" style="${btnStyle}" ${btnClick}>Add</button>
                     </div>
                 </div>
             </div>`;
@@ -1408,6 +1367,13 @@
             
             let isFav = wishlist.some(w=>String(w.id)===String(id));
             let safeId = String(id).replace(/'/g, "\\'");
+            
+            // 🌟 ឆែកស្តុកដើម្បីបិទប៊ូតុង Add to Order
+            let pQty = parseFloat(p.qty) || 0;
+            let canAdd = pQty > 0 || (sys && sys.preorder);
+            let btnStyle = canAdd ? '' : 'opacity:0.4; cursor:not-allowed;';
+            let btnClick = canAdd ? `onclick="addCartLogic()"` : `onclick="showToast('⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!', true);"`;
+            
             document.getElementById('dContent').innerHTML = `
                 <div style="position:relative;">
                     <button style="position:absolute; top:10px; right:10px; background:rgba(0,0,0,0.5); border:none; border-radius:50%; width:32px; height:32px; color:${isFav?'var(--danger)':'white'}; font-size:14px; z-index:10; cursor:pointer;" onclick="toggleWl('${safeId}', this, event)"><i class="fa-solid fa-heart"></i></button>
@@ -1418,7 +1384,7 @@
                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">${p.desc || ''}</div>
                 <div style="margin-bottom:5px; font-size:12px; font-weight:800; color:var(--text-muted);">Variant:</div>
                 <div style="margin-bottom:20px;">${vHtml}</div>
-                <button class="btn-act btn-green" style="width:100%;" onclick="addCartLogic()">Add to Order</button>
+                <button class="btn-act btn-green" style="width:100%; ${btnStyle}" ${btnClick}>Add to Order</button>
             `;
             renderQA(); openModal('detailModal');
         }
@@ -1446,7 +1412,7 @@
             const stockLimit = parseFloat(curProd.qty) || 0;
             
             if(ex) { 
-                if(ex.qty < stockLimit || sys.preorder) {
+                if(ex.qty < stockLimit || (sys && sys.preorder)) {
                     ex.qty++;
                     ex.cartQty = ex.qty;
                 } else {
@@ -1454,7 +1420,7 @@
                 }
             } 
             else { 
-                if(stockLimit <= 0 && !sys.preorder) return showToast('⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!', true); 
+                if(stockLimit <= 0 && !(sys && sys.preorder)) return showToast('⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!', true); 
                 cart.push({...curProd, cartId: cid, cartVar: selVar, qty: 1, cartQty: 1}); 
             }
             

@@ -1,5 +1,3 @@
-// main.js
-
 // ==========================================
 // 0. EARLY SETTINGS LOAD (FIX PIN CACHE ISSUE)
 // ==========================================
@@ -7,7 +5,7 @@ try {
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
     const sysKey = `ks2_${branchId}_sys_settings`;
     const loadedSys = JSON.parse(localStorage.getItem(sysKey));
-    if (loadedSys) window.sysSettings = loadedSys; // Force load new PIN instantly!
+    if (loadedSys) window.sysSettings = loadedSys; 
 } catch(e) {
     console.warn("Early sysSettings load skipped.");
 }
@@ -2981,16 +2979,15 @@ window.printZReport = function() {
 
     // ២. ជួសជុលបញ្ហា Store PIN (ការពារការលោតជាប់លេខចាស់ Autofill)
     const fixPinInputs = () => {
-        const pinInputs = document.querySelectorAll('input[type="password"], input[type="number"], input[id*="pin" i], input[id*="Pin" i]');
+        // កំណត់តែលើប្រអប់លេខកូដ Settings ទេ មិនប៉ះពាល់ដល់ Login
+        const pinInputs = document.querySelectorAll('input[type="password"], input[id*="pin" i], input[id*="Pin" i]');
         pinInputs.forEach(input => {
-            input.setAttribute('autocomplete', 'new-password'); // ប្រាប់ Browser កុំឱ្យទន្ទេញលេខកូដ
+            // ការពារ Autofill លោតរំខាន តែមិនត្រូវបិទ Keyboard (readonly) ទេ
+            input.setAttribute('autocomplete', 'off');
             input.setAttribute('spellcheck', 'false');
             
-            // ការពារ Browser ទម្លាក់លេខកូដចាស់ចូលភ្លាមៗពេលចុច
-            input.addEventListener('focus', function() {
-                this.setAttribute('readonly', 'readonly');
-                setTimeout(() => this.removeAttribute('readonly'), 100);
-            });
+            // លុបកូដដែលធ្វើអោយបាត់ Keyboard ចោល
+            // (កូដចាស់មាន input.setAttribute('readonly', 'readonly') ធ្វើអោយទូរស័ព្ទខ្លះគាំង Keyboard)
         });
     };
 
