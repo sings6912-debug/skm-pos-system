@@ -43,12 +43,16 @@ window.renderUnpaid = function() {
     if (!tableBody) return;
 
     let invoices = window.invoices || [];
-    if (invoices.length === 0) {
+    if (!Array.isArray(invoices) || invoices.length === 0) {
         try {
-            invoices = JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
+            const raw = localStorage.getItem(window.getBranchKey('invoices_pro'));
+            invoices = raw ? JSON.parse(raw) : [];
             window.invoices = invoices;
         } catch(e) { invoices = []; }
     }
+
+    // 🛡️ សម្អាតទិន្នន័យខូច (Null/Undefined) ការពារកុំឱ្យគាំង
+    invoices = invoices.filter(inv => inv !== null && typeof inv === 'object');
 
     const deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
     if (deletedTracker.length > 0) {
@@ -60,8 +64,8 @@ window.renderUnpaid = function() {
     }
 
     invoices.sort((a, b) => {
-        let timeA = a.timestamp || new Date(a.date || a.createdAt || 0).getTime();
-        let timeB = b.timestamp || new Date(b.date || b.createdAt || 0).getTime();
+        let timeA = a.timestamp || new Date(a.date || a.createdAt || 0).getTime() || 0;
+        let timeB = b.timestamp || new Date(b.date || b.createdAt || 0).getTime() || 0;
         return timeB - timeA;
     });
 
@@ -145,10 +149,10 @@ window.renderUnpaid = function() {
     tableBody.innerHTML = '';
     displayItems.forEach((inv, index) => {
         const invId = String(inv.id || inv.invoiceNo || `ORD-${index}`);
-        const custName = inv.customerName || inv.customer || 'អតិថិជនទូទៅ';
-        const custPhone = inv.customerPhone || inv.phone || '';
+        const custName = window.escapeHTML ? window.escapeHTML(inv.customerName || inv.customer || 'អតិថិជនទូទៅ') : (inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
+        const custPhone = window.escapeHTML ? window.escapeHTML(inv.customerPhone || inv.phone || '') : (inv.customerPhone || inv.phone || '');
         const dateStr = inv.date || inv.createdAt || 'N/A';
-        const seller = inv.seller || inv.cashier || 'N/A';
+        const seller = window.escapeHTML ? window.escapeHTML(inv.seller || inv.cashier || 'N/A') : (inv.seller || inv.cashier || 'N/A');
         const status = String(inv.status || 'unpaid').toLowerCase();
         
         const totalAmount = parseFloat(inv.totalAmount || inv.total || 0);
@@ -156,9 +160,15 @@ window.renderUnpaid = function() {
         if (status === 'paid') paidAmount = totalAmount;
         const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
+        // 🛡️ សម្អាតទិន្នន័យទំនិញក្នុងវិក្កយបត្រការពារការ Error
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
-            itemsSummary = inv.items.map(it => `${it.name || it.title} (x${it.cartQty !== undefined ? it.cartQty : (it.qty || 1)})`).join(', ');
+            itemsSummary = inv.items.map(it => {
+                if (!it) return '';
+                let name = it.name || it.title || 'ទំនិញ';
+                let qty = it.cartQty !== undefined ? it.cartQty : (it.qty || 1);
+                return `${name} (x${qty})`;
+            }).filter(Boolean).join(', ');
         } else {
             itemsSummary = inv.itemsSummary || 'ទំនិញចម្រុះ';
         }
@@ -196,7 +206,8 @@ window.renderUnpaid = function() {
             </div>
         `;
 
-        const noteTag = inv.note ? `<br><small style="color:#0284c7; font-weight:bold;">📝 ${inv.note}</small>` : '';
+        const safeNote = inv.note ? (window.escapeHTML ? window.escapeHTML(inv.note) : inv.note) : '';
+        const noteTag = safeNote ? `<br><small style="color:#0284c7; font-weight:bold;">📝 ${safeNote}</small>` : '';
 
         const row = document.createElement('tr');
         row.setAttribute('data-paid', paidAmount);
@@ -453,6 +464,7 @@ window.renderEditingInvoiceItems = function() {
     }
 
     items.forEach((it, idx) => {
+        if (!it) return;
         const price = parseFloat(it.price) > 0 ? parseFloat(it.price) : ((parseFloat(it.riel) || 0) / rate);
         it.price = price;
         const qty = parseInt(it.cartQty !== undefined ? it.cartQty : (it.qty || it.quantity || 1));
@@ -734,7 +746,7 @@ window.viewInvoiceDetails = function(invId) {
     
     let shopContact = document.getElementById('viewShopContact');
     if(shopContact && (window.shopPhone || window.shopAddress)) {
-        shopContact.innerHTML = `${window.shopPhone ? `Tel: ${window.shopPhone}<br>` : ''}${window.shopAddress ? window.shopAddress : ''}`;
+        shopContact.innerHTML = `${window.shopPhone ? `Tel: ${window.escapeHTML ? window.escapeHTML(window.shopPhone) : window.shopPhone}<br>` : ''}${window.shopAddress ? (window.escapeHTML ? window.escapeHTML(window.shopAddress) : window.shopAddress) : ''}`;
     }
 
     let itemsHtml = `<table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px;"><thead><tr style="border-bottom: 1px dashed #000;"><th style="text-align: left; padding: 4px 0;">ទំនិញ</th><th style="text-align: center; padding: 4px 0;">ចំនួន</th><th style="text-align: right; padding: 4px 0;">តម្លៃ</th><th style="text-align: right; padding: 4px 0;">សរុប</th></tr></thead><tbody>`;
@@ -743,10 +755,12 @@ window.viewInvoiceDetails = function(invId) {
     const rate = parseFloat(inv.rate) || window.cartRate || 4000;
 
     (inv.items || []).forEach(it => {
+        if (!it) return;
         const p = parseFloat(it.price) > 0 ? parseFloat(it.price) : ((parseFloat(it.riel) || 0) / rate);
         const q = parseInt(it.cartQty !== undefined ? it.cartQty : (it.qty || it.quantity || 1));
+        const safeName = window.escapeHTML ? window.escapeHTML(it.name || it.title || 'ទំនិញ') : (it.name || it.title || 'ទំនិញ');
         rawSubtotal += (p * q); 
-        itemsHtml += `<tr style="border-bottom: 1px dotted #ccc;"><td style="padding: 4px 0;">${it.name || it.title}</td><td style="text-align: center; padding: 4px 0;">${q}</td><td style="text-align: right; padding: 4px 0;">$${p.toFixed(2)}</td><td style="text-align: right; padding: 4px 0;">$${(p * q).toFixed(2)}</td></tr>`;
+        itemsHtml += `<tr style="border-bottom: 1px dotted #ccc;"><td style="padding: 4px 0;">${safeName}</td><td style="text-align: center; padding: 4px 0;">${q}</td><td style="text-align: right; padding: 4px 0;">$${p.toFixed(2)}</td><td style="text-align: right; padding: 4px 0;">$${(p * q).toFixed(2)}</td></tr>`;
     });
 
     const total = parseFloat(inv.totalAmount || inv.total || 0);
@@ -777,11 +791,16 @@ window.viewInvoiceDetails = function(invId) {
         itemsHtml += `<div style="font-size: 13px; margin-top: 4px;">បានទូទាត់៖ $${paid.toFixed(2)}</div><div style="font-size: 13px; font-weight: bold; color: red;">នៅខ្វះ៖ $${remaining.toFixed(2)}</div>`;
     }
 
-    itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 8px; text-align: left;">អតិថិជន៖ <b>${inv.customerName || inv.customer || 'ទូទៅ'}</b> (${inv.customerPhone || inv.phone || '-'})</div>`;
+    const safeCustName = window.escapeHTML ? window.escapeHTML(inv.customerName || inv.customer || 'ទូទៅ') : (inv.customerName || inv.customer || 'ទូទៅ');
+    const safeCustPhone = window.escapeHTML ? window.escapeHTML(inv.customerPhone || inv.phone || '-') : (inv.customerPhone || inv.phone || '-');
+    const safeSeller = window.escapeHTML ? window.escapeHTML(inv.seller || inv.cashier || 'N/A') : (inv.seller || inv.cashier || 'N/A');
+
+    itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 8px; text-align: left;">អតិថិជន៖ <b>${safeCustName}</b> (${safeCustPhone})</div>`;
     if (inv.note) {
-        itemsHtml += `<div style="font-size: 12px; color: #000; background: #f1f5f9; border-left: 3px solid #0284c7; padding: 5px 8px; margin-top: 5px; text-align: left; font-weight: bold;">📝 ចំណាំ៖ ${inv.note}</div>`;
+        const safeNote = window.escapeHTML ? window.escapeHTML(inv.note) : inv.note;
+        itemsHtml += `<div style="font-size: 12px; color: #000; background: #f1f5f9; border-left: 3px solid #0284c7; padding: 5px 8px; margin-top: 5px; text-align: left; font-weight: bold;">📝 ចំណាំ៖ ${safeNote}</div>`;
     }
-    itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 4px; text-align: left;">អ្នកលក់៖ ${inv.seller || inv.cashier || 'N/A'}</div></div>`;
+    itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 4px; text-align: left;">អ្នកលក់៖ ${safeSeller}</div></div>`;
 
     captureArea.innerHTML = itemsHtml;
     modal.style.display = 'flex';
@@ -805,16 +824,16 @@ window.reprintInvoice = function() {
     if(currentLogo) {
         receiptHTML += `<img src="${currentLogo}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
     }
-    receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.shopName || 'SKM INTEGRATE'}</h2>`; 
-    if(window.shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${window.shopPhone}</p>`; 
-    if(window.shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${window.shopAddress}</p>`; 
+    receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.escapeHTML ? window.escapeHTML(window.shopName || 'SKM INTEGRATE') : (window.shopName || 'SKM INTEGRATE')}</h2>`; 
+    if(window.shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${window.escapeHTML ? window.escapeHTML(window.shopPhone) : window.shopPhone}</p>`; 
+    if(window.shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${window.escapeHTML ? window.escapeHTML(window.shopAddress) : window.shopAddress}</p>`; 
     receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
     receiptHTML += `<p style="margin:4px 0; font-size:14px; font-weight:bold;">វិក្កយបត្រ / Invoice</p>`;
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${inv.date || inv.createdAt || 'N/A'}</p>`;
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">លេខវិក្កយបត្រ: ${inv.id || inv.invoiceNo || window.currentActiveInvoiceId}</p>`;
-    receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${inv.customerName || inv.customer || 'ទូទៅ'}</b> ${inv.phone || inv.customerPhone ? '('+(inv.phone || inv.customerPhone)+')':''}</p>`;
+    receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${window.escapeHTML ? window.escapeHTML(inv.customerName || inv.customer || 'ទូទៅ') : (inv.customerName || inv.customer || 'ទូទៅ')}</b> ${inv.phone || inv.customerPhone ? '('+(window.escapeHTML ? window.escapeHTML(inv.phone || inv.customerPhone) : (inv.phone || inv.customerPhone))+')':''}</p>`;
     if (inv.note) {
-        receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left; font-weight:bold;">ចំណាំ: ${inv.note}</p>`;
+        receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left; font-weight:bold;">ចំណាំ: ${window.escapeHTML ? window.escapeHTML(inv.note) : inv.note}</p>`;
     }
     receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div></div>`;
 
@@ -822,10 +841,12 @@ window.reprintInvoice = function() {
 
     const rate = parseFloat(inv.rate) || window.cartRate || 4000;
     (inv.items || []).forEach((item, index) => {
+        if (!item) return;
         let p = parseFloat(item.price) > 0 ? parseFloat(item.price) : ((parseFloat(item.riel) || 0) / rate);
         let q = parseInt(item.cartQty !== undefined ? item.cartQty : (item.qty || 1));
         let lineTotal = p * q;
-        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${item.name || item.title}</td></tr>`;
+        let safeItemName = window.escapeHTML ? window.escapeHTML(item.name || item.title) : (item.name || item.title);
+        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${safeItemName}</td></tr>`;
         receiptHTML += `<tr><td style="padding-bottom: 4px; font-size: 11px;">$${p.toFixed(2)}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${q}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">$${lineTotal.toFixed(2)}</td></tr>`;
     });
 
@@ -835,6 +856,7 @@ window.reprintInvoice = function() {
     receiptHTML += `</table>`;
     
     let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+    if (window.escapeHTML) footerText = window.escapeHTML(footerText).replace(/\n/g, '<br>');
     receiptHTML += `<p style="text-align:center; font-size:12px; margin-top: 15px; font-weight:bold;">${footerText}</p>`;
 
     if (typeof window.executePrint === 'function') {
@@ -890,6 +912,7 @@ window.exportInvoicesCSV = function() {
 
     let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ចំណាំ,សរុបទឹកប្រាក់,ស្ថានភាព,អ្នកលក់\n";
     invoices.forEach((inv, idx) => {
+        if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         const d = inv.date || inv.createdAt || '';
         const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
