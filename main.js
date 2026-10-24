@@ -340,6 +340,7 @@ window.sysI18n = {
         lblNuRole: 'សិទ្ធិប្រើប្រាស់ (Role):',
         optRoleSales: '🛒 ផ្នែកលក់ (Sales) - អាចចូលបានតែ POS ប៉ុណ្ណោះ',
         optRoleWarehouse: '📦 ផ្នែកឃ្លាំង (Warehouse) - អាចចូលមើលនិងបន្ថែមស្តុក',
+        optRoleManager: '💼 មេការ (Manager) - អាចចូលលក់ មើលស្តុក និងរបាយការណ៍',
         optRoleAdmin: '👑 អ្នកគ្រប់គ្រង (Admin) - មានសិទ្ធិពេញលេញ',
         lblAdminConfirm: '🔒 បញ្ជាក់លេខកូដ Admin របស់អ្នក:',
         plhAdminConfirm: 'បញ្ចូលលេខកូដ Admin ដើម្បីយល់ព្រម',
@@ -612,6 +613,7 @@ window.sysI18n = {
         lblNuRole: 'Role:',
         optRoleSales: '🛒 Sales - POS Access Only',
         optRoleWarehouse: '📦 Warehouse - Inventory Access',
+        optRoleManager: '💼 Manager - POS, Inventory & Reports',
         optRoleAdmin: '👑 Administrator - Full Access',
         lblAdminConfirm: '🔒 Confirm Your Admin Password:',
         plhAdminConfirm: 'Enter Admin password to confirm',
@@ -884,6 +886,7 @@ window.sysI18n = {
         lblNuRole: '分配操作权限 (Role):',
         optRoleSales: '🛒 销售员 (Sales) - 仅限收银前台',
         optRoleWarehouse: '📦 仓库员 (Warehouse) - 库存管理',
+        optRoleManager: '💼 门店店长 (Manager) - 收银, 库存, 报表',
         optRoleAdmin: '👑 管理员 (Admin) - 完整最高权限',
         lblAdminConfirm: '🔒 请输入管理员密码确认：',
         plhAdminConfirm: '输入管理员密码以确认操作',
@@ -1630,7 +1633,6 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
 
             let packageData = {
-                invoices: window.invoices || [], // 🌟 [RESTORED] បញ្ចូលវិក្កយបត្រទៅក្នុង JSON វិញ ដើម្បីធ្វើជា Backup
                 expenses: window.expenses,
                 shopName: window.shopName, 
                 shopLogo: window.shopLogo, 
@@ -1674,6 +1676,24 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 
                 const { error: upsertErr } = await window.supabaseClient.from('pos_products').upsert(formattedProductsForDB);
                 if(upsertErr) console.warn("Supabase Products Upsert Error:", upsertErr);
+            }
+
+            // ៣. 🌟 [AUTO-MIGRATE] បាញ់វិក្កយបត្រចាស់ៗពី LocalStorage ចូល pos_orders ស្វ័យប្រវត្តិ
+            if (window.invoices && window.invoices.length > 0) {
+                const formattedOrdersForDB = window.invoices.map((inv, idx) => ({
+                    id: String(inv.id || inv.invoiceNo || `INV-${Date.now()}-${idx}`),
+                    branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                    customer_name: inv.customerName || inv.customer || 'អតិថិជនទូទៅ',
+                    customer_phone: inv.customerPhone || inv.phone || 'EMPTY',
+                    total_amount: parseFloat(inv.totalAmount || inv.total || 0),
+                    paid_amount: parseFloat(inv.paidUsd || inv.paidAmount || 0),
+                    status: inv.status || 'unpaid',
+                    seller: inv.seller || inv.cashier || 'System',
+                    order_data: inv.items || [],
+                    note: inv.note || '',
+                    timestamp: inv.timestamp || Date.now()
+                }));
+                await window.supabaseClient.from('pos_orders').upsert(formattedOrdersForDB, { onConflict: 'id' });
             }
         }
     } catch(e) { console.warn("Cloud Sync saving failed:", e); }
@@ -1768,19 +1788,20 @@ window.applyPermissions = function() {
     if (!window.currentRole) window.currentRole = 'admin';
 
     const isAdmin = (window.currentRole === 'admin');
+    const isManager = (window.currentRole === 'manager'); // 🌟 សិទ្ធិ Manager
     const isSales = (window.currentRole === 'sales');
     const isWarehouse = (window.currentRole === 'warehouse');
     const isGuest = (window.currentRole === 'guest'); 
 
     let sDash = !isGuest && true;
-    let sInv = !isGuest && (isAdmin || isWarehouse);
-    let sPOS = !isGuest && (isAdmin || isSales);
-    let sCust = !isGuest && (isAdmin || (isSales && (window.sysSettings?.cust !== false)));
-    let sUnpaid = !isGuest && (isAdmin || (isSales && (window.sysSettings?.unpaid !== false)));
-    let sExp = !isGuest && isAdmin;
-    let sHist = !isGuest && isAdmin;
-    let sSet = !isGuest && isAdmin;
-    let sAbout = !isGuest && isAdmin;
+    let sInv = !isGuest && (isAdmin || isManager || isWarehouse); // 🌟 Manager មើលស្តុកបាន
+    let sPOS = !isGuest && (isAdmin || isManager || isSales); // 🌟 Manager ចូល POS បាន
+    let sCust = !isGuest && (isAdmin || isManager || (isSales && (window.sysSettings?.cust !== false)));
+    let sUnpaid = !isGuest && (isAdmin || isManager || (isSales && (window.sysSettings?.unpaid !== false)));
+    let sExp = !isGuest && (isAdmin || isManager); // 🌟 Manager អាចកត់ចំណាយបាន
+    let sHist = !isGuest && (isAdmin || isManager); // 🌟 Manager មើលប្រវត្តិបាន
+    let sSet = !isGuest && isAdmin; // មានតែ Admin ទេចូល Settings បាន
+    let sAbout = !isGuest && isAdmin; // មានតែ Admin ទេចូល About បាន
 
     const setFlex = (id, show) => {
         const el = document.getElementById(id);
@@ -1811,13 +1832,13 @@ window.applyPermissions = function() {
     const editIcon = document.getElementById('editShopIcon');
     if (editIcon) editIcon.style.display = isAdmin ? 'inline' : 'none';
 
-    const showCost = (window.sysSettings?.cost !== false) && isAdmin;
+    const showCost = (window.sysSettings?.cost !== false) && (isAdmin || isManager); // Manager អាចមើលថ្លៃដើមបាន
     setBlock('costPriceContainer', showCost);
     document.querySelectorAll('.p-cost').forEach(el => el.style.display = showCost ? 'inline' : 'none');
 
-    setBlock('btnAddNewProduct', isAdmin);
-    setFlex('inventoryExcelAction', isAdmin);
-    setBlock('adminUserManagementBlock', isAdmin);
+    setBlock('btnAddNewProduct', isAdmin || isManager); // Manager អាចបន្ថែមទំនិញថ្មី
+    setFlex('inventoryExcelAction', isAdmin || isManager);
+    setBlock('adminUserManagementBlock', isAdmin); // មានតែ Admin ទេកែគណនីបាន
 
     setFlex('posDiscountContainer', window.sysSettings?.discount !== false);
     if (document.getElementById('posTaxContainer')) {
@@ -1834,11 +1855,33 @@ window.applyPermissions = function() {
     setBlock('btnCheckoutPreorder', window.sysSettings?.preorder === true);
     setBlock('pExpiryContainer', window.sysSettings?.expiry !== false);
 
-    if (isAdmin) {
+    if (isAdmin || isManager) {
         if (typeof window.renderUsersList === 'function') window.renderUsersList();
         if (typeof window.renderUnpaid === 'function') window.renderUnpaid();
         if (typeof window.renderExpenses === 'function') window.renderExpenses();
     }
+};
+
+window.renderUsersList = function() {
+    if (!window.activeUser || window.activeUser.role !== 'admin') return; 
+    const tbody = document.getElementById('userListTableBody');
+    if (!tbody) return;
+    const lang = localStorage.getItem('app_lang') || 'km';
+    const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
+
+    tbody.innerHTML = (window.userAccounts || []).map(u => { 
+        if (!u) return '';
+        // 🌟 បន្ថែម Badge សម្រាប់ Manager
+        let badge = u.role === 'admin' ? '<span class="badge badge-admin">👑 Admin</span>' : 
+                    (u.role === 'manager' ? '<span class="badge" style="background:rgba(139,92,246,0.15); color:#8b5cf6; border:1px solid rgba(139,92,246,0.3);">💼 Manager</span>' :
+                    (u.role === 'sales' ? '<span class="badge badge-sales">🛒 Sales</span>' : '<span class="badge badge-warehouse">📦 Warehouse</span>')); 
+                    
+        let deleteBtn = `<button class="btn-danger" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="window.deleteUserAccount('${u.id}')">${d.btnDelete || '🗑️ លុប'}</button>`; 
+        let editBtn = `<button class="btn-outline" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer; color:var(--warning);" onclick="window.editUserAccount('${u.id}')">${d.btnEdit || '✏️ កែប្រែ'}</button>`; 
+        if (u.username === 'admin') deleteBtn = `<span style="color:var(--text-muted); font-size:var(--fs-11);">${d.cantDeleteAdmin || 'មិនអាចលុប'}</span>`; 
+        return `<tr><td data-sort="${u.fullName||''}"><span style="font-weight:bold;">${u.fullName||'-'}</span></td><td data-sort="${u.username}"><span style="color:var(--primary);">${u.username}</span></td><td data-sort="${u.role}">${badge}</td><td data-sort="${u.pin||''}"><span style="background:rgba(128,128,128,0.1); padding:2px 5px; border-radius:4px; font-family:monospace; letter-spacing:2px;">${u.pin||'0000'}</span></td><td style="text-align: center;"><div style="display: inline-flex; gap: 5px; justify-content: center;">${editBtn}${deleteBtn}</div></td></tr>`; 
+    }).join('');
+    if (typeof window.filterTable === 'function') window.filterTable('mainUserTable');
 };
 
 window.loadSettingsToUI = function() { 
@@ -2833,6 +2876,13 @@ window.onload = async () => {
         if (!isLicenseValid) return; 
     }
 
+    // 🔥🔥 បាញ់ទិន្នន័យចាស់ចូល Cloud ដោយស្វ័យប្រវត្តិ ពេលបើក App (Auto-Migrate)
+    if(typeof window.manualCloudSync === 'function') {
+        setTimeout(async () => {
+            await window.manualCloudSync(true); // Run ស្ងាត់ៗអត់ឱ្យរំខាន
+        }, 3000);
+    }
+
     if(typeof window.loadDataFromSupabase==='function') {
         await window.loadDataFromSupabase(window.userAccounts);
     }
@@ -2892,7 +2942,7 @@ window.onload = async () => {
         if(typeof window.runSmartDatabaseMaintenance === 'function') {
             window.runSmartDatabaseMaintenance();
         }
-    }, 3000);
+    }, 5000);
 };
 
 // ==========================================

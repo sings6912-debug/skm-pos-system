@@ -49,7 +49,11 @@ window.checkAuthentication = function(applyPermissionsCallback) {
         const posSeller = document.getElementById('posCurrentSellerDisplay'); 
         if (posSeller) posSeller.innerText = sName; 
         
-        let roleIcon = window.activeUser.role === 'admin' ? '👑 Admin' : (window.activeUser.role === 'sales' ? '🛒 Sales' : '📦 Warehouse'); 
+        // 🌟 កំណត់ Icon សម្រាប់តួនាទី (បូករួមទាំង Manager)
+        let roleIcon = window.activeUser.role === 'admin' ? '👑 Admin' : 
+                       (window.activeUser.role === 'manager' ? '💼 Manager' : 
+                       (window.activeUser.role === 'sales' ? '🛒 Sales' : '📦 Warehouse')); 
+                       
         if (document.getElementById('sidebarUserRoleDisplay')) {
             document.getElementById('sidebarUserRoleDisplay').innerText = roleIcon; 
         }
@@ -96,6 +100,7 @@ window.handleLogin = function() {
         } else if (foundUser.role === 'warehouse') {
             if (typeof window.switchTab === 'function') window.switchTab('inventory', '📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory'));
         } else {
+            // សម្រាប់ Admin និង Manager ឱ្យចូលផ្ទាំង Dashboard
             if (typeof window.switchTab === 'function') window.switchTab('dashboard', '📊 ផ្ទាំងព័ត៌មានទូទៅ (Dashboard)', document.getElementById('nav-dashboard'));
         }
 
@@ -217,7 +222,11 @@ window.renderUsersList = function() {
 
     tbody.innerHTML = (window.userAccounts || []).map(u => { 
         if (!u) return '';
-        let badge = u.role === 'admin' ? '<span class="badge badge-admin">👑 Admin</span>' : (u.role === 'sales' ? '<span class="badge badge-sales">🛒 Sales</span>' : '<span class="badge badge-warehouse">📦 Warehouse</span>'); 
+        // 🌟 បន្ថែម Badge សម្រាប់ Manager
+        let badge = u.role === 'admin' ? '<span class="badge badge-admin">👑 Admin</span>' : 
+                    (u.role === 'manager' ? '<span class="badge" style="background:rgba(139,92,246,0.15); color:#8b5cf6; border:1px solid rgba(139,92,246,0.3);">💼 Manager</span>' :
+                    (u.role === 'sales' ? '<span class="badge badge-sales">🛒 Sales</span>' : '<span class="badge badge-warehouse">📦 Warehouse</span>')); 
+                    
         let deleteBtn = `<button class="btn-danger" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="window.deleteUserAccount('${u.id}')">${d.btnDelete || '🗑️ លុប'}</button>`; 
         let editBtn = `<button class="btn-outline" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer; color:var(--warning);" onclick="window.editUserAccount('${u.id}')">${d.btnEdit || '✏️ កែប្រែ'}</button>`; 
         if (u.username === 'admin') deleteBtn = `<span style="color:var(--text-muted); font-size:var(--fs-11);">${d.cantDeleteAdmin || 'មិនអាចលុប'}</span>`; 
