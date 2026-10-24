@@ -2,11 +2,13 @@
 <html lang="km">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Welcome - POS & ERP System</title>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@700;900&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#10b981">
+    
+    <!-- Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
     <style>
@@ -17,7 +19,7 @@
             --current-bg: url('https://picsum.photos/id/1018/1920/1080');
         }
 
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Battambang', 'Nunito', sans-serif; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Battambang', 'Nunito', sans-serif; user-select: none; }
 
         body {
             display: flex;
@@ -230,11 +232,12 @@
             100% { transform: translateX(-100%); }
         }
 
+        /* 🌟 PIN Pad Modal Styling */
         .pin-modal {
             display: none;
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(8px);
             z-index: 2000;
             justify-content: center;
@@ -247,8 +250,8 @@
         .pin-pad {
             background: rgba(30, 41, 59, 0.95);
             border: 1px solid rgba(255,255,255,0.2);
-            padding: 25px;
-            border-radius: 20px;
+            padding: 30px;
+            border-radius: 24px;
             text-align: center;
             box-shadow: 0 25px 50px rgba(0,0,0,0.5);
             transform: scale(0.9);
@@ -259,9 +262,9 @@
         .pin-modal.show .pin-pad { transform: scale(1); }
         
         .pin-display {
-            font-size: 24px;
-            letter-spacing: 10px;
-            margin-bottom: 20px;
+            font-size: 28px;
+            letter-spacing: 12px;
+            margin-bottom: 25px;
             color: #10b981;
             height: 40px;
             border-bottom: 2px solid rgba(255,255,255,0.1);
@@ -292,17 +295,20 @@
             background: rgba(255,255,255,0.05);
             border: 1px solid rgba(255,255,255,0.1);
             color: #fff;
-            width: 60px; height: 60px;
+            width: 65px; height: 65px;
             border-radius: 50%;
-            font-size: 20px;
+            font-size: 22px;
             font-weight: bold;
             cursor: pointer;
             transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .pin-btn:hover { background: rgba(16, 185, 129, 0.3); border-color: #10b981; }
         .pin-btn:active { transform: scale(0.9); }
-        .pin-btn.cancel { color: #ef4444; font-size: 16px; }
-        .pin-btn.clear { color: #f59e0b; font-size: 16px; }
+        .pin-btn.cancel { color: #ef4444; font-size: 18px; }
+        .pin-btn.clear { color: #f59e0b; font-size: 18px; }
 
         .gallery-modal {
             display: none;
@@ -460,20 +466,20 @@
     <!-- 🌟 PIN Modal -->
     <div class="pin-modal" id="pinModal" onclick="if(event.target === this) closePinModal()">
         <div class="pin-pad" id="pinPadBox">
-            <h3 id="pinModalTitle" style="color:#fff; margin-bottom:10px; font-family:'Battambang'; font-size:16px;">បញ្ចូលលេខសម្ងាត់ហាង (Store PIN)</h3>
+            <h3 id="pinModalTitle" style="color:#fff; margin-bottom:15px; font-family:'Battambang'; font-size:16px;">បញ្ចូលលេខសម្ងាត់ហាង (Store PIN)</h3>
             <div class="pin-display" id="pinDisplay">_ _ _ _</div>
             <div class="pin-grid">
-                <button class="pin-btn" onclick="enterPin(1)">1</button>
-                <button class="pin-btn" onclick="enterPin(2)">2</button>
-                <button class="pin-btn" onclick="enterPin(3)">3</button>
-                <button class="pin-btn" onclick="enterPin(4)">4</button>
-                <button class="pin-btn" onclick="enterPin(5)">5</button>
-                <button class="pin-btn" onclick="enterPin(6)">6</button>
-                <button class="pin-btn" onclick="enterPin(7)">7</button>
-                <button class="pin-btn" onclick="enterPin(8)">8</button>
-                <button class="pin-btn" onclick="enterPin(9)">9</button>
+                <button class="pin-btn" onclick="enterPin('1')">1</button>
+                <button class="pin-btn" onclick="enterPin('2')">2</button>
+                <button class="pin-btn" onclick="enterPin('3')">3</button>
+                <button class="pin-btn" onclick="enterPin('4')">4</button>
+                <button class="pin-btn" onclick="enterPin('5')">5</button>
+                <button class="pin-btn" onclick="enterPin('6')">6</button>
+                <button class="pin-btn" onclick="enterPin('7')">7</button>
+                <button class="pin-btn" onclick="enterPin('8')">8</button>
+                <button class="pin-btn" onclick="enterPin('9')">9</button>
                 <button class="pin-btn clear" onclick="clearPin()">⌫</button>
-                <button class="pin-btn" onclick="enterPin(0)">0</button>
+                <button class="pin-btn" onclick="enterPin('0')">0</button>
                 <button class="pin-btn cancel" onclick="closePinModal()">X</button>
             </div>
         </div>
@@ -611,7 +617,6 @@
             window.location.href = relativeUrl;
         }
 
-        // ប្រើប្រាស់ Shared AudioContext តែមួយ ដើម្បីការពារបញ្ហាដាច់សំឡេងពេលចុចប៊ូតុងច្រើនដង
         let sharedWelcomeAudioCtx = null;
         function playClickSound() {
             if (branchSysSettings && branchSysSettings.enableSound === false) return;
@@ -655,6 +660,9 @@
             card.addEventListener('mouseenter', () => card.style.transition = 'none');
         }
 
+        // ==========================================
+        // 🌟 PIN PAD & KEYBOARD VERIFICATION LOGIC 🌟
+        // ==========================================
         let pinCode = '';
         let isProcessing = false;
 
@@ -706,16 +714,35 @@
             const display = document.getElementById('pinDisplay');
             const box = document.getElementById('pinPadBox');
             display.style.color = '#10b981';
-            display.style.letterSpacing = '10px';
+            display.style.letterSpacing = '12px';
             box.classList.remove('shake');
         }
 
         function verifyPinAndEnter() {
             const langDict = i18n[currentLang] || i18n.km;
             const cleanEntered = pinCode.trim();
+            
+            // 🌟 ១. ទាញយកលេខ Store PIN ដែលបានកំណត់ពី Settings មកផ្ទៀងផ្ទាត់
+            let correctStorePin = '1234'; // លេខ Default
+            try {
+                // ព្យាយាមរកក្នុង branchSysSettings បើមាន
+                if (branchSysSettings && branchSysSettings.storePin) {
+                    correctStorePin = String(branchSysSettings.storePin).trim();
+                } else {
+                    // បើគ្មានក្នុងប្រអប់អថេរ ទៅរកក្នុង LocalStorage ម្តង
+                    const rawSys = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`);
+                    if (rawSys) {
+                        const parsed = JSON.parse(rawSys);
+                        if (parsed.storePin) correctStorePin = String(parsed.storePin).trim();
+                    }
+                }
+            } catch(e) { console.error("Error reading pin:", e); }
+
+            // ២. ឆែកមើលថាតើលេខវាយត្រូវនឹង Store PIN ឬអត់ (អាចឆែក PIN របស់បុគ្គលិកផងដែរ)
             const matchedStaff = (branchUsers || []).find(u => u && String(u.pin).trim() === cleanEntered);
 
-            if (cleanEntered === storePinCode.trim() || matchedStaff) {
+            if (cleanEntered === correctStorePin || matchedStaff) {
+                // ✅ បើត្រឹមត្រូវ
                 const display = document.getElementById('pinDisplay');
                 display.style.color = '#38bdf8';
                 display.style.letterSpacing = '2px';
@@ -728,6 +755,7 @@
                     navigateSafely(`index.html?branch=${encodeURIComponent(SHOP_BRANCH_ID)}`);
                 }, 300);
             } else {
+                // ❌ បើខុស (រលាក់ក្រហម)
                 const box = document.getElementById('pinPadBox');
                 const display = document.getElementById('pinDisplay');
                 box.classList.add('shake');
@@ -743,6 +771,27 @@
                 }, 900);
             }
         }
+
+        // 🌟 អនុញ្ញាតឱ្យចុច Keyboard លើកុំព្យូទ័របាន (Keyboard Support) 🌟
+        document.addEventListener('keydown', function(event) {
+            const pinModal = document.getElementById('pinModal');
+            // ធ្វើការតែពេលបើកផ្ទាំង PIN Modal ប៉ុណ្ណោះ
+            if (!pinModal || !pinModal.classList.contains('show')) return;
+
+            // បើចុចលេខ 0-9
+            if (event.key >= '0' && event.key <= '9') {
+                enterPin(event.key);
+            } 
+            // បើចុច Backspace (លុបថយក្រោយ)
+            else if (event.key === 'Backspace') {
+                clearPin();
+            } 
+            // បើចុច Delete ឬ Escape (បិទ Modal)
+            else if (event.key === 'Escape') {
+                closePinModal();
+            }
+        });
+        // ==========================================
 
         function goToMenu() {
             playClickSound();
@@ -816,7 +865,6 @@
             } catch(err) {}
         }
 
-        // 🌟 មុខងារ Upload រូបភាព Wallpaper ទៅកាន់ Supabase Storage
         async function uploadToSupabaseStorage(canvasBlob, folderName) {
             if (!supabaseClient || !navigator.onLine) throw new Error("Offline or no DB connected");
             
@@ -1030,19 +1078,6 @@
         }
 
         window.onload = loadShopProfile;
-        
-        window.addEventListener('keydown', function(e) {
-            const pinModal = document.getElementById('pinModal');
-            if (!pinModal || !pinModal.classList.contains('show')) return;
-
-            if (e.key >= '0' && e.key <= '9') {
-                enterPin(parseInt(e.key));
-            } else if (e.key === 'Backspace' || e.key === 'Delete') {
-                clearPin();
-            } else if (e.key === 'Escape') {
-                closePinModal();
-            }
-        });
     </script>
 </body>
 </html>
