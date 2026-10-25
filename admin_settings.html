@@ -222,7 +222,7 @@
             <button class="tab-btn" onclick="switchTab('tab-theme')"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែកគោល</button>
             <button class="tab-btn" onclick="switchTab('tab-banner')"><i class="fa-solid fa-images"></i> 2. ផ្ទាំងផ្សាយ & ប្រូម៉ូសិន</button>
             <button class="tab-btn" onclick="switchTab('tab-ticker')"><i class="fa-solid fa-bullhorn"></i> 3. អត្ថបទរត់ (Ticker)</button>
-            <button class="tab-btn" onclick="switchTab('tab-store')"><i class="fa-solid fa-store"></i> 4. ម៉ោងបើក & ស្វាគមន៍</button>
+            <button class="tab-btn" onclick="switchTab('tab-store')"><i class="fa-solid fa-store"></i> 4. ព័ត៌មានហាង & ស្វាគមន៍</button>
             <button class="tab-btn" onclick="switchTab('tab-social')"><i class="fa-solid fa-share-nodes"></i> 5. បណ្តាញ & បង់ប្រាក់</button>
             <button class="tab-btn" onclick="switchTab('tab-customjs')"><i class="fa-solid fa-file-code"></i> 6. កូដបន្ថែម (Custom JS)</button>
             <button class="tab-btn" onclick="switchTab('tab-tables')"><i class="fa-solid fa-chair"></i> 7. លេខតុ & ទិន្នន័យ</button>
@@ -332,10 +332,63 @@
             </div>
         </div>
 
-        <!-- TAB 4: Welcome Popup & Store Hours -->
+        <!-- 🌟 TAB 4: STORE INFO, LOGO, Welcome Popup & Store Hours 🌟 -->
         <div id="tab-store" class="tab-pane">
-            <div class="section-title"><i class="fa-solid fa-store"></i> 4. ផ្ទាំងស្វាគមន៍ & ម៉ោងបើកហាង (Popup & Store Hours)</div>
+            <div class="section-title"><i class="fa-solid fa-store"></i> 4. ព័ត៌មានហាង, ម៉ោងបើក & ស្វាគមន៍ (Store Info & Hours)</div>
             
+            <!-- 🌟 SECTION: គ្រប់គ្រងឈ្មោះ, លេខទូរស័ព្ទ, អាសយដ្ឋាន និង Logo -->
+            <div style="background: rgba(0,0,0,0.02); padding: 15px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 20px;">
+                <h4 style="margin-bottom: 15px; font-size: 14px; color: var(--text-dark); border-bottom: 1px solid rgba(0,0,0,0.05); padding-bottom: 8px;"><i class="fa-solid fa-circle-info"></i> ព័ត៌មានមូលដ្ឋាន និង ឡូហ្គោ (Shop Profile)</h4>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 15px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>ឈ្មោះហាង (Shop Name):</label>
+                        <input type="text" id="setShopName" class="input-st" placeholder="បញ្ចូលឈ្មោះហាង..." onchange="saveAdminSettings()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>លេខទូរស័ព្ទ (Phone):</label>
+                        <input type="text" id="setShopPhone" class="input-st" placeholder="012 345 678..." onchange="saveAdminSettings()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0; grid-column: 1 / -1;">
+                        <label>អាសយដ្ឋាន (Address):</label>
+                        <input type="text" id="setShopAddress" class="input-st" placeholder="ទីតាំងហាង..." onchange="saveAdminSettings()">
+                    </div>
+                </div>
+
+                <!-- 🌟 កន្លែង Upload ឡូហ្គោ និងសារ៉េរាង/ទំហំ (Logo Customizer) 🌟 -->
+                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 250px; background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
+                        <label style="font-size: 13px; display:block; margin-bottom: 10px; font-weight: bold;">ឡូហ្គោហាង (Shop Logo):</label>
+                        <input type="file" id="shopLogoInput" accept="image/*" style="display:none;" onchange="handleShopLogo(event)">
+                        <button class="btn-action" style="width:100%; justify-content: center; background: var(--brand-dark); color: #fff;" onclick="document.getElementById('shopLogoInput').click()"><i class="fa-solid fa-camera"></i> ជ្រើសរើសឡូហ្គោ</button>
+                        
+                        <div id="logoControlsWrapper" style="display: none; margin-top: 15px; text-align: left; background: var(--store-bg); padding: 10px; border-radius: 8px;">
+                            <label style="font-size: 11px; color: var(--text-muted); font-weight: bold;">ទម្រង់ (Shape):</label>
+                            <select id="logoShapeSelect" class="input-st" style="font-size: 12px; padding: 6px; width: 100%; margin-bottom: 10px;" onchange="updateLogoPreview(); saveAdminSettings();">
+                                <option value="circle">រង្វង់មូល (Circle)</option>
+                                <option value="rectangle">ចតុកោណ (Rectangle)</option>
+                            </select>
+                            
+                            <label style="font-size: 11px; color: var(--text-muted); font-weight: bold; display: flex; justify-content: space-between;">
+                                ទំហំ (Scale): <span id="logoScaleLabel" style="color: var(--brand-cyan);">1.0x</span>
+                            </label>
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <span style="font-size: 11px; color: var(--text-muted);">តូច</span>
+                                <input type="range" id="logoScaleSlider" min="0.5" max="3.0" step="0.1" value="1" style="flex: 1; cursor: pointer; accent-color: var(--brand-cyan);" oninput="updateLogoPreview();" onchange="saveAdminSettings();">
+                                <span style="font-size: 11px; color: var(--text-muted);">ធំ</span>
+                            </div>
+                        </div>
+                        
+                        <!-- កន្លែងបង្ហាញ Preview ផ្ទាល់ៗ -->
+                        <div id="logoPreviewContainer" style="width: 90px; height: 90px; margin: 15px auto 0; overflow: hidden; border: 2px dashed var(--border-color); background: transparent; display: none; justify-content: center; align-items: center;">
+                            <img id="shopLogoPreview" src="" style="display: none; transition: transform 0.1s ease;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="height: 1px; background: var(--border-color); margin: 25px 0;"></div>
+
             <div class="toggle-row">
                 <span>✨ បើកផ្ទាំង Pop-up រូបភាពស្វាគមន៍ពេលភ្ញៀវចូលមើលដំបូង</span>
                 <input type="checkbox" id="toggleWelcomePopup" style="width: 20px; height: 20px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
@@ -401,7 +454,6 @@
                 <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL (Link)..." onchange="saveAdminSettings()">
             </div>
 
-            <!-- 🌟 បន្ថែមប្រព័ន្ធ KHQR Dynamic និងរក្សារូបភាព QR ជា Fallback -->
             <div class="form-group">
                 <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ជំនួស/Fallback)</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 8px;">
@@ -760,7 +812,6 @@
 <script>
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
-    // 🔗 កំណត់ Supabase នៅទីនេះសិន ដើម្បីអាចយកមកឆែកសិទ្ធិ Auth បាន
     const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
     const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
     
@@ -770,44 +821,29 @@
         catch (err) { console.error("Supabase init error:", err); }
     }
 
-    // 🔒 ផ្ទៀងផ្ទាត់សិទ្ធិ Admin ដោយបូកបញ្ចូលទាំង Supabase Auth
     (async function verifyAdminAccess() {
         let isSupabaseAuthed = false;
-        
-        // ឆែកមើល Session របស់ Supabase (សុវត្ថិភាពខ្ពស់)
         if (supabaseClient) {
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (session) isSupabaseAuthed = true;
-            } catch(e) { console.warn("Supabase auth check failed", e); }
+            } catch(e) {}
         }
-
-        // ប្រព័ន្ធផ្ទៀងផ្ទាត់ចាស់ (Local Storage + Session Storage)
         const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
-        try {
-            activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`));
-        } catch(e) {}
-
-        // បើមិនជាប់ Supabase Auth ទេ ត្រូវឆែក Local
+        try { activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`)); } catch(e) {}
         if (!isSupabaseAuthed && (authPassed !== 'true' || !activeUser || String(activeUser.role).toLowerCase() !== 'admin')) {
-            if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') {
-                console.warn("Preview Environment Detected: Authentication redirect bypassed.");
-            } else {
+            if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') { } else {
                 window.location.href = `welcome.html?branch=${encodeURIComponent(BRANCH)}`;
             }
         }
     })();
 
-    // 🛡️ មុខងារការពារកុំឱ្យពេញ LocalStorage
     function checkStorageQuota(newBase64Str) {
         try {
             let total = 0;
-            for (let i = 0; i < localStorage.length; i++) {
-                total += localStorage.getItem(localStorage.key(i)).length;
-            }
+            for (let i = 0; i < localStorage.length; i++) { total += localStorage.getItem(localStorage.key(i)).length; }
             let incoming = newBase64Str.length;
-            // គិតជាមេកាបៃ (MB), កំណត់អតិបរមាត្រឹម 4.5MB ដើម្បីកុំឱ្យ Crash
             let totalMB = (total + incoming) / 1024 / 1024;
             if (totalMB > 4.5) {
                 showToast("⚠️ ប្រយ័ត្ន៖ ទំហំផ្ទុករបស់អ្នកជិតពេញហើយ! សូមប្រើ Cloud ដើម្បី Save រូបភាព។", true);
@@ -837,35 +873,71 @@
 
     async function uploadToSupabaseStorage(canvasBlob, folderName) {
         if (!supabaseClient || !navigator.onLine) throw new Error("Offline or no DB connected");
-        
         const fileName = `${folderName}/${BRANCH}_${Date.now()}_${Math.random().toString(36).substring(2)}.jpg`;
-        const { data, error } = await supabaseClient.storage
-            .from('shop_assets')
-            .upload(fileName, canvasBlob, { contentType: 'image/jpeg', upsert: true });
-
+        const { data, error } = await supabaseClient.storage.from('shop_assets').upload(fileName, canvasBlob, { contentType: 'image/jpeg', upsert: true });
         if (error) throw error;
         const { data: publicData } = supabaseClient.storage.from('shop_assets').getPublicUrl(fileName);
         return publicData.publicUrl;
     }
 
     function getCanvasBlob(canvas, quality = 0.75) {
-        return new Promise((resolve) => {
-            canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality);
-        });
+        return new Promise((resolve) => { canvas.toBlob((blob) => resolve(blob), 'image/jpeg', quality); });
     }
 
-    let adminBanners = [];
-    let promoCodesList = [];
-    let editPromoIndex = -1;
-    let menuScripts = []; 
-    let posScripts = [];  
-    let showAllMenuScripts = false;
-    let showAllPosScripts = false;
-    let customPrinterPresets = [];
+    let adminBanners = []; let promoCodesList = []; let editPromoIndex = -1;
+    let menuScripts = []; let posScripts = []; let showAllMenuScripts = false; let showAllPosScripts = false;
+    let customPrinterPresets = []; let deptPrinters = []; let categoryRouting = {}; let posCategories = [];
 
-    let deptPrinters = [];
-    let categoryRouting = {};
-    let posCategories = [];
+    // 🌟 មុខងារថ្មីសម្រាប់ Logo Shape និង Scale 🌟
+    function updateLogoPreview() {
+        const preview = document.getElementById('shopLogoPreview');
+        const container = document.getElementById('logoPreviewContainer');
+        const shape = document.getElementById('logoShapeSelect').value;
+        const scale = document.getElementById('logoScaleSlider').value;
+        if (!preview) return;
+
+        document.getElementById('logoScaleLabel').innerText = `ទំហំ: ${parseFloat(scale).toFixed(1)}x`;
+
+        if (shape === 'circle') {
+            container.style.borderRadius = '50%';
+            preview.style.width = '100%';
+            preview.style.height = '100%';
+            preview.style.objectFit = 'cover';
+        } else {
+            container.style.borderRadius = '12px';
+            preview.style.width = '100%';
+            preview.style.height = '100%';
+            preview.style.objectFit = 'contain';
+        }
+        preview.style.transform = `scale(${scale})`;
+    }
+
+    function handleShopLogo(e) { 
+        const file = e.target.files[0]; if(!file) return; 
+        const reader = new FileReader(); 
+        reader.onload = (ev) => { 
+            const img = new Image(); 
+            img.onload = () => { 
+                const canvas = document.createElement('canvas'); const max = 400; let w = img.width, h = img.height; 
+                if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } 
+                canvas.width = w; canvas.height = h; 
+                const ctx = canvas.getContext('2d'); 
+                ctx.clearRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h); 
+                window.shopLogo = canvas.toDataURL('image/png', 0.9); 
+                
+                const preview = document.getElementById('shopLogoPreview');
+                preview.src = window.shopLogo; preview.style.display = 'block'; 
+                document.getElementById('logoPreviewContainer').style.display = 'flex';
+                document.getElementById('logoControlsWrapper').style.display = 'block';
+                
+                document.getElementById('logoShapeSelect').value = 'circle';
+                document.getElementById('logoScaleSlider').value = 1;
+                updateLogoPreview();
+            }; 
+            img.src = ev.target.result; 
+        }; 
+        reader.readAsDataURL(file); 
+    }
 
     const DEFAULT_RECEIPT_PRESETS = {
         '80mm': { paperMm: 80, bodyMm: 76, padMm: 4, downloadWidthPx: 380, downloadScale: 2, fontPx: 12, titlePx: 16, logoPx: 100, qrPx: 170 },
@@ -875,123 +947,59 @@
 
     function applyReceiptConfigToInputs(cfg) {
         if (!cfg) return;
-        document.getElementById('setPrintPaperMm').value = cfg.paperMm || 80;
-        document.getElementById('setPrintBodyMm').value = cfg.bodyMm || 76;
-        document.getElementById('setPrintPadMm').value = cfg.padMm !== undefined ? cfg.padMm : 4;
-        document.getElementById('setDownloadWidthPx').value = cfg.downloadWidthPx || 380;
-        document.getElementById('setDownloadScale').value = String(cfg.downloadScale || 2);
-        document.getElementById('setReceiptFontPx').value = cfg.fontPx || 12;
-        document.getElementById('setReceiptTitlePx').value = cfg.titlePx || 16;
-        document.getElementById('setReceiptLogoPx').value = cfg.logoPx || 100;
-        document.getElementById('setReceiptQrPx').value = cfg.qrPx || 170;
-        updateLiveReceiptPreview();
+        document.getElementById('setPrintPaperMm').value = cfg.paperMm || 80; document.getElementById('setPrintBodyMm').value = cfg.bodyMm || 76; document.getElementById('setPrintPadMm').value = cfg.padMm !== undefined ? cfg.padMm : 4; document.getElementById('setDownloadWidthPx').value = cfg.downloadWidthPx || 380; document.getElementById('setDownloadScale').value = String(cfg.downloadScale || 2); document.getElementById('setReceiptFontPx').value = cfg.fontPx || 12; document.getElementById('setReceiptTitlePx').value = cfg.titlePx || 16; document.getElementById('setReceiptLogoPx').value = cfg.logoPx || 100; document.getElementById('setReceiptQrPx').value = cfg.qrPx || 170; updateLiveReceiptPreview();
     }
 
     function getCurrentReceiptInputsConfig() {
         return {
-            mode: document.getElementById('setAdminReceiptSize')?.value || '80mm',
-            paperMm: parseFloat(document.getElementById('setPrintPaperMm')?.value) || 80,
-            bodyMm: parseFloat(document.getElementById('setPrintBodyMm')?.value) || 76,
-            padMm: parseFloat(document.getElementById('setPrintPadMm')?.value) || 0,
-            downloadWidthPx: parseInt(document.getElementById('setDownloadWidthPx')?.value) || 380,
-            downloadScale: parseInt(document.getElementById('setDownloadScale')?.value) || 2,
-            fontPx: parseInt(document.getElementById('setReceiptFontPx')?.value) || 12,
-            titlePx: parseInt(document.getElementById('setReceiptTitlePx')?.value) || 16,
-            logoPx: parseInt(document.getElementById('setReceiptLogoPx')?.value) || 100,
-            qrPx: parseInt(document.getElementById('setReceiptQrPx')?.value) || 170
+            mode: document.getElementById('setAdminReceiptSize')?.value || '80mm', paperMm: parseFloat(document.getElementById('setPrintPaperMm')?.value) || 80, bodyMm: parseFloat(document.getElementById('setPrintBodyMm')?.value) || 76, padMm: parseFloat(document.getElementById('setPrintPadMm')?.value) || 0, downloadWidthPx: parseInt(document.getElementById('setDownloadWidthPx')?.value) || 380, downloadScale: parseInt(document.getElementById('setDownloadScale')?.value) || 2, fontPx: parseInt(document.getElementById('setReceiptFontPx')?.value) || 12, titlePx: parseInt(document.getElementById('setReceiptTitlePx')?.value) || 16, logoPx: parseInt(document.getElementById('setReceiptLogoPx')?.value) || 100, qrPx: parseInt(document.getElementById('setReceiptQrPx')?.value) || 170
         };
     }
 
     function onAdminReceiptPresetChange(val) {
-        if (DEFAULT_RECEIPT_PRESETS[val]) {
-            applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[val]);
-        } else if (val.startsWith('preset_')) {
-            const found = customPrinterPresets.find(p => p.id === val);
-            if (found) applyReceiptConfigToInputs(found);
-        } else {
-            updateLiveReceiptPreview();
-        }
+        if (DEFAULT_RECEIPT_PRESETS[val]) { applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[val]); } else if (val.startsWith('preset_')) { const found = customPrinterPresets.find(p => p.id === val); if (found) applyReceiptConfigToInputs(found); } else { updateLiveReceiptPreview(); }
     }
 
     function onCustomDimensionEdit() {
         const sel = document.getElementById('setAdminReceiptSize');
-        if (sel && DEFAULT_RECEIPT_PRESETS[sel.value]) {
-            sel.value = 'custom';
-        }
-        updateLiveReceiptPreview();
+        if (sel && DEFAULT_RECEIPT_PRESETS[sel.value]) { sel.value = 'custom'; } updateLiveReceiptPreview();
     }
 
     function renderCustomPrinterPresets() {
-        const sel = document.getElementById('setAdminReceiptSize');
-        const listEl = document.getElementById('customPrinterPresetsList');
+        const sel = document.getElementById('setAdminReceiptSize'); const listEl = document.getElementById('customPrinterPresetsList');
         if (!sel || !listEl) return;
-
-        const currentVal = sel.value;
-        sel.querySelectorAll('option[data-custom-preset="true"]').forEach(o => o.remove());
-
-        customPrinterPresets.forEach(p => {
-            const opt = document.createElement('option');
-            opt.value = p.id;
-            opt.setAttribute('data-custom-preset', 'true');
-            opt.textContent = `🖨️ ${p.name} (${p.paperMm}mm | ${p.downloadWidthPx}px)`;
-            sel.appendChild(opt);
-        });
-
+        const currentVal = sel.value; sel.querySelectorAll('option[data-custom-preset="true"]').forEach(o => o.remove());
+        customPrinterPresets.forEach(p => { const opt = document.createElement('option'); opt.value = p.id; opt.setAttribute('data-custom-preset', 'true'); opt.textContent = `🖨️ ${p.name} (${p.paperMm}mm | ${p.downloadWidthPx}px)`; sel.appendChild(opt); });
         if ([...sel.options].some(o => o.value === currentVal)) sel.value = currentVal;
-
-        if (customPrinterPresets.length === 0) {
-            listEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">មិនទាន់មានខ្នាតបង្កើតថ្មីនៅឡើយទេ។</span>';
-            return;
-        }
-
+        if (customPrinterPresets.length === 0) { listEl.innerHTML = '<span style="font-size: 12px; color: var(--text-muted);">មិនទាន់មានខ្នាតបង្កើតថ្មីនៅឡើយទេ។</span>'; return; }
         listEl.innerHTML = customPrinterPresets.map((p, idx) => `
             <div style="display: inline-flex; align-items: center; gap: 8px; background: var(--card-bg); border: 1px solid var(--border-color); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 800;">
-                <span style="cursor: pointer; color: var(--brand-dark);" onclick="document.getElementById('setAdminReceiptSize').value='${p.id}'; onAdminReceiptPresetChange('${p.id}');">
-                    🖨️ ${p.name} <small style="color: var(--brand-cyan);">(${p.paperMm}mm / ${p.downloadWidthPx}px)</small>
-                </span>
+                <span style="cursor: pointer; color: var(--brand-dark);" onclick="document.getElementById('setAdminReceiptSize').value='${p.id}'; onAdminReceiptPresetChange('${p.id}');">🖨️ ${p.name} <small style="color: var(--brand-cyan);">(${p.paperMm}mm / ${p.downloadWidthPx}px)</small></span>
                 <button type="button" style="background: var(--danger); color: white; border: none; border-radius: 50%; width: 20px; height: 20px; cursor: pointer; font-size: 10px;" onclick="deleteCustomPrinterPreset(${idx})" title="លុបខ្នាតនេះ">✕</button>
             </div>
         `).join('');
     }
 
     function saveCustomPrinterPreset() {
-        const nameInp = document.getElementById('newPrinterPresetName');
-        const name = nameInp ? nameInp.value.trim() : '';
+        const nameInp = document.getElementById('newPrinterPresetName'); const name = nameInp ? nameInp.value.trim() : '';
         if (!name) return showToast('សូមវាយឈ្មោះខ្នាតម៉ាស៊ីនព្រីនជាមុនសិន!', true);
-
-        const cfg = getCurrentReceiptInputsConfig();
-        const presetId = 'preset_' + Date.now();
-        customPrinterPresets.push({ id: presetId, name: name, ...cfg });
-
-        nameInp.value = '';
-        renderCustomPrinterPresets();
-        document.getElementById('setAdminReceiptSize').value = presetId;
-        showToast(`✅ បានបង្កើតខ្នាត "${name}" រួចរាល់!`);
+        const cfg = getCurrentReceiptInputsConfig(); const presetId = 'preset_' + Date.now();
+        customPrinterPresets.push({ id: presetId, name: name, ...cfg }); nameInp.value = '';
+        renderCustomPrinterPresets(); document.getElementById('setAdminReceiptSize').value = presetId; showToast(`✅ បានបង្កើតខ្នាត "${name}" រួចរាល់!`);
     }
 
     function deleteCustomPrinterPreset(idx) {
-        const removed = customPrinterPresets.splice(idx, 1)[0];
-        const sel = document.getElementById('setAdminReceiptSize');
-        if (sel && removed && sel.value === removed.id) {
-            sel.value = '80mm';
-            applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS['80mm']);
-        }
-        renderCustomPrinterPresets();
-        showToast('បានលុបខ្នាតម៉ាស៊ីនព្រីន!');
+        const removed = customPrinterPresets.splice(idx, 1)[0]; const sel = document.getElementById('setAdminReceiptSize');
+        if (sel && removed && sel.value === removed.id) { sel.value = '80mm'; applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS['80mm']); }
+        renderCustomPrinterPresets(); showToast('បានលុបខ្នាតម៉ាស៊ីនព្រីន!');
     }
 
     function updateLiveReceiptPreview() {
-        const box = document.getElementById('adminReceiptLivePreview');
-        if (!box) return;
-        const cfg = getCurrentReceiptInputsConfig();
-        const footerTxt = document.getElementById('setAdminReceiptFooter')?.value || 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
-        const shopNm = localStorage.getItem(`ks2_${BRANCH}_shop_name`) || 'SKM INTEGRATE POS';
+        const box = document.getElementById('adminReceiptLivePreview'); if (!box) return;
+        const cfg = getCurrentReceiptInputsConfig(); const footerTxt = document.getElementById('setAdminReceiptFooter')?.value || 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+        const shopNm = document.getElementById('setShopName')?.value || 'SKM INTEGRATE POS';
         const qrSrc = document.getElementById('setMenuQR')?.value || '';
-
-        box.style.width = `${cfg.downloadWidthPx}px`;
-        box.style.fontSize = `${cfg.fontPx}px`;
-        box.style.padding = `${Math.max(8, cfg.padMm * 3)}px`;
-
+        box.style.width = `${cfg.downloadWidthPx}px`; box.style.fontSize = `${cfg.fontPx}px`; box.style.padding = `${Math.max(8, cfg.padMm * 3)}px`;
         box.innerHTML = `
             <div style="text-align: center; margin-bottom: 8px;">
                 <div style="font-weight: 900; font-size: ${cfg.titlePx}px; color: #000;">${shopNm}</div>
@@ -999,56 +1007,26 @@
                 <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
                 <div style="font-weight: bold;">បង្កាន់ដៃទទួលប្រាក់ / Receipt</div>
                 <div style="text-align: left; font-size: ${Math.max(9, cfg.fontPx - 1)}px;">លេខវិក្កយបត្រ: INV-SAMPLE-001</div>
-                <div style="text-align: left; font-size: ${Math.max(9, cfg.fontPx - 1)}px;">អតិថិជន: តុ VIP 1</div>
                 <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
             </div>
             <table style="width: 100%; border-collapse: collapse; font-size: ${cfg.fontPx}px;">
-                <thead>
-                    <tr style="border-bottom: 1px solid #000;">
-                        <th style="text-align: left; padding-bottom: 4px;">ទំនិញ</th>
-                        <th style="text-align: center; padding-bottom: 4px;">ចំនួន</th>
-                        <th style="text-align: right; padding-bottom: 4px;">សរុប</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td style="padding: 4px 0;">1. កាហ្វេទឹកដោះគោទឹកកក</td>
-                        <td style="text-align: center; padding: 4px 0;">2</td>
-                        <td style="text-align: right; font-weight: bold; padding: 4px 0;">$3.00</td>
-                    </tr>
-                    <tr>
-                        <td style="padding: 4px 0;">2. ម៉ាត់ឆាដូងក្រអូប</td>
-                        <td style="text-align: center; padding: 4px 0;">1</td>
-                        <td style="text-align: right; font-weight: bold; padding: 4px 0;">$2.50</td>
-                    </tr>
-                </tbody>
+                <thead><tr style="border-bottom: 1px solid #000;"><th style="text-align: left; padding-bottom: 4px;">ទំនិញ</th><th style="text-align: center; padding-bottom: 4px;">ចំនួន</th><th style="text-align: right; padding-bottom: 4px;">សរុប</th></tr></thead>
+                <tbody><tr><td style="padding: 4px 0;">1. កាហ្វេទឹកដោះគោទឹកកក</td><td style="text-align: center; padding: 4px 0;">2</td><td style="text-align: right; font-weight: bold; padding: 4px 0;">$3.00</td></tr></tbody>
             </table>
             <div style="border-bottom: 1px dashed #000; margin: 6px 0;"></div>
-            <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: ${cfg.fontPx + 2}px;">
-                <span>សរុបប្រាក់:</span>
-                <span>$5.50 (22,000 ៛)</span>
-            </div>
+            <div style="display: flex; justify-content: space-between; font-weight: 900; font-size: ${cfg.fontPx + 2}px;"><span>សរុបប្រាក់:</span><span>$3.00 (12,000 ៛)</span></div>
             ${qrSrc ? `<div style="text-align: center; margin-top: 8px; border-top: 1px dashed #000; padding-top: 8px;"><div style="font-size: 11px; font-weight: bold; margin-bottom: 4px;">ស្កេនទូទាត់ប្រាក់</div><img src="${qrSrc}" style="width: ${cfg.qrPx}px; height: ${cfg.qrPx}px; object-fit: contain;"></div>` : ''}
             <div style="text-align: center; margin-top: 10px; font-weight: bold; font-size: ${Math.max(10, cfg.fontPx - 1)}px;">${footerTxt}</div>
         `;
     }
 
     function testPrintReceiptFromAdmin() {
-        const previewEl = document.getElementById('adminReceiptLivePreview');
-        if (!previewEl) return;
-        const cfg = getCurrentReceiptInputsConfig();
-        const pageSizeCss = cfg.mode === 'A4' ? `@page { size: A4 portrait; margin: ${cfg.padMm}mm; }` : `@page { size: ${cfg.paperMm}mm auto; margin: 0; }`;
+        const previewEl = document.getElementById('adminReceiptLivePreview'); if (!previewEl) return;
+        const cfg = getCurrentReceiptInputsConfig(); const pageSizeCss = cfg.mode === 'A4' ? `@page { size: A4 portrait; margin: ${cfg.padMm}mm; }` : `@page { size: ${cfg.paperMm}mm auto; margin: 0; }`;
         const win = window.open('', '', cfg.paperMm >= 150 ? 'width=850,height=900' : 'width=380,height=650');
         if (!win) return showToast('សូមអនុញ្ញាតផ្ទាំង Popup ដើម្បីសាកល្បងព្រីន!', true);
-        win.document.write(`<html><head><title>Test Print (${cfg.paperMm}mm)</title>
-            <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet">
-            <style>
-                ${pageSizeCss}
-                * { box-sizing: border-box; font-family: 'Battambang', sans-serif; color: #000 !important; }
-                body { width: ${cfg.bodyMm}mm; max-width: 100%; margin: 0 auto; padding: ${cfg.padMm}mm; font-size: ${cfg.fontPx}px; line-height: 1.4; }
-            </style></head><body>${previewEl.innerHTML}</body></html>`);
-        win.document.close();
-        setTimeout(() => { win.print(); win.close(); }, 500);
+        win.document.write(`<html><head><title>Test Print</title><link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet"><style>${pageSizeCss} * { box-sizing: border-box; font-family: 'Battambang', sans-serif; color: #000 !important; } body { width: ${cfg.bodyMm}mm; max-width: 100%; margin: 0 auto; padding: ${cfg.padMm}mm; font-size: ${cfg.fontPx}px; line-height: 1.4; }</style></head><body>${previewEl.innerHTML}</body></html>`);
+        win.document.close(); setTimeout(() => { win.print(); win.close(); }, 500);
     }
 
     function showToast(msg, isError = false) {
@@ -1058,133 +1036,55 @@
     }
 
     function onPromoTypeChange() {
-        const type = document.getElementById('newPromoType').value;
-        const valInp = document.getElementById('newPromoValue');
-        if (type === 'freeship') {
-            valInp.value = '0';
-            valInp.disabled = true;
-            valInp.style.opacity = '0.5';
-        } else {
-            valInp.disabled = false;
-            valInp.style.opacity = '1';
-        }
+        const type = document.getElementById('newPromoType').value; const valInp = document.getElementById('newPromoValue');
+        if (type === 'freeship') { valInp.value = '0'; valInp.disabled = true; valInp.style.opacity = '0.5'; } else { valInp.disabled = false; valInp.style.opacity = '1'; }
     }
 
     function renderPromoCodesList() {
-        const container = document.getElementById('promoCodesListContainer');
-        if(!container) return;
-        container.innerHTML = '';
-        if(promoCodesList.length === 0) {
-            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដបញ្ចុះតម្លៃទេ។ សូមបង្កើតថ្មីខាងលើ។</div>';
-            return;
-        }
+        const container = document.getElementById('promoCodesListContainer'); if(!container) return; container.innerHTML = '';
+        if(promoCodesList.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដបញ្ចុះតម្លៃទេ។ សូមបង្កើតថ្មីខាងលើ។</div>'; return; }
         promoCodesList.forEach((promo, idx) => {
-            let desc = '';
-            if(promo.type === 'percent') desc = `(-${promo.value}%)`;
-            else if(promo.type === 'fixed') desc = `(-$${parseFloat(promo.value).toFixed(2)})`;
-            else if(promo.type === 'freeship') desc = `(ដឹកជញ្ជូនឥតគិតថ្លៃ)`;
-
+            let desc = promo.type === 'percent' ? `(-${promo.value}%)` : (promo.type === 'fixed' ? `(-$${parseFloat(promo.value).toFixed(2)})` : `(ដឹកជញ្ជូនឥតគិតថ្លៃ)`);
             let limitDesc = promo.limit > 0 ? `ប្រើបាន: ${promo.usedCount || 0}/${promo.limit} ដង` : `ប្រើបាន: មិនកំណត់`;
             let userLimitBadge = promo.oneTimePerUser ? `<span style="font-size: 11px; color: #ef4444; margin-left: 5px; background: rgba(239, 68, 68, 0.1); padding: 2px 6px; border-radius: 4px;"><i class="fa-solid fa-user-lock"></i> ១ដង/ម្នាក់</span>` : '';
-
             container.innerHTML += `
                 <div style="display: flex; align-items: center; justify-content: space-between; background: #fff; padding: 10px 14px; border-radius: 10px; border: 1px solid var(--border-color); ${editPromoIndex === idx ? 'border-color: var(--warning); box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);' : ''}">
-                    <div>
-                        <strong style="color: var(--brand-dark); font-size: 14px;">🏷️ ${promo.code}</strong>
-                        <span style="font-size: 12px; color: var(--success); font-weight: bold; margin-left: 10px;">${desc}</span>
-                        <span style="font-size: 11px; color: var(--text-muted); margin-left: 10px; background: rgba(0,0,0,0.03); padding: 2px 6px; border-radius: 4px;">${limitDesc}</span>
-                        ${userLimitBadge}
-                    </div>
-                    <div style="display: flex; gap: 8px;">
-                        <button class="btn-script" onclick="editPromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px; background: var(--warning); color: white; border-radius: 50%; border: none; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-pen"></i></button>
-                        <button class="btn-script btn-delete" onclick="deletePromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px;"><i class="fa-solid fa-trash"></i></button>
-                    </div>
-                </div>
-            `;
+                    <div><strong style="color: var(--brand-dark); font-size: 14px;">🏷️ ${promo.code}</strong><span style="font-size: 12px; color: var(--success); font-weight: bold; margin-left: 10px;">${desc}</span><span style="font-size: 11px; color: var(--text-muted); margin-left: 10px; background: rgba(0,0,0,0.03); padding: 2px 6px; border-radius: 4px;">${limitDesc}</span>${userLimitBadge}</div>
+                    <div style="display: flex; gap: 8px;"><button class="btn-script" onclick="editPromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px; background: var(--warning); color: white; border-radius: 50%; border: none; padding: 0; display: flex; align-items: center; justify-content: center;"><i class="fa-solid fa-pen"></i></button><button class="btn-script btn-delete" onclick="deletePromoCode(${idx})" style="width: 28px; height: 28px; font-size: 11px;"><i class="fa-solid fa-trash"></i></button></div>
+                </div>`;
         });
     }
 
     function editPromoCode(idx) {
-        editPromoIndex = idx;
-        const promo = promoCodesList[idx];
-        
-        document.getElementById('newPromoCode').value = promo.code;
-        document.getElementById('newPromoType').value = promo.type;
-        document.getElementById('newPromoValue').value = promo.value || '';
-        document.getElementById('newPromoLimit').value = promo.limit > 0 ? promo.limit : '';
-        document.getElementById('newPromoPerUser').checked = !!promo.oneTimePerUser;
-        
+        editPromoIndex = idx; const promo = promoCodesList[idx];
+        document.getElementById('newPromoCode').value = promo.code; document.getElementById('newPromoType').value = promo.type; document.getElementById('newPromoValue').value = promo.value || ''; document.getElementById('newPromoLimit').value = promo.limit > 0 ? promo.limit : ''; document.getElementById('newPromoPerUser').checked = !!promo.oneTimePerUser;
         onPromoTypeChange();
-        
-        const btnSave = document.getElementById('btnSavePromo');
-        btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកែប្រែ';
-        btnSave.style.background = 'var(--warning)';
-        
-        document.getElementById('btnCancelPromo').style.display = 'block';
-        renderPromoCodesList();
+        const btnSave = document.getElementById('btnSavePromo'); btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកែប្រែ'; btnSave.style.background = 'var(--warning)';
+        document.getElementById('btnCancelPromo').style.display = 'block'; renderPromoCodesList();
     }
 
     function cancelPromoEdit() {
-        editPromoIndex = -1;
-        document.getElementById('newPromoCode').value = '';
-        document.getElementById('newPromoType').value = 'percent';
-        document.getElementById('newPromoValue').value = '';
-        document.getElementById('newPromoLimit').value = '';
-        document.getElementById('newPromoPerUser').checked = false;
-        
+        editPromoIndex = -1; document.getElementById('newPromoCode').value = ''; document.getElementById('newPromoType').value = 'percent'; document.getElementById('newPromoValue').value = ''; document.getElementById('newPromoLimit').value = ''; document.getElementById('newPromoPerUser').checked = false;
         onPromoTypeChange();
-        
-        const btnSave = document.getElementById('btnSavePromo');
-        btnSave.innerHTML = '+ បន្ថែមរក្សាទុក';
-        btnSave.style.background = 'var(--brand-cyan)';
-        
-        document.getElementById('btnCancelPromo').style.display = 'none';
-        renderPromoCodesList();
+        const btnSave = document.getElementById('btnSavePromo'); btnSave.innerHTML = '+ បន្ថែមរក្សាទុក'; btnSave.style.background = 'var(--brand-cyan)';
+        document.getElementById('btnCancelPromo').style.display = 'none'; renderPromoCodesList();
     }
 
     function addNewPromoCode() {
-        const codeInp = document.getElementById('newPromoCode');
-        const typeInp = document.getElementById('newPromoType');
-        const valInp = document.getElementById('newPromoValue');
-        const limitInp = document.getElementById('newPromoLimit');
-        const perUserInp = document.getElementById('newPromoPerUser');
-
-        const code = codeInp.value.trim().toUpperCase();
-        const type = typeInp.value;
-        const value = parseFloat(valInp.value) || 0;
-        const limit = parseInt(limitInp.value) || 0;
-        const oneTimePerUser = perUserInp.checked;
-
+        const code = document.getElementById('newPromoCode').value.trim().toUpperCase(); const type = document.getElementById('newPromoType').value; const value = parseFloat(document.getElementById('newPromoValue').value) || 0; const limit = parseInt(document.getElementById('newPromoLimit').value) || 0; const oneTimePerUser = document.getElementById('newPromoPerUser').checked;
         if(!code) return showToast('សូមបំពេញឈ្មោះកូដបញ្ចុះតម្លៃ!', true);
-
-        if(type !== 'freeship' && (isNaN(value) || value <= 0)) {
-            return showToast('សូមបញ្ចូលតម្លៃបញ្ចុះឱ្យបានត្រឹមត្រូវ!', true);
-        }
-
+        if(type !== 'freeship' && (isNaN(value) || value <= 0)) return showToast('សូមបញ្ចូលតម្លៃបញ្ចុះឱ្យបានត្រឹមត្រូវ!', true);
         if (editPromoIndex === -1) {
-            if(promoCodesList.some(p => p.code === code)) {
-                return showToast('កូដនេះមានរួចហើយ!', true);
-            }
-            promoCodesList.push({ code, type, value, limit, usedCount: 0, oneTimePerUser });
-            showToast('បានបន្ថែមរក្សាទុកកូដប្រូម៉ូសិនជោគជ័យ!');
+            if(promoCodesList.some(p => p.code === code)) return showToast('កូដនេះមានរួចហើយ!', true);
+            promoCodesList.push({ code, type, value, limit, usedCount: 0, oneTimePerUser }); showToast('បានបន្ថែមរក្សាទុកកូដប្រូម៉ូសិនជោគជ័យ!');
         } else {
-            if(promoCodesList.some((p, idx) => p.code === code && idx !== editPromoIndex)) {
-                return showToast('កូដនេះជាន់គ្នាជាមួយកូដផ្សេង!', true);
-            }
-            const currentUsedCount = promoCodesList[editPromoIndex].usedCount || 0;
-            promoCodesList[editPromoIndex] = { code, type, value, limit, usedCount: currentUsedCount, oneTimePerUser };
-            showToast('បានកែប្រែកូដប្រូម៉ូសិនជោគជ័យ!');
+            if(promoCodesList.some((p, idx) => p.code === code && idx !== editPromoIndex)) return showToast('កូដនេះជាន់គ្នាជាមួយកូដផ្សេង!', true);
+            promoCodesList[editPromoIndex] = { code, type, value, limit, usedCount: promoCodesList[editPromoIndex].usedCount || 0, oneTimePerUser }; showToast('បានកែប្រែកូដប្រូម៉ូសិនជោគជ័យ!');
         }
-
         cancelPromoEdit();
     }
 
-    function deletePromoCode(idx) {
-        promoCodesList.splice(idx, 1);
-        if (editPromoIndex === idx) cancelPromoEdit();
-        renderPromoCodesList();
-        showToast('បានលុបកូដប្រូម៉ូសិន!');
-    }
+    function deletePromoCode(idx) { promoCodesList.splice(idx, 1); if (editPromoIndex === idx) cancelPromoEdit(); renderPromoCodesList(); showToast('បានលុបកូដប្រូម៉ូសិន!'); }
 
     function renderAdminBanners() {
         const container = document.getElementById('bannerListContainer'); container.innerHTML = '';
@@ -1209,49 +1109,27 @@
     function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); }
     
     function uploadAdminBanner(e, index) {
-        const file = e.target.files[0]; if(!file) return; 
-        showToast("កំពុង Upload រូបភាពចូល Cloud...", false);
-        
+        const file = e.target.files[0]; if(!file) return; showToast("កំពុង Upload រូបភាពចូល Cloud...", false);
         const reader = new FileReader();
         reader.onload = (ev) => {
             const img = new Image();
             img.onload = async () => {
-                const canvas = document.createElement('canvas'); 
-                const maxW = 1920; const maxH = 1080;
-                let w = img.width, h = img.height;
-                if (w > maxW || h > maxH) {
-                    const ratio = Math.min(maxW / w, maxH / h);
-                    w = Math.round(w * ratio); h = Math.round(h * ratio);
-                }
-                canvas.width = w; canvas.height = h; 
-                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                
+                const canvas = document.createElement('canvas'); const maxW = 1920; const maxH = 1080;
+                let w = img.width, h = img.height; if (w > maxW || h > maxH) { const ratio = Math.min(maxW / w, maxH / h); w = Math.round(w * ratio); h = Math.round(h * ratio); }
+                canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
                 try {
-                    const blob = await getCanvasBlob(canvas, 0.8);
-                    const cloudUrl = await uploadToSupabaseStorage(blob, 'banners');
-                    adminBanners[index] = cloudUrl;
-                    renderAdminBanners();
-                    saveAdminSettings();
-                    showToast("✅ Upload Cloud ជោគជ័យ!");
+                    const blob = await getCanvasBlob(canvas, 0.8); const cloudUrl = await uploadToSupabaseStorage(blob, 'banners');
+                    adminBanners[index] = cloudUrl; renderAdminBanners(); saveAdminSettings(); showToast("✅ Upload Cloud ជោគជ័យ!");
                 } catch(err) {
-                    console.warn("Cloud storage failed, falling back to Base64:", err);
                     const base64Str = canvas.toDataURL('image/jpeg', 0.6);
-                    if (checkStorageQuota(base64Str)) {
-                        adminBanners[index] = base64Str;
-                        renderAdminBanners();
-                        saveAdminSettings();
-                        showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
-                    }
+                    if (checkStorageQuota(base64Str)) { adminBanners[index] = base64Str; renderAdminBanners(); saveAdminSettings(); showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true); }
                 }
-            }; 
-            img.src = ev.target.result;
-        }; 
-        reader.readAsDataURL(file);
+            }; img.src = ev.target.result;
+        }; reader.readAsDataURL(file);
     }
 
     function uploadQR(e) {
-        const file = e.target.files[0]; if(!file) return; 
-        showToast("កំពុង Upload QR ចូល Cloud...", false);
+        const file = e.target.files[0]; if(!file) return; showToast("កំពុង Upload QR ចូល Cloud...", false);
         const reader = new FileReader();
         reader.onload = (ev) => {
             const img = new Image();
@@ -1260,23 +1138,15 @@
                 if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } }
                 canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); 
                 ctx.fillStyle='#fff'; ctx.fillRect(0,0,w,h); ctx.drawImage(img, 0, 0, w, h);
-                
                 try {
-                    const blob = await getCanvasBlob(canvas, 0.8);
-                    const cloudUrl = await uploadToSupabaseStorage(blob, 'qrcodes');
-                    document.getElementById('setMenuQR').value = cloudUrl;
-                    const qp = document.getElementById('menuQRPreview'); qp.src = cloudUrl; qp.style.display = 'block'; 
-                    document.getElementById('qrPreviewContainer').style.display = 'block';
-                    saveAdminSettings();
-                    showToast("✅ Upload QR ជោគជ័យ!");
+                    const blob = await getCanvasBlob(canvas, 0.8); const cloudUrl = await uploadToSupabaseStorage(blob, 'qrcodes');
+                    window.shopQR = cloudUrl; document.getElementById('setMenuQR').value = cloudUrl; const qp = document.getElementById('menuQRPreview'); qp.src = cloudUrl; qp.style.display = 'block'; document.getElementById('qrPreviewContainer').style.display = 'block'; 
+                    saveAdminSettings(); showToast("✅ Upload QR ជោគជ័យ!");
                 } catch (err) {
                     const url = canvas.toDataURL('image/jpeg', 0.8); 
                     if (checkStorageQuota(url)) {
-                        document.getElementById('setMenuQR').value = url;
-                        const qp = document.getElementById('menuQRPreview'); qp.src = url; qp.style.display = 'block'; 
-                        document.getElementById('qrPreviewContainer').style.display = 'block'; 
-                        saveAdminSettings();
-                        showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
+                        window.shopQR = url; document.getElementById('setMenuQR').value = url; const qp = document.getElementById('menuQRPreview'); qp.src = url; qp.style.display = 'block'; document.getElementById('qrPreviewContainer').style.display = 'block'; 
+                        saveAdminSettings(); showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
                     }
                 }
             }; img.src = ev.target.result;
@@ -1284,119 +1154,75 @@
     }
 
     function updateWelcomePreview(src) {
-        const box = document.getElementById('welcomeImgPreviewContainer');
-        const img = document.getElementById('welcomeImgPreview');
+        const box = document.getElementById('welcomeImgPreviewContainer'); const img = document.getElementById('welcomeImgPreview');
         if (!box || !img) return;
-        if (src && src.trim() !== '') { img.src = src; box.style.display = 'block'; } 
-        else { img.src = ''; box.style.display = 'none'; }
+        if (src && src.trim() !== '') { img.src = src; box.style.display = 'block'; } else { img.src = ''; box.style.display = 'none'; }
     }
 
     function uploadWelcomeImg(e) {
-        const file = e.target.files[0]; if (!file) return;
-        showToast("កំពុង Upload រូបស្វាគមន៍ចូល Cloud...", false);
+        const file = e.target.files[0]; if (!file) return; showToast("កំពុង Upload រូបស្វាគមន៍ចូល Cloud...", false);
         const reader = new FileReader();
         reader.onload = (ev) => {
             const img = new Image();
             img.onload = async () => {
-                const canvas = document.createElement('canvas');
-                const maxW = 1200, maxH = 900; let w = img.width, h = img.height;
-                if (w > maxW || h > maxH) {
-                    const ratio = Math.min(maxW / w, maxH / h);
-                    w = Math.round(w * ratio); h = Math.round(h * ratio);
-                }
-                canvas.width = w; canvas.height = h;
-                const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
-                
+                const canvas = document.createElement('canvas'); const maxW = 1200, maxH = 900; let w = img.width, h = img.height;
+                if (w > maxW || h > maxH) { const ratio = Math.min(maxW / w, maxH / h); w = Math.round(w * ratio); h = Math.round(h * ratio); }
+                canvas.width = w; canvas.height = h; const ctx = canvas.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
                 try {
-                    const blob = await getCanvasBlob(canvas, 0.8);
-                    const cloudUrl = await uploadToSupabaseStorage(blob, 'welcome_images');
-                    document.getElementById('setWelcomeImg').value = cloudUrl;
-                    document.getElementById('toggleWelcomePopup').checked = true;
-                    updateWelcomePreview(cloudUrl);
-                    saveAdminSettings();
-                    showToast("✅ Upload រូបស្វាគមន៍ជោគជ័យ!");
+                    const blob = await getCanvasBlob(canvas, 0.8); const cloudUrl = await uploadToSupabaseStorage(blob, 'welcome_images');
+                    document.getElementById('setWelcomeImg').value = cloudUrl; document.getElementById('toggleWelcomePopup').checked = true; updateWelcomePreview(cloudUrl); saveAdminSettings(); showToast("✅ Upload រូបស្វាគមន៍ជោគជ័យ!");
                 } catch(err) {
                     const url = canvas.toDataURL('image/jpeg', 0.75);
-                    if (checkStorageQuota(url)) {
-                        document.getElementById('setWelcomeImg').value = url;
-                        document.getElementById('toggleWelcomePopup').checked = true;
-                        updateWelcomePreview(url);
-                        saveAdminSettings();
-                        showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true);
-                    }
+                    if (checkStorageQuota(url)) { document.getElementById('setWelcomeImg').value = url; document.getElementById('toggleWelcomePopup').checked = true; updateWelcomePreview(url); saveAdminSettings(); showToast("⚠️ Cloud បរាជ័យ, ប្រើ Base64 ជំនួស!", true); }
                 }
-            };
-            img.src = ev.target.result;
-        };
-        reader.readAsDataURL(file);
+            }; img.src = ev.target.result;
+        }; reader.readAsDataURL(file);
     }
 
     function backupAllData() {
         try {
             const backupData = {};
             for (let i = 0; i < localStorage.length; i++) {
-                const key = localStorage.key(i);
-                if (key.includes(BRANCH) || key.startsWith('ks2_')) {
-                    backupData[key] = localStorage.getItem(key);
-                }
+                const key = localStorage.key(i); if (key.includes(BRANCH) || key.startsWith('ks2_')) { backupData[key] = localStorage.getItem(key); }
             }
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            const dateStr = new Date().toISOString().slice(0, 10);
-            downloadAnchor.setAttribute("download", `FullBackup_${BRANCH}_${dateStr}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
+            const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", `FullBackup_${BRANCH}_${new Date().toISOString().slice(0, 10)}.json`);
+            document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
             showToast("✅ Backup ទិន្នន័យបានជោគជ័យ!");
-        } catch (e) {
-            showToast("❌ បរាជ័យក្នុងការ Backup: " + e.message, true);
-        }
+        } catch (e) { showToast("❌ បរាជ័យក្នុងការ Backup: " + e.message, true); }
     }
 
-    function triggerRestoreAllData() {
-        document.getElementById('importFullBackupFile').click();
-    }
-
+    function triggerRestoreAllData() { document.getElementById('importFullBackupFile').click(); }
     function restoreAllData(e) {
-        const file = e.target.files[0];
-        if (!file) return;
-
+        const file = e.target.files[0]; if (!file) return;
         const reader = new FileReader();
         reader.onload = async function(event) {
             try {
                 const backupData = JSON.parse(event.target.result);
-                if (typeof backupData !== 'object' || backupData === null) {
-                    throw new Error("ទ្រង់ទ្រាយឯកសារមិនត្រឹមត្រូវ");
-                }
-
-                Object.keys(backupData).forEach(key => {
-                    localStorage.setItem(key, backupData[key]);
-                });
-
+                if (typeof backupData !== 'object' || backupData === null) throw new Error("ទ្រង់ទ្រាយឯកសារមិនត្រឹមត្រូវ");
+                Object.keys(backupData).forEach(key => { localStorage.setItem(key, backupData[key]); });
                 if (supabaseClient && navigator.onLine) {
-                     const payload = {};
-                     Object.keys(backupData).forEach(k => {
-                          try { payload[k] = JSON.parse(backupData[k]); } catch(err) { payload[k] = backupData[k]; }
-                     });
-                     await supabaseClient.from('branch_store').upsert({
-                          branch_id: BRANCH,
-                          data_json: payload,
-                          updated_at: new Date().toISOString()
-                     });
+                     const payload = {}; Object.keys(backupData).forEach(k => { try { payload[k] = JSON.parse(backupData[k]); } catch(err) { payload[k] = backupData[k]; } });
+                     await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: payload, updated_at: new Date().toISOString() });
                 }
-
-                showToast("✅ Restore ទិន្នន័យបានជោគជ័យ! ប្រព័ន្ធនឹងអាប់ដេត...", false);
-                setTimeout(() => window.location.reload(), 1500);
-            } catch (err) {
-                showToast("❌ ឯកសារ Backup មិនត្រឹមត្រូវ: " + err.message, true);
-            }
-        };
-        reader.readAsText(file);
+                showToast("✅ Restore ទិន្នន័យបានជោគជ័យ! ប្រព័ន្ធនឹងអាប់ដេត...", false); setTimeout(() => window.location.reload(), 1500);
+            } catch (err) { showToast("❌ ឯកសារ Backup មិនត្រឹមត្រូវ: " + err.message, true); }
+        }; reader.readAsText(file);
     }
 
     async function initAdmin() {
         try {
+            let shopName = localStorage.getItem(`ks2_${BRANCH}_shop_name`) || 'SKM INTEGRATE';
+            let shopPhone = localStorage.getItem(`ks2_${BRANCH}_shop_phone`) || '';
+            let shopAddress = localStorage.getItem(`ks2_${BRANCH}_shop_address`) || '';
+            window.shopLogo = localStorage.getItem(`ks2_${BRANCH}_shop_logo`) || '';
+            window.shopQR = localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '';
+            
+            document.getElementById('setShopName').value = shopName;
+            document.getElementById('setShopPhone').value = shopPhone;
+            document.getElementById('setShopAddress').value = shopAddress;
+
             let localSys = {}; let localPosScripts = [];
             try { const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`); if (rawSys) localSys = JSON.parse(rawSys); } catch(e) {}
             try { const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`); if (rawPos) localPosScripts = JSON.parse(rawPos); } catch(e) {}
@@ -1406,20 +1232,28 @@
             if (localPosScripts.length > 0) posScripts = localPosScripts;
             
             if (localSys.menuThemeColor) document.getElementById('setMenuThemeColor').value = localSys.menuThemeColor;
-            if (localSys.menuBanners && localSys.menuBanners.length > 0) adminBanners = localSys.menuBanners;
-            else if (localSys.menuBanner) adminBanners = [localSys.menuBanner];
+            if (localSys.menuBanners && localSys.menuBanners.length > 0) adminBanners = localSys.menuBanners; else if (localSys.menuBanner) adminBanners = [localSys.menuBanner];
             renderAdminBanners();
 
-            const localQr = localSys.menuQR || localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '';
+            const localQr = window.shopQR || localSys.menuQR || '';
             if (localQr) {
                 document.getElementById('setMenuQR').value = localQr;
                 const qp = document.getElementById('menuQRPreview'); qp.src = localQr; qp.style.display = 'block';
                 document.getElementById('qrPreviewContainer').style.display = 'block';
             }
             
+            if (window.shopLogo) {
+                const lp = document.getElementById('shopLogoPreview');
+                lp.src = window.shopLogo; lp.style.display = 'block';
+                document.getElementById('logoPreviewContainer').style.display = 'flex';
+                document.getElementById('logoControlsWrapper').style.display = 'block';
+            }
+            document.getElementById('logoShapeSelect').value = localSys.logoShape || 'circle';
+            document.getElementById('logoScaleSlider').value = localSys.logoScale || 1;
+            updateLogoPreview();
+            
             if (localSys.bakongId) document.getElementById('setBakongId').value = localSys.bakongId;
             if (localSys.bakongName) document.getElementById('setBakongName').value = localSys.bakongName;
-
             if (localSys.chatLink) document.getElementById('setChatLink').value = localSys.chatLink;
             if (localSys.socialIcon) document.getElementById('setSocialIcon').value = localSys.socialIcon;
             if (localSys.socialLabel) document.getElementById('setSocialLabel').value = localSys.socialLabel;
@@ -1443,34 +1277,15 @@
             document.getElementById('toggleTableFeature').checked = !!localSys.toggleTableFeature;
             document.getElementById('setTotalTables').value = localSys.totalTables || 20;
             document.getElementById('setTablePrefix').value = localSys.tablePrefix || 'តុលេខ';
-            if (document.getElementById('setCustomTables')) {
-                const cTables = localSys.customTables !== undefined ? localSys.customTables : (localSys.customTablesList !== undefined ? localSys.customTablesList : 'VIP 1, VIP 2, VIP 3');
-                document.getElementById('setCustomTables').value = cTables;
-            }
-            if (document.getElementById('toggleHideBannerPromoBadge')) {
-                document.getElementById('toggleHideBannerPromoBadge').checked = !!(localSys.hideBannerPromoBadge || localSys.hidePromoOnBanner);
-            }
-            if (document.getElementById('setPopupRepeatInterval')) {
-                const pInt = localSys.popupRepeatInterval || localSys.popupRepeatMinutes || '1';
-                document.getElementById('setPopupRepeatInterval').value = String(pInt);
-            }
+            if (document.getElementById('setCustomTables')) document.getElementById('setCustomTables').value = localSys.customTables !== undefined ? localSys.customTables : (localSys.customTablesList !== undefined ? localSys.customTablesList : 'VIP 1, VIP 2, VIP 3');
+            if (document.getElementById('toggleHideBannerPromoBadge')) document.getElementById('toggleHideBannerPromoBadge').checked = !!(localSys.hideBannerPromoBadge || localSys.hidePromoOnBanner);
+            if (document.getElementById('setPopupRepeatInterval')) document.getElementById('setPopupRepeatInterval').value = String(localSys.popupRepeatInterval || localSys.popupRepeatMinutes || '1');
 
-            if (localSys.customPrinterPresets && Array.isArray(localSys.customPrinterPresets)) {
-                customPrinterPresets = localSys.customPrinterPresets;
-            }
+            if (localSys.customPrinterPresets && Array.isArray(localSys.customPrinterPresets)) customPrinterPresets = localSys.customPrinterPresets;
             renderCustomPrinterPresets();
-            if (localSys.receiptSize && document.getElementById('setAdminReceiptSize')) {
-                document.getElementById('setAdminReceiptSize').value = localSys.receiptSize;
-            }
-            if (localSys.receiptFooter && document.getElementById('setAdminReceiptFooter')) {
-                document.getElementById('setAdminReceiptFooter').value = localSys.receiptFooter;
-            }
-            if (localSys.customReceiptConfig) {
-                applyReceiptConfigToInputs(localSys.customReceiptConfig);
-            } else {
-                const mode = localSys.receiptSize || '80mm';
-                applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[mode] || DEFAULT_RECEIPT_PRESETS['80mm']);
-            }
+            if (localSys.receiptSize && document.getElementById('setAdminReceiptSize')) document.getElementById('setAdminReceiptSize').value = localSys.receiptSize;
+            if (localSys.receiptFooter && document.getElementById('setAdminReceiptFooter')) document.getElementById('setAdminReceiptFooter').value = localSys.receiptFooter;
+            if (localSys.customReceiptConfig) applyReceiptConfigToInputs(localSys.customReceiptConfig); else applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[localSys.receiptSize || '80mm']);
 
             if (localSys.deptPrinters) deptPrinters = localSys.deptPrinters;
             if (localSys.categoryRouting) categoryRouting = localSys.categoryRouting;
@@ -1479,41 +1294,49 @@
             
             try {
                 let cats = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_categories`));
-                if (cats && Array.isArray(cats) && cats.length > 0) {
-                    posCategories = cats;
-                } else {
-                    let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`)) || [];
-                    posCategories = [...new Set(localInv.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))];
-                }
+                if (cats && Array.isArray(cats) && cats.length > 0) posCategories = cats;
+                else { let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`)) || []; posCategories = [...new Set(localInv.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))]; }
             } catch(e) {}
             
-            renderDeptPrinters();
-            renderMenuScripts(); renderPosScripts(); renderPromoCodesList();
+            renderDeptPrinters(); renderMenuScripts(); renderPosScripts(); renderPromoCodesList();
 
             if (supabaseClient && navigator.onLine) {
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
                 if (data && data.data_json) {
                     let d = data.data_json; let sys = d.sysSettings || {};
                     
+                    if(d.shopName) document.getElementById('setShopName').value = d.shopName;
+                    if(d.shopPhone) document.getElementById('setShopPhone').value = d.shopPhone;
+                    if(d.shopAddress) document.getElementById('setShopAddress').value = d.shopAddress;
+                    
+                    if(d.shopLogo) {
+                        window.shopLogo = d.shopLogo;
+                        const lp = document.getElementById('shopLogoPreview');
+                        lp.src = window.shopLogo; lp.style.display = 'block';
+                        document.getElementById('logoPreviewContainer').style.display = 'flex';
+                        document.getElementById('logoControlsWrapper').style.display = 'block';
+                    }
+                    document.getElementById('logoShapeSelect').value = sys.logoShape || 'circle';
+                    document.getElementById('logoScaleSlider').value = sys.logoScale || 1;
+                    updateLogoPreview();
+
                     if(sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
                     if(sys.menuBanners && sys.menuBanners.length > 0) adminBanners = sys.menuBanners; else if(sys.menuBanner) adminBanners = [sys.menuBanner];
                     renderAdminBanners();
                     
                     if(sys.promoCodes && Array.isArray(sys.promoCodes)) promoCodesList = sys.promoCodes;
                     renderPromoCodesList();
-                    if (document.getElementById('toggleHideBannerPromoBadge')) {
-                        document.getElementById('toggleHideBannerPromoBadge').checked = !!sys.hideBannerPromoBadge;
-                    }
+                    if (document.getElementById('toggleHideBannerPromoBadge')) document.getElementById('toggleHideBannerPromoBadge').checked = !!sys.hideBannerPromoBadge;
 
-                    if(sys.menuQR) {
-                        document.getElementById('setMenuQR').value = sys.menuQR;
-                        const qp = document.getElementById('menuQRPreview'); qp.src = sys.menuQR; qp.style.display = 'block';
+                    if(sys.menuQR || d.shopQR) {
+                        window.shopQR = sys.menuQR || d.shopQR;
+                        document.getElementById('setMenuQR').value = window.shopQR;
+                        const qp = document.getElementById('menuQRPreview'); qp.src = window.shopQR; qp.style.display = 'block';
                         document.getElementById('qrPreviewContainer').style.display = 'block';
                     }
                     
                     if(sys.bakongId) document.getElementById('setBakongId').value = sys.bakongId;
                     if(sys.bakongName) document.getElementById('setBakongName').value = sys.bakongName;
-                    
                     if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
                     if(sys.socialIcon) document.getElementById('setSocialIcon').value = sys.socialIcon;
                     if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
@@ -1525,9 +1348,7 @@
                     document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
                     document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
                     if (sys.welcomeImg) updateWelcomePreview(sys.welcomeImg);
-                    if (document.getElementById('setPopupRepeatInterval') && sys.popupRepeatInterval) {
-                        document.getElementById('setPopupRepeatInterval').value = String(sys.popupRepeatInterval);
-                    }
+                    if (document.getElementById('setPopupRepeatInterval') && sys.popupRepeatInterval) document.getElementById('setPopupRepeatInterval').value = String(sys.popupRepeatInterval);
                     document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
                     document.getElementById('setOpenTime').value = sys.openTime || '08:00';
                     document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
@@ -1536,37 +1357,20 @@
                     document.getElementById('toggleTableFeature').checked = !!sys.toggleTableFeature;
                     document.getElementById('setTotalTables').value = sys.totalTables || 20;
                     document.getElementById('setTablePrefix').value = sys.tablePrefix || 'តុលេខ';
-                    if (document.getElementById('setCustomTables')) {
-                        document.getElementById('setCustomTables').value = sys.customTables !== undefined ? sys.customTables : 'VIP 1, VIP 2, VIP 3';
-                    }
+                    if (document.getElementById('setCustomTables')) document.getElementById('setCustomTables').value = sys.customTables !== undefined ? sys.customTables : 'VIP 1, VIP 2, VIP 3';
 
-                    if (sys.customPrinterPresets && Array.isArray(sys.customPrinterPresets)) {
-                        customPrinterPresets = sys.customPrinterPresets;
-                    }
+                    if (sys.customPrinterPresets && Array.isArray(sys.customPrinterPresets)) customPrinterPresets = sys.customPrinterPresets;
                     renderCustomPrinterPresets();
-                    if (sys.receiptSize && document.getElementById('setAdminReceiptSize')) {
-                        document.getElementById('setAdminReceiptSize').value = sys.receiptSize;
-                    }
-                    if (sys.receiptFooter && document.getElementById('setAdminReceiptFooter')) {
-                        document.getElementById('setAdminReceiptFooter').value = sys.receiptFooter;
-                    }
-                    if (sys.customReceiptConfig) {
-                        applyReceiptConfigToInputs(sys.customReceiptConfig);
-                    } else {
-                        const mode = sys.receiptSize || '80mm';
-                        applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[mode] || DEFAULT_RECEIPT_PRESETS['80mm']);
-                    }
+                    if (sys.receiptSize && document.getElementById('setAdminReceiptSize')) document.getElementById('setAdminReceiptSize').value = sys.receiptSize;
+                    if (sys.receiptFooter && document.getElementById('setAdminReceiptFooter')) document.getElementById('setAdminReceiptFooter').value = sys.receiptFooter;
+                    if (sys.customReceiptConfig) applyReceiptConfigToInputs(sys.customReceiptConfig); else applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[sys.receiptSize || '80mm']);
 
                     if(sys.deptPrinters) deptPrinters = sys.deptPrinters;
                     if(sys.categoryRouting) categoryRouting = sys.categoryRouting;
                     if (document.getElementById('toggleMultiPrinter')) document.getElementById('toggleMultiPrinter').checked = !!sys.toggleMultiPrinter;
                     if (document.getElementById('printAllSync')) document.getElementById('printAllSync').checked = !!sys.printAllSync;
                     
-                    if (d.categories && Array.isArray(d.categories) && d.categories.length > 0) {
-                        posCategories = d.categories;
-                    } else if (d.inventory && Array.isArray(d.inventory)) {
-                        posCategories = [...new Set(d.inventory.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))];
-                    }
+                    if (d.categories && Array.isArray(d.categories) && d.categories.length > 0) posCategories = d.categories; else if (d.inventory && Array.isArray(d.inventory)) posCategories = [...new Set(d.inventory.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))];
                     renderDeptPrinters();
 
                     if(sys.orderTelegramBotToken || d.telegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken || d.telegramBotToken || '';
@@ -1585,17 +1389,17 @@
 
     function buildSysSettingsPayload(existingSys) {
         let sys = existingSys || {};
-        
         sys.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
         sys.menuBanners = adminBanners.filter(b => b.trim() !== '');
         sys.promoCodes = promoCodesList;
+        sys.hideBannerPromoBadge = document.getElementById('toggleHideBannerPromoBadge')?.checked || false;
+        sys.hidePromoOnBanner = sys.hideBannerPromoBadge;
         
-        const hideBadgeVal = document.getElementById('toggleHideBannerPromoBadge')?.checked || false;
-        sys.hideBannerPromoBadge = hideBadgeVal;
-        sys.hidePromoOnBanner = hideBadgeVal;
-        
+        // 🌟 Save Logo Controls 🌟
+        sys.logoShape = document.getElementById('logoShapeSelect').value;
+        sys.logoScale = parseFloat(document.getElementById('logoScaleSlider').value);
+
         sys.menuQR = document.getElementById('setMenuQR').value.trim();
-        
         sys.bakongId = document.getElementById('setBakongId') ? document.getElementById('setBakongId').value.trim() : '';
         sys.bakongName = document.getElementById('setBakongName') ? document.getElementById('setBakongName').value.trim().toUpperCase() : '';
 
@@ -1605,14 +1409,12 @@
         sys.socialLink = document.getElementById('setSocialLink').value.trim();
         
         sys.toggleTicker = document.getElementById('toggleTicker').checked;
-        const tickerVal = document.getElementById('setTickerText').value.trim();
-        sys.tickerText = tickerVal; sys.tickerNews = tickerVal;
+        sys.tickerText = document.getElementById('setTickerText').value.trim(); sys.tickerNews = sys.tickerText;
 
         sys.toggleWelcomePopup = document.getElementById('toggleWelcomePopup').checked;
         sys.welcomeImg = document.getElementById('setWelcomeImg').value.trim();
-        const repeatMinVal = parseInt(document.getElementById('setPopupRepeatInterval')?.value || '1') || 1;
-        sys.popupRepeatInterval = repeatMinVal;
-        sys.popupRepeatMinutes = repeatMinVal;
+        sys.popupRepeatInterval = parseInt(document.getElementById('setPopupRepeatInterval')?.value || '1') || 1;
+        sys.popupRepeatMinutes = sys.popupRepeatInterval;
         
         sys.toggleStoreHours = document.getElementById('toggleStoreHours').checked;
         sys.openTime = document.getElementById('setOpenTime').value;
@@ -1622,32 +1424,21 @@
         sys.toggleTableFeature = document.getElementById('toggleTableFeature').checked;
         sys.totalTables = parseInt(document.getElementById('setTotalTables').value) || 20;
         sys.tablePrefix = document.getElementById('setTablePrefix').value.trim() || 'តុលេខ';
-        const customTablesVal = document.getElementById('setCustomTables') ? document.getElementById('setCustomTables').value.trim() : 'VIP 1, VIP 2, VIP 3';
-        sys.customTables = customTablesVal; sys.customTablesList = customTablesVal;
+        sys.customTables = document.getElementById('setCustomTables') ? document.getElementById('setCustomTables').value.trim() : 'VIP 1, VIP 2, VIP 3'; sys.customTablesList = sys.customTables;
 
         if (document.getElementById('setAdminReceiptSize')) {
             sys.receiptSize = document.getElementById('setAdminReceiptSize').value || '80mm';
-            sys.customReceiptConfig = getCurrentReceiptInputsConfig();
-            sys.customPrinterPresets = customPrinterPresets;
+            sys.customReceiptConfig = getCurrentReceiptInputsConfig(); sys.customPrinterPresets = customPrinterPresets;
         }
-        if (document.getElementById('setAdminReceiptFooter')) {
-            sys.receiptFooter = document.getElementById('setAdminReceiptFooter').value.trim();
-        }
+        if (document.getElementById('setAdminReceiptFooter')) sys.receiptFooter = document.getElementById('setAdminReceiptFooter').value.trim();
 
-        sys.deptPrinters = deptPrinters;
-        sys.categoryRouting = categoryRouting;
+        sys.deptPrinters = deptPrinters; sys.categoryRouting = categoryRouting;
         sys.toggleMultiPrinter = document.getElementById('toggleMultiPrinter')?.checked || false;
         sys.printAllSync = document.getElementById('printAllSync')?.checked || false;
 
-        let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim();
-        let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
-        let servTok = document.getElementById('setServiceTelegramBotToken').value.trim();
-        let servChat = document.getElementById('setServiceTelegramChatId').value.trim();
-
-        sys.orderTelegramBotToken = orderTok; sys.orderTelegramChatId = orderChat;
-        sys.serviceTelegramBotToken = servTok; sys.serviceTelegramChatId = servChat;
-        sys.telegramBotToken = orderTok; sys.telegramChatId = orderChat;
-
+        let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim(); let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
+        let servTok = document.getElementById('setServiceTelegramBotToken').value.trim(); let servChat = document.getElementById('setServiceTelegramChatId').value.trim();
+        sys.orderTelegramBotToken = orderTok; sys.orderTelegramChatId = orderChat; sys.serviceTelegramBotToken = servTok; sys.serviceTelegramChatId = servChat; sys.telegramBotToken = orderTok; sys.telegramChatId = orderChat;
         sys.customMenuScripts = menuScripts;
         return { sys, orderTok, orderChat };
     }
@@ -1656,22 +1447,31 @@
         try {
             document.querySelectorAll('.btn-save').forEach(b => { b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> រក្សាទុក...'; b.disabled = true; });
             
-            localStorage.setItem(`ks2_${BRANCH}_pos_scripts`, JSON.stringify(posScripts));
             let d = {};
             if (supabaseClient && navigator.onLine) {
                 try { let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle(); if (data && data.data_json) d = data.data_json; } catch(err) {}
             }
-            if(!d.sysSettings) {
-                try { d.sysSettings = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`)) || {}; } 
-                catch(e) { d.sysSettings = {}; }
-            }
+            if(!d.sysSettings) { try { d.sysSettings = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`)) || {}; } catch(e) { d.sysSettings = {}; } }
             
             const { sys, orderTok, orderChat } = buildSysSettingsPayload(d.sysSettings);
             d.sysSettings = sys;
             d.telegramBotToken = orderTok; d.telegramChatId = orderChat;  
             d.customPosScripts = posScripts;
 
+            d.shopName = document.getElementById('setShopName').value.trim();
+            d.shopPhone = document.getElementById('setShopPhone').value.trim();
+            d.shopAddress = document.getElementById('setShopAddress').value.trim();
+            if (window.shopLogo) d.shopLogo = window.shopLogo;
+            if (window.shopQR) d.shopQR = window.shopQR;
+
             localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
+            localStorage.setItem(`ks2_${BRANCH}_pos_scripts`, JSON.stringify(posScripts));
+            localStorage.setItem(`ks2_${BRANCH}_shop_name`, d.shopName);
+            localStorage.setItem(`ks2_${BRANCH}_shop_phone`, d.shopPhone);
+            localStorage.setItem(`ks2_${BRANCH}_shop_address`, d.shopAddress);
+            if (window.shopLogo) localStorage.setItem(`ks2_${BRANCH}_shop_logo`, window.shopLogo);
+            if (window.shopQR) localStorage.setItem(`ks2_${BRANCH}_shop_qr`, window.shopQR);
+            
             if (orderTok) localStorage.setItem(`ks2_${BRANCH}_telegram_bot_token`, orderTok);
             if (orderChat) localStorage.setItem(`ks2_${BRANCH}_telegram_chat_id`, orderChat);
 
@@ -1679,7 +1479,6 @@
                 let { error } = await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
                 if (error) throw error;
             }
-            
             showToast('✅ រក្សាទុកបានជោគជ័យ! (Saved!)');
         } catch(e) { 
             showToast('❌ Save Failed: ' + e.message, true); console.error(e); 
@@ -1687,110 +1486,6 @@
             document.querySelectorAll('.btn-save').forEach(b => { b.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> រក្សាទុកការកំណត់'; b.disabled = false; });
         }
     }
-
-    function renderMenuScripts() {
-        const container = document.getElementById('menuScriptsListContainer'); const toggleContainer = document.getElementById('menuScriptsToggleContainer');
-        if (!container || !toggleContainer) return; container.innerHTML = ''; toggleContainer.innerHTML = '';
-        if (menuScripts.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដទេ</div>'; return; }
-        let displayScripts = [...menuScripts].reverse();
-        if (menuScripts.length > 3) {
-            let toggleBtnText = showAllMenuScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${menuScripts.length})`;
-            toggleContainer.innerHTML = `<button class="input-st" style="width: 100%; padding: 10px; background:rgba(6, 182, 212, 0.05); border: 1px dashed var(--brand-cyan); color:var(--brand-cyan); cursor:pointer; font-weight: bold; border-radius: 8px;" onclick="toggleMenuScriptsView()">${toggleBtnText}</button>`;
-        }
-        if (!showAllMenuScripts && menuScripts.length > 3) displayScripts = displayScripts.slice(0, 3);
-        displayScripts.forEach(s => {
-            let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off'; let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
-            container.innerHTML += `<div class="script-item"><div class="script-name">${s.name}</div><div class="script-actions"><button class="btn-script ${btnClass}" onclick="toggleMenuScript('${s.id}')">${btnText}</button><button class="btn-script btn-delete" onclick="deleteMenuScript('${s.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
-        });
-    }
-    function toggleMenuScriptsView() { showAllMenuScripts = !showAllMenuScripts; renderMenuScripts(); }
-    function toggleMenuScript(id) { let s = menuScripts.find(x => x.id === id); if (s) { s.isActive = !s.isActive; renderMenuScripts(); saveAdminSettings(); } }
-    function toggleAllMenuScripts() { if (menuScripts.length === 0) return; let targetState = menuScripts.some(s => !s.isActive); menuScripts.forEach(s => s.isActive = targetState); renderMenuScripts(); saveAdminSettings(); }
-    function deleteMenuScript(id) { menuScripts = menuScripts.filter(x => x.id !== id); renderMenuScripts(); saveAdminSettings(); }
-    function deleteAllMenuScripts() { if (menuScripts.length === 0) return; menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
-    
-    function uploadMenuScripts(e) {
-        const files = Array.from(e.target.files);
-        if (!files.length) return;
-        
-        let loadedCount = 0;
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const scriptContent = evt.target.result;
-                const newScript = {
-                    id: 'menu_js_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-                    name: file.name,
-                    code: scriptContent,
-                    isActive: true
-                };
-                menuScripts.push(newScript);
-                loadedCount++;
-                if (loadedCount === files.length) {
-                    renderMenuScripts();
-                    saveAdminSettings();
-                    showToast(`✅ បានបញ្ចូល Menu Custom JS ចំនួន ${loadedCount} ឯកសារ!`);
-                }
-            };
-            reader.readAsText(file);
-        });
-        e.target.value = '';
-    }
-
-    function exportMenuScriptsBackup() { if(menuScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(menuScripts, null, 2)], { type: "application/json" })); a.download = `Menu_JS.json`; a.click(); }
-    function importMenuScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err){ showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
-
-    function renderPosScripts() {
-        const container = document.getElementById('posScriptsListContainer'); const toggleContainer = document.getElementById('posScriptsToggleContainer');
-        if (!container || !toggleContainer) return; container.innerHTML = ''; toggleContainer.innerHTML = '';
-        if (posScripts.length === 0) { container.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 12px;">មិនទាន់មានកូដទេ</div>'; return; }
-        let displayScripts = [...posScripts].reverse();
-        if (posScripts.length > 3) {
-            let toggleBtnText = showAllPosScripts ? '▲ បង្រួមវិញ' : `▼ បង្ហាញទាំងអស់ (${posScripts.length})`;
-            toggleContainer.innerHTML = `<button class="input-st" style="width: 100%; padding: 10px; background:rgba(239, 68, 68, 0.05); border: 1px dashed var(--danger); color:var(--danger); cursor:pointer; font-weight: bold; border-radius: 8px;" onclick="togglePosScriptsView()">${toggleBtnText}</button>`;
-        }
-        if (!showAllPosScripts && posScripts.length > 3) displayScripts = displayScripts.slice(0, 3);
-        displayScripts.forEach(s => {
-            let btnClass = s.isActive ? 'btn-toggle-on' : 'btn-toggle-off'; let btnText = s.isActive ? 'បើក (ON)' : 'បិទ (OFF)';
-            container.innerHTML += `<div class="script-item"><div class="script-name">${s.name}</div><div class="script-actions"><button class="btn-script ${btnClass}" onclick="togglePosScript('${s.id}')">${btnText}</button><button class="btn-script btn-delete" onclick="deletePosScript('${s.id}')"><i class="fa-solid fa-trash"></i></button></div></div>`;
-        });
-    }
-    function togglePosScriptsView() { showAllPosScripts = !showAllPosScripts; renderPosScripts(); }
-    function togglePosScript(id) { let s = posScripts.find(x => x.id === id); if (s) { s.isActive = !s.isActive; renderPosScripts(); saveAdminSettings(); } }
-    function toggleAllPosScripts() { if (posScripts.length === 0) return; let targetState = posScripts.some(s => !s.isActive); posScripts.forEach(s => s.isActive = targetState); renderPosScripts(); saveAdminSettings(); }
-    function deletePosScript(id) { posScripts = posScripts.filter(x => x.id !== id); renderPosScripts(); saveAdminSettings(); }
-    function deleteAllPosScripts() { if (posScripts.length === 0) return; posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('បានលុបទាំងអស់ជោគជ័យ!'); }
-    
-    function uploadPosScripts(e) {
-        const files = Array.from(e.target.files);
-        if (!files.length) return;
-
-        let loadedCount = 0;
-        files.forEach(file => {
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                const scriptContent = evt.target.result;
-                const newScript = {
-                    id: 'pos_js_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
-                    name: file.name,
-                    code: scriptContent,
-                    isActive: true
-                };
-                posScripts.push(newScript);
-                loadedCount++;
-                if (loadedCount === files.length) {
-                    renderPosScripts();
-                    saveAdminSettings();
-                    showToast(`✅ បានបញ្ចូល POS Custom JS ចំនួន ${loadedCount} ឯកសារ!`);
-                }
-            };
-            reader.readAsText(file);
-        });
-        e.target.value = '';
-    }
-
-    function exportPosScriptsBackup() { if(posScripts.length === 0) return showToast("គ្មានកូដ!", true); const a = document.createElement("a"); a.href = URL.createObjectURL(new Blob([JSON.stringify(posScripts, null, 2)], { type: "application/json" })); a.download = `POS_JS.json`; a.click(); }
-    function importPosScriptsBackup(e) { const file = e.target.files[0]; if (!file) return; const r = new FileReader(); r.onload = (ev) => { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); showToast("Restore ជោគជ័យ!"); } catch(err) { showToast("ឯកសារមិនត្រឹមត្រូវ!", true); } e.target.value=''; }; r.readAsText(file); }
 
     function getPageUrl(pageName) { let path = window.location.pathname; let lastSlash = path.lastIndexOf('/'); return window.location.origin + path.substring(0, lastSlash + 1) + pageName + '?branch=' + encodeURIComponent(BRANCH); }
     function copyTextSafe(txt) { let ta = document.createElement('textarea'); ta.value = txt; ta.style.position = 'fixed'; document.body.appendChild(ta); ta.focus(); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); }
@@ -1802,28 +1497,24 @@
     function goToMenu() { window.open(getPageUrl('menu.html'), '_blank'); }
 
     async function testOrderTelegramBot() {
-        const token = document.getElementById('setOrderTelegramBotToken').value.trim();
-        const chatId = document.getElementById('setOrderTelegramChatId').value.trim();
+        const token = document.getElementById('setOrderTelegramBotToken').value.trim(); const chatId = document.getElementById('setOrderTelegramChatId').value.trim();
         if (!token || !chatId) return showToast('សូមបំពេញ Bot Token និង Chat ID (Order) ជាមុនសិន!', true);
         showToast('កំពុងផ្ញើសារសាកល្បង Order Bot...', false);
         try {
             const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: "🛒 [TEST] សារសាកល្បងសម្រាប់ Bot កុម្ម៉ង់ទំនិញ ដំណើរការជោគជ័យ!", parse_mode: 'HTML' }) });
             const data = await res.json();
-            if (data.ok) showToast('✅ ផ្ញើសារ Test Order Bot ជោគជ័យ!');
-            else showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
+            if (data.ok) showToast('✅ ផ្ញើសារ Test Order Bot ជោគជ័យ!'); else showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
         } catch(err) { showToast('❌ Error: ' + err.message, true); }
     }
 
     async function testServiceTelegramBot() {
-        const token = document.getElementById('setServiceTelegramBotToken').value.trim();
-        const chatId = document.getElementById('setServiceTelegramChatId').value.trim();
+        const token = document.getElementById('setServiceTelegramBotToken').value.trim(); const chatId = document.getElementById('setServiceTelegramChatId').value.trim();
         if (!token || !chatId) return showToast('សូមបំពេញ Bot Token និង Chat ID (Service) ជាមុនសិន!', true);
         showToast('កំពុងផ្ញើសារសាកល្បង Service Bot...', false);
         try {
             const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chat_id: chatId, text: "🛎️ [TEST] សារសាកល្បងសម្រាប់ Bot សេវាកម្ម / ហៅបុគ្គលិក ដំណើរការជោគជ័យ!", parse_mode: 'HTML' }) });
             const data = await res.json();
-            if (data.ok) showToast('✅ ផ្ញើសារ Test Service Bot ជោគជ័យ!');
-            else showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
+            if (data.ok) showToast('✅ ផ្ញើសារ Test Service Bot ជោគជ័យ!'); else showToast('❌ Error: ' + (data.description || 'Invalid token/chat id'), true);
         } catch(err) { showToast('❌ Error: ' + err.message, true); }
     }
 
@@ -1831,52 +1522,29 @@
         try {
             let invoices = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`)) || [];
             if (invoices.length === 0) return showToast("មិនមានវិក្កយបត្រដើម្បី Archive ទេ!", true);
-
-            const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000);
-            let oldInvoices = []; let newInvoices = [];
-
-            invoices.forEach(inv => {
-                const invTime = inv.timestamp || new Date(inv.date || inv.createdAt).getTime();
-                if (invTime < ninetyDaysAgo) oldInvoices.push(inv); else newInvoices.push(inv);
-            });
-
+            const ninetyDaysAgo = Date.now() - (90 * 24 * 60 * 60 * 1000); let oldInvoices = []; let newInvoices = [];
+            invoices.forEach(inv => { const invTime = inv.timestamp || new Date(inv.date || inv.createdAt).getTime(); if (invTime < ninetyDaysAgo) oldInvoices.push(inv); else newInvoices.push(inv); });
             if (oldInvoices.length === 0) return showToast("មិនមានវិក្កយបត្រចាស់ជាង ៣ខែ ដែលត្រូវ Archive ទេ!");
 
-            const modal = document.getElementById('adminConfirmModal');
-            const txt = document.getElementById('adminConfirmText');
-            const okBtn = document.getElementById('adminConfirmOkBtn');
-            txt.innerText = `រកឃើញវិក្កយបត្រចាស់ចំនួន ${oldInvoices.length} វិក្កយបត្រ។ តើអ្នកពិតជាចង់ទាញយកវាទុកជាឯកសារ Backup ហើយលុបវាចេញពីប្រព័ន្ធមែនទេ?`;
-            modal.style.display = 'flex';
-
+            const modal = document.getElementById('adminConfirmModal'); const txt = document.getElementById('adminConfirmText'); const okBtn = document.getElementById('adminConfirmOkBtn');
+            txt.innerText = `រកឃើញវិក្កយបត្រចាស់ចំនួន ${oldInvoices.length} វិក្កយបត្រ។ តើអ្នកពិតជាចង់ទាញយកវាទុកជាឯកសារ Backup ហើយលុបវាចេញពីប្រព័ន្ធមែនទេ?`; modal.style.display = 'flex';
             okBtn.onclick = async () => {
-                modal.style.display = 'none';
-                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(oldInvoices, null, 2));
-                const downloadAnchor = document.createElement('a');
-                downloadAnchor.setAttribute("href", dataStr);
-                downloadAnchor.setAttribute("download", `Archive_${BRANCH}_Invoices_${new Date().toISOString().slice(0, 10)}.json`);
-                document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
-
+                modal.style.display = 'none'; const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(oldInvoices, null, 2));
+                const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", `Archive_${BRANCH}_Invoices_${new Date().toISOString().slice(0, 10)}.json`); document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
                 localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(newInvoices));
-
                 if (supabaseClient && navigator.onLine) {
                     let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                    if (data && data.data_json) {
-                        let d = data.data_json; d.invoices = newInvoices;
-                        await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
-                    }
+                    if (data && data.data_json) { let d = data.data_json; d.invoices = newInvoices; await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' }); }
                 }
                 showToast(`✅ បាន Archive និងសម្អាតវិក្កយបត្រចំនួន ${oldInvoices.length} ដោយជោគជ័យ!`);
             };
         } catch (e) { showToast("❌ មានបញ្ហាក្នុងការ Archive: " + e.message, true); }
     }
 
-    // 🛡️ បន្ថែមមុខងារចាប់កំហុស (Error Handling) ពេលទាញយកឯកសារ Local
     async function downloadSystemShell() {
         showToast("កំពុងប្រមូលកូដ និងចងក្រងជា File តែ១... សូមរង់ចាំ!", false);
         try {
             let htmlRaw = await fetch('index.html').then(r => r.text());
-            
-            // ១. ទាញយក CSS
             const cssMatch = htmlRaw.match(/<link[^>]*rel="stylesheet"[^>]*href="([^"]+)"[^>]*>/gi);
             if (cssMatch) {
                 for (let linkTag of cssMatch) {
@@ -1885,18 +1553,12 @@
                         const href = hrefMatch[1];
                         if (!href.startsWith('http') && !href.startsWith('//')) {
                             try {
-                                const cssContent = await fetch(href).then(r => r.text());
-                                htmlRaw = htmlRaw.replace(linkTag, () => `<style>\n/* --- ${href} --- */\n${cssContent}\n</style>`);
-                            } catch(e) { 
-                                console.warn('Could not fetch CSS:', href); 
-                                showToast(`⚠️ មិនអាចទាញយកឯកសារ Local: ${href}`, true);
-                            }
+                                const cssContent = await fetch(href).then(r => r.text()); htmlRaw = htmlRaw.replace(linkTag, () => `<style>\n/* --- ${href} --- */\n${cssContent}\n</style>`);
+                            } catch(e) { console.warn('Could not fetch CSS:', href); showToast(`⚠️ មិនអាចទាញយកឯកសារ Local: ${href}`, true); }
                         }
                     }
                 }
             }
-
-            // ២. ទាញយក JS
             const jsMatch = htmlRaw.match(/<script[^>]*src="([^"]+)"[^>]*><\/script>/gi);
             if (jsMatch) {
                 for (let scriptTag of jsMatch) {
@@ -1905,34 +1567,16 @@
                         const src = srcMatch[1];
                         if (!src.startsWith('http') && !src.startsWith('//')) {
                             try {
-                                let jsContent = await fetch(src).then(r => r.text());
-                                jsContent = jsContent.replace(/<\/script>/gi, '<\\/script>');
-                                htmlRaw = htmlRaw.replace(scriptTag, () => `<script>\n/* --- ${src} --- */\n${jsContent}\n<\/script>`);
-                            } catch(e) { 
-                                console.warn('Could not fetch JS:', src); 
-                                showToast(`⚠️ មិនអាចទាញយកឯកសារ Local: ${src}`, true);
-                            }
+                                let jsContent = await fetch(src).then(r => r.text()); jsContent = jsContent.replace(/<\/script>/gi, '<\\/script>'); htmlRaw = htmlRaw.replace(scriptTag, () => `<script>\n/* --- ${src} --- */\n${jsContent}\n<\/script>`);
+                            } catch(e) { console.warn('Could not fetch JS:', src); showToast(`⚠️ មិនអាចទាញយកឯកសារ Local: ${src}`, true); }
                         }
                     }
                 }
             }
-
-            // ៣. បង្កើត និងបញ្ជាឱ្យ Download
-            const blob = new Blob([htmlRaw], { type: 'text/html;charset=utf-8' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `SKM_POS_SingleFile_Template_${new Date().toISOString().slice(0,10)}.html`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
-            
+            const blob = new Blob([htmlRaw], { type: 'text/html;charset=utf-8' }); const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = `SKM_POS_SingleFile_Template_${new Date().toISOString().slice(0,10)}.html`; document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
             showToast("✅ ទាញយកសំបកប្រព័ន្ធ POS (1 File) ជោគជ័យ!");
-        } catch (error) {
-            console.error(error);
-            showToast("❌ បរាជ័យ! សូមប្រាកដថាប្រព័ន្ធកំពុងដំណើរការលើ Server (http/https)", true);
-        }
+        } catch (error) { console.error(error); showToast("❌ បរាជ័យ! សូមប្រាកដថាប្រព័ន្ធកំពុងដំណើរការលើ Server (http/https)", true); }
     }
 
     function showAddPrinterForm() { document.getElementById('addPrinterForm').style.display = 'block'; }
