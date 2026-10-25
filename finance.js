@@ -51,7 +51,6 @@ window.renderUnpaid = function() {
         } catch(e) { invoices = []; }
     }
 
-    // 🛡️ សម្អាតទិន្នន័យខូច (Null/Undefined) ការពារកុំឱ្យគាំង
     invoices = invoices.filter(inv => inv !== null && typeof inv === 'object');
 
     const deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
@@ -105,7 +104,6 @@ window.renderUnpaid = function() {
         return true;
     });
 
-    // គណនាលុយសរុបទាំងអស់តាមអ្វីដែល Filter ឃើញ មុនកាត់ទំព័រ
     filtered.forEach(inv => {
         const status = String(inv.status || 'unpaid').toLowerCase();
         const totalAmount = parseFloat(inv.totalAmount || inv.total || 0);
@@ -131,7 +129,6 @@ window.renderUnpaid = function() {
         return;
     }
 
-    // ការគណនា Pagination
     let totalItems = filtered.length;
     let totalPages = 1;
     let displayItems = filtered;
@@ -160,7 +157,6 @@ window.renderUnpaid = function() {
         if (status === 'paid') paidAmount = totalAmount;
         const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
-        // 🛡️ សម្អាតទិន្នន័យទំនិញក្នុងវិក្កយបត្រការពារការ Error
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
             itemsSummary = inv.items.map(it => {
@@ -184,30 +180,30 @@ window.renderUnpaid = function() {
             statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; padding:4px 8px; border-radius:12px; font-weight:bold;">រង់ចាំទូទាត់</span>';
         }
 
-        let actionButtons = `
-            <div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">
-                <button class="btn btn-outline" style="padding: 4px 7px; font-size: 11px;" onclick="window.viewInvoiceDetails('${invId}')" title="មើលលម្អិត">👁️ មើល</button>
-                <button class="btn btn-warning" style="padding: 4px 7px; font-size: 11px;" onclick="window.openInvoiceEditModal('${invId}')" title="កែប្រែវិក្កយបត្រ ឬការកុម្ម៉ង់">✏️ កែប្រែ</button>
-        `;
+        // 🌟 ការកំណត់សិទ្ធិបង្ហាញប៊ូតុង (Role Based Buttons)
+        let actionButtons = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
+        
+        // 👁️ មើល (Admin, Manager, Sales មើលបានទាំងអស់)
+        actionButtons += `<button class="btn btn-outline" style="padding: 4px 7px; font-size: 11px;" onclick="window.viewInvoiceDetails('${invId}')" title="មើលលម្អិត">👁️ មើល</button>`;
+        
+        // ✏️ កែប្រែ (Admin & Manager អាចកែបានគ្រប់ពេល / Sales អាចកែបានតែពេលភ្ញៀវមិនទាន់ទូទាត់លុយ)
+        if (window.currentRole === 'admin' || window.currentRole === 'manager' || status !== 'paid') {
+            actionButtons += `<button class="btn btn-warning" style="padding: 4px 7px; font-size: 11px;" onclick="window.openInvoiceEditModal('${invId}')" title="កែប្រែវិក្កយបត្រ ឬការកុម្ម៉ង់">✏️ កែប្រែ</button>`;
+        }
 
+        // 💸 ទូទាត់ និង រួចរាល់ (បង្ហាញបើមិនទាន់ទូទាត់រួច)
         if (status !== 'paid') {
-            actionButtons += `
-                <button class="btn btn-success" style="padding: 4px 7px; font-size: 11px;" onclick="window.openDebtPaymentModal('${invId}')" title="ទូទាត់ប្រាក់">💸 ទូទាត់</button>
-            `;
+            actionButtons += `<button class="btn btn-success" style="padding: 4px 7px; font-size: 11px;" onclick="window.openDebtPaymentModal('${invId}')" title="ទូទាត់ប្រាក់">💸 ទូទាត់</button>`;
             if (status !== 'ready') {
-                actionButtons += `
-                    <button class="btn btn-primary" style="padding: 4px 7px; font-size: 11px; background:#0284c7; color: #fff; border: none;" onclick="window.notifyCustomerOrderDone('${invId}')" title="ប្រាប់ភ្ញៀវថារួចរាល់">📢 រួចរាល់</button>
-                `;
+                actionButtons += `<button class="btn btn-primary" style="padding: 4px 7px; font-size: 11px; background:#0284c7; color: #fff; border: none;" onclick="window.notifyCustomerOrderDone('${invId}')" title="ប្រាប់ភ្ញៀវថារួចរាល់">📢 រួចរាល់</button>`;
             }
         }
 
-        // 🌟 ឆែកសិទ្ធិ: បង្ហាញប៊ូតុងលុបតែ Admin និង Manager 🌟
+        // 🗑️ លុប (មានតែ Admin និង Manager ទេដែលឃើញប៊ូតុងនេះ)
         if (window.currentRole === 'admin' || window.currentRole === 'manager') {
-            actionButtons += `
-                <button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបចោល">🗑️ លុប</button>
-            `;
+            actionButtons += `<button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបចោល">🗑️ លុប</button>`;
         }
-        
+
         actionButtons += `</div>`;
 
         const safeNote = inv.note ? (window.escapeHTML ? window.escapeHTML(inv.note) : inv.note) : '';
@@ -232,7 +228,6 @@ window.renderUnpaid = function() {
         tableBody.appendChild(row);
     });
     
-    // Render ប៊ូតុង Pagination ខាងក្រោមតារាង
     if (pageContainer) {
         if (window.invListItemsPerPage === 'all' || totalItems <= window.invListItemsPerPage) {
             pageContainer.innerHTML = '';
@@ -425,6 +420,11 @@ window.openInvoiceEditModal = function(invId) {
     const inv = invoices.find((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
     if (!inv) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
+
+    // 🌟 ការពារសុវត្ថិភាព ២ ជាន់ (Sales មិនអាចបើកកែវិក្កយបត្រទូទាត់រួចទេ)
+    if (String(inv.status).toLowerCase() === 'paid' && window.currentRole !== 'admin' && window.currentRole !== 'manager') {
+        return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិកែប្រែវិក្កយបត្រដែលបានទូទាត់រួចទេ!", "គ្មានសិទ្ធិ", true);
+    }
 
     window.currentEditingInvoice = JSON.parse(JSON.stringify(inv));
     window.originalEditingInvoiceItems = JSON.parse(JSON.stringify(inv.items || []));
@@ -1157,7 +1157,6 @@ window.renderExpenses = function() {
         return;
     }
 
-    // ការគណនា Pagination
     let totalItems = filtered.length;
     let totalPages = 1;
     let displayItems = filtered;
@@ -1175,10 +1174,15 @@ window.renderExpenses = function() {
     tbody.innerHTML = displayItems.map(e => {
         let amt = parseFloat(e.amount || 0);
         
-        let deleteBtnHtml = '';
-        // 🌟 ឆែកសិទ្ធិ: បង្ហាញប៊ូតុងលុបចំណាយតែ Admin និង Manager 🌟
+        let actionButtonsHtml = '';
+        // 🌟 ឆែកសិទ្ធិ: បង្ហាញប៊ូតុងកែប្រែ និងលុបចំណាយ តែ Admin និង Manager ប៉ុណ្ណោះ 🌟
         if (window.currentRole === 'admin' || window.currentRole === 'manager') {
-            deleteBtnHtml = `<button class="btn-danger" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.deleteExpense('${e.id}')" title="លុបចោល">🗑️</button>`;
+            actionButtonsHtml = `
+                <button class="btn-warning" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.editExpense('${e.id}')" title="កែប្រែ">✏️</button>
+                <button class="btn-danger" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.deleteExpense('${e.id}')" title="លុបចោល">🗑️</button>
+            `;
+        } else {
+            actionButtonsHtml = `<span style="font-size: 11px; color: var(--text-muted);">គ្មានសិទ្ធិ</span>`;
         }
         
         return `
@@ -1189,15 +1193,13 @@ window.renderExpenses = function() {
             <td data-sort="${e.note || ''}" style="font-size: 13px;">${e.note || '-'}</td>
             <td style="text-align: center;">
                 <div style="display: flex; gap: 5px; justify-content: center;">
-                    <button class="btn-warning" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.editExpense('${e.id}')" title="កែប្រែ">✏️</button>
-                    ${deleteBtnHtml}
+                    ${actionButtonsHtml}
                 </div>
             </td>
         </tr>
         `;
     }).join('');
 
-    // Render ប៊ូតុង Pagination ខាងក្រោមតារាង
     if (pageContainer) {
         if (window.expItemsPerPage === 'all' || totalItems <= window.expItemsPerPage) {
             pageContainer.innerHTML = '';
