@@ -524,9 +524,7 @@
         const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
         const TABLE_PARAM = urlParams.get('table') || '';
         let currentLang = localStorage.getItem('app_lang') || 'km';
-        let storePinCode = '1234'; 
         let branchSysSettings = {};
-        let branchUsers = [];
 
         // 🌐 វចនានុក្រមបកប្រែពាក្យ ៣ ភាសា (ខ្មែរ / អង់គ្លេស / ចិន)
         const i18n = {
@@ -661,7 +659,7 @@
         }
 
         // ==========================================
-        // 🌟 PIN PAD & KEYBOARD VERIFICATION LOGIC 🌟
+        // 🌟 PIN PAD & STRICT VERIFICATION LOGIC 🌟
         // ==========================================
         let pinCode = '';
         let isProcessing = false;
@@ -722,27 +720,27 @@
             const langDict = i18n[currentLang] || i18n.km;
             const cleanEntered = pinCode.trim();
             
-            // 🌟 ១. ទាញយកលេខ Store PIN ដែលបានកំណត់ពី Settings មកផ្ទៀងផ្ទាត់
+            // 🌟 1. ទាញយកតែលេខកូដហាង (Store PIN) ពី Settings ប៉ុណ្ណោះ
             let correctStorePin = '1234'; // លេខ Default
             try {
                 // ព្យាយាមរកក្នុង branchSysSettings បើមាន
                 if (branchSysSettings && branchSysSettings.storePin) {
                     correctStorePin = String(branchSysSettings.storePin).trim();
                 } else {
-                    // បើគ្មានក្នុងប្រអប់អថេរ ទៅរកក្នុង LocalStorage ម្តង
+                    // បើគ្មាន ទៅរកក្នុង LocalStorage 
                     const rawSys = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`);
                     if (rawSys) {
                         const parsed = JSON.parse(rawSys);
-                        if (parsed.storePin) correctStorePin = String(parsed.storePin).trim();
+                        if (parsed.storePin && String(parsed.storePin).trim() !== '') {
+                            correctStorePin = String(parsed.storePin).trim();
+                        }
                     }
                 }
-            } catch(e) { console.error("Error reading pin:", e); }
+            } catch(e) { console.error("Error reading PIN:", e); }
 
-            // ២. ឆែកមើលថាតើលេខវាយត្រូវនឹង Store PIN ឬអត់ (អាចឆែក PIN របស់បុគ្គលិកផងដែរ)
-            const matchedStaff = (branchUsers || []).find(u => u && String(u.pin).trim() === cleanEntered);
-
-            if (cleanEntered === correctStorePin || matchedStaff) {
-                // ✅ បើត្រឹមត្រូវ
+            // 🌟 2. ផ្ទៀងផ្ទាត់យ៉ាងតឹងរ៉ឹងបំផុត (Strictly ONE code only)
+            if (cleanEntered === correctStorePin) {
+                // ✅ បើវាយត្រូវ 100% នឹង Store PIN
                 const display = document.getElementById('pinDisplay');
                 display.style.color = '#38bdf8';
                 display.style.letterSpacing = '2px';
@@ -755,7 +753,7 @@
                     navigateSafely(`index.html?branch=${encodeURIComponent(SHOP_BRANCH_ID)}`);
                 }, 300);
             } else {
-                // ❌ បើខុស (រលាក់ក្រហម)
+                // ❌ បើខុស (លោតរលាក់ក្រហម)
                 const box = document.getElementById('pinPadBox');
                 const display = document.getElementById('pinDisplay');
                 box.classList.add('shake');
@@ -952,11 +950,9 @@
             }
 
             try {
-                branchUsers = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_auth_users_pro`)) || [];
                 const localSettings = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`));
                 if (localSettings) {
                     branchSysSettings = localSettings;
-                    if (localSettings.storePin) storePinCode = String(localSettings.storePin);
                     const localTicker = localSettings.tickerNews || localSettings.tickerText || '';
                     if (localTicker) document.getElementById('tickerText').innerText = localTicker;
                 }
@@ -974,11 +970,6 @@
                         shopName = data.data_json.shopName || shopName;
                         shopLogo = data.data_json.shopLogo || '';
                         
-                        if (data.data_json.userAccounts && Array.isArray(data.data_json.userAccounts)) {
-                            branchUsers = data.data_json.userAccounts;
-                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_auth_users_pro`, JSON.stringify(branchUsers));
-                        }
-
                         if (data.data_json.customBg) {
                             document.documentElement.style.setProperty('--current-bg', data.data_json.customBg);
                             localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, data.data_json.customBg);
@@ -993,7 +984,6 @@
 
                         if (data.data_json.sysSettings) {
                             branchSysSettings = data.data_json.sysSettings;
-                            if (branchSysSettings.storePin) storePinCode = String(branchSysSettings.storePin);
                             const cloudTicker = branchSysSettings.tickerNews || branchSysSettings.tickerText || '';
                             if (cloudTicker) {
                                 document.getElementById('tickerText').innerText = cloudTicker;
