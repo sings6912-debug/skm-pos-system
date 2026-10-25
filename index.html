@@ -16,7 +16,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- 🌟 បន្ថែម CSS សម្រាប់ផ្ទាំង Login បែប Glassmorphism 🌟 -->
+    <!-- 🌟 CSS សម្រាប់ផ្ទាំង Login បែប Glassmorphism 🌟 -->
     <style>
         .glass-input {
             width: 100%;
@@ -68,44 +68,48 @@
     <!-- ផ្ទាំងសារលោតជូនដំណឹង (Toast Notification) -->
     <div id="toastNotification" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: bold; font-size: 16px; text-align: center; border: 1px solid rgba(255,255,255,0.2);"></div>
 
-    <!-- 🔒 ផ្ទាំង Login (រចនាបថ Glassmorphism ថ្លាៗ ទំនើប) -->
-    <div id="authScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat; z-index: 9999; justify-content: center; align-items: center; font-family: 'Nunito', 'Battambang', sans-serif;">
+    <!-- 🔒 ផ្ទាំង Login (Glassmorphism + មុខងាររើសរូប Background) -->
+    <div id="authScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat; z-index: 9999; justify-content: center; align-items: center; font-family: 'Nunito', 'Battambang', sans-serif; transition: background-image 0.4s ease;">
         
-        <!-- ស្រមោលព្រិលៗពីក្រោយ (Backdrop overlay) -->
-        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 50, 40, 0.3); backdrop-filter: blur(4px);"></div>
+        <!-- 🌟 របារបញ្ជាប្តូររូបភាព (Top Control Bar) 🌟 -->
+        <div style="position: absolute; top: 20px; right: 20px; display: flex; gap: 8px; z-index: 10001; flex-wrap: wrap;">
+            <button style="background: rgba(30, 41, 59, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 8px 14px; border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s;" onclick="navLoginBg(-1)">◀</button>
+            <button style="background: rgba(30, 41, 59, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 8px 14px; border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s;" onclick="openLoginGalleryModal()">🖼️ រើសរូប (<span id="loginBgCounterText">1/100</span>)</button>
+            <button style="background: rgba(30, 41, 59, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 8px 14px; border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s;" onclick="navLoginBg(1)">▶</button>
+            <button style="background: rgba(30, 41, 59, 0.65); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); color: #fff; padding: 8px 14px; border-radius: 50px; cursor: pointer; font-size: 13px; font-weight: bold; transition: 0.3s;" onclick="document.getElementById('loginBgFileInput').click()">📤 ផ្ទុករូប</button>
+            <input type="file" id="loginBgFileInput" accept="image/*" style="display:none;" onchange="handleLoginBgUpload(event)">
+        </div>
+
+        <!-- ស្រមោលព្រិលៗពីក្រោយ -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); backdrop-filter: blur(3px);"></div>
 
         <!-- ប្រអប់ Login កញ្ចក់ថ្លា -->
         <div style="background: rgba(255, 255, 255, 0.1); width: 100%; max-width: 380px; border-radius: 16px; padding: 40px 30px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.2); border-right: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: relative; z-index: 10;">
             
             <!-- ផ្ទាំង Login គោល -->
             <div id="loginForm">
-                <!-- ចំណងជើងរាងគ្រាប់ថ្នាំ (Pill Shape Title) -->
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <span style="background: rgba(255,255,255,0.25); padding: 8px 30px; border-radius: 25px; font-size: 18px; font-weight: 900; color: white; border: 1px solid rgba(255,255,255,0.2); letter-spacing: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">ចូលប្រព័ន្ធ</span>
+                    <span style="background: rgba(255,255,255,0.25); padding: 6px 30px; border-radius: 20px; font-size: 18px; font-weight: 900; color: white; border: 1px solid rgba(255,255,255,0.2); letter-spacing: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">ចូលប្រព័ន្ធ</span>
                 </div>
 
-                <!-- ប្រអប់ Username -->
                 <div style="position: relative; margin-bottom: 20px;">
                     <input type="text" id="loginUsername" placeholder="Username" class="glass-input">
-                    <i class="fa-solid fa-user" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.8); font-size: 15px;"></i>
+                    <i class="fa-regular fa-user" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.8); font-size: 14px;"></i>
                 </div>
 
-                <!-- ប្រអប់ Password និង ភ្នែកមើលកូដ -->
                 <div style="position: relative; margin-bottom: 20px;">
                     <input type="password" id="loginPassword" placeholder="Password" class="glass-input">
-                    <!-- ប៊ូតុងភ្នែក (Eye Icon) -->
-                    <i class="fa-solid fa-eye-slash" id="togglePassEye" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.8); font-size: 15px; cursor: pointer; transition: 0.3s; padding: 5px;" 
-                       onclick="const p=document.getElementById('loginPassword'); if(p.type==='password'){p.type='text'; this.classList.replace('fa-eye-slash','fa-eye'); this.style.color='#fff';}else{p.type='password'; this.classList.replace('fa-eye','fa-eye-slash'); this.style.color='rgba(255,255,255,0.8)';}"
+                    <i class="fa-solid fa-lock" id="togglePassEye" style="position: absolute; right: 15px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.8); font-size: 14px; cursor: pointer; transition: 0.3s; padding: 5px;" 
+                       onclick="const p=document.getElementById('loginPassword'); if(p.type==='password'){p.type='text'; this.classList.replace('fa-lock','fa-unlock'); this.style.color='#fff';}else{p.type='password'; this.classList.replace('fa-unlock','fa-lock'); this.style.color='rgba(255,255,255,0.8)';}"
                        onmouseover="this.style.color='#fff'" onmouseout="if(document.getElementById('loginPassword').type==='password') this.style.color='rgba(255,255,255,0.8)'"></i>
                 </div>
 
-                <!-- មុខងារចងចាំ (Remember Me) និង ភ្លេចកូដ -->
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; font-size: 12px; font-weight: 600;">
-                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
-                        <input type="checkbox" id="rememberMe" style="width: 14px; height: 14px; accent-color: #10b981; cursor: pointer; border: 1px solid #fff;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; font-size: 11px; font-weight: 600;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #fff;">
+                        <input type="checkbox" id="rememberMe" style="width: 13px; height: 13px; accent-color: #10b981; cursor: pointer; border: 1px solid #fff;">
                         ចងចាំគណនីខ្ញុំ
                     </label>
-                    <a href="#" onclick="window.toggleForgotPass(true)" style="color: #fff; text-decoration: none; text-shadow: 0 1px 2px rgba(0,0,0,0.5); transition: 0.2s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">ភ្លេចលេខកូដ?</a>
+                    <a href="#" onclick="window.toggleForgotPass(true)" style="color: #fff; text-decoration: none; transition: 0.2s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">ភ្លេចលេខកូដ?</a>
                 </div>
 
                 <button onclick="window.handleLogin()" class="glass-btn">Login</button>
@@ -114,23 +118,35 @@
             <!-- ផ្ទាំង Forgot Password (សង្គ្រោះគណនី) -->
             <div id="forgotPassForm" style="display:none;">
                 <div style="text-align: center; margin-bottom: 30px;">
-                    <span style="background: rgba(255,255,255,0.25); padding: 8px 25px; border-radius: 25px; font-size: 16px; font-weight: 900; color: white; border: 1px solid rgba(255,255,255,0.2); letter-spacing: 1px;">សង្គ្រោះគណនី</span>
+                    <span style="background: rgba(255,255,255,0.25); padding: 6px 20px; border-radius: 20px; font-size: 16px; font-weight: 900; color: white; border: 1px solid rgba(255,255,255,0.2); letter-spacing: 1px;">សង្គ្រោះគណនី</span>
                 </div>
                 
                 <div style="margin-bottom: 15px;">
                     <input type="text" id="resetUsername" placeholder="Username" class="glass-input">
                 </div>
                 <div style="margin-bottom: 15px;">
-                    <input type="password" id="resetPin" placeholder="លេខ PIN (4 ខ្ទង់)" class="glass-input">
+                    <input type="password" id="resetPin" placeholder="Recovery PIN (4 Digits)" class="glass-input">
                 </div>
                 <div style="margin-bottom: 25px;">
-                    <input type="password" id="newResetPassword" placeholder="លេខកូដសម្ងាត់ថ្មី" class="glass-input">
+                    <input type="password" id="newResetPassword" placeholder="New Password" class="glass-input">
                 </div>
 
-                <button onclick="window.handleResetPassword()" class="glass-btn" style="margin-bottom: 12px;">Reset Now</button>
+                <button onclick="window.handleResetPassword()" class="glass-btn" style="margin-bottom: 10px;">Reset Now</button>
                 <button onclick="window.toggleForgotPass(false)" class="glass-btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white;">Back to Login</button>
             </div>
-            
+        </div>
+        
+        <!-- 🌟 Gallery Modal សម្រាប់រើសរូប 🌟 -->
+        <div id="loginGalleryModal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(10px); z-index: 10005; justify-content: center; align-items: center; padding: 20px;">
+            <div style="background: #1e293b; border: 1px solid #334155; width: 100%; max-width: 950px; height: 85vh; border-radius: 20px; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 60px rgba(0,0,0,0.6);">
+                <div style="padding: 16px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
+                    <h3 style="color:#38bdf8; font-size:16px; margin:0;">🖼️ ជ្រើសរើសរូបភាពផ្ទៃខាងក្រោយ</h3>
+                    <button style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: white; padding: 4px 10px; border-radius: 8px; cursor: pointer;" onclick="document.getElementById('loginGalleryModal').style.display='none'">✕ បិទ</button>
+                </div>
+                <div id="loginGalleryGrid" style="flex: 1; overflow-y: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 12px;">
+                    <!-- រូបភាពលោតចេញមកទីនេះ -->
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1209,6 +1225,114 @@
 
     <!-- កូដចុះឈ្មោះ Service Worker និងមុខងារ Helper Globals -->
     <script>
+        // ==========================================
+        // 🌟 មុខងារប្តូររូបភាព Background ផ្ទាំង Login
+        // ==========================================
+        const loginWallpaperDB = [
+            10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 
+            20, 24, 25, 26, 27, 28, 29, 30, 36, 37, 
+            38, 39, 40, 41, 42, 43, 44, 45, 48, 49, 
+            50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 
+            60, 61, 62, 63, 64, 65, 66, 67, 68, 69, 
+            70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 
+            80, 81, 82, 83, 84, 85, 87, 88, 89, 90, 
+            91, 92, 93, 94, 96, 98, 100, 101, 102, 103, 
+            104, 106, 107, 108, 109, 110, 111, 112, 113, 114, 
+            115, 116, 117, 118, 119, 120, 121, 122, 123, 124
+        ].map(id => ({
+            thumb: `https://picsum.photos/id/${id}/320/200`,
+            full: `https://picsum.photos/id/${id}/1920/1080`
+        }));
+
+        let currentLoginBgIndex = 0;
+
+        function loadSavedLoginBg() {
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            const savedBg = localStorage.getItem(`ks2_${branchId}_login_bg`);
+            if (savedBg) {
+                document.getElementById('authScreen').style.backgroundImage = savedBg;
+                const foundIdx = loginWallpaperDB.findIndex(item => savedBg.includes(item.full));
+                if (foundIdx !== -1) {
+                    currentLoginBgIndex = foundIdx;
+                    document.getElementById('loginBgCounterText').innerText = `${foundIdx + 1}/100`;
+                } else {
+                    document.getElementById('loginBgCounterText').innerText = 'ផ្ទាល់ខ្លួន';
+                }
+            }
+        }
+        loadSavedLoginBg();
+
+        window.navLoginBg = function(direction) {
+            currentLoginBgIndex = (currentLoginBgIndex + direction + loginWallpaperDB.length) % loginWallpaperDB.length;
+            applyAndSaveLoginBg(`url("${loginWallpaperDB[currentLoginBgIndex].full}")`, currentLoginBgIndex);
+        };
+
+        window.openLoginGalleryModal = function() {
+            const grid = document.getElementById('loginGalleryGrid');
+            if (grid.children.length === 0) {
+                grid.innerHTML = loginWallpaperDB.map((item, idx) => `
+                    <div style="aspect-ratio: 16/10; border-radius: 10px; overflow: hidden; cursor: pointer; border: 2px solid ${idx === currentLoginBgIndex ? '#38bdf8' : 'transparent'}; position: relative;" onclick="selectLoginBgFromGallery(${idx}, this)">
+                        <img src="${item.thumb}" loading="lazy" style="width: 100%; height: 100%; object-fit: cover;">
+                        <span style="position: absolute; bottom: 4px; right: 6px; background: rgba(0,0,0,0.65); font-size: 10px; padding: 1px 5px; border-radius: 4px; color: #cbd5e1;">#${idx + 1}</span>
+                    </div>
+                `).join('');
+            }
+            document.getElementById('loginGalleryModal').style.display = 'flex';
+        };
+
+        window.selectLoginBgFromGallery = function(index, el) {
+            currentLoginBgIndex = index;
+            applyAndSaveLoginBg(`url("${loginWallpaperDB[index].full}")`, index);
+            
+            const children = document.getElementById('loginGalleryGrid').children;
+            for(let i=0; i<children.length; i++) {
+                children[i].style.borderColor = (i === index) ? '#38bdf8' : 'transparent';
+            }
+            document.getElementById('loginGalleryModal').style.display = 'none';
+        };
+
+        function applyAndSaveLoginBg(bgStyle, index = null) {
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            document.getElementById('authScreen').style.backgroundImage = bgStyle;
+            localStorage.setItem(`ks2_${branchId}_login_bg`, bgStyle);
+            
+            if (index !== null) {
+                document.getElementById('loginBgCounterText').innerText = `${index + 1}/100`;
+            } else {
+                document.getElementById('loginBgCounterText').innerText = 'ផ្ទាល់ខ្លួន';
+            }
+        }
+
+        window.handleLoginBgUpload = function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            
+            if (typeof window.showToast === 'function') window.showToast("កំពុង Upload រូបភាព...", false);
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const maxW = 1600;
+                    let w = img.width, h = img.height;
+                    if (w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+                    canvas.width = w;
+                    canvas.height = h;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, w, h);
+                    
+                    const compressedBg = `url("${canvas.toDataURL('image/jpeg', 0.75)}")`;
+                    applyAndSaveLoginBg(compressedBg, null);
+                    
+                    if (typeof window.showToast === 'function') window.showToast("✅ បានប្តូររូប Background ផ្ទាល់ខ្លួន!");
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        };
+
+
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
             navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' }).catch(function(err) {
                 console.log('Service Worker registration skipped or failed in preview: ', err);
@@ -1299,8 +1423,6 @@
         };
 
         // 📂 មុខងារ Restore ទិន្នន័យ (Import JSON)
-        // ⚠️ ចំណាំ៖ កូដនេះកំពុងប្រើទម្រង់ចាស់ (branch_store) ក្នុង Supabase។ 
-        // ថ្ងៃមុខបើយើងប្តូរទៅ Table ថ្មី (orders, products) ត្រូវតែលុបកូដនេះចោល ឬកែតម្រូវ។
         window.triggerAppRestore = function() {
             const fileInput2 = document.getElementById('importBackupFile2');
             if (fileInput2) {
@@ -1348,7 +1470,6 @@
                                 Object.keys(backupData).forEach(k => {
                                     try { payload[k] = JSON.parse(backupData[k]); } catch(err) { payload[k] = backupData[k]; }
                                 });
-                                // ⚠️ ដាស់តឿន: នៅកំពុងបាញ់ចូលប្រអប់ json ធំ
                                 await window.supabaseClient.from('branch_store').upsert({
                                     branch_id: branchId,
                                     data_json: payload,
@@ -1396,7 +1517,6 @@
                 filterInputs.forEach((input, index) => {
                     const filterValue = input.value.toLowerCase();
                     if (filterValue && cells[index]) {
-                        // ប្រើ textContent ដើម្បីសុវត្ថិភាពពី XSS
                         let cellText = cells[index].textContent || cells[index].innerText;
                         if (input.tagName === 'SELECT') {
                             if (input.value && cellText.trim() !== input.value) {
@@ -1532,7 +1652,6 @@
                 let totalTables = parseInt(sysSettings.totalTables) || 20;
                 let prefix = sysSettings.tablePrefix || 'តុលេខ';
                 
-                // បញ្ជីតុ VIP និងតុពិសេសបន្ថែម
                 let customTablesRaw = sysSettings.customTables !== undefined ? sysSettings.customTables : (sysSettings.customTablesList !== undefined ? sysSettings.customTablesList : 'VIP 1, VIP 2, VIP 3');
                 let customTables = String(customTablesRaw)
                     .split(',')
@@ -1663,7 +1782,6 @@
             }
         };
 
-        // 🚀 ប្រព័ន្ធពន្យារពេលស្វែងរក (Debounce System) ដើម្បីកុំឱ្យគាំង
         window.debounceTimer = null;
         window.debounce = function(func, delay = 300) {
             return function(...args) {
