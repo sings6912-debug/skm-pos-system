@@ -201,10 +201,14 @@ window.renderUnpaid = function() {
             }
         }
 
-        actionButtons += `
+        // 🌟 ឆែកសិទ្ធិ: បង្ហាញប៊ូតុងលុបតែ Admin និង Manager 🌟
+        if (window.currentRole === 'admin' || window.currentRole === 'manager') {
+            actionButtons += `
                 <button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបចោល">🗑️ លុប</button>
-            </div>
-        `;
+            `;
+        }
+        
+        actionButtons += `</div>`;
 
         const safeNote = inv.note ? (window.escapeHTML ? window.escapeHTML(inv.note) : inv.note) : '';
         const noteTag = safeNote ? `<br><small style="color:#0284c7; font-weight:bold;">📝 ${safeNote}</small>` : '';
@@ -648,6 +652,11 @@ window.saveInvoiceChanges = async function() {
 };
 
 window.deleteInvoiceRecord = function(invId) {
+    // 🌟 ឆែកសិទ្ធិ: បើមិនមែន Admin ឬ Manager ទេ គឺបិទមិនអោយលុបឡើយ
+    if (window.currentRole !== 'admin' && window.currentRole !== 'manager') {
+        return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិលុបទិន្នន័យនេះទេ!", "គ្មានសិទ្ធិ", true);
+    }
+
     const executeDeleteInvoice = () => {
         try {
             const targetId = String(invId).trim().toLowerCase();
@@ -822,7 +831,14 @@ window.reprintInvoice = function() {
     let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
     const currentLogo = window.shopLogo || localStorage.getItem(window.getBranchKey('shop_logo')) || '';
     if(currentLogo) {
-        receiptHTML += `<img src="${currentLogo}" style="width: 80px; height: 80px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
+        let savedScale = window.sysSettings?.logoScale || 1;
+        let savedShape = window.sysSettings?.logoShape || 'circle';
+        
+        if (savedShape === 'circle') {
+            receiptHTML += `<div style="width: 80px; height: 80px; margin: 0 auto 5px; overflow: hidden; border-radius: 50%;"><img src="${currentLogo}" style="width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transform: scale(${savedScale});"></div>`; 
+        } else {
+            receiptHTML += `<div style="width: 100px; height: 80px; margin: 0 auto 5px; overflow: hidden; border-radius: 8px;"><img src="${currentLogo}" style="width: 100%; height: 100%; object-fit: contain; filter: grayscale(100%); transform: scale(${savedScale});"></div>`; 
+        }
     }
     receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.escapeHTML ? window.escapeHTML(window.shopName || 'SKM INTEGRATE') : (window.shopName || 'SKM INTEGRATE')}</h2>`; 
     if(window.shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${window.escapeHTML ? window.escapeHTML(window.shopPhone) : window.shopPhone}</p>`; 
@@ -1158,6 +1174,13 @@ window.renderExpenses = function() {
 
     tbody.innerHTML = displayItems.map(e => {
         let amt = parseFloat(e.amount || 0);
+        
+        let deleteBtnHtml = '';
+        // 🌟 ឆែកសិទ្ធិ: បង្ហាញប៊ូតុងលុបចំណាយតែ Admin និង Manager 🌟
+        if (window.currentRole === 'admin' || window.currentRole === 'manager') {
+            deleteBtnHtml = `<button class="btn-danger" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.deleteExpense('${e.id}')" title="លុបចោល">🗑️</button>`;
+        }
+        
         return `
         <tr>
             <td style="font-size: 13px; color: var(--text-muted);" data-sort="${e.timestamp || 0}">${e.date}</td>
@@ -1167,7 +1190,7 @@ window.renderExpenses = function() {
             <td style="text-align: center;">
                 <div style="display: flex; gap: 5px; justify-content: center;">
                     <button class="btn-warning" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.editExpense('${e.id}')" title="កែប្រែ">✏️</button>
-                    <button class="btn-danger" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.deleteExpense('${e.id}')" title="លុបចោល">🗑️</button>
+                    ${deleteBtnHtml}
                 </div>
             </td>
         </tr>
@@ -1193,6 +1216,11 @@ window.renderExpenses = function() {
 };
 
 window.deleteExpense = function(id) {
+    // 🌟 ឆែកសិទ្ធិ: បើមិនមែន Admin ឬ Manager ទេ គឺបិទមិនអោយលុបឡើយ
+    if (window.currentRole !== 'admin' && window.currentRole !== 'manager') {
+        return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិលុបទិន្នន័យនេះទេ!", "គ្មានសិទ្ធិ", true);
+    }
+
     const executeDeleteExp = async () => {
         let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
         deletedExps.push(String(id));
