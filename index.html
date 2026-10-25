@@ -10,41 +10,127 @@
     <title>SKM INTEGRATE POS - ERP</title>
     <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+    <!-- 🌟 បន្ថែម CSS សម្រាប់ផ្ទាំង Login បែប Glassmorphism 🌟 -->
+    <style>
+        .glass-input {
+            width: 100%;
+            padding: 12px 40px 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            color: #ffffff;
+            outline: none;
+            font-size: 14px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.1);
+        }
+        .glass-input::placeholder {
+            color: rgba(255, 255, 255, 0.7);
+            font-weight: normal;
+        }
+        .glass-input:focus {
+            border-color: rgba(255, 255, 255, 1);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+        .glass-btn {
+            width: 100%;
+            padding: 14px;
+            border-radius: 30px;
+            border: none;
+            background: #ffffff;
+            color: #1e293b;
+            font-size: 15px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        .glass-btn:hover {
+            background: #f1f5f9;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+        }
+        .glass-btn:active {
+            transform: scale(0.97);
+        }
+    </style>
 </head>
 <body>
 
     <!-- ផ្ទាំងសារលោតជូនដំណឹង (Toast Notification) -->
     <div id="toastNotification" style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: var(--success); color: white; padding: 12px 24px; border-radius: 8px; z-index: 1000000; display: none; box-shadow: 0 10px 30px rgba(0,0,0,0.3); font-weight: bold; font-size: 16px; text-align: center; border: 1px solid rgba(255,255,255,0.2);"></div>
 
-    <!-- ផ្ទាំងចូលប្រព័ន្ធ (Login & Reset Password) -->
-    <div id="authScreen">
-        <div id="loginForm" class="auth-card">
-            <h2 style="color: var(--primary); margin-bottom: 10px; font-size: 24px;">🔐 ចូលប្រព័ន្ធ</h2>
-            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 14px;">ប្រព័ន្ធគ្រប់គ្រង SKM INTEGRATE POS</p>
-            <div style="text-align: left; margin-bottom: 15px;">
-                <label style="font-size: 14px; margin-bottom: 5px; display: block;">ឈ្មោះអ្នកប្រើប្រាស់ (Username):</label>
-                <input type="text" id="loginUsername" class="form-control" placeholder="ឧ. admin, staff01..." style="font-size: 16px; width: 100%;" autocomplete="off">
-            </div>
-            <div style="text-align: left; margin-bottom: 25px;">
-                <label style="font-size: 14px; margin-bottom: 5px; display: block;">លេខកូដសម្ងាត់ (Password):</label>
-                <input type="password" id="loginPassword" class="form-control" placeholder="******" style="font-size: 16px; width: 100%;">
-            </div>
-            <button class="btn btn-primary" style="width: 100%; padding: 12px; margin-bottom: 15px; font-size: 16px;" onclick="window.handleLogin()">ចូលប្រព័ន្ធ (Login)</button>
-            <a href="#" style="color: var(--text-muted); font-size: 14px; text-decoration: underline;" onclick="window.toggleForgotPass(true)">ភ្លេចលេខកូដសម្ងាត់? (Forgot Password)</a>
-        </div>
+    <!-- 🔒 ផ្ទាំង Login (រចនាបថ Glassmorphism ថ្លាៗ ទំនើប) -->
+    <div id="authScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: url('https://images.unsplash.com/photo-1518531933037-91b2f5f229cc?q=80&w=1920&auto=format&fit=crop') center/cover no-repeat; z-index: 9999; justify-content: center; align-items: center; font-family: 'Nunito', 'Battambang', sans-serif;">
         
-        <div id="forgotPassForm" class="auth-card" style="display: none;">
-            <h2 style="color: var(--warning); margin-bottom: 10px; font-size: 24px;">🔄 ភ្លេចលេខកូដ</h2>
-            <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 14px;">ប្រើលេខ PIN សម្ងាត់ ដើម្បីបង្កើតលេខកូដថ្មី</p>
-            <div style="text-align: left; margin-bottom: 15px;"><input type="text" id="resetUsername" class="form-control" placeholder="ឈ្មោះអ្នកប្រើប្រាស់ (Username)" style="width: 100%;"></div>
-            <div style="text-align: left; margin-bottom: 15px;"><input type="password" id="resetPin" class="form-control" placeholder="លេខ PIN សម្ងាត់ (សួរមេការ)" style="width: 100%;"></div>
-            <div style="text-align: left; margin-bottom: 25px;"><input type="password" id="newResetPassword" class="form-control" placeholder="លេខកូដសម្ងាត់ថ្មី (New Password)" style="width: 100%;"></div>
-            <button class="btn btn-warning" style="width: 100%; padding: 12px; margin-bottom: 15px; font-size: 16px;" onclick="window.handleResetPassword()">បញ្ជាក់ការផ្លាស់ប្តូរ (Reset)</button>
-            <a href="#" style="color: var(--text-muted); font-size: 14px; text-decoration: underline;" onclick="window.toggleForgotPass(false)">ត្រឡប់ទៅការចូលប្រព័ន្ធវិញ</a>
+        <!-- ស្រមោលព្រិលៗពីក្រោយ (Backdrop overlay) -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 50, 40, 0.3); backdrop-filter: blur(4px);"></div>
+
+        <!-- ប្រអប់ Login កញ្ចក់ថ្លា -->
+        <div style="background: rgba(255, 255, 255, 0.1); width: 100%; max-width: 380px; border-radius: 16px; padding: 40px 30px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.2); border: 1px solid rgba(255, 255, 255, 0.2); border-right: 1px solid rgba(255, 255, 255, 0.1); border-bottom: 1px solid rgba(255, 255, 255, 0.1); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); position: relative; z-index: 10;">
+            
+            <!-- ផ្ទាំង Login គោល -->
+            <div id="loginForm">
+                <!-- ចំណងជើងរាងគ្រាប់ថ្នាំ (Pill Shape Title) -->
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <span style="background: rgba(255,255,255,0.25); padding: 8px 30px; border-radius: 25px; font-size: 18px; font-weight: 900; color: white; border: 1px solid rgba(255,255,255,0.2); letter-spacing: 1px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">ចូលប្រព័ន្ធ</span>
+                </div>
+
+                <!-- ប្រអប់ Username -->
+                <div style="position: relative; margin-bottom: 20px;">
+                    <input type="text" id="loginUsername" placeholder="Username" class="glass-input">
+                    <i class="fa-solid fa-user" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.8); font-size: 15px;"></i>
+                </div>
+
+                <!-- ប្រអប់ Password និង ភ្នែកមើលកូដ -->
+                <div style="position: relative; margin-bottom: 20px;">
+                    <input type="password" id="loginPassword" placeholder="Password" class="glass-input">
+                    <!-- ប៊ូតុងភ្នែក (Eye Icon) -->
+                    <i class="fa-solid fa-eye-slash" id="togglePassEye" style="position: absolute; right: 20px; top: 50%; transform: translateY(-50%); color: rgba(255,255,255,0.8); font-size: 15px; cursor: pointer; transition: 0.3s; padding: 5px;" 
+                       onclick="const p=document.getElementById('loginPassword'); if(p.type==='password'){p.type='text'; this.classList.replace('fa-eye-slash','fa-eye'); this.style.color='#fff';}else{p.type='password'; this.classList.replace('fa-eye','fa-eye-slash'); this.style.color='rgba(255,255,255,0.8)';}"
+                       onmouseover="this.style.color='#fff'" onmouseout="if(document.getElementById('loginPassword').type==='password') this.style.color='rgba(255,255,255,0.8)'"></i>
+                </div>
+
+                <!-- មុខងារចងចាំ (Remember Me) និង ភ្លេចកូដ -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; font-size: 12px; font-weight: 600;">
+                    <label style="display: flex; align-items: center; gap: 6px; cursor: pointer; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.5);">
+                        <input type="checkbox" id="rememberMe" style="width: 14px; height: 14px; accent-color: #10b981; cursor: pointer; border: 1px solid #fff;">
+                        ចងចាំគណនីខ្ញុំ
+                    </label>
+                    <a href="#" onclick="window.toggleForgotPass(true)" style="color: #fff; text-decoration: none; text-shadow: 0 1px 2px rgba(0,0,0,0.5); transition: 0.2s;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'">ភ្លេចលេខកូដ?</a>
+                </div>
+
+                <button onclick="window.handleLogin()" class="glass-btn">Login</button>
+            </div>
+
+            <!-- ផ្ទាំង Forgot Password (សង្គ្រោះគណនី) -->
+            <div id="forgotPassForm" style="display:none;">
+                <div style="text-align: center; margin-bottom: 30px;">
+                    <span style="background: rgba(255,255,255,0.25); padding: 8px 25px; border-radius: 25px; font-size: 16px; font-weight: 900; color: white; border: 1px solid rgba(255,255,255,0.2); letter-spacing: 1px;">សង្គ្រោះគណនី</span>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <input type="text" id="resetUsername" placeholder="Username" class="glass-input">
+                </div>
+                <div style="margin-bottom: 15px;">
+                    <input type="password" id="resetPin" placeholder="លេខ PIN (4 ខ្ទង់)" class="glass-input">
+                </div>
+                <div style="margin-bottom: 25px;">
+                    <input type="password" id="newResetPassword" placeholder="លេខកូដសម្ងាត់ថ្មី" class="glass-input">
+                </div>
+
+                <button onclick="window.handleResetPassword()" class="glass-btn" style="margin-bottom: 12px;">Reset Now</button>
+                <button onclick="window.toggleForgotPass(false)" class="glass-btn" style="background: transparent; border: 1px solid rgba(255,255,255,0.4); color: white;">Back to Login</button>
+            </div>
+            
         </div>
     </div>
 
