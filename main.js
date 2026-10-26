@@ -1710,7 +1710,10 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram || '');
     localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken || '');
     localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId || '');
-
+ // 🚀 បង្ខំឱ្យវា Sync ទៅ Cloud ភ្លាមៗរាល់ពេលចុច Save អ្វីមួយ
+    if(typeof window.manualCloudSync === 'function') {
+        window.manualCloudSync(true);
+    }
     if(typeof renderAllCallback === 'function') renderAllCallback();
 };
 

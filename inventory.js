@@ -358,6 +358,12 @@ window.deleteProduct = function(id) {
             
             window.logAction('update', p.name, 0, 'លុបចេញពីប្រព័ន្ធ', window.activeUser); 
             
+            // 🚀 បញ្ជាឱ្យលុបពី Cloud (Supabase) ភ្លាមៗ កុំឱ្យវារស់ឡើងវិញ
+            if (window.supabaseClient && navigator.onLine) {
+                const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                window.supabaseClient.from('pos_products').delete().eq('id', id).eq('branch_id', bId).then();
+            }
+
             if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
             window.renderInventory();
             window.ksMsg('លុបជោគជ័យ!', 'ជោគជ័យ');

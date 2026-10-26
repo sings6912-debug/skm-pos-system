@@ -51,6 +51,7 @@ window.renderUnpaid = function() {
         } catch(e) { invoices = []; }
     }
 
+    // 🛡️ សម្អាតទិន្នន័យខូច (Null/Undefined) ការពារកុំឱ្យគាំង
     invoices = invoices.filter(inv => inv !== null && typeof inv === 'object');
 
     const deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
@@ -104,6 +105,7 @@ window.renderUnpaid = function() {
         return true;
     });
 
+    // គណនាលុយសរុបទាំងអស់តាមអ្វីដែល Filter ឃើញ មុនកាត់ទំព័រ
     filtered.forEach(inv => {
         const status = String(inv.status || 'unpaid').toLowerCase();
         const totalAmount = parseFloat(inv.totalAmount || inv.total || 0);
@@ -129,6 +131,7 @@ window.renderUnpaid = function() {
         return;
     }
 
+    // ការគណនា Pagination
     let totalItems = filtered.length;
     let totalPages = 1;
     let displayItems = filtered;
@@ -157,6 +160,7 @@ window.renderUnpaid = function() {
         if (status === 'paid') paidAmount = totalAmount;
         const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
+        // 🛡️ សម្អាតទិន្នន័យទំនិញក្នុងវិក្កយបត្រការពារការ Error
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
             itemsSummary = inv.items.map(it => {
@@ -228,6 +232,7 @@ window.renderUnpaid = function() {
         tableBody.appendChild(row);
     });
     
+    // Render ប៊ូតុង Pagination ខាងក្រោមតារាង
     if (pageContainer) {
         if (window.invListItemsPerPage === 'all' || totalItems <= window.invListItemsPerPage) {
             pageContainer.innerHTML = '';
@@ -697,6 +702,12 @@ window.deleteInvoiceRecord = function(invId) {
             invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
             window.invoices = invoices;
             localStorage.setItem(branchKey, JSON.stringify(invoices));
+            
+            // 🚀 បញ្ជាឱ្យលុបពី Cloud (Supabase SQL Database) ភ្លាមៗ កុំឱ្យវារស់ឡើងវិញ
+            if (window.supabaseClient && navigator.onLine) {
+                const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                window.supabaseClient.from('pos_orders').delete().eq('id', invId).eq('branch_id', bId).then();
+            }
 
             window.renderUnpaid();
             if (typeof window.renderInventory === 'function') window.renderInventory();
