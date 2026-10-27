@@ -122,24 +122,44 @@ if (typeof window.playOrderSound !== 'function') {
 if (typeof window.generateInvoiceId !== 'function' || true) {
     window.generateInvoiceId = function() {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        let counters = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoice_counter`)) || { lastDate: '', seq: 0 };
         let d = new Date(); 
         let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+        let prefix = `INV-${todayStr}-`;
         
-        if (counters.lastDate === todayStr) {
-            counters.seq += 1; 
-        } else { 
-            counters.lastDate = todayStr; 
-            counters.seq = 1; 
+        // 🔍 ជំហានទី១៖ ឆែកមើលវិក្កយបត្រចាស់ៗទាំងអស់ ដើម្បីរកលេខដែលធំបំផុតប្រចាំថ្ងៃ
+        let maxSeq = 0;
+        if (window.invoices && window.invoices.length > 0) {
+            window.invoices.forEach(inv => {
+                let id = inv.id || inv.invoiceNo || '';
+                if (id.startsWith(prefix)) {
+                    let parts = id.split('-');
+                    if (parts.length >= 3) {
+                        let seq = parseInt(parts[2]);
+                        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
+                    }
+                }
+            });
         }
+
+        // 🔍 ជំហានទី២៖ ធានាថាមិនជាន់ជាមួយលេខក្នុង Local Storage (ករណីដាច់អ៊ីនធឺណិត)
+        let counters = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoice_counter`)) || { lastDate: '', seq: 0 };
+        if (counters.lastDate === todayStr && counters.seq > maxSeq) {
+            maxSeq = counters.seq;
+        }
+        
+        // បូក ១ ទៅលើលេខចុងក្រោយគេជានិច្ច!
+        let nextSeq = maxSeq + 1;
+        counters.lastDate = todayStr;
+        counters.seq = nextSeq;
         localStorage.setItem(`ks2_${branchId}_invoice_counter`, JSON.stringify(counters)); 
         
-        // បន្ថែម ម៉ោង នាទី វិនាទី ពីក្រោយ
+        // ⏰ បន្ថែម ម៉ោង នាទី វិនាទី ពីក្រោយ
         let hh = String(d.getHours()).padStart(2, '0');
         let mm = String(d.getMinutes()).padStart(2, '0');
         let ss = String(d.getSeconds()).padStart(2, '0');
         
-        return `INV-${todayStr}-${String(counters.seq).padStart(3, '0')}-${hh}${mm}${ss}`;
+        // ត្រឡប់លេខវិក្កយបត្រ (ឧទាហរណ៍៖ INV-261027-013-143005)
+        return `${prefix}${String(nextSeq).padStart(3, '0')}-${hh}${mm}${ss}`;
     };
 }
 
@@ -1521,7 +1541,18 @@ window.manualCloudSync = async function(isAuto = false) {
             
             if (!window.invoices) window.invoices = [];
             
-            // ⚡ បញ្ចូលគ្នារវាងទិន្នន័យចាស់ក្នុង Local និង SQL ការពារការបាត់វិក្កយបត្រថ្មីពេល Cloud គាំង
+            // 🚀 ដំណោះស្រាយខ្មោច៖ បើ Cloud លុបហើយ ទូរស័ព្ទ/កុំព្យូទ័រផ្សេងទៀតត្រូវតែលុបតាមស្វ័យប្រវត្តិ!
+            let cloudIds = formattedOrders.map(o => String(o.id).trim().toLowerCase());
+            let nowTime = Date.now();
+            
+            window.invoices = window.invoices.filter(localInv => {
+                let localId = String(localInv.id || localInv.invoiceNo).trim().toLowerCase();
+                // ទុកតែវិក្កយបត្រដែលទើបលក់ថ្មីៗ (ក្រោម ១ ម៉ោង មិនទាន់ Sync) ឬ មានឈ្មោះក្នុង Cloud
+                let isNewOffline = (nowTime - (localInv.timestamp || 0)) < 3600000; 
+                return cloudIds.includes(localId) || isNewOffline;
+            });
+            
+            // ⚡ Update ទិន្នន័យពី Cloud មក Local
             formattedOrders.forEach(cInv => {
                 let tempId = String(cInv.id).trim().toLowerCase();
                 if (!deletedInv.includes(tempId)) {
@@ -3061,3 +3092,50 @@ window.printZReport = function() {
         fixPinInputs();
     }
 })();
+
+// ==========================================
+// 🌟 មុខងារកាត់ស្តុកផ្ទាល់ពី Cloud (ការពារស្តុកជាន់គ្នា ១០០%)
+// ==========================================
+window.realtimeCloudDeduct = async function(soldItems) {
+    if (!window.supabaseClient || !navigator.onLine) return;
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    
+    try {
+        for (let item of soldItems) {
+            let soldQty = parseInt(item.cartQty || item.qty || 1);
+            
+            // ១. ទាញយកចំនួនស្តុកពិតប្រាកដ និងចុងក្រោយបំផុតពី Cloud ផ្ទាល់
+            let { data: cloudData } = await window.supabaseClient
+                .from('pos_products')
+                .select('qty')
+                .eq('id', item.id)
+                .eq('branch_id', branchId)
+                .single();
+                
+            if (cloudData) {
+                // ២. កាត់ស្តុកចេញពីចំនួនពិតប្រាកដនៅលើ Cloud
+                let currentCloudQty = parseInt(cloudData.qty) || 0;
+                let newQty = Math.max(0, currentCloudQty - soldQty);
+                
+                // ៣. បាញ់ទិន្នន័យស្តុកថ្មីទៅកាន់ Cloud វិញភ្លាមៗ (ទោះជាន់គ្នាក៏មិនបញ្ហា)
+                await window.supabaseClient
+                    .from('pos_products')
+                    .update({ qty: newQty })
+                    .eq('id', item.id)
+                    .eq('branch_id', branchId);
+                    
+                // ៤. កែប្រែស្តុកក្នុងកុំព្យូទ័រ/ទូរស័ព្ទ (Local) ឱ្យត្រូវគ្នានឹង Cloud វិញ
+                let localItem = (window.inventory || []).find(i => String(i.id) === String(item.id));
+                if (localItem) localItem.qty = newQty;
+            }
+        }
+        
+        // Save Local រួច Refresh ផ្ទាំង UI សារជាថ្មី
+        localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+        if (typeof window.renderInventory === 'function') window.renderInventory();
+        if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+        
+    } catch (err) {
+        console.error("Cloud Deduction Error:", err);
+    }
+};
