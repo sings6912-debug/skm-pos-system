@@ -3124,3 +3124,18 @@ window.realtimeCloudDeduct = async function(soldItems) {
         console.error("Cloud Deduction Error:", err);
     }
 };
+// ==========================================
+// មុខងារកំណត់រូបរាង Logo ស្វ័យប្រវត្តិ (Circle / Rectangle)
+// ==========================================
+setInterval(() => {
+    // ទាញយកការកំណត់ពី Admin Settings
+    let shape = (window.sysSettings && window.sysSettings.logoShape) ? window.sysSettings.logoShape : 'circle';
+    let radius = (shape === 'circle') ? '50%' : '12px'; // បើរង្វង់ 50% បើចតុកោណឱ្យកោងជ្រុង 12px
+    
+    // បង្ខំដូររូបរាង Logo គ្រប់កន្លែងទាំងអស់ឱ្យត្រូវគ្នានឹងការកំណត់
+    let logoIds = ['sidebarLogo', 'shopLogoPreview', 'viewInvoiceLogo'];
+    logoIds.forEach(id => {
+        let el = document.getElementById(id);
+        if (el) el.style.borderRadius = radius;
+    });
+}, 1000); // ឆែកនិង Update រៀងរាល់ ១ វិនាទី
