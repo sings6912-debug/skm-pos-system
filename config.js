@@ -2,8 +2,8 @@
  * config.js - កំណត់អថេរគោល ភ្ជាប់ Database (Supabase) និងទាញទិន្នន័យដំបូងពីម៉ាស៊ីន (LocalStorage)
  */
 
-window.SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
-window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+window.SUPABASE_URL = 'https://qlzyyfqjwudbapgwsugu.supabase.co';
+window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ';
 
 // ការពារកុំឱ្យគាំងប្រព័ន្ធនៅពេលដាច់អ៊ីនធឺណិត (Offline Safe Initialization)
 window.supabaseClient = null;
