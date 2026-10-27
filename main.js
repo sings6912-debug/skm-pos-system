@@ -1433,30 +1433,27 @@ window.manualCloudSync = async function(isAuto = false) {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         let hasChanges = false;
 
-        // 1. Fetch JSON Settings
+        // 1. Fetch JSON Settings (ឈប់ទាញ Invoices ពី JSON ទៀតហើយ!)
         let { data: storeData } = await window.supabaseClient.from('branch_store').select('data_json, updated_at').eq('branch_id', branchId).maybeSingle();
         
         let localLastUpdate = parseInt(localStorage.getItem(`ks2_${branchId}_last_update`)) || 0;
         let cloudLastUpdate = storeData && storeData.updated_at ? new Date(storeData.updated_at).getTime() : 0;
 
-        // 🚀 បន្លាស់ប្តូរត្រង់នេះ៖ បើចុចដោយដៃ (!isAuto) វាត្រូវតែទាញទិន្នន័យពី Cloud មកសង្កត់ ១០០% ជានិច្ច!
         if (storeData && storeData.data_json && (!isAuto || cloudLastUpdate > localLastUpdate)) {
             let d = storeData.data_json;
             
             let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
             let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
             let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
-            let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+            // លែងប្រើ deleted_invoices_tracker សំរាប់ JSON ទៀតហើយ
 
             if (d.deletedExpenses) deletedExp = [...new Set([...deletedExp, ...d.deletedExpenses])];
             if (d.deletedCustomers) deletedCust = [...new Set([...deletedCust, ...d.deletedCustomers])];
             if (d.deletedProducts) deletedProd = [...new Set([...deletedProd, ...d.deletedProducts])];
-            if (d.deletedInvoices) deletedInv = [...new Set([...deletedInv, ...d.deletedInvoices])];
 
             localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExp));
             localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
             localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProd));
-            localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedInv));
 
             if (d.customers) {
                 window.customers = d.customers.filter(c => !deletedCust.includes(String(c.id)));
@@ -1475,14 +1472,6 @@ window.manualCloudSync = async function(isAuto = false) {
                 localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings));
             }
 
-            // Sync Invoices from JSON (Fallback)
-            if (d.invoices && Array.isArray(d.invoices)) {
-                window.invoices = d.invoices.filter(i => !deletedInv.includes(String(i.id || i.invoiceNo).trim().toLowerCase()));
-                window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-                localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
-                hasChanges = true;
-            }
-
             if (d.shopName) window.shopName = d.shopName;
             if (d.shopLogo) window.shopLogo = d.shopLogo;
             if (d.shopQR) window.shopQR = d.shopQR;
@@ -1491,7 +1480,6 @@ window.manualCloudSync = async function(isAuto = false) {
             localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
             localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
             
-            // Update time
             localStorage.setItem(`ks2_${branchId}_last_update`, cloudLastUpdate.toString());
 
             const dispName = document.getElementById('displayShopName');
@@ -1510,30 +1498,15 @@ window.manualCloudSync = async function(isAuto = false) {
             hasChanges = true;
         }
 
-        // 3. Fetch Orders
+        // 3. Fetch Orders (ទាញ Invoices ពី pos_orders សុទ្ធ ១០០%)
         let { data: ordersData } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
         if (ordersData) {
-            let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
             let formattedOrders = ordersData.map(o => ({
                 id: o.id, invoiceNo: o.id, customerName: o.customer_name, customerPhone: o.customer_phone, totalAmount: o.total_amount, total: o.total_amount, paidUsd: o.paid_amount, paidAmount: o.paid_amount, status: o.status, seller: o.seller, items: o.order_data, note: o.note, timestamp: o.timestamp, date: new Date(o.timestamp).toLocaleString('km-KH')
             }));
             
-            // បញ្ចូលគ្នារវាងទិន្នន័យចាស់ក្នុង Local និង SQL
-            if (!window.invoices) window.invoices = [];
-            formattedOrders.forEach(cInv => {
-                let tempId = String(cInv.id).trim().toLowerCase();
-                if (!deletedInv.includes(tempId)) {
-                    let localInv = window.invoices.find(lInv => String(lInv.id || lInv.invoiceNo).trim().toLowerCase() === tempId);
-                    if (!localInv) {
-                        window.invoices.push(cInv);
-                    } else {
-                        Object.assign(localInv, cInv);
-                    }
-                }
-            });
-
-            window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i.id || i.invoiceNo).trim().toLowerCase()));
-            window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+            // ជំនួស Invoices ថ្មីទាំងស្រុង មិនបាច់ប្រៀបធៀបជាមួយរបស់ចាស់ទេ ដើម្បីអោយប្រាកដថាអត់មានរបស់ខ្មោច
+            window.invoices = formattedOrders;
             localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
             hasChanges = true;
         }
@@ -1564,7 +1537,6 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(userAccountsRef));
     }
     
-    // 🌟 [FIX] រក្សាទុកទិន្នន័យស្តុកនិងវិក្កយបត្រទៅ LocalStorage ដើម្បីកុំឱ្យបាត់ពេលទើបតែបញ្ចូលថ្មី
     if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
     if (window.invoices) localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
     if (window.expenses) localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
@@ -1573,10 +1545,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     // Save Settings & Offline Data back to JSON (Supabase Cloud)
     try {
         if(window.supabaseClient && navigator.onLine) {
-            // ១. រក្សាទុកទិន្នន័យទូទៅទៅ branch_store
-            let { data } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).maybeSingle();
-            let cloudData = (data && data.data_json) ? data.data_json : {};
-
+            // ១. រក្សាទុកទិន្នន័យទូទៅទៅ branch_store (ដក Invoices ចេញ)
             let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
             let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
 
@@ -1596,6 +1565,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 telegramChatId: window.telegramChatId || '',
                 deletedExpenses: deletedExp,
                 deletedCustomers: deletedCust
+                // ❌ លែងរក្សាទុក Invoices ចូល JSON ទៀតហើយ!
             };
 
             await window.supabaseClient.from('branch_store').upsert({ 
@@ -1604,7 +1574,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 updated_at: new Date().toISOString()
             }, { onConflict: 'branch_id' });
 
-            // ២. 🌟 [FIX] រក្សាទុកទំនិញចូលតារាង pos_products ថ្មីក្នុង Supabase
+            // ២. រក្សាទុកទំនិញចូលតារាង pos_products
             if (window.inventory && window.inventory.length > 0) {
                 const formattedProductsForDB = window.inventory.map(p => ({
                     id: p.id,
@@ -1626,7 +1596,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 if(upsertErr) console.warn("Supabase Products Upsert Error:", upsertErr);
             }
 
-            // ៣. 🌟 [AUTO-MIGRATE] បាញ់វិក្កយបត្រចាស់ៗពី LocalStorage ចូល pos_orders ស្វ័យប្រវត្តិ
+            // ៣. រក្សាទុកវិក្កយបត្រចូល pos_orders
             if (window.invoices && window.invoices.length > 0) {
                 const formattedOrdersForDB = window.invoices.map((inv, idx) => ({
                     id: String(inv.id || inv.invoiceNo || `INV-${Date.now()}-${idx}`),
@@ -1658,7 +1628,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram || '');
     localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken || '');
     localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId || '');
- // 🚀 បង្ខំឱ្យវា Sync ទៅ Cloud ភ្លាមៗរាល់ពេលចុច Save អ្វីមួយ
+ 
     if(typeof window.manualCloudSync === 'function') {
         window.manualCloudSync(true);
     }

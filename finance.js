@@ -657,56 +657,58 @@ window.saveInvoiceChanges = async function() {
 };
 
 window.deleteInvoiceRecord = function(invId) {
-    // 🌟 ឆែកសិទ្ធិ: បើមិនមែន Admin ឬ Manager ទេ គឺបិទមិនអោយលុបឡើយ
     if (window.currentRole !== 'admin' && window.currentRole !== 'manager') {
         return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិលុបទិន្នន័យនេះទេ!", "គ្មានសិទ្ធិ", true);
     }
 
-    const executeDeleteInvoice = () => {
+    const executeDeleteInvoice = async () => {
         try {
             const targetId = String(invId).trim().toLowerCase();
             let branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('invoices_pro') : 'invoices_pro';
-            
             let invoices = JSON.parse(localStorage.getItem(branchKey)) || window.invoices || [];
-            let deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
             
             const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-            if (!deletedTracker.includes(targetId)) {
-                if (invIndex !== -1) {
-                    const inv = invoices[invIndex];
-                    const isPreorder = String(inv?.status || '').toLowerCase() === 'preorder';
+            if (invIndex !== -1) {
+                const inv = invoices[invIndex];
+                const isPreorder = String(inv?.status || '').toLowerCase() === 'preorder';
 
-                    if (!isPreorder && inv && Array.isArray(inv.items) && window.inventory) {
-                        inv.items.forEach(item => {
-                            if (item && item.id) {
-                                const realItem = window.inventory.find(p => p && String(p.id) === String(item.id));
-                                const returnQty = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 1;
-                                if (realItem) {
-                                    realItem.qty = (parseFloat(realItem.qty) || 0) + returnQty;
-                                    if (typeof window.logAction === 'function') {
-                                        window.logAction('update', realItem.name, returnQty, `បង្វិលស្តុកពីការលុបវិក្កយបត្រ ${invId}`, window.activeUser);
-                                    }
+                // Return Stock
+                if (!isPreorder && inv && Array.isArray(inv.items) && window.inventory) {
+                    inv.items.forEach(item => {
+                        if (item && item.id) {
+                            const realItem = window.inventory.find(p => p && String(p.id) === String(item.id));
+                            const returnQty = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 1;
+                            if (realItem) {
+                                realItem.qty = (parseFloat(realItem.qty) || 0) + returnQty;
+                                if (typeof window.logAction === 'function') {
+                                    window.logAction('update', realItem.name, returnQty, `បង្វិលស្តុកពីការលុបវិក្កយបត្រ ${invId}`, window.activeUser);
                                 }
                             }
-                        });
-                        if (typeof window.getBranchKey === 'function') {
-                            localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
                         }
+                    });
+                    if (typeof window.getBranchKey === 'function') {
+                        localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
                     }
                 }
-                deletedTracker.push(targetId);
-                localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedTracker));
             }
 
+            // លុបពី Local Storage
             invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
             window.invoices = invoices;
             localStorage.setItem(branchKey, JSON.stringify(invoices));
             
-            // 🚀 បញ្ជាឱ្យលុបពី Cloud (Supabase SQL Database) ភ្លាមៗ កុំឱ្យវារស់ឡើងវិញ
+            // 🚀 បញ្ជាឱ្យលុបពី Cloud (Supabase) ភ្លាមៗ ១០០%
             if (window.supabaseClient && navigator.onLine) {
                 const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                window.supabaseClient.from('pos_orders').delete().eq('id', invId).eq('branch_id', bId).then();
+                
+                // ១. លុបចេញពី pos_orders ផ្ទាល់
+                await window.supabaseClient.from('pos_orders').delete().eq('id', invId).eq('branch_id', bId);
+                
+                // ២. ហៅមុខងារ Save Data ដើម្ប Update ទៅ Branch Store
+                if (typeof window.saveData === 'function') {
+                    await window.saveData(window.userAccounts);
+                }
             }
 
             window.renderUnpaid();
@@ -714,13 +716,7 @@ window.deleteInvoiceRecord = function(invId) {
             if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
             if (typeof window.renderDashboard === 'function') window.renderDashboard();
 
-            setTimeout(async () => {
-                if (typeof window.saveData === 'function') {
-                    window.saveData(window.userAccounts);
-                }
-            }, 100);
-
-            notifyFinanceUser("✅ បានលុបវិក្កយបត្រដោយជោគជ័យ!", "ជោគជ័យ");
+            notifyFinanceUser("✅ បានលុបវិក្កយបត្រដោយជោគជ័យ និងបាត់ពី Cloud ទាំងស្រុង!", "ជោគជ័យ");
         } catch (error) {
             console.error("Error deleting invoice:", error);
             notifyFinanceUser("❌ មានបញ្ហាក្នុងការលុប៖ " + error.message, "បរាជ័យ", true);
