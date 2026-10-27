@@ -119,14 +119,13 @@ if (typeof window.playOrderSound !== 'function') {
     };
 }
 
-if (typeof window.generateInvoiceId !== 'function' || true) {​
+if (typeof window.generateInvoiceId !== 'function' || true) {
     window.generateInvoiceId = function() {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         let d = new Date(); 
         let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
         let prefix = `INV-${todayStr}-`;
         
-        // 🔍 ឆែកមើលវិក្កយបត្រទាំងអស់ពីគ្រប់ម៉ាស៊ីន ដើម្បីរកលេខធំបំផុត ធានាថាមិនឱ្យជាន់គ្នា!
         let maxSeq = 0;
         if (window.invoices && window.invoices.length > 0) {
             window.invoices.forEach(inv => {
@@ -146,12 +145,11 @@ if (typeof window.generateInvoiceId !== 'function' || true) {​
             maxSeq = counters.seq;
         }
         
-        let nextSeq = maxSeq + 1; // លោតលេខបន្ទាប់ជានិច្ច!
+        let nextSeq = maxSeq + 1;
         counters.lastDate = todayStr;
         counters.seq = nextSeq;
         localStorage.setItem(`ks2_${branchId}_invoice_counter`, JSON.stringify(counters)); 
         
-        // ⏰ បន្ថែមម៉ោងនាទីវិនាទី តាមការចង់បានរបស់បង
         let hh = String(d.getHours()).padStart(2, '0');
         let mm = String(d.getMinutes()).padStart(2, '0');
         let ss = String(d.getSeconds()).padStart(2, '0');
