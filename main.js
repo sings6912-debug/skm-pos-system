@@ -3139,3 +3139,44 @@ setInterval(() => {
         if (el) el.style.borderRadius = radius;
     });
 }, 1000); // ឆែកនិង Update រៀងរាល់ ១ វិនាទី
+
+// ==========================================
+// មុខងារទាញយកខ្នាតក្រដាសព្រីន Custom ពី Admin Settings មកបង្ហាញស្វ័យប្រវត្តិ
+// ==========================================
+window.updateReceiptDropdownOptions = function() {
+    const select = document.getElementById('setReceiptSize');
+    if (!select) return;
+
+    // ១. រៀបចំជម្រើសស្តង់ដារ
+    select.innerHTML = `
+        <option value="80mm">📄 ខ្នាត 80mm (ម៉ាស៊ីនព្រីនធំស្តង់ដារ)</option>
+        <option value="58mm">🧾 ខ្នាត 57x40mm / 58mm (ម៉ាស៊ីនព្រីនតូច)</option>
+        <option value="A4">📋 ខ្នាតក្រដាសធម្មតា A4 (វិក្កយបត្រធំ)</option>
+        <option value="custom">⚙️ សរសេរទំហំខ្លួនឯងតាមចិត្ត (Custom)</option>
+    `;
+
+    // ២. ទាញយកខ្នាត Custom ដែលបានបង្កើតក្នុង Admin Settings មកបង្ហាញបន្ថែម
+    if (window.sysSettings && Array.isArray(window.sysSettings.customPrinterPresets)) {
+        window.sysSettings.customPrinterPresets.forEach(preset => {
+            if (preset && preset.id) {
+                const opt = document.createElement('option');
+                opt.value = preset.id;
+                opt.text = `🖨️ ${preset.name || 'Custom Preset'} (${preset.paperMm}mm | ${preset.downloadWidthPx}px)`;
+                select.appendChild(opt);
+            }
+        });
+    }
+
+    // ៣. កំណត់យកខ្នាតដែលកំពុងប្រើបច្ចុប្បន្ន
+    if (window.sysSettings && window.sysSettings.receiptSize) {
+        select.value = window.sysSettings.receiptSize;
+    }
+};
+
+// ហៅមុខងារនេះឲ្យដើរពេលបើកកម្មវិធី ឬពេលឆ្លាស់ Tab
+window.addEventListener('DOMContentLoaded', () => {
+    setTimeout(window.updateReceiptDropdownOptions, 500);
+});
+window.addEventListener('visibilitychange', function() {
+    if (!document.hidden) setTimeout(window.updateReceiptDropdownOptions, 500);
+});
