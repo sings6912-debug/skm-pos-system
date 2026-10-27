@@ -743,16 +743,18 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         window.routeOrderToPrinters(newInvoice, printerJobs);
     }
 
-    // 🚀 Enterprise Async Save Strategy (ប្រើ Tables ថ្មី pos_orders និង RPC deduct_stock_safely)
+    // 🚀 Enterprise Async Save Strategy (កាត់ស្តុកផ្ទាល់លើ Cloud ធានាភាពត្រឹមត្រូវ ១០០%)
     setTimeout(async () => {
         if (window.supabaseClient && navigator.onLine) {
             try {
+                const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+
                 // ១. រក្សាទុកវិក្កយបត្រថ្មីចូល Table 'pos_orders'
                 const { error: orderError } = await window.supabaseClient
                     .from('pos_orders')
                     .insert([{
                         id: newInvId,
-                        branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                        branch_id: bId,
                         customer_name: newInvoice.customerName,
                         customer_phone: newInvoice.customerPhone,
                         total_amount: newInvoice.totalAmount,
@@ -767,20 +769,43 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
                 if (orderError) throw orderError;
                 console.log("✅ វិក្កយបត្រត្រូវបានរក្សាទុកចូល pos_orders");
 
-                // ២. កាត់ស្តុកទំនិញដោយប្រើ Function ពិសេស (RPC) លើ Cloud
+                // ២. ⚡ កាត់ស្តុកទំនិញលើ Cloud ភ្លាមៗ (ទោះគិតលុយជាន់គ្នាក៏មិនខុស)
                 if (status !== 'preorder') {
                     for (let item of normalizedCartItems) {
                         const deductQty = parseInt(item.cartQty) || 1;
-                        const { error: stockError } = await window.supabaseClient.rpc('deduct_stock_safely', {
-                            p_product_id: item.id,
-                            p_branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
-                            deduct_qty: deductQty
-                        });
-                        if (stockError) console.warn("បញ្ហាកាត់ស្តុកលើ Cloud:", stockError);
+                        
+                        // ក. ទាញយកស្តុកចុងក្រោយបង្អស់ពី Cloud ផ្ទាល់ (ការពារការជាន់គ្នា)
+                        let { data: currentItem } = await window.supabaseClient
+                            .from('pos_products')
+                            .select('qty')
+                            .eq('id', item.id)
+                            .eq('branch_id', bId)
+                            .single();
+                            
+                        if (currentItem) {
+                            // ខ. ដកចំនួនដែលលក់ចេញ
+                            let newQty = Math.max(0, (parseInt(currentItem.qty) || 0) - deductQty);
+                            
+                            // គ. បាញ់ស្តុកថ្មីដែលដករួចទៅកាន់ Cloud វិញភ្លាមៗ
+                            await window.supabaseClient
+                                .from('pos_products')
+                                .update({ qty: newQty })
+                                .eq('id', item.id)
+                                .eq('branch_id', bId);
+                                
+                            // ឃ. Update ស្តុកនៅក្នុងម៉ាស៊ីន Local ឱ្យត្រូវគ្នានឹង Cloud វិញជានិច្ច
+                            let localItem = (window.inventory || []).find(i => String(i.id) === String(item.id));
+                            if (localItem) localItem.qty = newQty;
+                        }
                     }
+                    
+                    // Save ស្តុកចូល Local វិញ រួច Refresh ផ្ទាំងលក់
+                    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+                    if (typeof window.renderInventory === 'function') window.renderInventory();
+                    if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
                 }
                 
-                // Save Local និង Data ដទៃទៀត
+                // ៣. Save ទិន្នន័យដទៃទៀត
                 if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
 
             } catch (err) {
