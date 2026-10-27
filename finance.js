@@ -203,6 +203,14 @@ window.renderUnpaid = function() {
             }
         }
 
+        // 🚀 ✅ ប៊ូតុងកត់ចំណាំធ្វើរួចរាល់ (បន្ថែមថ្មី)
+        const isNoteDone = (inv.note || '').includes('[✅ រួចរាល់]');
+        if (isNoteDone) {
+            actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#64748b; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="ដកចំណាំចេញវិញ">❌ ដកចេញ</button>`;
+        } else {
+            actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#10b981; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="កត់ចំណាំថាធ្វើរួច">✅ ធ្វើរួច</button>`;
+        }
+
         // 🗑️ លុប (មានតែ Admin និង Manager ទេដែលឃើញប៊ូតុងនេះ)
         if (window.currentRole === 'admin' || window.currentRole === 'manager') {
             actionButtons += `<button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបចោល">🗑️ លុប</button>`;
@@ -1249,4 +1257,43 @@ window.deleteExpense = function(id) {
     } else {
         executeDeleteExp();
     }
+};
+
+// ==========================================
+// មុខងារកត់ចំណាំថាការងារបានធ្វើរួចរាល់ (Mark as Done)
+// ==========================================
+window.markAsDone = async function(invId) {
+    let invIndex = (window.invoices || []).findIndex(i => String(i.id) === String(invId));
+    if (invIndex === -1) return;
+
+    let currentNote = window.invoices[invIndex].note || '';
+    let isDone = currentNote.includes('[✅ រួចរាល់]');
+
+    // បើកត់ហើយ ដកចេញវិញ, បើមិនទាន់កត់ បន្ថែមចូល
+    if (isDone) {
+        window.invoices[invIndex].note = currentNote.replace('[✅ រួចរាល់]', '').trim();
+        if (typeof window.showToast === 'function') window.showToast("🔄 ដកចំណាំធ្វើរួចចេញវិញ!", true);
+    } else {
+        window.invoices[invIndex].note = currentNote ? currentNote + ' [✅ រួចរាល់]' : '[✅ រួចរាល់]';
+        if (typeof window.showToast === 'function') window.showToast("✅ បានកត់ចំណាំថាការងាររួចរាល់!");
+    }
+
+    // Save ចូលកុំព្យូទ័រ & Refresh អេក្រង់
+    localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+    if (typeof window.renderUnpaid === 'function') window.renderUnpaid();
+
+    // 🚀 បាញ់ទៅប្រាប់ Supabase ភ្លាមៗ (Cloud Sync)
+    if (window.supabaseClient && navigator.onLine) {
+        try {
+            const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            await window.supabaseClient
+                .from('pos_orders')
+                .update({ note: window.invoices[invIndex].note })
+                .eq('id', invId)
+                .eq('branch_id', branchId);
+        } catch (e) {
+            console.error("Error updating note to cloud:", e);
+        }
+    }
+    if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
 };
