@@ -105,7 +105,6 @@ window.renderUnpaid = function() {
         return true;
     });
 
-    // គណនាលុយសរុបទាំងអស់តាមអ្វីដែល Filter ឃើញ មុនកាត់ទំព័រ
     filtered.forEach(inv => {
         const status = String(inv.status || 'unpaid').toLowerCase();
         const totalAmount = parseFloat(inv.totalAmount || inv.total || 0);
@@ -131,7 +130,6 @@ window.renderUnpaid = function() {
         return;
     }
 
-    // ការគណនា Pagination
     let totalItems = filtered.length;
     let totalPages = 1;
     let displayItems = filtered;
@@ -160,7 +158,6 @@ window.renderUnpaid = function() {
         if (status === 'paid') paidAmount = totalAmount;
         const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
-        // 🛡️ សម្អាតទិន្នន័យទំនិញក្នុងវិក្កយបត្រការពារការ Error
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
             itemsSummary = inv.items.map(it => {
@@ -184,18 +181,13 @@ window.renderUnpaid = function() {
             statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; padding:4px 8px; border-radius:12px; font-weight:bold;">រង់ចាំទូទាត់</span>';
         }
 
-        // 🌟 ការកំណត់សិទ្ធិបង្ហាញប៊ូតុង (Role Based Buttons)
         let actionButtons = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
-        
-        // 👁️ មើល (Admin, Manager, Sales មើលបានទាំងអស់)
         actionButtons += `<button class="btn btn-outline" style="padding: 4px 7px; font-size: 11px;" onclick="window.viewInvoiceDetails('${invId}')" title="មើលលម្អិត">👁️ មើល</button>`;
         
-        // ✏️ កែប្រែ (Admin & Manager អាចកែបានគ្រប់ពេល / Sales អាចកែបានតែពេលភ្ញៀវមិនទាន់ទូទាត់លុយ)
         if (window.currentRole === 'admin' || window.currentRole === 'manager' || status !== 'paid') {
             actionButtons += `<button class="btn btn-warning" style="padding: 4px 7px; font-size: 11px;" onclick="window.openInvoiceEditModal('${invId}')" title="កែប្រែវិក្កយបត្រ ឬការកុម្ម៉ង់">✏️ កែប្រែ</button>`;
         }
 
-        // 💸 ទូទាត់ និង រួចរាល់ (បង្ហាញបើមិនទាន់ទូទាត់រួច)
         if (status !== 'paid') {
             actionButtons += `<button class="btn btn-success" style="padding: 4px 7px; font-size: 11px;" onclick="window.openDebtPaymentModal('${invId}')" title="ទូទាត់ប្រាក់">💸 ទូទាត់</button>`;
             if (status !== 'ready') {
@@ -203,7 +195,6 @@ window.renderUnpaid = function() {
             }
         }
 
-        // 🚀 ✅ ប៊ូតុងកត់ចំណាំធ្វើរួចរាល់ (បន្ថែមថ្មី)
         const isNoteDone = (inv.note || '').includes('[✅ រួចរាល់]');
         if (isNoteDone) {
             actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#64748b; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="ដកចំណាំចេញវិញ">❌ ដកចេញ</button>`;
@@ -211,11 +202,9 @@ window.renderUnpaid = function() {
             actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#10b981; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="កត់ចំណាំថាធ្វើរួច">✅ ធ្វើរួច</button>`;
         }
 
-        // 🗑️ លុប (មានតែ Admin និង Manager ទេដែលឃើញប៊ូតុងនេះ)
         if (window.currentRole === 'admin' || window.currentRole === 'manager') {
             actionButtons += `<button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបចោល">🗑️ លុប</button>`;
         }
-
         actionButtons += `</div>`;
 
         const safeNote = inv.note ? (window.escapeHTML ? window.escapeHTML(inv.note) : inv.note) : '';
@@ -240,7 +229,6 @@ window.renderUnpaid = function() {
         tableBody.appendChild(row);
     });
     
-    // Render ប៊ូតុង Pagination ខាងក្រោមតារាង
     if (pageContainer) {
         if (window.invListItemsPerPage === 'all' || totalItems <= window.invListItemsPerPage) {
             pageContainer.innerHTML = '';
@@ -434,7 +422,6 @@ window.openInvoiceEditModal = function(invId) {
 
     if (!inv) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
 
-    // 🌟 ការពារសុវត្ថិភាព ២ ជាន់ (Sales មិនអាចបើកកែវិក្កយបត្រទូទាត់រួចទេ)
     if (String(inv.status).toLowerCase() === 'paid' && window.currentRole !== 'admin' && window.currentRole !== 'manager') {
         return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិកែប្រែវិក្កយបត្រដែលបានទូទាត់រួចទេ!", "គ្មានសិទ្ធិ", true);
     }
@@ -681,7 +668,6 @@ window.deleteInvoiceRecord = function(invId) {
                 const inv = invoices[invIndex];
                 const isPreorder = String(inv?.status || '').toLowerCase() === 'preorder';
 
-                // Return Stock
                 if (!isPreorder && inv && Array.isArray(inv.items) && window.inventory) {
                     inv.items.forEach(item => {
                         if (item && item.id) {
@@ -701,19 +687,13 @@ window.deleteInvoiceRecord = function(invId) {
                 }
             }
 
-            // លុបពី Local Storage
             invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
             window.invoices = invoices;
             localStorage.setItem(branchKey, JSON.stringify(invoices));
             
-            // 🚀 បញ្ជាឱ្យលុបពី Cloud (Supabase) ភ្លាមៗ ១០០%
             if (window.supabaseClient && navigator.onLine) {
                 const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                
-                // ១. លុបចេញពី pos_orders ផ្ទាល់
                 await window.supabaseClient.from('pos_orders').delete().eq('id', invId).eq('branch_id', bId);
-                
-                // ២. ហៅមុខងារ Save Data ដើម្ប Update ទៅ Branch Store
                 if (typeof window.saveData === 'function') {
                     await window.saveData(window.userAccounts);
                 }
@@ -759,6 +739,9 @@ window.viewInvoiceDetails = function(invId) {
         if (currentLogo && currentLogo.trim() !== '') {
             logoImg.src = currentLogo;
             logoImg.style.display = 'block';
+            let shape = window.sysSettings?.logoShape || 'circle';
+            logoImg.style.borderRadius = shape === 'circle' ? '50%' : '12px';
+            logoImg.style.objectFit = shape === 'circle' ? 'cover' : 'contain';
         } else {
             logoImg.style.display = 'none';
         }
@@ -850,9 +833,9 @@ window.reprintInvoice = function() {
         let savedShape = window.sysSettings?.logoShape || 'circle';
         
         if (savedShape === 'circle') {
-            receiptHTML += `<div style="width: 80px; height: 80px; margin: 0 auto 5px; overflow: hidden; border-radius: 50%;"><img src="${currentLogo}" style="width: 100%; height: 100%; object-fit: cover; filter: grayscale(100%); transform: scale(${savedScale});"></div>`; 
+            receiptHTML += `<div style="width: 80px; height: 80px; margin: 0 auto 5px; overflow: hidden; border-radius: 50%;"><img src="${currentLogo}" style="width: 100%; height: 100%; object-fit: cover; transform: scale(${savedScale});"></div>`; 
         } else {
-            receiptHTML += `<div style="width: 100px; height: 80px; margin: 0 auto 5px; overflow: hidden; border-radius: 8px;"><img src="${currentLogo}" style="width: 100%; height: 100%; object-fit: contain; filter: grayscale(100%); transform: scale(${savedScale});"></div>`; 
+            receiptHTML += `<div style="width: 100px; height: 80px; margin: 0 auto 5px; overflow: hidden; border-radius: 8px;"><img src="${currentLogo}" style="width: 100%; height: 100%; object-fit: contain; transform: scale(${savedScale});"></div>`; 
         }
     }
     receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.escapeHTML ? window.escapeHTML(window.shopName || 'SKM INTEGRATE') : (window.shopName || 'SKM INTEGRATE')}</h2>`; 
@@ -1190,7 +1173,6 @@ window.renderExpenses = function() {
         let amt = parseFloat(e.amount || 0);
         
         let actionButtonsHtml = '';
-        // 🌟 ឆែកសិទ្ធិ: បង្ហាញប៊ូតុងកែប្រែ និងលុបចំណាយ តែ Admin និង Manager ប៉ុណ្ណោះ 🌟
         if (window.currentRole === 'admin' || window.currentRole === 'manager') {
             actionButtonsHtml = `
                 <button class="btn-warning" style="padding:4px 8px; border:none; border-radius:6px; cursor:pointer;" onclick="window.editExpense('${e.id}')" title="កែប្រែ">✏️</button>
@@ -1233,7 +1215,6 @@ window.renderExpenses = function() {
 };
 
 window.deleteExpense = function(id) {
-    // 🌟 ឆែកសិទ្ធិ: បើមិនមែន Admin ឬ Manager ទេ គឺបិទមិនអោយលុបឡើយ
     if (window.currentRole !== 'admin' && window.currentRole !== 'manager') {
         return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិលុបទិន្នន័យនេះទេ!", "គ្មានសិទ្ធិ", true);
     }
@@ -1259,9 +1240,6 @@ window.deleteExpense = function(id) {
     }
 };
 
-// ==========================================
-// មុខងារកត់ចំណាំថាការងារបានធ្វើរួចរាល់ (Mark as Done)
-// ==========================================
 window.markAsDone = async function(invId) {
     let invIndex = (window.invoices || []).findIndex(i => String(i.id) === String(invId));
     if (invIndex === -1) return;
@@ -1269,7 +1247,6 @@ window.markAsDone = async function(invId) {
     let currentNote = window.invoices[invIndex].note || '';
     let isDone = currentNote.includes('[✅ រួចរាល់]');
 
-    // បើកត់ហើយ ដកចេញវិញ, បើមិនទាន់កត់ បន្ថែមចូល
     if (isDone) {
         window.invoices[invIndex].note = currentNote.replace('[✅ រួចរាល់]', '').trim();
         if (typeof window.showToast === 'function') window.showToast("🔄 ដកចំណាំធ្វើរួចចេញវិញ!", true);
@@ -1278,11 +1255,9 @@ window.markAsDone = async function(invId) {
         if (typeof window.showToast === 'function') window.showToast("✅ បានកត់ចំណាំថាការងាររួចរាល់!");
     }
 
-    // Save ចូលកុំព្យូទ័រ & Refresh អេក្រង់
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
     if (typeof window.renderUnpaid === 'function') window.renderUnpaid();
 
-    // 🚀 បាញ់ទៅប្រាប់ Supabase ភ្លាមៗ (Cloud Sync)
     if (window.supabaseClient && navigator.onLine) {
         try {
             const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';

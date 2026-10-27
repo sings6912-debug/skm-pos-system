@@ -34,7 +34,6 @@ window.setPosCategory = function(cat) {
 };
 
 window.updateCategories = function() {
-    // ត្រងយកតែទំនិញដែលមានក្នុងស្តុក និងមិនមែនជាទិន្នន័យទទេ
     let activeItems = (window.inventory || []).filter(p => p !== null && typeof p === 'object');
     const cats = [...new Set(activeItems.filter(p => p.category).map(p => p.category))];
     
@@ -51,8 +50,6 @@ window.updateCategories = function() {
     const posTabs = document.getElementById('posCategoryTabs');
     if(posTabs) { 
         let activeCat = window.currentPosCategory ? window.currentPosCategory : 'all'; 
-        
-        // ទាញយកពាក្យបកប្រែសម្រាប់ Tab "ទាំងអស់"
         const lang = localStorage.getItem('app_lang') || 'km';
         const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
         const allLabel = d.allCategoryTab || 'ទាំងអស់ (All)';
@@ -66,7 +63,6 @@ window.updateCategories = function() {
         }); 
         posTabs.innerHTML = tabsHtml; 
         
-        // ដំណើរការមុខងារអូសដោយប្រើ Mouse (Drag to scroll)
         if(typeof window.initPosTabScroll === 'function') window.initPosTabScroll();
     }
 };
@@ -543,12 +539,11 @@ window.routeOrderToPrinters = function(order, printerJobs) {
     const deptPrinters = sys.deptPrinters || [];
 
     for (const [printerId, items] of Object.entries(printerJobs)) {
-        if (printerId === 'cashier' || printerId === 'none') continue; // Cashier ព្រីនវិក្កយបត្រដើមរួចហើយ
+        if (printerId === 'cashier' || printerId === 'none') continue; 
 
         const printerInfo = deptPrinters.find(p => p.id === printerId);
         if (!printerInfo) continue;
 
-        // បង្កើតវិក្កយបត្របញ្ជា (Kitchen Ticket / Bar Ticket)
         let ticketHTML = `<div style="text-align:center; font-family:'Kantumruy Pro', sans-serif;">`;
         ticketHTML += `<h2 style="border: 2px solid #000; padding: 4px; display:inline-block; margin-bottom:5px;">${printerInfo.name}</h2>`;
         ticketHTML += `<h3>តុ: ${window.escapeHTML(order.customerName)}</h3>`;
@@ -562,7 +557,6 @@ window.routeOrderToPrinters = function(order, printerJobs) {
         
         ticketHTML += `</table><hr style="border-top:1px dashed #000; margin-top:10px;"><p style="font-size: 10px;">បោះពុម្ពម៉ោង: ${new Date().toLocaleTimeString('km-KH')}</p></div>`;
 
-        // ព្រីនចេញ
         window.executePrint(ticketHTML, `Ticket - ${printerInfo.name}`);
     }
 };
@@ -570,7 +564,6 @@ window.routeOrderToPrinters = function(order, printerJobs) {
 window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!');
     
-    // 🛡️ សុវត្ថិភាពទិន្នន័យ (XSS Protection)
     const custNameInput = window.escapeHTML(document.getElementById('posCustomerName').value.trim()); 
     const custPhoneInput = window.escapeHTML(document.getElementById('posCustomerPhone').value.trim());
     const tableSelectEl = document.getElementById('posTableSelect');
@@ -589,7 +582,13 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
 
     let receiptHTML = `<div style="text-align:center; margin-bottom: 8px;">`; 
     const rCfg = window.getActiveReceiptConfig();
-    if(window.shopLogo) receiptHTML += `<img class="receipt-logo" src="${window.shopLogo}" style="width: ${rCfg.logoPx}px; height: ${rCfg.logoPx}px; object-fit: cover; border-radius: 50%; margin-bottom: 5px; filter: grayscale(100%);">`; 
+    if(window.shopLogo) {
+        let shape = window.sysSettings?.logoShape || 'circle';
+        let scale = window.sysSettings?.logoScale || 1;
+        let radius = shape === 'circle' ? '50%' : '8px';
+        let fit = shape === 'circle' ? 'cover' : 'contain';
+        receiptHTML += `<img class="receipt-logo" src="${window.shopLogo}" style="width: ${rCfg.logoPx}px; height: ${rCfg.logoPx}px; object-fit: ${fit}; border-radius: ${radius}; margin-bottom: 5px; transform: scale(${scale});">`; 
+    }
     receiptHTML += `<h2 style="margin:0; font-size:16px;">${window.escapeHTML(window.shopName)}</h2>`; 
     if(window.shopPhone) receiptHTML += `<p style="margin:2px 0; font-size:12px;">Tel: ${window.escapeHTML(window.shopPhone)}</p>`; 
     if(window.shopAddress) receiptHTML += `<p style="margin:2px 0; font-size:12px;">${window.escapeHTML(window.shopAddress)}</p>`; 
@@ -600,7 +599,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
 
     const normalizedCartItems = [];
     const printerRouting = (window.sysSettings && window.sysSettings.categoryRouting) ? window.sysSettings.categoryRouting : {};
-    let printerJobs = {}; // កន្លែងផ្ទុកមុខម្ហូបបែងចែកតាមម៉ាស៊ីន
+    let printerJobs = {}; 
 
     window.cart.forEach((c, index) => {
         if(!c) return; 
@@ -616,7 +615,6 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
             qty: c.cartQty
         });
 
-        // 🖨️ តម្រៀបចូលប្រអប់តាមម៉ាស៊ីនព្រីនផ្ទះបាយ
         let cat = c.category || 'Unknown';
         let routeId = printerRouting[cat] || 'none';
         if (routeId !== 'none' && window.sysSettings.toggleMultiPrinter) {
@@ -677,13 +675,11 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         paidAmount: paidUsdAmount
     }; 
     
-    // 🚀 កន្លែងរក្សាទុកទិន្នន័យ (Database Save Strategy)
     if(!window.invoices) window.invoices = [];
     window.invoices.unshift(newInvoice); 
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
     if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
     
-    // ការចុះឈ្មោះអតិថិជនស្វ័យប្រវត្តិ
     if(custNameInput && custNameInput !== selectedTable && typeof window.setAutoRegisterCustomer === 'function') {
         window.setAutoRegisterCustomer(custNameInput, custPhoneInput);
     }
@@ -712,7 +708,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
 
     let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? window.escapeHTML(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
     
-    if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img class="receipt-qr" src="${window.shopQR}" style="width: ${rCfg.qrPx}px; height: ${rCfg.qrPx}px; object-fit: contain; filter: grayscale(100%);"></div>`;
+    if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img class="receipt-qr" src="${window.shopQR}" style="width: ${rCfg.qrPx}px; height: ${rCfg.qrPx}px; object-fit: contain;"></div>`;
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">${footerText}</p>`; 
     
     // Clear Input
@@ -735,26 +731,20 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(typeof window.renderCustomers === 'function') window.renderCustomers();
     if(typeof window.renderDashboard === 'function') window.renderDashboard();
     
-    // 🖨️ បញ្ជាបោះពុម្ព
     window.executePrint(receiptHTML, `Receipt - ${newInvId}`);
     
-    // 🖨️ បាញ់ទិន្នន័យទៅផ្ទះបាយ / បារ
     if (window.sysSettings && window.sysSettings.toggleMultiPrinter && Object.keys(printerJobs).length > 0) {
         window.routeOrderToPrinters(newInvoice, printerJobs);
     }
 
-    // 🚀 Enterprise Async Save Strategy (កាត់ស្តុកផ្ទាល់លើ Cloud ធានាភាពត្រឹមត្រូវ ១០០%)
     setTimeout(async () => {
         if (window.supabaseClient && navigator.onLine) {
             try {
-                const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-
-                // ១. រក្សាទុកវិក្កយបត្រថ្មីចូល Table 'pos_orders'
                 const { error: orderError } = await window.supabaseClient
                     .from('pos_orders')
                     .insert([{
                         id: newInvId,
-                        branch_id: bId,
+                        branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
                         customer_name: newInvoice.customerName,
                         customer_phone: newInvoice.customerPhone,
                         total_amount: newInvoice.totalAmount,
@@ -769,43 +759,18 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
                 if (orderError) throw orderError;
                 console.log("✅ វិក្កយបត្រត្រូវបានរក្សាទុកចូល pos_orders");
 
-                // ២. ⚡ កាត់ស្តុកទំនិញលើ Cloud ភ្លាមៗ (ទោះគិតលុយជាន់គ្នាក៏មិនខុស)
                 if (status !== 'preorder') {
                     for (let item of normalizedCartItems) {
                         const deductQty = parseInt(item.cartQty) || 1;
-                        
-                        // ក. ទាញយកស្តុកចុងក្រោយបង្អស់ពី Cloud ផ្ទាល់ (ការពារការជាន់គ្នា)
-                        let { data: currentItem } = await window.supabaseClient
-                            .from('pos_products')
-                            .select('qty')
-                            .eq('id', item.id)
-                            .eq('branch_id', bId)
-                            .single();
-                            
-                        if (currentItem) {
-                            // ខ. ដកចំនួនដែលលក់ចេញ
-                            let newQty = Math.max(0, (parseInt(currentItem.qty) || 0) - deductQty);
-                            
-                            // គ. បាញ់ស្តុកថ្មីដែលដករួចទៅកាន់ Cloud វិញភ្លាមៗ
-                            await window.supabaseClient
-                                .from('pos_products')
-                                .update({ qty: newQty })
-                                .eq('id', item.id)
-                                .eq('branch_id', bId);
-                                
-                            // ឃ. Update ស្តុកនៅក្នុងម៉ាស៊ីន Local ឱ្យត្រូវគ្នានឹង Cloud វិញជានិច្ច
-                            let localItem = (window.inventory || []).find(i => String(i.id) === String(item.id));
-                            if (localItem) localItem.qty = newQty;
-                        }
+                        const { error: stockError } = await window.supabaseClient.rpc('deduct_stock_safely', {
+                            p_product_id: item.id,
+                            p_branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                            deduct_qty: deductQty
+                        });
+                        if (stockError) console.warn("បញ្ហាកាត់ស្តុកលើ Cloud:", stockError);
                     }
-                    
-                    // Save ស្តុកចូល Local វិញ រួច Refresh ផ្ទាំងលក់
-                    localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
-                    if (typeof window.renderInventory === 'function') window.renderInventory();
-                    if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
                 }
                 
-                // ៣. Save ទិន្នន័យដទៃទៀត
                 if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
 
             } catch (err) {
@@ -813,7 +778,6 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
                 if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
             }
         } else {
-            // Offline Mode Fallback
             if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
         }
     }, 100);
@@ -891,3 +855,21 @@ window.initPosTabScroll = function() {
     slider.style.cursor = 'grab';
     isPosTabScrollInitialized = true;
 };
+
+// ==========================================
+// ធ្វើបច្ចុប្បន្នភាពការកំណត់ស្វ័យប្រវត្តិ ពេលឆ្លាស់ Tab គ្នា (Auto-Refresh Settings)
+// ==========================================
+window.addEventListener('visibilitychange', function() {
+    if (!document.hidden && typeof window.getBranchKey === 'function') {
+        const freshSettings = localStorage.getItem(window.getBranchKey('sys_settings'));
+        if (freshSettings) {
+            window.sysSettings = JSON.parse(freshSettings);
+            let shape = window.sysSettings.logoShape || 'circle';
+            let radius = (shape === 'circle') ? '50%' : '12px';
+            ['sidebarLogo', 'shopLogoPreview', 'viewInvoiceLogo'].forEach(id => {
+                let el = document.getElementById(id);
+                if (el) { el.style.borderRadius = radius; el.style.objectFit = (shape === 'circle') ? 'cover' : 'contain'; }
+            });
+        }
+    }
+});
