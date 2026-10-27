@@ -119,14 +119,27 @@ if (typeof window.playOrderSound !== 'function') {
     };
 }
 
-if (typeof window.generateInvoiceId !== 'function') {
+if (typeof window.generateInvoiceId !== 'function' || true) {
     window.generateInvoiceId = function() {
-        let counters = JSON.parse(localStorage.getItem(window.getBranchKey('invoice_counter'))) || { lastDate: '', seq: 0 };
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        let counters = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoice_counter`)) || { lastDate: '', seq: 0 };
         let d = new Date(); 
         let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
-        if (counters.lastDate === todayStr) counters.seq += 1; else { counters.lastDate = todayStr; counters.seq = 1; }
-        localStorage.setItem(window.getBranchKey('invoice_counter'), JSON.stringify(counters)); 
-        return `INV-${todayStr}-${String(counters.seq).padStart(3, '0')}`;
+        
+        if (counters.lastDate === todayStr) {
+            counters.seq += 1; 
+        } else { 
+            counters.lastDate = todayStr; 
+            counters.seq = 1; 
+        }
+        localStorage.setItem(`ks2_${branchId}_invoice_counter`, JSON.stringify(counters)); 
+        
+        // បន្ថែម ម៉ោង នាទី វិនាទី ពីក្រោយ
+        let hh = String(d.getHours()).padStart(2, '0');
+        let mm = String(d.getMinutes()).padStart(2, '0');
+        let ss = String(d.getSeconds()).padStart(2, '0');
+        
+        return `INV-${todayStr}-${String(counters.seq).padStart(3, '0')}-${hh}${mm}${ss}`;
     };
 }
 
@@ -1498,15 +1511,31 @@ window.manualCloudSync = async function(isAuto = false) {
             hasChanges = true;
         }
 
-        // 3. Fetch Orders (ទាញ Invoices ពី pos_orders សុទ្ធ ១០០%)
+// 3. Fetch Orders (ទាញ Invoices ពី pos_orders និងបញ្ចូលគ្នាជាមួយ Local)
         let { data: ordersData } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
         if (ordersData) {
+            let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
             let formattedOrders = ordersData.map(o => ({
                 id: o.id, invoiceNo: o.id, customerName: o.customer_name, customerPhone: o.customer_phone, totalAmount: o.total_amount, total: o.total_amount, paidUsd: o.paid_amount, paidAmount: o.paid_amount, status: o.status, seller: o.seller, items: o.order_data, note: o.note, timestamp: o.timestamp, date: new Date(o.timestamp).toLocaleString('km-KH')
             }));
             
-            // ជំនួស Invoices ថ្មីទាំងស្រុង មិនបាច់ប្រៀបធៀបជាមួយរបស់ចាស់ទេ ដើម្បីអោយប្រាកដថាអត់មានរបស់ខ្មោច
-            window.invoices = formattedOrders;
+            if (!window.invoices) window.invoices = [];
+            
+            // ⚡ បញ្ចូលគ្នារវាងទិន្នន័យចាស់ក្នុង Local និង SQL ការពារការបាត់វិក្កយបត្រថ្មីពេល Cloud គាំង
+            formattedOrders.forEach(cInv => {
+                let tempId = String(cInv.id).trim().toLowerCase();
+                if (!deletedInv.includes(tempId)) {
+                    let localInv = window.invoices.find(lInv => String(lInv.id || lInv.invoiceNo).trim().toLowerCase() === tempId);
+                    if (!localInv) {
+                        window.invoices.push(cInv);
+                    } else {
+                        Object.assign(localInv, cInv);
+                    }
+                }
+            });
+
+            window.invoices = window.invoices.filter(i => !deletedInv.includes(String(i.id || i.invoiceNo).trim().toLowerCase()));
+            window.invoices.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
             localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
             hasChanges = true;
         }
