@@ -119,14 +119,14 @@ if (typeof window.playOrderSound !== 'function') {
     };
 }
 
-if (typeof window.generateInvoiceId !== 'function' || true) {
+if (typeof window.generateInvoiceId !== 'function' || true) {​
     window.generateInvoiceId = function() {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         let d = new Date(); 
         let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
         let prefix = `INV-${todayStr}-`;
         
-        // 🔍 ជំហានទី១៖ ឆែកមើលវិក្កយបត្រចាស់ៗទាំងអស់ ដើម្បីរកលេខដែលធំបំផុតប្រចាំថ្ងៃ
+        // 🔍 ឆែកមើលវិក្កយបត្រទាំងអស់ពីគ្រប់ម៉ាស៊ីន ដើម្បីរកលេខធំបំផុត ធានាថាមិនឱ្យជាន់គ្នា!
         let maxSeq = 0;
         if (window.invoices && window.invoices.length > 0) {
             window.invoices.forEach(inv => {
@@ -141,24 +141,21 @@ if (typeof window.generateInvoiceId !== 'function' || true) {
             });
         }
 
-        // 🔍 ជំហានទី២៖ ធានាថាមិនជាន់ជាមួយលេខក្នុង Local Storage (ករណីដាច់អ៊ីនធឺណិត)
         let counters = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoice_counter`)) || { lastDate: '', seq: 0 };
         if (counters.lastDate === todayStr && counters.seq > maxSeq) {
             maxSeq = counters.seq;
         }
         
-        // បូក ១ ទៅលើលេខចុងក្រោយគេជានិច្ច!
-        let nextSeq = maxSeq + 1;
+        let nextSeq = maxSeq + 1; // លោតលេខបន្ទាប់ជានិច្ច!
         counters.lastDate = todayStr;
         counters.seq = nextSeq;
         localStorage.setItem(`ks2_${branchId}_invoice_counter`, JSON.stringify(counters)); 
         
-        // ⏰ បន្ថែម ម៉ោង នាទី វិនាទី ពីក្រោយ
+        // ⏰ បន្ថែមម៉ោងនាទីវិនាទី តាមការចង់បានរបស់បង
         let hh = String(d.getHours()).padStart(2, '0');
         let mm = String(d.getMinutes()).padStart(2, '0');
         let ss = String(d.getSeconds()).padStart(2, '0');
         
-        // ត្រឡប់លេខវិក្កយបត្រ (ឧទាហរណ៍៖ INV-261027-013-143005)
         return `${prefix}${String(nextSeq).padStart(3, '0')}-${hh}${mm}${ss}`;
     };
 }
@@ -1539,20 +1536,21 @@ window.manualCloudSync = async function(isAuto = false) {
                 id: o.id, invoiceNo: o.id, customerName: o.customer_name, customerPhone: o.customer_phone, totalAmount: o.total_amount, total: o.total_amount, paidUsd: o.paid_amount, paidAmount: o.paid_amount, status: o.status, seller: o.seller, items: o.order_data, note: o.note, timestamp: o.timestamp, date: new Date(o.timestamp).toLocaleString('km-KH')
             }));
             
-            if (!window.invoices) window.invoices = [];
-            
-            // 🚀 ដំណោះស្រាយខ្មោច៖ បើ Cloud លុបហើយ ទូរស័ព្ទ/កុំព្យូទ័រផ្សេងទៀតត្រូវតែលុបតាមស្វ័យប្រវត្តិ!
             let cloudIds = formattedOrders.map(o => String(o.id).trim().toLowerCase());
             let nowTime = Date.now();
             
+            if (!window.invoices) window.invoices = [];
+            
+            // 🚀 ដំណោះស្រាយខ្មោច (Ghost Data Fix): បើ Supabase លុប គឺកុំព្យូទ័រត្រូវតែលុបតាម!
             window.invoices = window.invoices.filter(localInv => {
                 let localId = String(localInv.id || localInv.invoiceNo).trim().toLowerCase();
-                // ទុកតែវិក្កយបត្រដែលទើបលក់ថ្មីៗ (ក្រោម ១ ម៉ោង មិនទាន់ Sync) ឬ មានឈ្មោះក្នុង Cloud
-                let isNewOffline = (nowTime - (localInv.timestamp || 0)) < 3600000; 
-                return cloudIds.includes(localId) || isNewOffline;
+                // បន្ថយម៉ោងយោគយល់ មកសល់ត្រឹម ២ នាទី (ការពារការលុបបាត់វិក្កយបត្រកំពុងគិតលុយ)
+                let isVeryNew = (nowTime - (localInv.timestamp || 0)) < 120000; 
+                // បើគ្មានក្នុង Cloud ទេ ហើយលក់យូរជាង ២ នាទីហើយ គឺត្រូវតែលុបចោល!
+                return cloudIds.includes(localId) || isVeryNew;
             });
             
-            // ⚡ Update ទិន្នន័យពី Cloud មក Local
+            // ⚡ បញ្ចូលទិន្នន័យពី Cloud មក Local វិញ
             formattedOrders.forEach(cInv => {
                 let tempId = String(cInv.id).trim().toLowerCase();
                 if (!deletedInv.includes(tempId)) {
@@ -1570,7 +1568,7 @@ window.manualCloudSync = async function(isAuto = false) {
             localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
             hasChanges = true;
         }
-
+        
         if (!isAuto) {
             const now = new Date();
             window.setSyncStatus('synced', `Synced: ${now.toLocaleTimeString()}`);
