@@ -285,7 +285,7 @@
 
             <!-- 🎟️ PROMO CODES MANAGER -->
             <div class="section-title" style="color: var(--success);"><i class="fa-solid fa-ticket"></i> កុម្ម៉ង់ និងគ្រប់គ្រងកូដបញ្ចុះតម្លៃ (Promo Codes Manager)</div>
-            <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, FREESHIP) កំណត់ប្រភេទបញ្ចុះតម្លៃ (% , $ ឬ ដឹកជញ្ជូនឥតគិតថ្លៃ) និងកំណត់ចំនួនដងដែលអាចប្រើប្រាស់បាន។</p>
+            <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, FREESHIP) កំណត់ប្រភេទបញ្ចុះតម្លៃ (% , $ ឬ ដឹកជញ្ជូនឥតគិតថ្លៃ) និងកំណត់ចំនួនដងដែលអាចប្រើប្រាស់បាន。</p>
             
             <div class="toggle-row" style="background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.25);">
                 <span style="color: var(--text-dark);"><i class="fa-solid fa-eye-slash" style="color: var(--danger);"></i> លាក់ស្លាកកូដប្រូម៉ូសិនកុំឱ្យបង្ហាញលើ Banner អតិថិជន (Hide Promo Badge on Banner)</span>
@@ -1588,6 +1588,7 @@
         deptPrinters.push({ id, name, type, ip, icon, color }); document.getElementById('addPrinterForm').style.display = 'none'; renderDeptPrinters(); saveAdminSettings(); showToast('បានបន្ថែមម៉ាស៊ីនព្រីនថ្មី!');
     }
     function deleteDepartmentPrinter(idx) { deptPrinters.splice(idx, 1); renderDeptPrinters(); saveAdminSettings(); showToast("បានលុបម៉ាស៊ីនព្រីនជោគជ័យ!"); }
+    
     function renderDeptPrinters() {
         const list = document.getElementById('departmentPrintersList'); if (!list) return; list.innerHTML = '';
         if (deptPrinters.length === 0) { list.innerHTML = '<div style="font-size:13px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 10px;">មិនទាន់មានម៉ាស៊ីនព្រីនទេ។ សូមចុចបន្ថែម!</div>'; } else {
@@ -1597,6 +1598,7 @@
         }
         renderCategoryRouting();
     }
+
     function renderCategoryRouting() {
         const list = document.getElementById('categoryRoutingList'); if (!list) return; list.innerHTML = '';
         if (posCategories.length === 0) { list.innerHTML = '<tr><td colspan="2" style="font-size:12px; color:var(--text-muted); text-align:center; padding:15px; border: 1px dashed var(--border-color); border-radius: 8px;">មិនទាន់មានប្រភេទមុខម្ហូបក្នុងប្រព័ន្ធទេ។<br>សូមបង្កើតក្នុងផ្ទាំង POS ជាមុនសិន។</td></tr>'; return; }
@@ -1609,9 +1611,10 @@
             list.innerHTML += `<tr style="border-bottom: 1px solid rgba(0,0,0,0.04);"><td style="padding: 10px 4px; font-size: 13px; font-weight: 800; color: var(--brand-dark);">${catName}</td><td style="padding: 10px 4px;">${selectHtml}</td></tr>`;
         });
     }
-    (catId, printerId) { categoryRouting[catId] = printerId; saveAdminSettings(); }
 
-// ==========================================
+    function updateCategoryRoute(catId, printerId) { categoryRouting[catId] = printerId; saveAdminSettings(); }
+
+    // ==========================================
     // មុខងារសម្រាប់ MENU CUSTOM JS (Update ថ្មី + រុញមកលើគេបង្អស់)
     // ==========================================
     let menuScriptsExpanded = false;
@@ -1623,21 +1626,17 @@
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(ev) {
-                // ឆែករកមើលបើមាន File ឈ្មោះជាន់គ្នា
                 const existingIdx = menuScripts.findIndex(s => s.name === file.name);
                 let targetScript;
                 
                 if (existingIdx > -1) {
-                    // បើមានហើយ គឺ Update កូដថ្មី រួចកាត់វាចេញពីទីតាំងចាស់
                     targetScript = menuScripts.splice(existingIdx, 1)[0];
                     targetScript.code = ev.target.result;
                     targetScript.active = true; 
                 } else {
-                    // បើមិនទាន់មាន បង្កើតជា Object ថ្មី
                     targetScript = { name: file.name, code: ev.target.result, active: true };
                 }
                 
-                // .unshift គឺរុញ File នេះទៅដាក់ខាងលើគេបង្អស់ (Index 0)
                 menuScripts.unshift(targetScript);
                 
                 loadedCount++;
@@ -1656,7 +1655,7 @@
         container.innerHTML = '';
         if(menuScripts.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដ JS ទេ។</div>'; return; }
 
-        const limit = 3; // បង្ហាញត្រឹម 3 ឯកសារដំបូង
+        const limit = 3; 
         const total = menuScripts.length;
         const showCount = menuScriptsExpanded ? total : Math.min(limit, total);
 
@@ -1674,7 +1673,6 @@
                 </div>`;
         }
 
-        // ប៊ូតុងទម្លាក់ចុះ / លាក់
         if (total > limit) {
             const btnText = menuScriptsExpanded ? '🔼 លាក់ខ្លះវិញ' : `🔽 បង្ហាញ ${total - limit} ទៀត...`;
             container.innerHTML += `
@@ -1690,7 +1688,6 @@
     function toggleAllMenuScripts() { showAllMenuScripts = !showAllMenuScripts; menuScripts.forEach(s => s.active = showAllMenuScripts); renderMenuScripts(); saveAdminSettings(); }
     function deleteAllMenuScripts() { if(confirm("តើអ្នកពិតជាចង់លុបកូដ Menu JS ទាំងអស់មែនទេ?")) { menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('🗑️ លុបទាំងអស់ជោគជ័យ!'); } }
     
-    // Backup & Restore Menu JS
     function exportMenuScriptsBackup() {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(menuScripts, null, 2));
         const a = document.createElement('a'); a.href = dataStr; a.download = `Menu_JS_Backup_${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
@@ -1701,8 +1698,6 @@
         reader.readAsText(file); e.target.value = '';
     }
 
-// (រក្សាទុក function renderMenuScripts... ផ្សេងៗនៅដដែល រហូតដល់ uploadPosScripts)
-    
     // ==========================================
     // មុខងារសម្រាប់ POS CUSTOM JS (Update ថ្មី + រុញមកលើគេបង្អស់)
     // ==========================================
@@ -1715,21 +1710,17 @@
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(ev) {
-                // ឆែករកមើលបើមាន File ឈ្មោះជាន់គ្នា
                 const existingIdx = posScripts.findIndex(s => s.name === file.name);
                 let targetScript;
                 
                 if (existingIdx > -1) {
-                    // បើមានហើយ គឺ Update កូដថ្មី រួចកាត់វាចេញពីទីតាំងចាស់
                     targetScript = posScripts.splice(existingIdx, 1)[0];
                     targetScript.code = ev.target.result;
                     targetScript.active = true; 
                 } else {
-                    // បើមិនទាន់មាន បង្កើតជា Object ថ្មី
                     targetScript = { name: file.name, code: ev.target.result, active: true };
                 }
                 
-                // .unshift គឺរុញ File នេះទៅដាក់ខាងលើគេបង្អស់ (Index 0)
                 posScripts.unshift(targetScript);
                 
                 loadedCount++;
@@ -1748,7 +1739,7 @@
         container.innerHTML = '';
         if(posScripts.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដ JS ទេ។</div>'; return; }
 
-        const limit = 3; // បង្ហាញត្រឹម 3 ឯកសារដំបូង
+        const limit = 3; 
         const total = posScripts.length;
         const showCount = posScriptsExpanded ? total : Math.min(limit, total);
 
@@ -1766,7 +1757,6 @@
                 </div>`;
         }
 
-        // ប៊ូតុងទម្លាក់ចុះ / លាក់
         if (total > limit) {
             const btnText = posScriptsExpanded ? '🔼 លាក់ខ្លះវិញ' : `🔽 បង្ហាញ ${total - limit} ទៀត...`;
             container.innerHTML += `
@@ -1782,7 +1772,6 @@
     function toggleAllPosScripts() { showAllPosScripts = !showAllPosScripts; posScripts.forEach(s => s.active = showAllPosScripts); renderPosScripts(); saveAdminSettings(); }
     function deleteAllPosScripts() { if(confirm("តើអ្នកពិតជាចង់លុបកូដ POS JS ទាំងអស់មែនទេ?")) { posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('🗑️ លុបទាំងអស់ជោគជ័យ!'); } }
 
-    // Backup & Restore POS JS
     function exportPosScriptsBackup() {
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(posScripts, null, 2));
         const a = document.createElement('a'); a.href = dataStr; a.download = `POS_JS_Backup_${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
@@ -1792,6 +1781,7 @@
         reader.onload = function(ev) { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); showToast("✅ Restore JSON បានជោគជ័យ!"); } catch (err) { showToast("❌ ឯកសារមិនត្រឹមត្រូវ!", true); } };
         reader.readAsText(file); e.target.value = '';
     }
+    
     window.onload = initAdmin;
 </script>
 </body>
