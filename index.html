@@ -1846,5 +1846,32 @@
             if(typeof window.closeCustomerHistoryModal !== 'function') window.closeCustomerHistoryModal = () => document.getElementById('customerHistoryModal').style.display = 'none';
         });
     </script>
+	<!-- ========================================== -->
+    <!-- មុខងារទាញយក និងដំណើរការ POS Custom JS ស្វ័យប្រវត្តិ -->
+    <!-- ========================================== -->
+    <script>
+        window.addEventListener('DOMContentLoaded', () => {
+            // ទុកពេល 1 វិនាទី ឱ្យប្រព័ន្ធ POS ដើរចប់សិន ទើបរត់កូដបន្ថែម ដើម្បីការពារ Error
+            setTimeout(() => {
+                const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                try {
+                    const rawScripts = localStorage.getItem(`ks2_${branchId}_pos_scripts`);
+                    if (rawScripts) {
+                        const scripts = JSON.parse(rawScripts);
+                        scripts.forEach(s => {
+                            if (s.active && s.code) {
+                                const scriptTag = document.createElement('script');
+                                scriptTag.textContent = s.code;
+                                document.body.appendChild(scriptTag);
+                                console.log('✅ កំពុងដំណើរការ Custom JS:', s.name);
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('កំហុសក្នុងការអាន POS Custom JS:', error);
+                }
+            }, 1000); 
+        });
+    </script>
 </body>
 </html>
