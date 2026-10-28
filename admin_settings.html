@@ -1615,6 +1615,11 @@
     // ==========================================
     let menuScriptsExpanded = false;
 
+// ==========================================
+    // មុខងារសម្រាប់ MENU CUSTOM JS (Update ថ្មី + រុញមកលើគេបង្អស់)
+    // ==========================================
+    let menuScriptsExpanded = false;
+
     function uploadMenuScripts(e) {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -1622,18 +1627,34 @@
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(ev) {
-                menuScripts.push({ name: file.name, code: ev.target.result, active: true });
+                // ឆែករកមើលបើមាន File ឈ្មោះជាន់គ្នា
+                const existingIdx = menuScripts.findIndex(s => s.name === file.name);
+                let targetScript;
+                
+                if (existingIdx > -1) {
+                    // បើមានហើយ គឺ Update កូដថ្មី រួចកាត់វាចេញពីទីតាំងចាស់
+                    targetScript = menuScripts.splice(existingIdx, 1)[0];
+                    targetScript.code = ev.target.result;
+                    targetScript.active = true; 
+                } else {
+                    // បើមិនទាន់មាន បង្កើតជា Object ថ្មី
+                    targetScript = { name: file.name, code: ev.target.result, active: true };
+                }
+                
+                // .unshift គឺរុញ File នេះទៅដាក់ខាងលើគេបង្អស់ (Index 0)
+                menuScripts.unshift(targetScript);
+                
                 loadedCount++;
                 if (loadedCount === files.length) {
                     renderMenuScripts(); saveAdminSettings();
-                    showToast(`✅ Upload បាន ${loadedCount} ឯកសារ (Menu)!`);
+                    showToast(`✅ Upload & Update បាន ${loadedCount} ឯកសារ (Menu)!`);
                 }
             };
             reader.readAsText(file);
         });
         e.target.value = ''; // Reset
     }
-
+    
     function renderMenuScripts() {
         const container = document.getElementById('menuScriptsListContainer'); if(!container) return;
         container.innerHTML = '';
@@ -1684,8 +1705,10 @@
         reader.readAsText(file); e.target.value = '';
     }
 
+// (រក្សាទុក function renderMenuScripts... ផ្សេងៗនៅដដែល រហូតដល់ uploadPosScripts)
+    
     // ==========================================
-    // មុខងារសម្រាប់ POS CUSTOM JS
+    // មុខងារសម្រាប់ POS CUSTOM JS (Update ថ្មី + រុញមកលើគេបង្អស់)
     // ==========================================
     let posScriptsExpanded = false;
 
@@ -1696,11 +1719,27 @@
         Array.from(files).forEach(file => {
             const reader = new FileReader();
             reader.onload = function(ev) {
-                posScripts.push({ name: file.name, code: ev.target.result, active: true });
+                // ឆែករកមើលបើមាន File ឈ្មោះជាន់គ្នា
+                const existingIdx = posScripts.findIndex(s => s.name === file.name);
+                let targetScript;
+                
+                if (existingIdx > -1) {
+                    // បើមានហើយ គឺ Update កូដថ្មី រួចកាត់វាចេញពីទីតាំងចាស់
+                    targetScript = posScripts.splice(existingIdx, 1)[0];
+                    targetScript.code = ev.target.result;
+                    targetScript.active = true; 
+                } else {
+                    // បើមិនទាន់មាន បង្កើតជា Object ថ្មី
+                    targetScript = { name: file.name, code: ev.target.result, active: true };
+                }
+                
+                // .unshift គឺរុញ File នេះទៅដាក់ខាងលើគេបង្អស់ (Index 0)
+                posScripts.unshift(targetScript);
+                
                 loadedCount++;
                 if (loadedCount === files.length) {
                     renderPosScripts(); saveAdminSettings();
-                    showToast(`✅ Upload បាន ${loadedCount} ឯកសារ (POS)!`);
+                    showToast(`✅ Upload & Update បាន ${loadedCount} ឯកសារ (POS)!`);
                 }
             };
             reader.readAsText(file);
