@@ -1610,7 +1610,117 @@
         });
     }
     function updateCategoryRoute(catId, printerId) { categoryRouting[catId] = printerId; saveAdminSettings(); }
+// ==========================================
+    // មុខងារសម្រាប់ MENU CUSTOM JS
+    // ==========================================
+    function uploadMenuScripts(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        let loadedCount = 0;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                menuScripts.push({ name: file.name, code: ev.target.result, active: true });
+                loadedCount++;
+                if (loadedCount === files.length) {
+                    renderMenuScripts(); saveAdminSettings();
+                    showToast(`✅ Upload បាន ${loadedCount} ឯកសារ (Menu)!`);
+                }
+            };
+            reader.readAsText(file);
+        });
+        e.target.value = ''; // Reset
+    }
 
+    function renderMenuScripts() {
+        const container = document.getElementById('menuScriptsListContainer'); if(!container) return;
+        container.innerHTML = '';
+        if(menuScripts.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដ JS ទេ។</div>'; return; }
+        menuScripts.forEach((script, idx) => {
+            const activeClass = script.active ? 'btn-toggle-on' : 'btn-toggle-off';
+            const activeIcon = script.active ? 'fa-toggle-on' : 'fa-toggle-off';
+            container.innerHTML += `
+                <div class="script-item">
+                    <div class="script-name">📜 ${script.name}</div>
+                    <div class="script-actions">
+                        <button class="btn-script ${activeClass}" onclick="toggleMenuScript(${idx})"><i class="fa-solid ${activeIcon}"></i> ${script.active ? 'On' : 'Off'}</button>
+                        <button class="btn-script btn-delete" onclick="deleteMenuScript(${idx})"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function toggleMenuScript(idx) { menuScripts[idx].active = !menuScripts[idx].active; renderMenuScripts(); saveAdminSettings(); }
+    function deleteMenuScript(idx) { menuScripts.splice(idx, 1); renderMenuScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
+    function toggleAllMenuScripts() { showAllMenuScripts = !showAllMenuScripts; menuScripts.forEach(s => s.active = showAllMenuScripts); renderMenuScripts(); saveAdminSettings(); }
+    function deleteAllMenuScripts() { if(confirm("តើអ្នកពិតជាចង់លុបកូដ Menu JS ទាំងអស់មែនទេ?")) { menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('🗑️ លុបទាំងអស់ជោគជ័យ!'); } }
+    
+    // Backup & Restore Menu JS
+    function exportMenuScriptsBackup() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(menuScripts, null, 2));
+        const a = document.createElement('a'); a.href = dataStr; a.download = `Menu_JS_Backup_${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+    }
+    function importMenuScriptsBackup(e) {
+        const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+        reader.onload = function(ev) { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); showToast("✅ Restore JSON បានជោគជ័យ!"); } catch (err) { showToast("❌ ឯកសារមិនត្រឹមត្រូវ!", true); } };
+        reader.readAsText(file); e.target.value = '';
+    }
+
+    // ==========================================
+    // មុខងារសម្រាប់ POS CUSTOM JS
+    // ==========================================
+    function uploadPosScripts(e) {
+        const files = e.target.files;
+        if (!files || files.length === 0) return;
+        let loadedCount = 0;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                posScripts.push({ name: file.name, code: ev.target.result, active: true });
+                loadedCount++;
+                if (loadedCount === files.length) {
+                    renderPosScripts(); saveAdminSettings();
+                    showToast(`✅ Upload បាន ${loadedCount} ឯកសារ (POS)!`);
+                }
+            };
+            reader.readAsText(file);
+        });
+        e.target.value = ''; // Reset
+    }
+
+    function renderPosScripts() {
+        const container = document.getElementById('posScriptsListContainer'); if(!container) return;
+        container.innerHTML = '';
+        if(posScripts.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដ JS ទេ។</div>'; return; }
+        posScripts.forEach((script, idx) => {
+            const activeClass = script.active ? 'btn-toggle-on' : 'btn-toggle-off';
+            const activeIcon = script.active ? 'fa-toggle-on' : 'fa-toggle-off';
+            container.innerHTML += `
+                <div class="script-item">
+                    <div class="script-name">📜 ${script.name}</div>
+                    <div class="script-actions">
+                        <button class="btn-script ${activeClass}" onclick="togglePosScript(${idx})"><i class="fa-solid ${activeIcon}"></i> ${script.active ? 'On' : 'Off'}</button>
+                        <button class="btn-script btn-delete" onclick="deletePosScript(${idx})"><i class="fa-solid fa-trash"></i></button>
+                    </div>
+                </div>`;
+        });
+    }
+
+    function togglePosScript(idx) { posScripts[idx].active = !posScripts[idx].active; renderPosScripts(); saveAdminSettings(); }
+    function deletePosScript(idx) { posScripts.splice(idx, 1); renderPosScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
+    function toggleAllPosScripts() { showAllPosScripts = !showAllPosScripts; posScripts.forEach(s => s.active = showAllPosScripts); renderPosScripts(); saveAdminSettings(); }
+    function deleteAllPosScripts() { if(confirm("តើអ្នកពិតជាចង់លុបកូដ POS JS ទាំងអស់មែនទេ?")) { posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('🗑️ លុបទាំងអស់ជោគជ័យ!'); } }
+
+    // Backup & Restore POS JS
+    function exportPosScriptsBackup() {
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(posScripts, null, 2));
+        const a = document.createElement('a'); a.href = dataStr; a.download = `POS_JS_Backup_${new Date().toISOString().slice(0, 10)}.json`; document.body.appendChild(a); a.click(); a.remove();
+    }
+    function importPosScriptsBackup(e) {
+        const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
+        reader.onload = function(ev) { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); showToast("✅ Restore JSON បានជោគជ័យ!"); } catch (err) { showToast("❌ ឯកសារមិនត្រឹមត្រូវ!", true); } };
+        reader.readAsText(file); e.target.value = '';
+    }
     window.onload = initAdmin;
 </script>
 </body>
