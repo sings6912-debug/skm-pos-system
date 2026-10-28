@@ -1613,6 +1613,8 @@
 // ==========================================
     // មុខងារសម្រាប់ MENU CUSTOM JS
     // ==========================================
+    let menuScriptsExpanded = false;
+
     function uploadMenuScripts(e) {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -1636,7 +1638,13 @@
         const container = document.getElementById('menuScriptsListContainer'); if(!container) return;
         container.innerHTML = '';
         if(menuScripts.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដ JS ទេ។</div>'; return; }
-        menuScripts.forEach((script, idx) => {
+
+        const limit = 3; // បង្ហាញត្រឹម 3 ឯកសារដំបូង
+        const total = menuScripts.length;
+        const showCount = menuScriptsExpanded ? total : Math.min(limit, total);
+
+        for (let idx = 0; idx < showCount; idx++) {
+            const script = menuScripts[idx];
             const activeClass = script.active ? 'btn-toggle-on' : 'btn-toggle-off';
             const activeIcon = script.active ? 'fa-toggle-on' : 'fa-toggle-off';
             container.innerHTML += `
@@ -1647,7 +1655,17 @@
                         <button class="btn-script btn-delete" onclick="deleteMenuScript(${idx})"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>`;
-        });
+        }
+
+        // ប៊ូតុងទម្លាក់ចុះ / លាក់
+        if (total > limit) {
+            const btnText = menuScriptsExpanded ? '🔼 លាក់ខ្លះវិញ' : `🔽 បង្ហាញ ${total - limit} ទៀត...`;
+            container.innerHTML += `
+                <button type="button" class="btn-action" style="width: 100%; justify-content: center; background: rgba(0,0,0,0.02); color: var(--text-muted); border: 1px dashed var(--border-color); margin-top: 5px; box-shadow: none;" onclick="menuScriptsExpanded = !menuScriptsExpanded; renderMenuScripts();">
+                    ${btnText}
+                </button>
+            `;
+        }
     }
 
     function toggleMenuScript(idx) { menuScripts[idx].active = !menuScripts[idx].active; renderMenuScripts(); saveAdminSettings(); }
@@ -1669,6 +1687,8 @@
     // ==========================================
     // មុខងារសម្រាប់ POS CUSTOM JS
     // ==========================================
+    let posScriptsExpanded = false;
+
     function uploadPosScripts(e) {
         const files = e.target.files;
         if (!files || files.length === 0) return;
@@ -1692,7 +1712,13 @@
         const container = document.getElementById('posScriptsListContainer'); if(!container) return;
         container.innerHTML = '';
         if(posScripts.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដ JS ទេ។</div>'; return; }
-        posScripts.forEach((script, idx) => {
+
+        const limit = 3; // បង្ហាញត្រឹម 3 ឯកសារដំបូង
+        const total = posScripts.length;
+        const showCount = posScriptsExpanded ? total : Math.min(limit, total);
+
+        for (let idx = 0; idx < showCount; idx++) {
+            const script = posScripts[idx];
             const activeClass = script.active ? 'btn-toggle-on' : 'btn-toggle-off';
             const activeIcon = script.active ? 'fa-toggle-on' : 'fa-toggle-off';
             container.innerHTML += `
@@ -1703,7 +1729,17 @@
                         <button class="btn-script btn-delete" onclick="deletePosScript(${idx})"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>`;
-        });
+        }
+
+        // ប៊ូតុងទម្លាក់ចុះ / លាក់
+        if (total > limit) {
+            const btnText = posScriptsExpanded ? '🔼 លាក់ខ្លះវិញ' : `🔽 បង្ហាញ ${total - limit} ទៀត...`;
+            container.innerHTML += `
+                <button type="button" class="btn-action" style="width: 100%; justify-content: center; background: rgba(0,0,0,0.02); color: var(--text-muted); border: 1px dashed var(--border-color); margin-top: 5px; box-shadow: none;" onclick="posScriptsExpanded = !posScriptsExpanded; renderPosScripts();">
+                    ${btnText}
+                </button>
+            `;
+        }
     }
 
     function togglePosScript(idx) { posScripts[idx].active = !posScripts[idx].active; renderPosScripts(); saveAdminSettings(); }
