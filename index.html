@@ -772,10 +772,10 @@
                         <h2 style="font-size: var(--fs-20); margin-bottom: 20px; color: var(--warning); border-bottom: 1px solid var(--border); padding-bottom: 10px;">🔐 ផ្លាស់ប្តូរលេខកូដសម្ងាត់គណនីរបស់អ្នក</h2>
                         <div style="max-width: 400px;">
                             <label style="display: block; margin-bottom: 5px; font-size: var(--fs-14);">លេខកូដចាស់ (Old Password):</label>
-                            <input type="password" id="chgOldPassword" class="form-control" style="margin-bottom: 15px; width: 100%;">
+                            <input type="text" id="chgOldPassword" class="form-control" style="margin-bottom: 15px; width: 100%; -webkit-text-security: disc;" autocomplete="new-password">
                             
                             <label style="display: block; margin-bottom: 5px; font-size: var(--fs-14);">លេខកូដថ្មី (New Password):</label>
-                            <input type="password" id="chgNewPassword" class="form-control" style="margin-bottom: 15px; width: 100%;" onkeydown="if(event.key==='Enter') window.handleChangePassword()">
+                            <input type="text" id="chgNewPassword" class="form-control" style="margin-bottom: 15px; width: 100%; -webkit-text-security: disc;" onkeydown="if(event.key==='Enter') window.handleChangePassword()" autocomplete="new-password">
                             
                             <button class="btn btn-warning" onclick="window.handleChangePassword()">🔄 ផ្លាស់ប្តូរលេខកូដ</button>
                         </div>
@@ -793,7 +793,7 @@
                         <p style="color: var(--text-muted); font-size: var(--fs-14); margin-bottom: 10px;">ផ្នែកនេះត្រូវបានចាក់សោរជាពិសេស។ សូមចុចប៊ូតុងដោះសោខាងលើដើម្បីបង្ហាញប៊ូតុងគ្រប់គ្រង។</p>
                         
                         <div id="quickToolsPassBox" style="display: none; gap: 10px; align-items: center; margin-top: 12px; margin-bottom: 12px; background: rgba(6, 182, 212, 0.08); padding: 12px; border-radius: 10px; border: 1px dashed #06b6d4;">
-                            <input type="password" id="quickToolsMasterPassInput" class="form-control" placeholder="🔐 បញ្ចូលលេខកូដសម្ងាត់ពិសេស (Master Password)..." style="flex: 1;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.verifyQuickToolsPass();}">
+                            <input type="text" id="quickToolsMasterPassInput" class="form-control" placeholder="🔐 បញ្ចូលលេខកូដសម្ងាត់ពិសេស (Master Password)..." style="flex: 1; -webkit-text-security: disc;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.verifyQuickToolsPass();}" autocomplete="off" spellcheck="false">
                             <button type="button" class="btn btn-primary" onclick="window.verifyQuickToolsPass()">✅ យល់ព្រម</button>
                         </div>
 
