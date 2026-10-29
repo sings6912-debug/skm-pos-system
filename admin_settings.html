@@ -355,34 +355,44 @@
                     </div>
                 </div>
 
-                <!-- 🌟 កន្លែង Upload ឡូហ្គោ និងសារ៉េរាង/ទំហំ (Logo Customizer) 🌟 -->
-                <div style="display: flex; gap: 15px; flex-wrap: wrap;">
-                    <div style="flex: 1; min-width: 250px; background: var(--card-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border-color); text-align: center;">
-                        <label style="font-size: 13px; display:block; margin-bottom: 10px; font-weight: bold;">ឡូហ្គោហាង (Shop Logo):</label>
+                <!-- 🌟 កន្លែង Upload ឡូហ្គោ និងបញ្ចូល Image URL (Logo Manager) 🌟 -->
+                <div style="background: var(--card-bg); padding: 16px; border-radius: 14px; border: 1px solid var(--border-color); margin-top: 10px;">
+                    <label style="font-size: 13px; display:block; margin-bottom: 8px; font-weight: bold; color: var(--brand-dark);">
+                        <i class="fa-solid fa-image" style="color: var(--brand-cyan);"></i> ឡូហ្គោហាង (Shop Logo URL / Upload):
+                    </label>
+
+                    <!-- បញ្ចូល Image Link ឬ Upload រូបភាព -->
+                    <div style="display: flex; gap: 8px; margin-bottom: 10px;">
+                        <input type="text" id="setShopLogoUrl" class="input-st" placeholder="https://... ដាក់តំណភ្ជាប់រូបភាព Logo ទីនេះ (ឬចុច Upload)" style="flex: 1; margin-bottom: 0;" oninput="onLogoUrlInput(this.value)" onchange="saveAdminSettings()">
                         <input type="file" id="shopLogoInput" accept="image/*" style="display:none;" onchange="handleShopLogo(event)">
-                        <button class="btn-action" style="width:100%; justify-content: center; background: var(--brand-dark); color: #fff;" onclick="document.getElementById('shopLogoInput').click()"><i class="fa-solid fa-camera"></i> ជ្រើសរើសឡូហ្គោ</button>
-                        
-                        <div id="logoControlsWrapper" style="display: none; margin-top: 15px; text-align: left; background: var(--store-bg); padding: 10px; border-radius: 8px;">
-                            <label style="font-size: 11px; color: var(--text-muted); font-weight: bold;">ទម្រង់ (Shape):</label>
-                            <select id="logoShapeSelect" class="input-st" style="font-size: 12px; padding: 6px; width: 100%; margin-bottom: 10px;" onchange="updateLogoPreview(); saveAdminSettings();">
-                                <option value="circle">រង្វង់មូល (Circle)</option>
-                                <option value="rectangle">ចតុកោណ (Rectangle)</option>
-                            </select>
-                            
-                            <label style="font-size: 11px; color: var(--text-muted); font-weight: bold; display: flex; justify-content: space-between;">
-                                ទំហំ (Scale): <span id="logoScaleLabel" style="color: var(--brand-cyan);">1.0x</span>
-                            </label>
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <span style="font-size: 11px; color: var(--text-muted);">តូច</span>
-                                <input type="range" id="logoScaleSlider" min="0.5" max="3.0" step="0.1" value="1" style="flex: 1; cursor: pointer; accent-color: var(--brand-cyan);" oninput="updateLogoPreview();" onchange="saveAdminSettings();">
-                                <span style="font-size: 11px; color: var(--text-muted);">ធំ</span>
+                        <button type="button" class="input-st" style="width: auto; cursor: pointer; background: var(--brand-dark); color: #fff; border: none; padding: 0 16px; white-space: nowrap;" onclick="document.getElementById('shopLogoInput').click()"><i class="fa-solid fa-upload"></i> Upload</button>
+                    </div>
+                    
+                    <div id="logoControlsWrapper" style="display: none; margin-top: 15px; background: var(--store-bg); padding: 12px; border-radius: 10px; border: 1px dashed var(--border-color);">
+                        <div style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap;">
+                            <div style="flex: 1; min-width: 140px;">
+                                <label style="font-size: 12px; color: var(--text-muted); font-weight: bold; margin-bottom: 4px; display: block;">ទម្រង់ (Shape):</label>
+                                <select id="logoShapeSelect" class="input-st" style="font-size: 13px; padding: 8px;" onchange="updateLogoPreview(); saveAdminSettings();">
+                                    <option value="circle">រង្វង់មូល (Circle)</option>
+                                    <option value="rectangle">ចតុកោណ (Rectangle)</option>
+                                </select>
+                            </div>
+                            <div style="flex: 1.5; min-width: 180px;">
+                                <label style="font-size: 12px; color: var(--text-muted); font-weight: bold; display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <span>ទំហំ (Scale):</span> <span id="logoScaleLabel" style="color: var(--brand-cyan); font-weight: 900;">1.0x</span>
+                                </label>
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 11px; color: var(--text-muted);">តូច</span>
+                                    <input type="range" id="logoScaleSlider" min="0.5" max="3.0" step="0.1" value="1" style="flex: 1; cursor: pointer; accent-color: var(--brand-cyan);" oninput="updateLogoPreview();" onchange="saveAdminSettings();">
+                                    <span style="font-size: 11px; color: var(--text-muted);">ធំ</span>
+                                </div>
                             </div>
                         </div>
-                        
-                        <!-- កន្លែងបង្ហាញ Preview ផ្ទាល់ៗ -->
-                        <div id="logoPreviewContainer" style="width: 90px; height: 90px; margin: 15px auto 0; overflow: hidden; border: 2px dashed var(--border-color); background: transparent; display: none; justify-content: center; align-items: center;">
-                            <img id="shopLogoPreview" src="" style="display: none; transition: transform 0.1s ease;">
-                        </div>
+                    </div>
+                    
+                    <!-- កន្លែងបង្ហាញ Preview ផ្ទាល់ៗ -->
+                    <div id="logoPreviewContainer" style="width: 100px; height: 100px; margin: 15px auto 0; overflow: hidden; border: 2px dashed var(--border-color); background: #fff; display: none; justify-content: center; align-items: center; box-shadow: 0 4px 12px rgba(0,0,0,0.05);">
+                        <img id="shopLogoPreview" src="" style="display: none; transition: transform 0.1s ease;">
                     </div>
                 </div>
             </div>
@@ -454,15 +464,16 @@
                 <input type="text" id="setSocialLink" class="input-st" placeholder="តំណភ្ជាប់ URL (Link)..." onchange="saveAdminSettings()">
             </div>
 
+            <!-- 🌟 SECTION: រូបភាព QR Code ទូទាត់ប្រាក់ (Shop QR URL / Upload) 🌟 -->
             <div class="form-group">
-                <label>រូបភាព QR Code ទូទាត់ប្រាក់ (ជំនួស/Fallback)</label>
+                <label>រូបភាព QR Code ទូទាត់ប្រាក់ (Shop QR URL / Upload):</label>
                 <div style="display: flex; gap: 8px; margin-bottom: 8px;">
-                    <input type="text" id="setMenuQR" class="input-st" placeholder="Link ឬ Base64..." style="margin-bottom:0;" onchange="saveAdminSettings()">
+                    <input type="text" id="setMenuQR" class="input-st" placeholder="https://... ដាក់តំណភ្ជាប់រូបភាព QR ឬចុច Upload" style="margin-bottom:0; flex:1;" oninput="onQrUrlInput(this.value)" onchange="saveAdminSettings()">
                     <input type="file" id="qrFile" accept="image/*" style="display:none;" onchange="uploadQR(event)">
-                    <button class="input-st" style="width: auto; cursor: pointer;" onclick="document.getElementById('qrFile').click()"><i class="fa-solid fa-upload"></i></button>
+                    <button class="input-st" style="width: auto; cursor: pointer; background: var(--brand-dark); color: #fff; border: none; padding: 0 16px; white-space: nowrap;" onclick="document.getElementById('qrFile').click()"><i class="fa-solid fa-upload"></i> Upload</button>
                 </div>
                 <div class="preview-box" id="qrPreviewContainer" style="display: none;">
-                    <img id="menuQRPreview" src="" alt="QR Preview" style="display: none;">
+                    <img id="menuQRPreview" src="" alt="QR Preview" style="display: none; max-height: 140px;">
                 </div>
             </div>
             
@@ -892,7 +903,7 @@
     let menuScripts = []; let posScripts = []; let showAllMenuScripts = false; let showAllPosScripts = false;
     let customPrinterPresets = []; let deptPrinters = []; let categoryRouting = {}; let posCategories = [];
 
-    // 🌟 មុខងារថ្មីសម្រាប់ Logo Shape និង Scale 🌟
+    // 🌟 មុខងារគ្រប់គ្រង Preview Logo 🌟
     function updateLogoPreview() {
         const preview = document.getElementById('shopLogoPreview');
         const container = document.getElementById('logoPreviewContainer');
@@ -900,7 +911,7 @@
         const scale = document.getElementById('logoScaleSlider').value;
         if (!preview) return;
 
-        document.getElementById('logoScaleLabel').innerText = `ទំហំ: ${parseFloat(scale).toFixed(1)}x`;
+        document.getElementById('logoScaleLabel').innerText = `${parseFloat(scale).toFixed(1)}x`;
 
         if (shape === 'circle') {
             container.style.borderRadius = '50%';
@@ -916,27 +927,77 @@
         preview.style.transform = `scale(${scale})`;
     }
 
+    // 🌟 មុខងារពេលវាយបញ្ចូល Logo URL ផ្ទាល់ 🌟
+    function onLogoUrlInput(val) {
+        val = val.trim();
+        window.shopLogo = val;
+        const preview = document.getElementById('shopLogoPreview');
+        const container = document.getElementById('logoPreviewContainer');
+        const controls = document.getElementById('logoControlsWrapper');
+        if (val) {
+            preview.src = val;
+            preview.style.display = 'block';
+            container.style.display = 'flex';
+            controls.style.display = 'block';
+            updateLogoPreview();
+        } else {
+            preview.src = '';
+            preview.style.display = 'none';
+            container.style.display = 'none';
+            controls.style.display = 'none';
+        }
+    }
+
+    // 🌟 មុខងារពេលវាយបញ្ចូល QR URL ផ្ទាល់ 🌟
+    function onQrUrlInput(val) {
+        val = val.trim();
+        window.shopQR = val;
+        const qp = document.getElementById('menuQRPreview');
+        const container = document.getElementById('qrPreviewContainer');
+        if (val) {
+            qp.src = val;
+            qp.style.display = 'block';
+            container.style.display = 'block';
+        } else {
+            qp.src = '';
+            qp.style.display = 'none';
+            container.style.display = 'none';
+        }
+        updateLiveReceiptPreview();
+    }
+
+    // 🌟 មុខងារ Upload Logo ចូល Supabase Storage ឬកាត់បន្ថយទំហំ 🌟
     function handleShopLogo(e) { 
         const file = e.target.files[0]; if(!file) return; 
+        showToast("កំពុងដំណើរការ Upload Logo...", false);
         const reader = new FileReader(); 
         reader.onload = (ev) => { 
             const img = new Image(); 
-            img.onload = () => { 
+            img.onload = async () => { 
                 const canvas = document.createElement('canvas'); const max = 400; let w = img.width, h = img.height; 
                 if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } 
                 canvas.width = w; canvas.height = h; 
                 const ctx = canvas.getContext('2d'); 
                 ctx.clearRect(0, 0, w, h); ctx.drawImage(img, 0, 0, w, h); 
-                window.shopLogo = canvas.toDataURL('image/png', 0.9); 
+                
+                try {
+                    const blob = await getCanvasBlob(canvas, 0.85);
+                    const cloudUrl = await uploadToSupabaseStorage(blob, 'logos');
+                    window.shopLogo = cloudUrl;
+                    document.getElementById('setShopLogoUrl').value = cloudUrl;
+                    showToast("✅ Upload Logo ចូល Cloud រួចរាល់!");
+                } catch(err) {
+                    window.shopLogo = canvas.toDataURL('image/png', 0.85); 
+                    document.getElementById('setShopLogoUrl').value = window.shopLogo;
+                    showToast("⚠️ Cloud បរាជ័យ, ប្រើប្រាស់ Base64 ជំនួស!", true);
+                }
                 
                 const preview = document.getElementById('shopLogoPreview');
                 preview.src = window.shopLogo; preview.style.display = 'block'; 
                 document.getElementById('logoPreviewContainer').style.display = 'flex';
                 document.getElementById('logoControlsWrapper').style.display = 'block';
-                
-                document.getElementById('logoShapeSelect').value = 'circle';
-                document.getElementById('logoScaleSlider').value = 1;
                 updateLogoPreview();
+                saveAdminSettings();
             }; 
             img.src = ev.target.result; 
         }; 
@@ -1247,6 +1308,7 @@
             }
             
             if (window.shopLogo) {
+                document.getElementById('setShopLogoUrl').value = window.shopLogo;
                 const lp = document.getElementById('shopLogoPreview');
                 lp.src = window.shopLogo; lp.style.display = 'block';
                 document.getElementById('logoPreviewContainer').style.display = 'flex';
@@ -1315,6 +1377,7 @@
                     
                     if(d.shopLogo) {
                         window.shopLogo = d.shopLogo;
+                        document.getElementById('setShopLogoUrl').value = window.shopLogo;
                         const lp = document.getElementById('shopLogoPreview');
                         lp.src = window.shopLogo; lp.style.display = 'block';
                         document.getElementById('logoPreviewContainer').style.display = 'flex';
@@ -1619,7 +1682,7 @@
     function updateCategoryRoute(catId, printerId) { categoryRouting[catId] = printerId; saveAdminSettings(); }
 
     // ==========================================
-    // មុខងារសម្រាប់ MENU CUSTOM JS (Update ថ្មី + រុញមកលើគេបង្អស់)
+    // មុខងារសម្រាប់ MENU CUSTOM JS
     // ==========================================
     let menuScriptsExpanded = false;
 
@@ -1724,7 +1787,7 @@
     }
 
     // ==========================================
-    // មុខងារសម្រាប់ POS CUSTOM JS (Update ថ្មី + រុញមកលើគេបង្អស់)
+    // មុខងារសម្រាប់ POS CUSTOM JS
     // ==========================================
     let posScriptsExpanded = false;
 
