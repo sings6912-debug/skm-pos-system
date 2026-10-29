@@ -1069,5 +1069,51 @@
 
         window.onload = loadShopProfile;
     </script>
+    <!-- កូដសម្រាប់ទាញយករាង និងទំហំ Logo ពី Admin -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // រង់ចាំបន្តិចដើម្បីឱ្យប្រព័ន្ធទាញរូប Logo មកបង្ហាញសិន
+        setTimeout(() => {
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            try {
+                const rawSys = localStorage.getItem(`ks2_${branchId}_sys_settings`);
+                if (rawSys) {
+                    const sys = JSON.parse(rawSys);
+                    
+                    // ស្វែងរកកន្លែង Logo (ផ្អែកតាម Tag រូបភាព)
+                    const logoContainers = document.querySelectorAll('img');
+                    
+                    logoContainers.forEach(logoImg => {
+                        // រកមើលតែរូបណាដែលជា Logo ហាង (ច្រើនតែមានផ្ទុកទិន្នន័យ base64 ឬចេញពី storage)
+                        if (logoImg.src.length > 100 || logoImg.id.toLowerCase().includes('logo')) {
+                            
+                            // ១. កំណត់ទម្រង់រាង (Shape)
+                            if (sys.logoShape === 'rectangle') {
+                                logoImg.style.borderRadius = '12px'; // រាងចតុកោណ
+                                logoImg.style.objectFit = 'contain';
+                                
+                                // បើសិនជារូបមានប្រអប់ក្រៅ (Container) ក៏ត្រូវកែប្រអប់នោះទៅជាចតុកោណដែរ
+                                if(logoImg.parentElement && logoImg.parentElement.style.borderRadius === '50%'){
+                                    logoImg.parentElement.style.borderRadius = '12px';
+                                }
+                            } else {
+                                logoImg.style.borderRadius = '50%'; // រាងរង្វង់មូល
+                                logoImg.style.objectFit = 'cover';
+                            }
+                            
+                            // ២. កំណត់ទំហំរូប (Scale)
+                            if (sys.logoScale) {
+                                logoImg.style.transform = `scale(${sys.logoScale})`;
+                                logoImg.style.transition = 'transform 0.3s ease';
+                            }
+                        }
+                    });
+                }
+            } catch(error) {
+                console.error("កំហុសពេលទាញយកទម្រង់ Logo:", error);
+            }
+        }, 600); // ទុកពេល 0.6 វិនាទី
+    });
+</script>
 </body>
 </html>
