@@ -173,7 +173,11 @@
     <!-- របារបញ្ជីចំហៀង (Sidebar) -->
     <div class="sidebar" id="appSidebar">
         <div class="brand" onclick="window.openShopNameModal()" title="ចុចដើម្បីប្តូរឈ្មោះហាង ឬ Logo (Admin ប៉ុណ្ណោះ)">
-            <img id="sidebarLogo" src="" style="display:none; width: 120px; height: 120px; border-radius: 50%; object-fit: cover; margin: 0 auto 10px; border: 2px solid var(--primary);">
+            <!-- បានដកយក border និង background ចេញពី Container ខាងក្រៅ -->
+            <div id="sidebarLogoWrapper" style="width: 120px; height: 120px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
+                <!-- បានបន្ថែម border និង padding ចូលទៅក្នុងរូបភាពផ្ទាល់វិញ ដើម្បីឱ្យពេល Scale វារីកធំមកទាំងអស់ -->
+                <img id="sidebarLogo" src="" style="display:none; width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s ease; border: 2px solid var(--primary); background: rgba(0,0,0,0.05); border-radius: 50%;">
+            </div>
             <span id="displayShopName" style="display: flex; align-items: center; justify-content: center; gap: 5px;">SKM INTEGRATE <i id="editShopIcon" style="font-size: var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i></span>
             <span class="sub-text">ប្រព័ន្ធគ្រប់គ្រង ERP & POS</span>
         </div>
@@ -884,7 +888,7 @@
                     <select id="nuRole" class="form-control" style="width: 100%;">
                         <option value="sales">🛒 ផ្នែកលក់ (Sales) - អាចចូលបានតែ POS ប៉ុណ្ណោះ</option>
                         <option value="warehouse">📦 ផ្នែកឃ្លាំង (Warehouse) - អាចចូលមើលនិងបន្ថែមស្តុក</option>
-			<option value="manager">💼 មេការ (Manager) - អាចចូលលក់ មើលស្តុក និងរបាយការណ៍</option>
+                        <option value="manager">💼 មេការ (Manager) - អាចចូលលក់ មើលស្តុក និងរបាយការណ៍</option>
                         <option value="admin">👑 អ្នកគ្រប់គ្រង (Admin) - មានសិទ្ធិពេញលេញ</option>
                     </select>
                 </div>
@@ -1233,6 +1237,48 @@
 
     <!-- កូដចុះឈ្មោះ Service Worker និងមុខងារ Helper Globals -->
     <script>
+        // ==========================================
+        // 🌟 មុខងារគ្រប់គ្រងទំហំ និងរូបរាង Logo លើ Sidebar (Scale & Shape)
+        // ==========================================
+        window.applySidebarLogoSettings = function() {
+            const logoImg = document.getElementById('sidebarLogo');
+            const logoWrapper = document.getElementById('sidebarLogoWrapper');
+            if (!logoImg) return;
+
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            let sys = window.sysSettings || {};
+            try {
+                const rawSys = localStorage.getItem(`ks2_${branchId}_sys_settings`);
+                if (rawSys) sys = Object.assign({}, sys, JSON.parse(rawSys));
+            } catch(e) {}
+
+            const logoSrc = localStorage.getItem(`ks2_${branchId}_shop_logo`) || sys.shopLogo || '';
+            if (logoSrc) {
+                logoImg.src = logoSrc;
+                logoImg.style.display = 'block';
+            }
+
+            const scale = parseFloat(sys.logoScale) || 1.0;
+            const shape = sys.logoShape || 'circle';
+
+            // កំណត់ទំហំរបស់ Container (Wrapper) ជំនួសឱ្យការ Scale រូបភាពផ្ទាល់ 
+            // ព្រោះការ Scale រូបភាពដោយប្រើ CSS Transform នឹងធ្វើឱ្យរូបត្រូវបានកាត់ (crop) ដោយ Container
+            if (logoWrapper) {
+                logoWrapper.style.width = `${120 * scale}px`;
+                logoWrapper.style.height = `${120 * scale}px`;
+            }
+
+            if (shape === 'circle') {
+                if (logoWrapper) logoWrapper.style.borderRadius = '50%';
+                logoImg.style.borderRadius = '50%';
+                logoImg.style.objectFit = 'cover';
+            } else {
+                if (logoWrapper) logoWrapper.style.borderRadius = '12px';
+                logoImg.style.borderRadius = '12px';
+                logoImg.style.objectFit = 'contain';
+            }
+        };
+
         // ==========================================
         // 🌟 មុខងារប្តូររូបភាព Background ផ្ទាំង Login
         // ==========================================
@@ -1807,6 +1853,7 @@
 
         window.addEventListener('DOMContentLoaded', () => {
             window.loadTableSettingsForPOS(); 
+            if (typeof window.applySidebarLogoSettings === 'function') window.applySidebarLogoSettings();
             
             if (typeof window.handleLogin !== 'function') window.handleLogin = () => { document.getElementById('authScreen').style.display = 'none'; };
             if (typeof window.handleLogout !== 'function') window.handleLogout = () => { document.getElementById('authScreen').style.display = 'flex'; };
@@ -1846,7 +1893,7 @@
             if(typeof window.closeCustomerHistoryModal !== 'function') window.closeCustomerHistoryModal = () => document.getElementById('customerHistoryModal').style.display = 'none';
         });
     </script>
-	<!-- ========================================== -->
+    <!-- ========================================== -->
     <!-- មុខងារទាញយក និងដំណើរការ POS Custom JS ស្វ័យប្រវត្តិ -->
     <!-- ========================================== -->
     <script>
