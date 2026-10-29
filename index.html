@@ -830,7 +830,7 @@
                             <label style="display: block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">បញ្ចូល ឬប្តូរលេខកូដថ្មី (License Key):</label>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <input type="text" id="aboutLicenseInput" class="form-control" placeholder="ដាក់លេខកូដ License Key..." style="flex: 1; min-width: 220px; width: 100%;" onkeydown="if(event.key==='Enter') window.verifyAndSaveLicenseFromAbout()">
-                                <button class="btn btn-primary" onclick="window.verifyNewLicense()">🔄 បញ្ចូលកូដថ្មី</button>
+                                <button type="button" class="btn btn-primary" onclick="window.verifyNewLicense()">🔄 បញ្ចូលកូដថ្មី</button>
                             </div>
                         </div>
                     </div>
@@ -1876,7 +1876,7 @@
 <script>
     window.verifyNewLicense = async function() {
         const inputEl = document.getElementById('aboutLicenseInput');
-        const key = inputEl ? inputEl.value.trim() : '';
+        const key = inputEl ? String(inputEl.value).trim() : '';
         const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
         if (!key) {
@@ -1895,7 +1895,7 @@
             const { data, error } = await window.supabaseClient
                 .from('branch_licenses')
                 .select('*')
-                .eq('license_key', String(key))
+                .eq('license_key', key)
                 .maybeSingle();
 
             if (error || !data) {
