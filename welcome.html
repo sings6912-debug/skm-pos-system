@@ -1069,7 +1069,7 @@
 
         window.onload = loadShopProfile;
     </script>
-    <!-- កូដសម្រាប់ទាញយករាង និងទំហំ Logo ពី Admin -->
+<!-- កូដសម្រាប់ទាញយករាង និងទំហំ Logo ពី Admin (អាប់ដេតចំតួ Logo របស់ Welcome) -->
 <script>
     document.addEventListener('DOMContentLoaded', () => {
         // រង់ចាំបន្តិចដើម្បីឱ្យប្រព័ន្ធទាញរូប Logo មកបង្ហាញសិន
@@ -1079,35 +1079,30 @@
                 const rawSys = localStorage.getItem(`ks2_${branchId}_sys_settings`);
                 if (rawSys) {
                     const sys = JSON.parse(rawSys);
+                    const logoImg = document.getElementById('dynamicLogo');
                     
-                    // ស្វែងរកកន្លែង Logo (ផ្អែកតាម Tag រូបភាព)
-                    const logoContainers = document.querySelectorAll('img');
-                    
-                    logoContainers.forEach(logoImg => {
-                        // រកមើលតែរូបណាដែលជា Logo ហាង (ច្រើនតែមានផ្ទុកទិន្នន័យ base64 ឬចេញពី storage)
-                        if (logoImg.src.length > 100 || logoImg.id.toLowerCase().includes('logo')) {
-                            
-                            // ១. កំណត់ទម្រង់រាង (Shape)
-                            if (sys.logoShape === 'rectangle') {
-                                logoImg.style.borderRadius = '12px'; // រាងចតុកោណ
-                                logoImg.style.objectFit = 'contain';
-                                
-                                // បើសិនជារូបមានប្រអប់ក្រៅ (Container) ក៏ត្រូវកែប្រអប់នោះទៅជាចតុកោណដែរ
-                                if(logoImg.parentElement && logoImg.parentElement.style.borderRadius === '50%'){
-                                    logoImg.parentElement.style.borderRadius = '12px';
-                                }
-                            } else {
-                                logoImg.style.borderRadius = '50%'; // រាងរង្វង់មូល
-                                logoImg.style.objectFit = 'cover';
-                            }
-                            
-                            // ២. កំណត់ទំហំរូប (Scale)
-                            if (sys.logoScale) {
-                                logoImg.style.transform = `scale(${sys.logoScale})`;
-                                logoImg.style.transition = 'transform 0.3s ease';
-                            }
+                    if (logoImg) {
+                        const logoBox = logoImg.parentElement; // ផ្តោតលើប្រអប់ .logo-box ខាងក្រៅ
+                        
+                        // ១. កំណត់ទម្រង់រាង (Shape)
+                        if (sys.logoShape === 'rectangle') {
+                            logoBox.style.borderRadius = '12px'; // ប្តូរប្រអប់ក្រៅទៅជាចតុកោណ
+                            logoBox.style.border = 'none'; // លុបស៊ុមរង្វង់ចោលកុំឱ្យទើស
+                            logoImg.style.borderRadius = '12px'; 
+                            logoImg.style.objectFit = 'contain';
+                        } else {
+                            logoBox.style.borderRadius = '50%'; // រាងរង្វង់មូល
+                            logoBox.style.border = '2px solid rgba(16, 185, 129, 0.5)'; // ដាក់ស៊ុមរង្វង់វិញ
+                            logoImg.style.borderRadius = '50%';
+                            logoImg.style.objectFit = 'cover';
                         }
-                    });
+                        
+                        // ២. កំណត់ទំហំរូប (Scale)
+                        if (sys.logoScale) {
+                            logoImg.style.transform = `scale(${sys.logoScale})`;
+                            logoImg.style.transition = 'transform 0.3s ease';
+                        }
+                    }
                 }
             } catch(error) {
                 console.error("កំហុសពេលទាញយកទម្រង់ Logo:", error);
