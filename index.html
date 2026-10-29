@@ -1873,7 +1873,7 @@
             }, 1000); 
         });
     </script>
-<!-- កូដសម្រាប់ដំណើរការប៊ូតុង បញ្ចូលកូដ License ថ្មី (ជៀសវាងជាន់កូដចាស់) -->
+<!-- កូដផ្ទៀងផ្ទាត់ License ត្រឹមត្រូវតាមស្ដង់ដារ JavaScript (Fixed ReferenceError) -->
 <script>
     window.verifyNewLicense = async function() {
         const inputEl = document.getElementById('aboutLicenseInput');
@@ -1886,16 +1886,15 @@
         try {
             window.ksMsg("⏳ កំពុងផ្ទៀងផ្ទាត់កូដ...", "ជូនដំណឹង");
 
-            // ទាញទិន្នន័យពី Supabase Table 'branch_licenses'
+            // ឆែករក license_key ក្នុង Database ផ្ទាល់ដោយកំណត់ជា Text
             const { data, error } = await window.supabaseClient
                 .from('branch_licenses')
                 .select('*')
-                .eq('branch_id', branchId)
-                .eq('license_key', key)
+                .eq('license_key', String(key))
                 .maybeSingle();
 
             if (error || !data) {
-                return window.ksMsg(`❌ លេខកូដមិនត្រឹមត្រូវ ឬមិនមែនសម្រាប់សាខានេះទេ!\n(សូមបញ្ជាក់៖ កូដនេះត្រូវតែបង្កើតសម្រាប់សាខាឈ្មោះ "${branchId}")`, "បរាជ័យ");
+                return window.ksMsg("❌ លេខកូដ License នេះមិនមានក្នុងប្រព័ន្ធទេ!", "បរាជ័យ");
             }
 
             if (data.is_active === false) return window.ksMsg("❌ លេខកូដនេះត្រូវបានបិទ (Inactive)!", "បរាជ័យ");
