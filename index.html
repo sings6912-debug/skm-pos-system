@@ -1241,25 +1241,40 @@
         // 🌟 មុខងារគ្រប់គ្រងទំហំ និងរូបរាង Logo លើ Sidebar (Scale & Shape)
         // ==========================================
         window.applySidebarLogoSettings = function() {
-    const logoImg = document.getElementById('sidebarLogo');
-    const logoWrapper = document.getElementById('sidebarLogoWrapper');
-    if (!logoImg) return;
+            const logoImg = document.getElementById('sidebarLogo');
+            const logoWrapper = document.getElementById('sidebarLogoWrapper');
+            if (!logoImg) return;
 
-    const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-    let sys = window.sysSettings || {};
-    try {
-        const rawSys = localStorage.getItem(`ks2_${branchId}_sys_settings`);
-        if (rawSys) sys = Object.assign({}, sys, JSON.parse(rawSys));
-    } catch(e) {}
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            let sys = window.sysSettings || {};
+            try {
+                const rawSys = localStorage.getItem(`ks2_${branchId}_sys_settings`);
+                if (rawSys) sys = Object.assign({}, sys, JSON.parse(rawSys));
+            } catch(e) {}
 
-    const logoSrc = localStorage.getItem(`ks2_${branchId}_shop_logo`) || sys.shopLogo || '';
-    if (logoSrc) {
-        logoImg.src = logoSrc;
-        logoImg.style.display = 'block';
-    }
+            const logoSrc = localStorage.getItem(`ks2_${branchId}_shop_logo`) || sys.shopLogo || '';
+            if (logoSrc) {
+                logoImg.src = logoSrc;
+                logoImg.style.display = 'block';
+            }
 
-    const scale = parseFloat(sys.logoScale) || 1.0;
-    const shape = sys.logoShape || 'circle';
+            const scale = parseFloat(sys.logoScale) || 1.0;
+            const shape = sys.logoShape || 'circle';
+
+            // 🌟 ប្រើ Transform Scale លើរូបភាពផ្ទាល់ ដើម្បីឱ្យវា Zoom និង Crop ដូច Admin Settings បេះបិទ
+            logoImg.style.transform = `scale(${scale})`;
+            logoImg.style.transformOrigin = 'center center';
+
+            if (shape === 'circle') {
+                if (logoWrapper) logoWrapper.style.borderRadius = '50%';
+                logoImg.style.borderRadius = '50%';
+                logoImg.style.objectFit = 'cover';
+            } else {
+                if (logoWrapper) logoWrapper.style.borderRadius = '12px';
+                logoImg.style.borderRadius = '12px';
+                logoImg.style.objectFit = 'contain';
+            }
+        };
 
     // 🌟 កំណត់ទំហំ Wrapper ឱ្យថេរ 120px ស្របតាមរចនាប័ទ្ម Sidebar
     if (logoWrapper) {
@@ -1287,7 +1302,6 @@
         logoImg.style.setProperty('border-radius', '12px', 'important');
         logoImg.style.setProperty('object-fit', 'contain', 'important');
     }
-};
 
         // ==========================================
         // 🌟 មុខងារប្តូររូបភាព Background ផ្ទាំង Login
