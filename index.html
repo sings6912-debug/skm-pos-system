@@ -1271,34 +1271,6 @@
         logoWrapper.style.setProperty('justify-content', 'center', 'important');
     }
 
-    // 🌟 บังคับទំហំរូបភាព និងប្រើ transform: scale() ឱ្យដូច Admin Settings បេះបិទ
-    logoImg.style.setProperty('width', '120px', 'important');
-    logoImg.style.setProperty('height', '120px', 'important');
-    logoImg.style.setProperty('max-width', 'none', 'important');
-    logoImg.style.setProperty('transform', `scale(${scale})`, 'important');
-    logoImg.style.setProperty('transform-origin', 'center center', 'important');
-
-    if (shape === 'circle') {
-        if (logoWrapper) logoWrapper.style.setProperty('border-radius', '50%', 'important');
-        logoImg.style.setProperty('border-radius', '50%', 'important');
-        logoImg.style.setProperty('object-fit', 'cover', 'important');
-    } else {
-        if (logoWrapper) logoWrapper.style.setProperty('border-radius', '12px', 'important');
-        logoImg.style.setProperty('border-radius', '12px', 'important');
-        logoImg.style.setProperty('object-fit', 'contain', 'important');
-    }
-};
-
-    // 🌟 កំណត់ទំហំ Wrapper ឱ្យថេរ 120px ស្របតាមរចនាប័ទ្ម Sidebar
-    if (logoWrapper) {
-        logoWrapper.style.setProperty('width', '120px', 'important');
-        logoWrapper.style.setProperty('height', '120px', 'important');
-        logoWrapper.style.setProperty('overflow', 'hidden', 'important');
-        logoWrapper.style.setProperty('display', 'flex', 'important');
-        logoWrapper.style.setProperty('align-items', 'center', 'important');
-        logoWrapper.style.setProperty('justify-content', 'center', 'important');
-    }
-
     // 🌟 ទំហំរូបភាព និងប្រើ transform: scale() ឱ្យដូច Admin Settings បេះបិទ
     logoImg.style.setProperty('width', '120px', 'important');
     logoImg.style.setProperty('height', '120px', 'important');
@@ -1315,6 +1287,7 @@
         logoImg.style.setProperty('border-radius', '12px', 'important');
         logoImg.style.setProperty('object-fit', 'contain', 'important');
     }
+};
 
         // ==========================================
         // 🌟 មុខងារប្តូររូបភាព Background ផ្ទាំង Login
