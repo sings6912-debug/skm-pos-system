@@ -1873,5 +1873,68 @@
             }, 1000); 
         });
     </script>
+	<!-- កូដសម្រាប់ដំណើរការប៊ូតុង បញ្ចូលកូដ License ថ្មី ក្នុងផ្ទាំង About -->
+<script>
+    window.verifyAndSaveLicenseFromAbout = async function() {
+        const inputEl = document.getElementById('aboutLicenseInput');
+        const key = inputEl ? inputEl.value.trim() : '';
+        const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+
+        if (!key) {
+            if (typeof window.showToast === 'function') window.showToast("⚠️ សូមបញ្ចូលលេខកូដ License ជាមុនសិន!", true);
+            return;
+        }
+
+        if (!navigator.onLine || !window.supabaseClient) {
+            if (typeof window.showToast === 'function') window.showToast("⚠️ គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់កូដជាមួយ Server បានទេ។", true);
+            return;
+        }
+
+        try {
+            if (typeof window.showToast === 'function') window.showToast("⏳ កំពុងផ្ទៀងផ្ទាត់កូដ...");
+
+            // ទាញទិន្នន័យពី Supabase Table 'branch_licenses'
+            const { data, error } = await window.supabaseClient
+                .from('branch_licenses')
+                .select('*')
+                .eq('branch_id', branchId)
+                .eq('license_key', key)
+                .maybeSingle();
+
+            if (error || !data) {
+                if (typeof window.showToast === 'function') window.showToast("❌ លេខកូដមិនត្រឹមត្រូវ ឬមិនមែនសម្រាប់សាខានេះទេ!", true);
+                return;
+            }
+
+            if (data.is_active === false) {
+                if (typeof window.showToast === 'function') window.showToast("❌ លេខកូដនេះត្រូវបានបិទ (Inactive)!", true);
+                return;
+            }
+
+            const expiryDate = new Date(data.expires_at);
+            if (expiryDate < new Date()) {
+                if (typeof window.showToast === 'function') window.showToast("❌ លេខកូដនេះបានផុតកំណត់ហើយ!", true);
+                return;
+            }
+
+            // បើកូដត្រូវ ធ្វើការ Save ចូល LocalStorage
+            localStorage.setItem(`ks2_${branchId}_license_key`, key);
+            localStorage.setItem(`ks2_${branchId}_license_expiry`, data.expires_at);
+            
+            inputEl.value = '';
+            if (typeof window.showToast === 'function') window.showToast("✅ បញ្ចូលកូដជោគជ័យ! ប្រព័ន្ធបើកដំណើរការពេញលេញ។");
+            
+            // លុបផ្ទាំងចាក់សោរបើមាន និង Refresh ទំព័រ ដើម្បី Update ថ្ងៃផុតកំណត់
+            const lockScreen = document.getElementById('licenseLockScreen');
+            if (lockScreen) lockScreen.style.display = 'none';
+            
+            setTimeout(() => { window.location.reload(); }, 1500);
+
+        } catch (err) {
+            console.error("License Verification Error:", err);
+            if (typeof window.showToast === 'function') window.showToast("❌ មានបញ្ហាក្នុងការភ្ជាប់ទៅ Server!", true);
+        }
+    };
+</script>
 </body>
 </html>
