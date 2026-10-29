@@ -702,8 +702,8 @@
             });
         }
 
-        const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+const SUPABASE_URL = 'https://qlzyyfqjwudbapgwsugu.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ';
         
         let supabaseClient = null;
         if (window.supabase) {
@@ -1101,11 +1101,31 @@
                             }
                         }
 
-                        // 🌟 Process Products (ពី Table 'pos_products') 
+                        // 🌟 Process Products (ទាញយកពី branch_store ជាអាទិភាព)
                         let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
                         if (d.deletedProducts) deletedProd = [...new Set([...deletedProd, ...d.deletedProducts])];
 
-                        if (productsRes && productsRes.data && productsRes.data.length > 0) {
+                        // ស្វែងរក Key ទំនិញក្នុង d ស្វ័យប្រវត្តិ ទោះជាហាងថ្មី ឬអក្សរតូចធំ
+                        const searchBranch = String(BRANCH).toLowerCase().trim();
+                        let rawInv = null;
+
+                        for (const key of Object.keys(d)) {
+                            const kLower = key.toLowerCase();
+                            if (kLower.includes(searchBranch) && (kLower.includes('inv_pro') || kLower.includes('inventory'))) {
+                                rawInv = d[key];
+                                break;
+                            }
+                        }
+
+                        if (!rawInv) rawInv = d.inventory || null;
+
+                        if (typeof rawInv === 'string') {
+                            try { rawInv = JSON.parse(rawInv); } catch(e) { rawInv = null; }
+                        }
+
+                        if (Array.isArray(rawInv) && rawInv.length > 0) {
+                            inventory = rawInv.filter(p => p && !deletedProd.includes(String(p.id)));
+                        } else if (productsRes && productsRes.data && productsRes.data.length > 0) {
                             let dbProducts = productsRes.data.map(p => ({
                                 id: p.id,
                                 customId: p.custom_id || p.id,
@@ -1122,9 +1142,6 @@
                                 desc: p.desc || '' 
                             }));
                             inventory = dbProducts.filter(p => p && !deletedProd.includes(String(p.id)));
-                        } else if (d.inventory && Array.isArray(d.inventory)) {
-                            // Fallback to JSON Format
-                            inventory = d.inventory.filter(p => p && !deletedProd.includes(String(p.id)));
                         }
                         
                         const nm = d.shopName || 'Shop Name';
@@ -1708,10 +1725,18 @@
 
                 d.invoices.unshift(ord);
 
+                let targetInv = d[`ks2_${BRANCH}_inv_pro`] || d.inventory || [];
+                if (typeof targetInv === 'string') {
+                    try { targetInv = JSON.parse(targetInv); } catch(e) { targetInv = []; }
+                }
+
                 cart.forEach(c => {
-                    let i = (d.inventory || []).find(x => x && String(x.id) === String(c.id));
+                    let i = targetInv.find(x => x && String(x.id) === String(c.id));
                     if(i) i.qty = Math.max(0, (parseFloat(i.qty) || 0) - c.qty);
                 });
+
+                d[`ks2_${BRANCH}_inv_pro`] = targetInv;
+                d.inventory = targetInv;
 
                 if (!TABLE_NO && n && n !== 'អតិថិជនទូទៅ') {
                     if (!d.customers) d.customers = [];
@@ -1747,7 +1772,7 @@
                 }
 
                 localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(d.invoices));
-                localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(d.inventory || []));
+                localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(targetInv));
                 if (d.customers) localStorage.setItem(`ks2_${BRANCH}_customers_pro`, JSON.stringify(d.customers));
                 if (d.sysSettings) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
                 

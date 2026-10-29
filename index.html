@@ -829,7 +829,7 @@
                         <div style="background: rgba(0,0,0,0.05); padding: 15px; border-radius: 8px; border: 1px solid var(--border);">
                             <label style="display: block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">បញ្ចូល ឬប្តូរលេខកូដថ្មី (License Key):</label>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                                <input type="text" id="aboutLicenseInput" class="form-control" placeholder="ដាក់លេខកូដ License Key..." style="flex: 1; min-width: 220px; width: 100%;" onkeydown="if(event.key==='Enter') window.verifyAndSaveLicenseFromAbout()">
+                                <input type="text" id="aboutLicenseInput" class="form-control" placeholder="ដាក់លេខកូដ License Key..." style="flex: 1; min-width: 220px; width: 100%;" onkeydown="if(event.key==='Enter') window.verifyNewLicense()">
                                 <button type="button" class="btn btn-primary" onclick="window.verifyNewLicense()">🔄 បញ្ចូលកូដថ្មី</button>
                             </div>
                         </div>
@@ -1851,7 +1851,6 @@
     <!-- ========================================== -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
-            // ទុកពេល 1 វិនាទី ឱ្យប្រព័ន្ធ POS ដើរចប់សិន ទើបរត់កូដបន្ថែម ដើម្បីការពារ Error
             setTimeout(() => {
                 const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
                 try {
@@ -1872,63 +1871,75 @@
                 }
             }, 1000); 
         });
+
+        // 🔑 មុខងារផ្ទៀងផ្ទាត់ License (ដំណើរការទាំងលើ About និង Lock Screen)
+        window.verifyNewLicense = async function() {
+            const inputEl = document.getElementById('aboutLicenseInput') || document.getElementById('licenseInputBox');
+            const key = inputEl ? String(inputEl.value).trim() : '';
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+
+            if (!key) {
+                if (typeof window.ksMsg === 'function') window.ksMsg("សូមបញ្ចូលលេខកូដ License ជាមុនសិន!", "បរាជ័យ");
+                else alert("សូមបញ្ចូលលេខកូដ License ជាមុនសិន!");
+                return;
+            }
+
+            if (!navigator.onLine || !window.supabaseClient) {
+                if (typeof window.ksMsg === 'function') window.ksMsg("គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់បានទេ។", "បរាជ័យ");
+                else alert("គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់បានទេ។");
+                return;
+            }
+
+            try {
+                if (typeof window.ksMsg === 'function') window.ksMsg("កំពុងផ្ទៀងផ្ទាត់កូដ...", "ជូនដំណឹង");
+
+                const { data, error } = await window.supabaseClient
+                    .from('branch_licenses')
+                    .select('*')
+                    .eq('license_key', key)
+                    .maybeSingle();
+
+                if (error || !data) {
+                    if (typeof window.ksMsg === 'function') window.ksMsg("លេខកូដ License មិនមានក្នុងប្រព័ន្ធទេ!", "បរាជ័យ");
+                    return;
+                }
+
+                if (data.is_active === false) {
+                    if (typeof window.ksMsg === 'function') window.ksMsg("លេខកូដនេះត្រូវបានបិទ!", "បរាជ័យ");
+                    return;
+                }
+
+                const expiryDate = new Date(data.expires_at);
+                if (expiryDate < new Date()) {
+                    if (typeof window.ksMsg === 'function') window.ksMsg("លេខកូដនេះបានផុតកំណត់ហើយ!", "បរាជ័យ");
+                    return;
+                }
+
+                localStorage.setItem('ks2_' + branchId + '_license_key', key);
+                localStorage.setItem('ks2_' + branchId + '_license_expiry', data.expires_at);
+                
+                if (inputEl) inputEl.value = '';
+                
+                const doneAction = function() {
+                    const lockScreen = document.getElementById('licenseLockScreen');
+                    if (lockScreen) lockScreen.style.display = 'none';
+                    window.location.reload();
+                };
+
+                if (typeof window.ksMsg === 'function') {
+                    window.ksMsg("បញ្ចូលកូដជោគជ័យ! ប្រព័ន្ធបើកដំណើរការពេញលេញ។", "ជោគជ័យ", false, doneAction);
+                } else {
+                    doneAction();
+                }
+
+            } catch (err) {
+                console.error("License Verification Error:", err);
+                if (typeof window.ksMsg === 'function') window.ksMsg("មានបញ្ហាក្នុងការភ្ជាប់ទៅ Server!", "បរាជ័យ");
+            }
+        };
+
+        // ភ្ជាប់ឈ្មោះ Function ទាំងពីរឱ្យស្គាល់គ្នាពេលប្រព័ន្ធជាប់សោរ
+        window.verifyAndSaveLicense = window.verifyNewLicense;
     </script>
-<script>
-    window.verifyNewLicense = async function() {
-        const inputEl = document.getElementById('aboutLicenseInput');
-        const key = inputEl ? String(inputEl.value).trim() : '';
-        const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-
-        if (!key) {
-            window.ksMsg("សូមបញ្ចូលលេខកូដ License ជាមុនសិន!", "បរាជ័យ");
-            return;
-        }
-
-        if (!navigator.onLine || !window.supabaseClient) {
-            window.ksMsg("គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់បានទេ។", "បរាជ័យ");
-            return;
-        }
-
-        try {
-            window.ksMsg("កំពុងផ្ទៀងផ្ទាត់កូដ...", "ជូនដំណឹង");
-
-            const { data, error } = await window.supabaseClient
-                .from('branch_licenses')
-                .select('*')
-                .eq('license_key', key)
-                .maybeSingle();
-
-            if (error || !data) {
-                window.ksMsg("លេខកូដ License មិនមានក្នុងប្រព័ន្ធទេ!", "បរាជ័យ");
-                return;
-            }
-
-            if (data.is_active === false) {
-                window.ksMsg("លេខកូដនេះត្រូវបានបិទ!", "បរាជ័យ");
-                return;
-            }
-
-            const expiryDate = new Date(data.expires_at);
-            if (expiryDate < new Date()) {
-                window.ksMsg("លេខកូដនេះបានផុតកំណត់ហើយ!", "បរាជ័យ");
-                return;
-            }
-
-            localStorage.setItem('ks2_' + branchId + '_license_key', key);
-            localStorage.setItem('ks2_' + branchId + '_license_expiry', data.expires_at);
-            
-            inputEl.value = '';
-            window.ksMsg("បញ្ចូលកូដជោគជ័យ! ប្រព័ន្ធបើកដំណើរការពេញលេញ។", "ជោគជ័យ", false, function() {
-                const lockScreen = document.getElementById('licenseLockScreen');
-                if (lockScreen) lockScreen.style.display = 'none';
-                window.location.reload();
-            });
-
-        } catch (err) {
-            console.error("License Verification Error:", err);
-            window.ksMsg("មានបញ្ហាក្នុងការភ្ជាប់ទៅ Server!", "បរាជ័យ");
-        }
-    };
-</script>
 </body>
 </html>
