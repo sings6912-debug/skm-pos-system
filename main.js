@@ -1446,9 +1446,6 @@ window.setSyncStatus = function(status, text) {
 // ==========================================
 // 6. MASTER REAL-TIME DATA SAVE & SYNC (Unified Sync to DB)
 // ==========================================
-// ==========================================
-// 6. MASTER REAL-TIME DATA SAVE & SYNC (Unified Sync to DB)
-// ==========================================
 window.manualCloudSync = async function(isAuto = false) {
     if (!window.supabaseClient || !navigator.onLine) {
         if (!isAuto) window.setSyncStatus('error', 'គ្មានអ៊ីនធឺណិត (Offline)');
