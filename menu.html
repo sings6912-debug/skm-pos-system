@@ -1837,5 +1837,46 @@
 
         window.onload = init;
     </script>
+<!-- កូដសម្រាប់ទាញយករាង និងទំហំ Logo ពី Admin (អាប់ដេតចំតួ Logo របស់ Menu) -->
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        // រង់ចាំបន្តិចដើម្បីឱ្យប្រព័ន្ធទាញរូប Logo មកបង្ហាញសិន
+        setTimeout(() => {
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            try {
+                const rawSys = localStorage.getItem(`ks2_${branchId}_sys_settings`);
+                if (rawSys) {
+                    const sys = JSON.parse(rawSys);
+                    
+                    // ក្នុង menu.html នេះ Logo គឺមាន ID ឈ្មោះ lpLogo
+                    const logoImg = document.getElementById('lpLogo');
+                    
+                    if (logoImg) {
+                        // ១. កំណត់ទម្រង់រាង (Shape)
+                        if (sys.logoShape === 'rectangle') {
+                            logoImg.style.borderRadius = '12px'; // រាងចតុកោណ
+                            logoImg.style.border = 'none'; // លុបស៊ុមពណ៌សចេញឱ្យស្អាត
+                            logoImg.style.objectFit = 'contain';
+                            logoImg.style.background = 'transparent';
+                        } else {
+                            logoImg.style.borderRadius = '50%'; // រាងរង្វង់មូល
+                            logoImg.style.border = '3px solid white'; // ដាក់ស៊ុមពណ៌សវិញ
+                            logoImg.style.objectFit = 'cover';
+                            logoImg.style.background = '#fff';
+                        }
+                        
+                        // ២. កំណត់ទំហំរូប (Scale)
+                        if (sys.logoScale) {
+                            logoImg.style.transform = `scale(${sys.logoScale})`;
+                            logoImg.style.transition = 'transform 0.3s ease';
+                        }
+                    }
+                }
+            } catch(error) {
+                console.error("កំហុសពេលទាញយកទម្រង់ Logo ក្នុង Menu:", error);
+            }
+        }, 600); // ទុកពេល 0.6 វិនាទី
+    });
+</script>
 </body>
 </html>
