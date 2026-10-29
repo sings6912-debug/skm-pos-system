@@ -812,8 +812,8 @@
 <script>
     const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
-    const SUPABASE_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
-    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+    const SUPABASE_URL = 'https://qlzyyfqjwudbapgwsugu.supabase.co';
+    const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ';
     
     let supabaseClient = null;
     if (window.supabase) {
@@ -832,8 +832,12 @@
         const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
         try { activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`)); } catch(e) {}
-        if (!isSupabaseAuthed && (authPassed !== 'true' || !activeUser || String(activeUser.role).toLowerCase() !== 'admin')) {
-            if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') { } else {
+
+        const isAdminRole = activeUser && String(activeUser.role).toLowerCase() === 'admin';
+        const isPinPassed = authPassed === 'true';
+
+        if (!isSupabaseAuthed && !isAdminRole && !isPinPassed) {
+            if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:') {
                 window.location.href = `welcome.html?branch=${encodeURIComponent(BRANCH)}`;
             }
         }
@@ -1633,15 +1637,24 @@
                     targetScript = menuScripts.splice(existingIdx, 1)[0];
                     targetScript.code = ev.target.result;
                     targetScript.active = true; 
+                    targetScript.isActive = true;
+                    if (!targetScript.id) targetScript.id = 'menu_script_' + Date.now();
                 } else {
-                    targetScript = { name: file.name, code: ev.target.result, active: true };
+                    targetScript = { 
+                        id: 'menu_script_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                        name: file.name, 
+                        code: ev.target.result, 
+                        active: true,
+                        isActive: true 
+                    };
                 }
                 
                 menuScripts.unshift(targetScript);
                 
                 loadedCount++;
                 if (loadedCount === files.length) {
-                    renderMenuScripts(); saveAdminSettings();
+                    renderMenuScripts(); 
+                    saveAdminSettings();
                     showToast(`✅ Upload & Update បាន ${loadedCount} ឯកសារ (Menu)!`);
                 }
             };
@@ -1651,9 +1664,13 @@
     }
     
     function renderMenuScripts() {
-        const container = document.getElementById('menuScriptsListContainer'); if(!container) return;
+        const container = document.getElementById('menuScriptsListContainer'); 
+        if (!container) return;
         container.innerHTML = '';
-        if(menuScripts.length === 0) { container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដ JS ទេ។</div>'; return; }
+        if (menuScripts.length === 0) { 
+            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">មិនទាន់មានកូដ JS ទេ។</div>'; 
+            return; 
+        }
 
         const limit = 3; 
         const total = menuScripts.length;
@@ -1661,13 +1678,14 @@
 
         for (let idx = 0; idx < showCount; idx++) {
             const script = menuScripts[idx];
-            const activeClass = script.active ? 'btn-toggle-on' : 'btn-toggle-off';
-            const activeIcon = script.active ? 'fa-toggle-on' : 'fa-toggle-off';
+            const isScriptOn = (script.active || script.isActive);
+            const activeClass = isScriptOn ? 'btn-toggle-on' : 'btn-toggle-off';
+            const activeIcon = isScriptOn ? 'fa-toggle-on' : 'fa-toggle-off';
             container.innerHTML += `
                 <div class="script-item">
                     <div class="script-name">📜 ${script.name}</div>
                     <div class="script-actions">
-                        <button class="btn-script ${activeClass}" onclick="toggleMenuScript(${idx})"><i class="fa-solid ${activeIcon}"></i> ${script.active ? 'On' : 'Off'}</button>
+                        <button class="btn-script ${activeClass}" onclick="toggleMenuScript(${idx})"><i class="fa-solid ${activeIcon}"></i> ${isScriptOn ? 'On' : 'Off'}</button>
                         <button class="btn-script btn-delete" onclick="deleteMenuScript(${idx})"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>`;
@@ -1683,7 +1701,14 @@
         }
     }
 
-    function toggleMenuScript(idx) { menuScripts[idx].active = !menuScripts[idx].active; renderMenuScripts(); saveAdminSettings(); }
+    function toggleMenuScript(idx) { 
+        const nextState = !(menuScripts[idx].active || menuScripts[idx].isActive);
+        menuScripts[idx].active = nextState; 
+        menuScripts[idx].isActive = nextState;
+        renderMenuScripts(); 
+        saveAdminSettings(); 
+    }
+
     function deleteMenuScript(idx) { menuScripts.splice(idx, 1); renderMenuScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
     function toggleAllMenuScripts() { showAllMenuScripts = !showAllMenuScripts; menuScripts.forEach(s => s.active = showAllMenuScripts); renderMenuScripts(); saveAdminSettings(); }
     function deleteAllMenuScripts() { if(confirm("តើអ្នកពិតជាចង់លុបកូដ Menu JS ទាំងអស់មែនទេ?")) { menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('🗑️ លុបទាំងអស់ជោគជ័យ!'); } }
@@ -1718,7 +1743,12 @@
                     targetScript.code = ev.target.result;
                     targetScript.active = true; 
                 } else {
-                    targetScript = { name: file.name, code: ev.target.result, active: true };
+                    targetScript = { 
+                        id: 'pos_script_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
+                        name: file.name, 
+                        code: ev.target.result, 
+                        active: true 
+                    };
                 }
                 
                 posScripts.unshift(targetScript);
