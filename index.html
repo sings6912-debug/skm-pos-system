@@ -691,7 +691,7 @@
 
                         <div style="display:flex; align-items:center; gap:12px; margin-top: 15px; font-size: var(--fs-16);">
                             <span><strong style="color:var(--text-main);">🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖</strong></span>
-                            <input type="password" id="setStorePin" class="form-control" maxlength="4" placeholder="1234" style="width: 100px; padding: 5px; height: 35px; text-align: center;" onchange="window.saveSysSettings()">
+                            <input type="text" id="setStorePin" class="form-control" maxlength="4" placeholder="1234" style="width: 100px; padding: 5px; height: 35px; text-align: center; -webkit-text-security: disc;" onchange="window.saveSysSettings()" autocomplete="off">
                         </div>
 
                         <div style="margin-top: 15px;">
