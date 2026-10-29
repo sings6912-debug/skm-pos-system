@@ -1261,12 +1261,9 @@
             const scale = parseFloat(sys.logoScale) || 1.0;
             const shape = sys.logoShape || 'circle';
 
-            // កំណត់ទំហំរបស់ Container (Wrapper) ជំនួសឱ្យការ Scale រូបភាពផ្ទាល់ 
-            // ព្រោះការ Scale រូបភាពដោយប្រើ CSS Transform នឹងធ្វើឱ្យរូបត្រូវបានកាត់ (crop) ដោយ Container
-            if (logoWrapper) {
-                logoWrapper.style.width = `${120 * scale}px`;
-                logoWrapper.style.height = `${120 * scale}px`;
-            }
+            // 🌟 ប្រើប្រាស់ transform: scale() ទៅលើរូបភាពផ្ទាល់ ដើម្បីឱ្យវា Zoom & Crop ក្នុងប្រអប់ទំហំ 120px ថេរ
+            logoImg.style.transform = `scale(${scale})`;
+            logoImg.style.transformOrigin = 'center center';
 
             if (shape === 'circle') {
                 if (logoWrapper) logoWrapper.style.borderRadius = '50%';
