@@ -830,7 +830,7 @@
                             <label style="display: block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">បញ្ចូល ឬប្តូរលេខកូដថ្មី (License Key):</label>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <input type="text" id="aboutLicenseInput" class="form-control" placeholder="ដាក់លេខកូដ License Key..." style="flex: 1; min-width: 220px; width: 100%;" onkeydown="if(event.key==='Enter') window.verifyAndSaveLicenseFromAbout()">
-                                <button class="btn btn-primary" onclick="window.verifyAndSaveLicenseFromAbout()">🔄 បញ្ចូលកូដថ្មី</button>
+                                <button class="btn btn-primary" onclick="window.verifyNewLicense()">🔄 បញ្ចូលកូដថ្មី</button>
                             </div>
                         </div>
                     </div>
@@ -1873,25 +1873,18 @@
             }, 1000); 
         });
     </script>
-	<!-- កូដសម្រាប់ដំណើរការប៊ូតុង បញ្ចូលកូដ License ថ្មី ក្នុងផ្ទាំង About -->
+<!-- កូដសម្រាប់ដំណើរការប៊ូតុង បញ្ចូលកូដ License ថ្មី (ជៀសវាងជាន់កូដចាស់) -->
 <script>
-    window.verifyAndSaveLicenseFromAbout = async function() {
+    window.verifyNewLicense = async function() {
         const inputEl = document.getElementById('aboutLicenseInput');
         const key = inputEl ? inputEl.value.trim() : '';
         const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
-        if (!key) {
-            if (typeof window.showToast === 'function') window.showToast("⚠️ សូមបញ្ចូលលេខកូដ License ជាមុនសិន!", true);
-            return;
-        }
-
-        if (!navigator.onLine || !window.supabaseClient) {
-            if (typeof window.showToast === 'function') window.showToast("⚠️ គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់កូដជាមួយ Server បានទេ។", true);
-            return;
-        }
+        if (!key) return window.ksMsg("⚠️ សូមបញ្ចូលលេខកូដ License ជាមុនសិន!", "បរាជ័យ");
+        if (!navigator.onLine || !window.supabaseClient) return window.ksMsg("⚠️ គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់បានទេ។", "បរាជ័យ");
 
         try {
-            if (typeof window.showToast === 'function') window.showToast("⏳ កំពុងផ្ទៀងផ្ទាត់កូដ...");
+            window.ksMsg("⏳ កំពុងផ្ទៀងផ្ទាត់កូដ...", "ជូនដំណឹង");
 
             // ទាញទិន្នន័យពី Supabase Table 'branch_licenses'
             const { data, error } = await window.supabaseClient
@@ -1902,37 +1895,28 @@
                 .maybeSingle();
 
             if (error || !data) {
-                if (typeof window.showToast === 'function') window.showToast("❌ លេខកូដមិនត្រឹមត្រូវ ឬមិនមែនសម្រាប់សាខានេះទេ!", true);
-                return;
+                return window.ksMsg(`❌ លេខកូដមិនត្រឹមត្រូវ ឬមិនមែនសម្រាប់សាខានេះទេ!\n(សូមបញ្ជាក់៖ កូដនេះត្រូវតែបង្កើតសម្រាប់សាខាឈ្មោះ "${branchId}")`, "បរាជ័យ");
             }
 
-            if (data.is_active === false) {
-                if (typeof window.showToast === 'function') window.showToast("❌ លេខកូដនេះត្រូវបានបិទ (Inactive)!", true);
-                return;
-            }
+            if (data.is_active === false) return window.ksMsg("❌ លេខកូដនេះត្រូវបានបិទ (Inactive)!", "បរាជ័យ");
 
             const expiryDate = new Date(data.expires_at);
-            if (expiryDate < new Date()) {
-                if (typeof window.showToast === 'function') window.showToast("❌ លេខកូដនេះបានផុតកំណត់ហើយ!", true);
-                return;
-            }
+            if (expiryDate < new Date()) return window.ksMsg("❌ លេខកូដនេះបានផុតកំណត់ហើយ!", "បរាជ័យ");
 
             // បើកូដត្រូវ ធ្វើការ Save ចូល LocalStorage
             localStorage.setItem(`ks2_${branchId}_license_key`, key);
             localStorage.setItem(`ks2_${branchId}_license_expiry`, data.expires_at);
             
             inputEl.value = '';
-            if (typeof window.showToast === 'function') window.showToast("✅ បញ្ចូលកូដជោគជ័យ! ប្រព័ន្ធបើកដំណើរការពេញលេញ។");
-            
-            // លុបផ្ទាំងចាក់សោរបើមាន និង Refresh ទំព័រ ដើម្បី Update ថ្ងៃផុតកំណត់
-            const lockScreen = document.getElementById('licenseLockScreen');
-            if (lockScreen) lockScreen.style.display = 'none';
-            
-            setTimeout(() => { window.location.reload(); }, 1500);
+            window.ksMsg("✅ បញ្ចូលកូដជោគជ័យ! ប្រព័ន្ធបើកដំណើរការពេញលេញ។", "ជោគជ័យ", false, () => {
+                const lockScreen = document.getElementById('licenseLockScreen');
+                if (lockScreen) lockScreen.style.display = 'none';
+                window.location.reload();
+            });
 
         } catch (err) {
             console.error("License Verification Error:", err);
-            if (typeof window.showToast === 'function') window.showToast("❌ មានបញ្ហាក្នុងការភ្ជាប់ទៅ Server!", true);
+            window.ksMsg("❌ មានបញ្ហាក្នុងការភ្ជាប់ទៅ Server!", "បរាជ័យ");
         }
     };
 </script>
