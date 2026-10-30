@@ -3,17 +3,15 @@
  * ធានាថារាល់ឧបករណ៍ទាំងអស់ (ទូរស័ព្ទ/កុំព្យូទ័រ) ស្គាល់គណនីដូចគ្នា និង Login បាន ១០០%
  */
 
-// 🌟 អនុគមន៍សុវត្ថិភាពសម្រាប់ទាញយក Branch Key
+// 🌟 អនុគមន៍សុវត្ថិភាពសម្រាប់ទាញយក Branch Key (គ្មានបញ្ហា Infinite Loop)
 function getSafeBranchKey(key) {
-    if (typeof window.getBranchKey === 'function') {
+    if (typeof window.getBranchKey === 'function' && window.getBranchKey !== getSafeBranchKey) {
         return window.getBranchKey(key);
     }
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
     return `ks2_${branchId}_${key}`;
 }
-if (typeof window.getBranchKey !== 'function') {
-    window.getBranchKey = getSafeBranchKey;
-}
+window.getBranchKey = getSafeBranchKey;
 
 // ទាញយកគណនីពី LocalStorage
 function loadLocalUsers() {
@@ -80,8 +78,8 @@ window.syncUsersFromCloud = async function() {
             .eq('branch_id', branchId)
             .maybeSingle();
 
-        if (!error && data && data.data_json && data.data_json[key]) {
-            let cloudUsers = data.data_json[key];
+        if (!error && data && data.data_json) {
+            let cloudUsers = data.data_json[key] || data.data_json['auth_users_pro'];
             if (typeof cloudUsers === 'string') {
                 try { cloudUsers = JSON.parse(cloudUsers); } catch(e) {}
             }
@@ -89,6 +87,7 @@ window.syncUsersFromCloud = async function() {
                 window.userAccounts = cloudUsers;
                 localStorage.setItem(key, JSON.stringify(window.userAccounts));
                 if (typeof window.renderUsersList === 'function') window.renderUsersList();
+                console.log('✅ បានទាញយកគណនីពី Cloud មកឧបករណ៍នេះជោគជ័យ!');
             }
         }
     } catch (err) {
@@ -107,7 +106,6 @@ function notifyAuthUser(msg, title = 'ជូនដំណឹង', isError = false
 }
 
 window.checkAuthentication = function(applyPermissionsCallback) {
-    // Sync គណនីពី Cloud ជានិច្ចពេលឆែក Auth
     if (typeof window.syncUsersFromCloud === 'function') {
         window.syncUsersFromCloud();
     }
@@ -161,7 +159,6 @@ window.handleLogin = async function() {
     const pInput = document.getElementById('loginPassword');
     if (!uInput || !pInput) return;
 
-    // ទាញយកគណនីពី Cloud មកបង្ហើយមុន Login ការពារឧបករណ៍ទើបបើកថ្មី
     if (typeof window.syncUsersFromCloud === 'function') {
         await window.syncUsersFromCloud();
     }
@@ -357,7 +354,7 @@ window.closeUserModal = function() {
     document.getElementById('userManageModal').style.display = 'none'; 
 };
 
-// 🌟 មុខងារ Save គណនី (ផ្ទៀងផ្ទាត់លេខកូដ Admin ត្រឹមត្រូវ និងរុញទៅ Cloud ភ្លាមៗ)
+// 🌟 មុខងារ Save គណនី (Sync ពី Cloud ជាមុនសិន ដើម្បីផ្ទៀងផ្ទាត់កូដ Admin ថ្មីបំផុត)
 window.saveNewUser = async function() {
     const editId = document.getElementById('editUserId').value; 
     const fname = document.getElementById('nuFullName').value.trim(); 
@@ -371,7 +368,12 @@ window.saveNewUser = async function() {
         return notifyAuthUser('សូមបំពេញព័ត៌មានដែលចាំបាច់ និងបញ្ជាក់លេខកូដ Admin របស់អ្នក!', 'ជូនដំណឹង', true);
     }
 
-    // ពិនិត្យកូដ Admin ដោយមិនខ្វល់ថា Session បច្ចុប្បន្នជា guest ឬអត់
+    // ទាញយក user accounts ថ្មីបំផុតពី cloud មុននឹងឆែកកូដ Admin
+    if (typeof window.syncUsersFromCloud === 'function') {
+        await window.syncUsersFromCloud();
+    }
+    window.userAccounts = loadLocalUsers();
+
     const isAdminValid = (window.userAccounts || []).some(
         x => x && (x.role === 'admin' || x.username === 'admin') && String(x.password) === adminPass
     );
@@ -420,7 +422,6 @@ window.saveNewUser = async function() {
         notifyAuthUser(`គណនី ${uname} ត្រូវបានបង្កើតដោយជោគជ័យ!`, 'ជោគជ័យ'); 
     }
 
-    // រុញទិន្នន័យឡើង Supabase ភ្លាម
     await syncUsersToCloud();
 
     window.closeUserModal(); 
@@ -451,7 +452,6 @@ window.deleteUserAccount = async function(id) {
     }
 };
 
-// 🌟 ដំណើរការទាញយកគណនីពី Cloud ភ្លាមៗពេលបើក Page
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof window.syncUsersFromCloud === 'function') window.syncUsersFromCloud();
