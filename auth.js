@@ -33,7 +33,7 @@ window.userAccounts = loadLocalUsers();
 window.activeUser = JSON.parse(localStorage.getItem(getSafeBranchKey('active_user_obj'))) || null; 
 window.currentRole = window.activeUser ? window.activeUser.role : 'guest';
 
-// 🌟 មុខងាររុញគណនីទាំងអស់ទៅកាន់ Supabase Cloud
+// 🌟 មុខងាររុញគណនីទាំងអស់ទៅកាន់ Supabase Cloud ដោយមិនឱ្យបាត់ទិន្នន័យផ្សេង
 async function syncUsersToCloud() {
     const key = getSafeBranchKey('auth_users_pro');
     localStorage.setItem(key, JSON.stringify(window.userAccounts));
@@ -41,15 +41,20 @@ async function syncUsersToCloud() {
     if (window.supabaseClient && navigator.onLine) {
         try {
             const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            
+            // ១. ទាញយកទិន្នន័យចាស់ដែលមានក្នុង Cloud មកជាមុនសិន
             const { data } = await window.supabaseClient
                 .from('branch_store')
                 .select('data_json')
                 .eq('branch_id', branchId)
                 .maybeSingle();
 
-            let payload = (data && data.data_json) ? data.data_json : {};
+            let payload = (data && data.data_json && typeof data.data_json === 'object') ? data.data_json : {};
+            
+            // ២. បញ្ចូល key គណនីបន្ថែមទៅក្នុង payload ចាស់ (មិនលុប shopQR ឬការកំណត់ផ្សេងឡើយ)
             payload[key] = window.userAccounts;
 
+            // ៣. បាញ់ទិន្នន័យត្រឡប់ទៅវិញ
             await window.supabaseClient.from('branch_store').upsert({
                 branch_id: branchId,
                 data_json: payload,
@@ -62,12 +67,13 @@ async function syncUsersToCloud() {
     }
 }
 
-// 🌟 មុខងារទាញយកគណនីពី Cloud មកដាក់ក្នុងឧបករណ៍ផ្សេងៗ
+// 🌟 មុខងារទាញយកគណនីពី Cloud មកដាក់ក្នុងឧបករណ៍
 window.syncUsersFromCloud = async function() {
     if (!window.supabaseClient || !navigator.onLine) return;
     try {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         const key = getSafeBranchKey('auth_users_pro');
+        
         const { data, error } = await window.supabaseClient
             .from('branch_store')
             .select('data_json')
@@ -83,7 +89,6 @@ window.syncUsersFromCloud = async function() {
                 window.userAccounts = cloudUsers;
                 localStorage.setItem(key, JSON.stringify(window.userAccounts));
                 if (typeof window.renderUsersList === 'function') window.renderUsersList();
-                console.log('✅ បានទាញយកគណនីពី Cloud មកឧបករណ៍នេះជោគជ័យ!');
             }
         }
     } catch (err) {
