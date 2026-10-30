@@ -1,30 +1,115 @@
 /**
- * auth.js - គ្រប់គ្រងការចូលប្រព័ន្ធ សុវត្ថិភាព និងគណនីបុគ្គលិក (Authentication & User Management)
+ * auth.js - គ្រប់គ្រងការចូលប្រព័ន្ធ សុវត្ថិភាព និងគណនីបុគ្គលិក (Multi-Device Auto-Sync Edition)
+ * ធានាថារាល់ឧបករណ៍ទាំងអស់ (ទូរស័ព្ទ/កុំព្យូទ័រ) ស្គាល់គណនីដូចគ្នា និង Login បាន ១០០%
  */
 
-window.userAccounts = JSON.parse(localStorage.getItem(window.getBranchKey('auth_users_pro'))) || [ 
-    { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' } 
-];
-window.activeUser = JSON.parse(localStorage.getItem(window.getBranchKey('active_user_obj'))) || null; 
+// 🌟 អនុគមន៍សុវត្ថិភាពសម្រាប់ទាញយក Branch Key
+function getSafeBranchKey(key) {
+    if (typeof window.getBranchKey === 'function') {
+        return window.getBranchKey(key);
+    }
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    return `ks2_${branchId}_${key}`;
+}
+if (typeof window.getBranchKey !== 'function') {
+    window.getBranchKey = getSafeBranchKey;
+}
+
+// ទាញយកគណនីពី LocalStorage
+function loadLocalUsers() {
+    try {
+        const raw = localStorage.getItem(getSafeBranchKey('auth_users_pro'));
+        if (raw) {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+    } catch(e) {}
+    return [ 
+        { id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' } 
+    ];
+}
+
+window.userAccounts = loadLocalUsers();
+window.activeUser = JSON.parse(localStorage.getItem(getSafeBranchKey('active_user_obj'))) || null; 
 window.currentRole = window.activeUser ? window.activeUser.role : 'guest';
 
-// អនុគមន៍ជំនួយសម្រាប់បង្ហាញសារជូនដំណឹងដោយសុវត្ថិភាព (ជំនួសការប្រើ alert/confirm)
+// 🌟 មុខងាររុញគណនីទាំងអស់ទៅកាន់ Supabase Cloud
+async function syncUsersToCloud() {
+    const key = getSafeBranchKey('auth_users_pro');
+    localStorage.setItem(key, JSON.stringify(window.userAccounts));
+
+    if (window.supabaseClient && navigator.onLine) {
+        try {
+            const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            const { data } = await window.supabaseClient
+                .from('branch_store')
+                .select('data_json')
+                .eq('branch_id', branchId)
+                .maybeSingle();
+
+            let payload = (data && data.data_json) ? data.data_json : {};
+            payload[key] = window.userAccounts;
+
+            await window.supabaseClient.from('branch_store').upsert({
+                branch_id: branchId,
+                data_json: payload,
+                updated_at: new Date().toISOString()
+            });
+            console.log('☁️ គណនីបុគ្គលិកត្រូវបាន Sync ទៅ Cloud រួចរាល់!');
+        } catch (err) {
+            console.warn('⚠️ កំហុសពេល Sync គណនីទៅ Cloud:', err);
+        }
+    }
+}
+
+// 🌟 មុខងារទាញយកគណនីពី Cloud មកដាក់ក្នុងឧបករណ៍ផ្សេងៗ
+window.syncUsersFromCloud = async function() {
+    if (!window.supabaseClient || !navigator.onLine) return;
+    try {
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const key = getSafeBranchKey('auth_users_pro');
+        const { data, error } = await window.supabaseClient
+            .from('branch_store')
+            .select('data_json')
+            .eq('branch_id', branchId)
+            .maybeSingle();
+
+        if (!error && data && data.data_json && data.data_json[key]) {
+            let cloudUsers = data.data_json[key];
+            if (typeof cloudUsers === 'string') {
+                try { cloudUsers = JSON.parse(cloudUsers); } catch(e) {}
+            }
+            if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+                window.userAccounts = cloudUsers;
+                localStorage.setItem(key, JSON.stringify(window.userAccounts));
+                if (typeof window.renderUsersList === 'function') window.renderUsersList();
+                console.log('✅ បានទាញយកគណនីពី Cloud មកឧបករណ៍នេះជោគជ័យ!');
+            }
+        }
+    } catch (err) {
+        console.warn('⚠️ មិនអាចទាញយកគណនីពី Cloud:', err);
+    }
+};
+
 function notifyAuthUser(msg, title = 'ជូនដំណឹង', isError = false) {
     if (typeof window.ksMsg === 'function') {
         window.ksMsg(msg, title);
     } else if (typeof window.showToast === 'function') {
         window.showToast(msg, isError);
     } else {
-        console.log(`[${title}] ${msg}`);
+        alert(msg);
     }
 }
 
 window.checkAuthentication = function(applyPermissionsCallback) {
-    // 🔒 ទប់ស្កាត់ការលួចចូលដោយរំលងទំព័រ Welcome (Security Bypass Fix)
+    // Sync គណនីពី Cloud ជានិច្ចពេលឆែក Auth
+    if (typeof window.syncUsersFromCloud === 'function') {
+        window.syncUsersFromCloud();
+    }
+
     const authPassed = sessionStorage.getItem('ks2_auth_passed');
     if (authPassed !== 'true') {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        // 💡 ដំណោះស្រាយ៖ បន្ថែម `window.location.protocol !== 'file:'` ដើម្បីឱ្យ Single File បើកបានធម្មតាដោយមិនលោត Error
         if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:' && window.location.protocol !== 'file:') {
             window.location.href = `welcome.html?branch=${encodeURIComponent(branchId)}`;
             return;
@@ -49,7 +134,6 @@ window.checkAuthentication = function(applyPermissionsCallback) {
         const posSeller = document.getElementById('posCurrentSellerDisplay'); 
         if (posSeller) posSeller.innerText = sName; 
         
-        // 🌟 កំណត់ Icon សម្រាប់តួនាទី (បូករួមទាំង Manager)
         let roleIcon = window.activeUser.role === 'admin' ? '👑 Admin' : 
                        (window.activeUser.role === 'manager' ? '💼 Manager' : 
                        (window.activeUser.role === 'sales' ? '🛒 Sales' : '📦 Warehouse')); 
@@ -67,10 +151,16 @@ window.checkAuthentication = function(applyPermissionsCallback) {
     }
 };
 
-window.handleLogin = function() {
+window.handleLogin = async function() {
     const uInput = document.getElementById('loginUsername');
     const pInput = document.getElementById('loginPassword');
     if (!uInput || !pInput) return;
+
+    // ទាញយកគណនីពី Cloud មកបង្ហើយមុន Login ការពារឧបករណ៍ទើបបើកថ្មី
+    if (typeof window.syncUsersFromCloud === 'function') {
+        await window.syncUsersFromCloud();
+    }
+    window.userAccounts = loadLocalUsers();
 
     const u = uInput.value.trim(); 
     const p = pInput.value.trim(); 
@@ -88,7 +178,7 @@ window.handleLogin = function() {
     if (foundUser) { 
         window.activeUser = foundUser; 
         window.currentRole = foundUser.role; 
-        localStorage.setItem(window.getBranchKey('active_user_obj'), JSON.stringify(window.activeUser)); 
+        localStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(window.activeUser)); 
         
         uInput.value = ''; 
         pInput.value = ''; 
@@ -100,7 +190,6 @@ window.handleLogin = function() {
         } else if (foundUser.role === 'warehouse') {
             if (typeof window.switchTab === 'function') window.switchTab('inventory', '📦 គ្រប់គ្រងស្តុក (Inventory)', document.getElementById('nav-inventory'));
         } else {
-            // សម្រាប់ Admin និង Manager ឱ្យចូលផ្ទាំង Dashboard
             if (typeof window.switchTab === 'function') window.switchTab('dashboard', '📊 ផ្ទាំងព័ត៌មានទូទៅ (Dashboard)', document.getElementById('nav-dashboard'));
         }
 
@@ -122,11 +211,10 @@ window.handleLogout = function() {
     const executeLogout = () => {
         window.activeUser = null; 
         window.currentRole = 'guest';
-        localStorage.removeItem(window.getBranchKey('active_user_obj')); 
+        localStorage.removeItem(getSafeBranchKey('active_user_obj')); 
         sessionStorage.removeItem('ks2_auth_passed');
 
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        // 💡 ដំណោះស្រាយ៖ បន្ថែម `window.location.protocol !== 'file:'` ត្រង់នេះដូចគ្នា
         if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:' && window.location.protocol !== 'file:') {
             window.location.href = `welcome.html?branch=${encodeURIComponent(branchId)}`;
         } else {
@@ -166,11 +254,7 @@ window.handleResetPassword = async function() {
             return notifyAuthUser("សូមបញ្ចូលលេខកូដសម្ងាត់ថ្មី!", d.confirmNoticeTitle || "ជូនដំណឹង", true);
         }
         window.userAccounts[userIndex].password = newP; 
-        localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
-        
-        if (typeof window.saveData === 'function') {
-            await window.saveData(window.userAccounts);
-        }
+        await syncUsersToCloud();
 
         document.getElementById('resetUsername').value = '';
         document.getElementById('resetPin').value = '';
@@ -198,12 +282,8 @@ window.handleChangePassword = async function() {
     if (userIndex !== -1 && String(window.userAccounts[userIndex].password) === oldP) { 
         window.userAccounts[userIndex].password = newP; 
         window.activeUser.password = newP;
-        localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
-        localStorage.setItem(window.getBranchKey('active_user_obj'), JSON.stringify(window.activeUser));
-        
-        if (typeof window.saveData === 'function') {
-            await window.saveData(window.userAccounts);
-        }
+        localStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(window.activeUser));
+        await syncUsersToCloud();
 
         document.getElementById('chgOldPassword').value = ''; 
         document.getElementById('chgNewPassword').value = ''; 
@@ -214,7 +294,7 @@ window.handleChangePassword = async function() {
 };
 
 window.renderUsersList = function() {
-    if (!window.activeUser || window.activeUser.role !== 'admin') return; 
+    if (!window.activeUser || (window.activeUser.role !== 'admin' && window.activeUser.role !== 'manager')) return; 
     const tbody = document.getElementById('userListTableBody');
     if (!tbody) return;
     const lang = localStorage.getItem('app_lang') || 'km';
@@ -222,7 +302,6 @@ window.renderUsersList = function() {
 
     tbody.innerHTML = (window.userAccounts || []).map(u => { 
         if (!u) return '';
-        // 🌟 បន្ថែម Badge សម្រាប់ Manager
         let badge = u.role === 'admin' ? '<span class="badge badge-admin">👑 Admin</span>' : 
                     (u.role === 'manager' ? '<span class="badge" style="background:rgba(139,92,246,0.15); color:#8b5cf6; border:1px solid rgba(139,92,246,0.3);">💼 Manager</span>' :
                     (u.role === 'sales' ? '<span class="badge badge-sales">🛒 Sales</span>' : '<span class="badge badge-warehouse">📦 Warehouse</span>')); 
@@ -273,6 +352,7 @@ window.closeUserModal = function() {
     document.getElementById('userManageModal').style.display = 'none'; 
 };
 
+// 🌟 មុខងារ Save គណនី (ផ្ទៀងផ្ទាត់លេខកូដ Admin ត្រឹមត្រូវ និងរុញទៅ Cloud ភ្លាមៗ)
 window.saveNewUser = async function() {
     const editId = document.getElementById('editUserId').value; 
     const fname = document.getElementById('nuFullName').value.trim(); 
@@ -280,15 +360,19 @@ window.saveNewUser = async function() {
     const pass = document.getElementById('nuPassword').value.trim(); 
     const pin = document.getElementById('nuPin').value.trim() || '0000'; 
     let role = document.getElementById('nuRole').value; 
-    const adminPass = document.getElementById('adminConfirmPassword').value; 
+    const adminPass = document.getElementById('adminConfirmPassword').value.trim(); 
 
     if (!uname || !pass || !role || !adminPass) {
         return notifyAuthUser('សូមបំពេញព័ត៌មានដែលចាំបាច់ និងបញ្ជាក់លេខកូដ Admin របស់អ្នក!', 'ជូនដំណឹង', true);
     }
 
-    const myAccount = (window.userAccounts || []).find(x => x && window.activeUser && x.username === window.activeUser.username); 
-    if (!myAccount || String(myAccount.password) !== adminPass) {
-        return notifyAuthUser('លេខកូដ Admin របស់អ្នកមិនត្រឹមត្រូវទេ! ប្រតិបត្តិការត្រូវបានបដិសេធ។', 'បរាជ័យ', true);
+    // ពិនិត្យកូដ Admin ដោយមិនខ្វល់ថា Session បច្ចុប្បន្នជា guest ឬអត់
+    const isAdminValid = (window.userAccounts || []).some(
+        x => x && (x.role === 'admin' || x.username === 'admin') && String(x.password) === adminPass
+    );
+
+    if (!isAdminValid) {
+        return notifyAuthUser('លេខកូដសម្ងាត់ Admin មិនត្រឹមត្រូវទេ! ប្រតិបត្តិការត្រូវបានបដិសេធ។', 'បរាជ័យ', true);
     }
     
     const usernameConflict = (window.userAccounts || []).find(
@@ -298,7 +382,6 @@ window.saveNewUser = async function() {
         return notifyAuthUser('ឈ្មោះ Login នេះមានអ្នកប្រើប្រាស់រួចហើយ សូមជ្រើសរើសឈ្មោះផ្សេង។', 'បរាជ័យ', true);
     }
 
-    // ការពារកុំឱ្យលេខ PIN របស់ Admin ជាន់គ្នាជាមួយលេខកូដហាង (Store PIN)
     const currentStorePin = (window.sysSettings && window.sysSettings.storePin) ? String(window.sysSettings.storePin).trim() : '1234';
     if (uname.toLowerCase() === 'admin' && pin === currentStorePin) {
         return notifyAuthUser("❌ លេខ PIN របស់ Admin មិនអាចដូចលេខកូដសម្ងាត់ហាង (Store PIN) បានទេ!", "PIN ជាន់គ្នា", true);
@@ -317,7 +400,7 @@ window.saveNewUser = async function() {
         existingUser.role = role; 
         if (window.activeUser && existingUser.id === window.activeUser.id) { 
             window.activeUser = existingUser; 
-            localStorage.setItem(window.getBranchKey('active_user_obj'), JSON.stringify(window.activeUser)); 
+            localStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(window.activeUser)); 
         } 
         notifyAuthUser('គណនីត្រូវបានកែប្រែដោយជោគជ័យ!', 'ជោគជ័យ'); 
     } else { 
@@ -332,17 +415,14 @@ window.saveNewUser = async function() {
         notifyAuthUser(`គណនី ${uname} ត្រូវបានបង្កើតដោយជោគជ័យ!`, 'ជោគជ័យ'); 
     }
 
-    localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
-    
-    if (typeof window.saveData === 'function') {
-        await window.saveData(window.userAccounts);
-    }
+    // រុញទិន្នន័យឡើង Supabase ភ្លាម
+    await syncUsersToCloud();
 
     window.closeUserModal(); 
     window.renderUsersList();
 };
 
-window.deleteUserAccount = function(id) { 
+window.deleteUserAccount = async function(id) { 
     const u = (window.userAccounts || []).find(x => x && x.id === id); 
     if (!u) return; 
     if (u.username === 'admin') {
@@ -354,12 +434,7 @@ window.deleteUserAccount = function(id) {
 
     const executeDeleteUser = async () => {
         window.userAccounts = (window.userAccounts || []).filter(x => x && x.id !== id); 
-        localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
-        
-        if (typeof window.saveData === 'function') {
-            await window.saveData(window.userAccounts);
-        }
-
+        await syncUsersToCloud();
         window.renderUsersList(); 
         notifyAuthUser("គណនីត្រូវបានលុបដោយជោគជ័យ!", "ជោគជ័យ"); 
     };
@@ -367,6 +442,15 @@ window.deleteUserAccount = function(id) {
     if (typeof window.ksMsg === 'function') {
         window.ksMsg(`តើអ្នកពិតជាចង់លុបគណនីបុគ្គលិកឈ្មោះ "${u.fullName || u.username}" មែនទេ?`, "បញ្ជាក់ការលុបគណនី", true, executeDeleteUser); 
     } else {
-        executeDeleteUser();
+        await executeDeleteUser();
     }
 };
+
+// 🌟 ដំណើរការទាញយកគណនីពី Cloud ភ្លាមៗពេលបើក Page
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => {
+        if (typeof window.syncUsersFromCloud === 'function') window.syncUsersFromCloud();
+    });
+} else {
+    if (typeof window.syncUsersFromCloud === 'function') window.syncUsersFromCloud();
+}
