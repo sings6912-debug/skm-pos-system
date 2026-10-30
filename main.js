@@ -1,3 +1,4 @@
+/* STREAMING_CHUNK:Initializing Safe Data Merging & Sys Configs... */
 // ==========================================
 // 0. EARLY SETTINGS LOAD (FIX PIN CACHE ISSUE)
 // ==========================================
@@ -169,6 +170,7 @@ if (typeof window.logAction !== 'function') {
     };
 }
 
+/* STREAMING_CHUNK:Injecting Translations and Handlers... */
 // ==========================================
 // 2. 🌐 FULL 3-LANGUAGE SYSTEM DICTIONARY
 // ==========================================
@@ -994,9 +996,6 @@ window.sysI18n = {
     }
 };
 
-// ==========================================
-// 3. LANGUAGE SWITCHER LOGIC
-// ==========================================
 window.changeAppLanguage = function(lang) {
     localStorage.setItem('app_lang', lang);
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
@@ -1261,9 +1260,6 @@ window.changeAppLanguage = function(lang) {
     if (typeof window.setSyncStatus === 'function') window.setSyncStatus('synced');
 };
 
-// ==========================================
-// 4. SMART MULTI-LANGUAGE ALERT & CONFIRM DIALOG
-// ==========================================
 window.ksMsgOpenedAt = 0;
 
 window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
@@ -1406,9 +1402,6 @@ window.ksMsg = function(msg, title, isConfirm = false, onConfirm = null) {
     }
 })();
 
-// ==========================================
-// 5. LIVE SYNC STATUS INDICATOR
-// ==========================================
 window.setSyncStatus = function(status, text) {
     let badge = document.getElementById('globalSyncBadge');
     if (!badge) {
@@ -1443,6 +1436,7 @@ window.setSyncStatus = function(status, text) {
     }
 };
 
+/* STREAMING_CHUNK:Implementing Safe Sync and Save Functions... */
 // ==========================================
 // 6. MASTER REAL-TIME DATA SAVE & SYNC (Unified Sync to DB)
 // ==========================================
@@ -1477,6 +1471,20 @@ window.manualCloudSync = async function(isAuto = false) {
                 localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
                 localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProd));
 
+                // 🔥 បន្ថែមការទាញយកគណនី (auth_users_pro) ពី Cloud ចូលមកវិញ
+                const authKey = window.getBranchKey('auth_users_pro');
+                if (d[authKey]) {
+                    let cloudUsers = d[authKey];
+                    if (typeof cloudUsers === 'string') {
+                        try { cloudUsers = JSON.parse(cloudUsers); } catch(e) {}
+                    }
+                    if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
+                        window.userAccounts = cloudUsers;
+                        localStorage.setItem(authKey, JSON.stringify(window.userAccounts));
+                        if (typeof window.renderUsersList === 'function') window.renderUsersList();
+                    }
+                }
+
                 if (d.customers) {
                     window.customers = d.customers.filter(c => !deletedCust.includes(String(c.id)));
                     localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
@@ -1504,7 +1512,7 @@ window.manualCloudSync = async function(isAuto = false) {
                 if(dispName) dispName.innerHTML = `${window.shopName || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
             }
 
-            // 2. Fetch Products (🔥 បន្ថែមលក្ខខណ្ឌ៖ បើ Cloud ទទេ ហាមលុបទិន្នន័យកុំព្យូទ័រ)
+            // 2. Fetch Products
             let { data: productsData } = await window.supabaseClient.from('pos_products').select('*').eq('branch_id', branchId);
             if (productsData && productsData.length > 0) {
                 let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
@@ -1516,7 +1524,7 @@ window.manualCloudSync = async function(isAuto = false) {
                 hasChanges = true;
             }
 
-            // 3. Fetch Orders (🔥 បន្ថែមលក្ខខណ្ឌ៖ បើ Cloud ទទេ ហាមលុបទិន្នន័យកុំព្យូទ័រ)
+            // 3. Fetch Orders
             let { data: ordersData } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
             if (ordersData && ordersData.length > 0) {
                 let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
@@ -1587,32 +1595,36 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     // Save Settings & Offline Data back to JSON (Supabase Cloud)
     try {
         if(window.supabaseClient && navigator.onLine) {
-            // ១. រក្សាទុកទិន្នន័យទូទៅទៅ branch_store (ដក Invoices ចេញ)
+            
+            // 🔥 ការពារកុំឱ្យ Save ជាន់កម្ទេចទិន្នន័យគណនីបុគ្គលិកចាស់ៗ
+            let { data: existingData } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).maybeSingle();
+            let safeDataJson = (existingData && existingData.data_json && typeof existingData.data_json === 'object') ? existingData.data_json : {};
+
             let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
             let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
 
-            let packageData = {
-                expenses: window.expenses,
-                shopName: window.shopName, 
-                shopLogo: window.shopLogo, 
-                shopQR: window.shopQR, 
-                customers: window.customers, 
-                sysSettings: window.sysSettings, 
-                userAccounts: window.userAccounts,
-                customPosScripts: window.customPosScripts || [],
-                shopPhone: window.shopPhone || '', 
-                shopAddress: window.shopAddress || '', 
-                shopTelegram: window.shopTelegram || '', 
-                telegramBotToken: window.telegramBotToken || '', 
-                telegramChatId: window.telegramChatId || '',
-                deletedExpenses: deletedExp,
-                deletedCustomers: deletedCust
-                // ❌ លែងរក្សាទុក Invoices ចូល JSON ទៀតហើយ!
-            };
+            // ធ្វើបច្ចុប្បន្នភាពតែ Field ណាដែលថ្មី ដោយទុក Field ចាស់ៗ (ដូចជា auth_users_pro) អោយនៅដដែលបើគ្មានការកែប្រែ
+            safeDataJson.expenses = window.expenses;
+            safeDataJson.shopName = window.shopName;
+            safeDataJson.shopLogo = window.shopLogo;
+            safeDataJson.shopQR = window.shopQR;
+            safeDataJson.customers = window.customers;
+            safeDataJson.sysSettings = window.sysSettings;
+            if (window.userAccounts && window.userAccounts.length > 0) {
+                safeDataJson[window.getBranchKey('auth_users_pro')] = window.userAccounts;
+            }
+            safeDataJson.customPosScripts = window.customPosScripts || [];
+            safeDataJson.shopPhone = window.shopPhone || '';
+            safeDataJson.shopAddress = window.shopAddress || '';
+            safeDataJson.shopTelegram = window.shopTelegram || '';
+            safeDataJson.telegramBotToken = window.telegramBotToken || '';
+            safeDataJson.telegramChatId = window.telegramChatId || '';
+            safeDataJson.deletedExpenses = deletedExp;
+            safeDataJson.deletedCustomers = deletedCust;
 
             await window.supabaseClient.from('branch_store').upsert({ 
                 branch_id: window.SHOP_BRANCH_ID, 
-                data_json: packageData,
+                data_json: safeDataJson,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'branch_id' });
 
@@ -1681,6 +1693,7 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
     await window.manualCloudSync(false);
 };
 
+/* STREAMING_CHUNK:Rest of Main Scripts and Functions... */
 // ==========================================
 // 13. GLOBAL UI & APP FLOW METHODS
 // ==========================================
