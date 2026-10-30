@@ -72,21 +72,17 @@ window.renderInventory = function() {
             return; 
         }
 
-        // ការគណនា Pagination
         let totalItems = filtered.length;
         let totalPages = 1;
         let displayItems = filtered;
 
         if (window.invItemsPerPage !== 'all') {
             totalPages = Math.ceil(totalItems / window.invItemsPerPage) || 1;
-            
-            // ការពារកុំឱ្យលើសលេខទំព័រ
             if (window.invCurrentPage > totalPages) window.invCurrentPage = totalPages;
             if (window.invCurrentPage < 1) window.invCurrentPage = 1;
-
             let startIndex = (window.invCurrentPage - 1) * window.invItemsPerPage;
             let endIndex = startIndex + window.invItemsPerPage;
-            displayItems = filtered.slice(startIndex, endIndex); // កាត់យកតែទិន្នន័យសម្រាប់ទំព័រនេះ
+            displayItems = filtered.slice(startIndex, endIndex); 
         }
 
         const showCost = window.sysSettings.cost && window.currentRole === 'admin'; 
@@ -138,10 +134,9 @@ window.renderInventory = function() {
             if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainInventoryTable'), 50);
         }
 
-        // Render ប៊ូតុង Pagination ខាងក្រោមតារាង
         if (pageContainer) {
             if (window.invItemsPerPage === 'all' || totalItems <= window.invItemsPerPage) {
-                pageContainer.innerHTML = ''; // លាក់ប៊ូតុងបើអត់មានទំព័របន្ទាប់
+                pageContainer.innerHTML = ''; 
             } else {
                 let pageHtml = `<button class="btn btn-outline" ${window.invCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvPage(${window.invCurrentPage - 1})"`}>◀ មុន</button>`;
                 pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.invCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} មុខ)</small></span>`;
@@ -358,7 +353,6 @@ window.deleteProduct = function(id) {
             
             window.logAction('update', p.name, 0, 'លុបចេញពីប្រព័ន្ធ', window.activeUser); 
             
-            // 🚀 បញ្ជាឱ្យលុបពី Cloud (Supabase) ភ្លាមៗ កុំឱ្យវារស់ឡើងវិញ
             if (window.supabaseClient && navigator.onLine) {
                 const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
                 window.supabaseClient.from('pos_products').delete().eq('id', id).eq('branch_id', bId).then();
@@ -371,13 +365,15 @@ window.deleteProduct = function(id) {
     }
 };
 
+// 🌟 មុខងារ Export ទិន្នន័យ (បានបន្ថែមរូបភាព URL)
 window.exportCSV = function() {
     if(!window.inventory || window.inventory.length === 0) {
         if(typeof window.ksMsg === 'function') return window.ksMsg('គ្មានទិន្នន័យទំនិញដើម្បី Export ទេ!');
         return;
     }
     const showCost = window.sysSettings && window.sysSettings.cost && window.currentRole === 'admin';
-    let csv = '\uFEFF"លេខកូដ","ឈ្មោះទំនិញ","ប្រភេទ","តម្លៃដើម($)","តម្លៃលក់($)","តម្លៃរៀល(៛)","ខ្នាត","ស្តុក","ស្ថានភាព","ផុតកំណត់","ការពណ៌នា"\n';
+    // បន្ថែម Column រូបភាព(URL)
+    let csv = '\uFEFF"លេខកូដ","ឈ្មោះទំនិញ","ប្រភេទ","តម្លៃដើម($)","តម្លៃលក់($)","តម្លៃរៀល(៛)","ខ្នាត","ស្តុក","ស្ថានភាព","ផុតកំណត់","រូបភាព(URL)","ការពណ៌នា"\n';
     
     window.inventory.forEach(p => {
         if(!p) return;
@@ -391,9 +387,10 @@ window.exportCSV = function() {
         let qty = parseInt(p.qty) || 0;
         let condition = `"${(p.condition || '').replace(/"/g, '""')}"`;
         let expiry = `"${p.expiry || ''}"`;
+        let img = `"${(p.image || '').replace(/"/g, '""')}"`; // ទាញយក URL រូបភាព
         let desc = `"${(p.desc || '').replace(/"/g, '""')}"`;
         
-        csv += `${id},${name},${cat},${cost},${price},${riel},${unit},${qty},${condition},${expiry},${desc}\n`;
+        csv += `${id},${name},${cat},${cost},${price},${riel},${unit},${qty},${condition},${expiry},${img},${desc}\n`;
     });
 
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -401,4 +398,75 @@ window.exportCSV = function() {
     link.href = URL.createObjectURL(blob);
     link.download = `Inventory_Report_${Date.now()}.csv`;
     link.click();
+};
+
+// 🌟 មុខងារ Import ទិន្នន័យ (មានរូបភាព)
+window.importCSV = function() {
+    if(window.currentRole !== 'admin') {
+        if(typeof window.ksMsg === 'function') window.ksMsg('មានតែ Admin ប៉ុណ្ណោះដែលអាច Import ទិន្នន័យបាន!', 'គ្មានសិទ្ធិ', true);
+        return;
+    }
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        if(!file) return;
+        
+        const reader = new FileReader();
+        reader.onload = async function(event) {
+            const text = event.target.result;
+            // រំលង Header និងបំបែកជួរដេក
+            const lines = text.split('\n').filter(l => l.trim() !== '');
+            if(lines.length <= 1) return window.ksMsg('ឯកសារ CSV គ្មានទិន្នន័យទេ!', 'បរាជ័យ', true);
+
+            let addedCount = 0;
+            let updatedCount = 0;
+
+            for(let i = 1; i < lines.length; i++) {
+                // កាត់យក Column នីមួយៗ (ឆ្លាតវៃជាមួយសញ្ញា " ដែលមាន , នៅកណ្តាល)
+                const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                if(!cols || cols.length < 5) continue;
+
+                // សម្អាតសញ្ញាធ្មេញកណ្តុរ " " 
+                const clean = (str) => str ? str.replace(/^"|"$/g, '').replace(/""/g, '"').trim() : '';
+                
+                const customId = clean(cols[0]);
+                const name = clean(cols[1]);
+                if(!name) continue; // បើអត់ឈ្មោះមិនបញ្ចូលទេ
+
+                const newObj = {
+                    customId: customId || ('SKM' + Math.floor(100000 + Math.random() * 900000)),
+                    name: name,
+                    category: clean(cols[2]),
+                    cost: parseFloat(clean(cols[3])) || 0,
+                    price: parseFloat(clean(cols[4])) || 0,
+                    riel: parseFloat(clean(cols[5])) || 0,
+                    unit: clean(cols[6]) || 'ឯកតា',
+                    qty: parseInt(clean(cols[7])) || 0,
+                    condition: clean(cols[8]),
+                    expiry: clean(cols[9]),
+                    image: clean(cols[10]), // ចាប់យក Column រូបភាព
+                    desc: clean(cols[11])
+                };
+
+                const existingIdx = window.inventory.findIndex(p => p.customId === customId && customId !== '');
+                if (existingIdx !== -1) {
+                    newObj.id = window.inventory[existingIdx].id; // រក្សាទុក ID ដើម
+                    window.inventory[existingIdx] = { ...window.inventory[existingIdx], ...newObj };
+                    updatedCount++;
+                } else {
+                    newObj.id = 'P_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                    window.inventory.push(newObj);
+                    addedCount++;
+                }
+            }
+            
+            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+            window.renderInventory();
+            window.ksMsg(`Import រួចរាល់!<br>ទំនិញថ្មី: ${addedCount}<br>កែប្រែ: ${updatedCount}`, 'ជោគជ័យ');
+        };
+        reader.readAsText(file);
+    };
+    input.click();
 };
