@@ -937,53 +937,30 @@
 
             let shopName = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_shop_name`) || 'SKM INTEGRATE';
             let shopLogo = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_shop_logo`) || '';
-            const savedBg = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`);
-            if (savedBg) {
-                document.documentElement.style.setProperty('--current-bg', savedBg);
-                const foundIdx = wallpaperDatabase.findIndex(item => savedBg.includes(item.full));
-                if (foundIdx !== -1) {
-                    currentBgIndex = foundIdx;
-                    document.getElementById('bgCounterText').innerText = `${foundIdx + 1}/100`;
-                } else {
-                    document.getElementById('bgCounterText').innerText = (i18n[currentLang]||i18n.km).customBg;
-                }
-            }
-
-            try {
-                const localSettings = JSON.parse(localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`));
-                if (localSettings) {
-                    branchSysSettings = localSettings;
-                    const localTicker = localSettings.tickerNews || localSettings.tickerText || '';
-                    if (localTicker) document.getElementById('tickerText').innerText = localTicker;
-                }
-            } catch(e) {}
 
             applyShopUI(shopName, shopLogo);
 
             if(navigator.onLine && supabaseClient) {
                 try {
-                    const fetchPromise = supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).maybeSingle();
+                    // 🌟 ទាញយកពី Column shop_info, sys_settings និង data_json
+                    const fetchPromise = supabaseClient.from('branch_store')
+                        .select('shop_info, sys_settings, data_json')
+                        .eq('branch_id', SHOP_BRANCH_ID)
+                        .maybeSingle();
+
                     const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 4000));
                     let { data } = await Promise.race([fetchPromise, timeoutPromise]);
                     
-                    if (data && data.data_json) {
-                        shopName = data.data_json.shopName || shopName;
-                        shopLogo = data.data_json.shopLogo || '';
-                        
-                        if (data.data_json.customBg) {
-                            document.documentElement.style.setProperty('--current-bg', data.data_json.customBg);
-                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, data.data_json.customBg);
-                            const foundIdx = wallpaperDatabase.findIndex(item => data.data_json.customBg.includes(item.full));
-                            if (foundIdx !== -1) {
-                                currentBgIndex = foundIdx;
-                                document.getElementById('bgCounterText').innerText = `${foundIdx + 1}/100`;
-                            } else {
-                                document.getElementById('bgCounterText').innerText = (i18n[currentLang]||i18n.km).customBg;
-                            }
-                        }
+                    if (data) {
+                        let shop = data.shop_info || data.data_json?.shop_info || {};
+                        let d = data.data_json || {};
 
-                        if (data.data_json.sysSettings) {
-                            branchSysSettings = data.data_json.sysSettings;
+                        shopName = shop.shopName || d.shopName || shopName;
+                        shopLogo = shop.shopLogo || d.shopLogo || shopLogo;
+                        
+                        let sys = data.sys_settings || d.sysSettings || {};
+                        if (sys) {
+                            branchSysSettings = sys;
                             const cloudTicker = branchSysSettings.tickerNews || branchSysSettings.tickerText || '';
                             if (cloudTicker) {
                                 document.getElementById('tickerText').innerText = cloudTicker;
@@ -995,7 +972,9 @@
                         localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_shop_logo`, shopLogo);
                         applyShopUI(shopName, shopLogo);
                     }
-                } catch(e) {}
+                } catch(e) {
+                    console.warn("Load profile error:", e);
+                }
             }
             updateStoreStatus();
             updateNetworkStatus();

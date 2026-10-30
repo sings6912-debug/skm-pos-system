@@ -996,6 +996,168 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
         async function init() {
             document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
             
+            try {
+                if (supabaseClient && navigator.onLine) {
+                    // ១. ទាញយកទាំង Column ថ្មី (shop_info, sys_settings) និង Column ចាស់
+                    const fetchSettings = supabaseClient.from('branch_store')
+                        .select('shop_info, sys_settings, data_json')
+                        .eq('branch_id', BRANCH)
+                        .maybeSingle();
+
+                    // ២. ទាញយកទំនិញពីតារាង pos_products
+                    const fetchProducts = supabaseClient.from('pos_products')
+                        .select('*')
+                        .eq('branch_id', BRANCH);
+                    
+                    const timeoutPromise = new Promise((_, r) => setTimeout(() => r(new Error('Timeout')), 6000));
+                    
+                    let [settingsRes, productsRes] = await Promise.race([
+                        Promise.all([fetchSettings, fetchProducts]),
+                        timeoutPromise
+                    ]);
+
+                    let storeRow = settingsRes?.data || {};
+                    let d = storeRow.data_json || {};
+                    let shop = storeRow.shop_info || d.shop_info || {};
+                    sys = storeRow.sys_settings || d.sysSettings || {};
+
+                    // --- កំណត់រៀបចំ Settings លើ Menu ---
+                    if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
+                    
+                    const promoBanner = document.getElementById('promoBannerWrapper');
+                    const slider = document.getElementById('bannerSlider');
+                    const dotsContainer = document.getElementById('bannerDots');
+                    if (sys.menuBanners && sys.menuBanners.length > 0) bannerBgs = sys.menuBanners.filter(b => b && b.trim() !== '');
+                    else if (sys.menuBanner) bannerBgs = [sys.menuBanner];
+
+                    if (bannerBgs.length > 0) {
+                        promoBanner.style.display = 'block';
+                        slider.innerHTML = bannerBgs.map(b => `<img src="${b}" alt="Promo Banner" onclick="openLightbox(this.src)" onerror="this.src='https://placehold.co/800x400/1d162d/ffffff?text=Promo+Banner'">`).join('');
+                        
+                        if (bannerBgs.length > 1) {
+                            dotsContainer.innerHTML = bannerBgs.map((_, i) => `<div class="slider-dot ${i===0?'active':''}" onclick="curBannerIdx=${i}; document.getElementById('bannerSlider').style.transform='translateX(-${i*100}%)'; document.querySelectorAll('.slider-dot').forEach((d,idx)=>d.classList.toggle('active', idx===${i}));"></div>`).join('');
+                            clearInterval(bannerTimerInterval);
+                            bannerTimerInterval = setInterval(() => {
+                                curBannerIdx = (curBannerIdx + 1) % bannerBgs.length;
+                                slider.style.transform = `translateX(-${curBannerIdx * 100}%)`;
+                                document.querySelectorAll('.slider-dot').forEach((d, i) => d.classList.toggle('active', i === curBannerIdx));
+                            }, 3500);
+                        } else dotsContainer.innerHTML = '';
+                    } else promoBanner.style.display = 'none';
+                    
+                    renderSingleBannerPromoBadge();
+                    
+                    const cloudTicker = sys.tickerText || sys.tickerNews || '';
+                    if ((sys.toggleTicker || sys.tickerNews) && cloudTicker) {
+                        document.getElementById('tickerContentText').innerText = cloudTicker;
+                        document.getElementById('marqueeTickerBar').style.display = 'block';
+                    } else {
+                        document.getElementById('marqueeTickerBar').style.display = 'none';
+                    }
+
+                    if (sys.toggleWelcomePopup && sys.welcomeImg) {
+                        if (!sessionStorage.getItem('welcomePopupShown')) {
+                            document.getElementById('welcomePopupImg').src = sys.welcomeImg;
+                            document.getElementById('welcomePopupModal').style.display = 'flex';
+                            sessionStorage.setItem('welcomePopupShown', 'true');
+                        }
+                    } else {
+                        document.getElementById('welcomePopupModal').style.display = 'none';
+                    }
+                    
+                    if (sys.toggleStoreHours && sys.openTime && sys.closeTime) {
+                        const now = new Date();
+                        const currentTime = String(now.getHours()).padStart(2,'0') + ':' + String(now.getMinutes()).padStart(2,'0');
+                        if (currentTime < sys.openTime || currentTime > sys.closeTime) {
+                            document.getElementById('storeClosedBanner').style.display = 'block';
+                            if (!sys.preorder) {
+                                document.getElementById('checkoutBtn').disabled = true;
+                                document.getElementById('checkoutBtn').style.opacity = '0.5';
+                                document.getElementById('checkoutBtn').innerText = 'Store Closed';
+                            }
+                        }
+                    }
+                    
+                    const shopQr = document.getElementById('shopQrImg');
+                    const qrSrc = sys.menuQR || shop.shopQR || d.shopQR || '';
+                    if (shopQr && qrSrc) {
+                        shopQr.src = qrSrc;
+                        document.getElementById('qrBoxContainer').style.display = 'block';
+                    } else {
+                        document.getElementById('qrBoxContainer').style.display = 'none';
+                    }
+                    
+                    if (sys.chatLink) dynamicChatLink = sys.chatLink;
+                    if (sys.customMenuScripts) injectMenuScripts(sys.customMenuScripts);
+
+                    // --- 🌟 បង្ហាញឈ្មោះហាង និង Logo (ទាញពី shop_info) ---
+                    const nm = shop.shopName || d.shopName || 'Shop Name';
+                    const logoUrl = shop.shopLogo || d.shopLogo || '';
+                    document.getElementById('lpName').innerText = nm;
+                    document.getElementById('splashName').innerText = nm;
+                    if (logoUrl) document.getElementById('lpLogo').src = logoUrl;
+
+                    // --- 🌟 ទាញយកទំនិញពី pos_products ---
+                    let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+                    if (productsRes && productsRes.data && productsRes.data.length > 0) {
+                        let dbProducts = productsRes.data.map(p => ({
+                            id: p.id,
+                            customId: p.custom_id || p.id,
+                            name: p.name,
+                            category: p.category,
+                            cost: p.cost,
+                            price: p.price,
+                            riel: p.riel,
+                            qty: p.qty,
+                            unit: p.unit,
+                            condition: p.condition,
+                            expiry: p.expiry,
+                            image: p.image,
+                            desc: p.desc || '' 
+                        }));
+                        inventory = dbProducts.filter(p => p && !deletedProd.includes(String(p.id)));
+                    } else if (d.inventory && Array.isArray(d.inventory)) {
+                        inventory = d.inventory.filter(p => p && !deletedProd.includes(String(p.id)));
+                    }
+                    
+                    orderBotToken = (sys.orderTelegramBotToken || sys.telegramBotToken || d.telegramBotToken || '').trim();
+                    orderChatId = (sys.orderTelegramChatId || sys.telegramChatId || d.telegramChatId || '').trim();
+                    serviceBotToken = (sys.serviceTelegramBotToken || orderBotToken).trim();
+                    serviceChatId = (sys.serviceTelegramChatId || orderChatId).trim();
+                    
+                    window.orderBotToken = orderBotToken; window.orderChatId = orderChatId;
+                    window.waiterBotToken = serviceBotToken; window.waiterChatId = serviceChatId;
+                    
+                    buildCats();
+                    renderMenu();
+                    populateCustomerTables();
+                    
+                    localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(inventory));
+                    if(sys) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sys));
+                } else {
+                    throw new Error("Offline or no Supabase Client");
+                }
+            } catch (e) { 
+                console.log('DB error, using offline local data', e); 
+                let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`));
+                if (localInv && Array.isArray(localInv)) {
+                    let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
+                    inventory = localInv.filter(p => p && !deletedProd.includes(String(p.id)));
+                    buildCats();
+                    renderMenu();
+                }
+                populateCustomerTables();
+            }
+            
+            setTimeout(() => {
+                const sp = document.getElementById('splashScreen'); 
+                if (sp) {
+                    sp.style.opacity = '0';
+                    setTimeout(() => sp.style.display = 'none', 500);
+                }
+            }, 600);
+        }
+            
             // 🚀 អនុគមន៍ជំនួយថ្មី៖ Fetch ទិន្នន័យព្រមគ្នា ដើម្បីដើរលឿន និងទាញយកពី Table ថ្មី `pos_products`
             try {
                 if (supabaseClient && navigator.onLine) {
