@@ -12,47 +12,79 @@ try {
 }
 
 // ==========================================
-// 0.5 POS CUSTOM SCRIPT LOADER (CDN & Static Loader)
+// 0.5 POS CUSTOM SCRIPT LOADER (Runs automatically)
 // ==========================================
+try {
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    const localPosScripts = JSON.parse(localStorage.getItem(`ks2_${branchId}_pos_scripts`));
+    if (localPosScripts && Array.isArray(localPosScripts)) {
+        window.customPosScripts = localPosScripts;
+    }
+} catch(e) {
+    console.warn("Error loading POS scripts from LocalStorage:", e);
+}
+
 function injectPosScripts() {
-    // ១. ស្វែងរកបញ្ជីឈ្មោះ Plugin ដែលត្រូវបើកដំណើរការ
-    let pluginList = [];
-    if (window.sysSettings && window.sysSettings.activePlugins && window.sysSettings.activePlugins.pos) {
-        pluginList = window.sysSettings.activePlugins.pos;
-    } else if (window.customPosScripts && Array.isArray(window.customPosScripts)) {
-        pluginList = window.customPosScripts
+    if (!window.customPosScripts || !Array.isArray(window.customPosScripts)) return;
+
+    window.customPosScripts.forEach(scriptObj => {
+        if (scriptObj && scriptObj.isActive && scriptObj.code) {
+            try {
+                const existingScript = document.getElementById(scriptObj.id);
+                if (existingScript) existingScript.remove();
+
+                const scriptEl = document.createElement('script');
+                scriptEl.textContent = scriptObj.code;
+                scriptEl.id = scriptObj.id;
+                document.body.appendChild(scriptEl);
+                console.log(`✨ POS Custom JS loaded: ${scriptObj.name}`);
+            } catch (err) {
+                console.error(`Error loading POS script ${scriptObj.name}:`, err);
+            }
+        }
+    });
+}
+
+injectPosScripts();
+
+// ==========================================
+// 0.6 MENU CUSTOM SCRIPT LOADER (GitHub CDN)
+// ==========================================
+function injectMenuScripts() {
+    let menuPluginList = [];
+    if (window.sysSettings && window.sysSettings.activePlugins && window.sysSettings.activePlugins.menu) {
+        menuPluginList = window.sysSettings.activePlugins.menu;
+    } else if (window.customMenuScripts && Array.isArray(window.customMenuScripts)) {
+        menuPluginList = window.customMenuScripts
             .filter(s => s && (s.isActive || s.active))
             .map(s => s.name || s);
     }
 
-    if (!Array.isArray(pluginList) || pluginList.length === 0) return;
+    if (!Array.isArray(menuPluginList) || menuPluginList.length === 0) return;
 
-    // ២. Link ទៅកាន់ Folder plugins/pos លើ GitHub របស់អ្នកតាមរយៈ jsDelivr CDN
-    const GITHUB_CDN = "https://cdn.jsdelivr.net/gh/sings6912-debug/skm-pos-system@main/plugins/pos/";
+    // Link ទៅកាន់ Folder plugins/menu លើ GitHub តាមរយៈ jsDelivr CDN
+    const GITHUB_MENU_CDN = "https://cdn.jsdelivr.net/gh/sings6912-debug/skm-pos-system@main/plugins/menu/";
 
-    // ៣. បង្កើត Script Tag ទាញយកតែឯកសារណាដែលបើកដំណើរការ
-    pluginList.forEach(fileName => {
+    menuPluginList.forEach(fileName => {
         const cleanName = String(fileName).trim();
         const scriptName = cleanName.endsWith('.js') ? cleanName : `${cleanName}.js`;
-        const scriptId = `script-pos-${scriptName.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
+        const scriptId = `script-menu-${scriptName.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
 
-        // ការពារកុំឱ្យ Load ជាន់គ្នាពីរដង
         if (document.getElementById(scriptId)) return;
 
         const scriptEl = document.createElement('script');
         scriptEl.id = scriptId;
-        scriptEl.src = GITHUB_CDN + encodeURIComponent(scriptName);
+        scriptEl.src = GITHUB_MENU_CDN + encodeURIComponent(scriptName);
         scriptEl.async = true;
 
         scriptEl.onload = () => {
-            console.log(`✨ POS Plugin Loaded via GitHub: ${scriptName}`);
+            console.log(`✨ Menu Plugin Loaded via GitHub: ${scriptName}`);
         };
 
-        // ប្រសិនបើដាច់ Internet ឬទាញពី CDN មិនបាន ឱ្យវាទាញពី Local Folder ក្នុងម៉ាស៊ីនជំនួស
         scriptEl.onerror = () => {
-            console.warn(`CDN failed, loading local: plugins/pos/${scriptName}`);
+            console.warn(`CDN failed for menu, loading local: plugins/menu/${scriptName}`);
             const fallbackScript = document.createElement('script');
-            fallbackScript.src = `./plugins/pos/${encodeURIComponent(scriptName)}`;
+            fallbackScript.src = `./plugins/menu/${encodeURIComponent(scriptName)}`;
             document.body.appendChild(fallbackScript);
         };
 
@@ -60,8 +92,8 @@ function injectPosScripts() {
     });
 }
 
-// ហៅឱ្យដំណើរការ
-injectPosScripts();
+// ហៅឱ្យដំណើរការពេលបើកទំព័រ
+injectMenuScripts();
 
 // ==========================================
 // 1. BIND UTILS & CONFIGS TO WINDOW (Fallback safe)
@@ -1629,11 +1661,7 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             if (window.userAccounts && window.userAccounts.length > 0) {
                 safeDataJson[window.getBranchKey('auth_users_pro')] = window.userAccounts;
             }
-            safeDataJson.customPosScripts = (window.customPosScripts || []).map(s => ({
-    id: s.id,
-    name: s.name,
-    isActive: s.isActive || s.active
-}));
+            safeDataJson.customPosScripts = window.customPosScripts || [];
             safeDataJson.shopPhone = window.shopPhone || '';
             safeDataJson.shopAddress = window.shopAddress || '';
             safeDataJson.shopTelegram = window.shopTelegram || '';
@@ -2932,7 +2960,7 @@ window.onload = async () => {
     // ⚡ Auto Real-time Update Sync Listener
     setInterval(() => {
         if(typeof window.manualCloudSync === 'function') window.manualCloudSync(true);
-    }, 3000000); 
+    }, 30000); 
 
     setTimeout(() => {
         if(typeof window.runSmartDatabaseMaintenance === 'function') {
