@@ -1640,47 +1640,46 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     if (window.expenses) localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
     if (window.customers) localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
 
-    // Save Settings & Offline Data back to JSON (Supabase Cloud)
+    // 🌟 រៀបចំទិន្នន័យបំបែកទៅតាម Column នីមួយៗក្នុង Supabase (Normalized Columns)
     try {
         if(window.supabaseClient && navigator.onLine) {
+            const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             
-            // 🔥 ការពារកុំឱ្យ Save ជាន់កម្ទេចទិន្នន័យគណនីបុគ្គលិកចាស់ៗ
-            let { data: existingData } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', window.SHOP_BRANCH_ID).maybeSingle();
-            let safeDataJson = (existingData && existingData.data_json && typeof existingData.data_json === 'object') ? existingData.data_json : {};
+            // រៀបចំ Object សម្រាប់ Column នីមួយៗ
+            const shopInfoPayload = {
+                shopName: window.shopName || '',
+                shopLogo: window.shopLogo || '',
+                shopQR: window.shopQR || '',
+                shopPhone: window.shopPhone || '',
+                shopAddress: window.shopAddress || '',
+                shopTelegram: window.shopTelegram || '',
+                bakongName: window.sysSettings?.bakongName || '',
+                bakongId: window.sysSettings?.bakongId || ''
+            };
 
-            let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
-            let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
-
-            // ធ្វើបច្ចុប្បន្នភាពតែ Field ណាដែលថ្មី ដោយទុក Field ចាស់ៗ (ដូចជា auth_users_pro) អោយនៅដដែលបើគ្មានការកែប្រែ
-            safeDataJson.expenses = window.expenses;
-            safeDataJson.shopName = window.shopName;
-            safeDataJson.shopLogo = window.shopLogo;
-            safeDataJson.shopQR = window.shopQR;
-            safeDataJson.customers = window.customers;
-            safeDataJson.sysSettings = window.sysSettings;
-            if (window.userAccounts && window.userAccounts.length > 0) {
-                safeDataJson[window.getBranchKey('auth_users_pro')] = window.userAccounts;
+            const sysSettingsPayload = window.sysSettings || {};
+            const userAccountsPayload = userAccountsRef || window.userAccounts || [];
+            
+            let activePluginsPayload = { pos: [], menu: [] };
+            if (window.sysSettings && window.sysSettings.activePlugins) {
+                activePluginsPayload = window.sysSettings.activePlugins;
             }
-            safeDataJson.customPosScripts = window.customPosScripts || [];
-            safeDataJson.shopPhone = window.shopPhone || '';
-            safeDataJson.shopAddress = window.shopAddress || '';
-            safeDataJson.shopTelegram = window.shopTelegram || '';
-            safeDataJson.telegramBotToken = window.telegramBotToken || '';
-            safeDataJson.telegramChatId = window.telegramChatId || '';
-            safeDataJson.deletedExpenses = deletedExp;
-            safeDataJson.deletedCustomers = deletedCust;
 
+            // 🔥 បាញ់ទិន្នន័យចំ Column នីមួយៗក្នុង Table branch_store (មិនបាច់ពឹងផ្អែកលើ data_json ទៀតទេ)
             await window.supabaseClient.from('branch_store').upsert({ 
-                branch_id: window.SHOP_BRANCH_ID, 
-                data_json: safeDataJson,
+                branch_id: branchId, 
+                shop_info: shopInfoPayload,
+                sys_settings: sysSettingsPayload,
+                user_accounts: userAccountsPayload,
+                active_plugins: activePluginsPayload,
                 updated_at: new Date().toISOString()
             }, { onConflict: 'branch_id' });
 
-            // ២. រក្សាទុកទំនិញចូលតារាង pos_products
+            // ២. រក្សាទុកទំនិញចូលតារាង pos_products ធម្មតា
             if (window.inventory && window.inventory.length > 0) {
                 const formattedProductsForDB = window.inventory.map(p => ({
                     id: p.id,
-                    branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                    branch_id: branchId,
                     custom_id: p.customId || p.id,
                     name: p.name,
                     category: p.category,
@@ -1693,16 +1692,14 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                     expiry: p.expiry,
                     image: p.image
                 }));
-                
-                const { error: upsertErr } = await window.supabaseClient.from('pos_products').upsert(formattedProductsForDB);
-                if(upsertErr) console.warn("Supabase Products Upsert Error:", upsertErr);
+                await window.supabaseClient.from('pos_products').upsert(formattedProductsForDB);
             }
 
             // ៣. រក្សាទុកវិក្កយបត្រចូល pos_orders
             if (window.invoices && window.invoices.length > 0) {
                 const formattedOrdersForDB = window.invoices.map((inv, idx) => ({
                     id: String(inv.id || inv.invoiceNo || `INV-${Date.now()}-${idx}`),
-                    branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                    branch_id: branchId,
                     customer_name: inv.customerName || inv.customer || 'អតិថិជនទូទៅ',
                     customer_phone: inv.customerPhone || inv.phone || 'EMPTY',
                     total_amount: parseFloat(inv.totalAmount || inv.total || 0),
@@ -1722,6 +1719,8 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     if (window.customPosScripts) {
         localStorage.setItem(window.getBranchKey('pos_scripts'), JSON.stringify(window.customPosScripts));
     }
+    
+    // រក្សាទុកទិន្នន័យ LocalStorage ផ្សេងៗទៀតដូចធម្មតា
     localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
     localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
     localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');

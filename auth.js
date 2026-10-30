@@ -32,6 +32,7 @@ window.activeUser = JSON.parse(localStorage.getItem(getSafeBranchKey('active_use
 window.currentRole = window.activeUser ? window.activeUser.role : 'guest';
 
 // 🌟 មុខងាររុញគណនីទាំងអស់ទៅកាន់ Supabase Cloud ដោយមិនឱ្យបាត់ទិន្នន័យផ្សេង
+// 🌟 មុខងាររុញគណនីបុគ្គលិកទៅកាន់ Column user_accounts ក្នុង Supabase ដោយផ្ទាល់
 async function syncUsersToCloud() {
     const key = getSafeBranchKey('auth_users_pro');
     localStorage.setItem(key, JSON.stringify(window.userAccounts));
@@ -40,46 +41,36 @@ async function syncUsersToCloud() {
         try {
             const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             
-            // ១. ទាញយកទិន្នន័យចាស់ដែលមានក្នុង Cloud មកជាមុនសិន
-            const { data } = await window.supabaseClient
-                .from('branch_store')
-                .select('data_json')
-                .eq('branch_id', branchId)
-                .maybeSingle();
-
-            let payload = (data && data.data_json && typeof data.data_json === 'object') ? data.data_json : {};
-            
-            // ២. បញ្ចូល key គណនីបន្ថែមទៅក្នុង payload ចាស់ (មិនលុប shopQR ឬការកំណត់ផ្សេងឡើយ)
-            payload[key] = window.userAccounts;
-
-            // ៣. បាញ់ទិន្នន័យត្រឡប់ទៅវិញ
+            // 🔥 បាញ់ត្រង់ទៅ Column user_accounts តែម្តង
             await window.supabaseClient.from('branch_store').upsert({
                 branch_id: branchId,
-                data_json: payload,
+                user_accounts: window.userAccounts,
                 updated_at: new Date().toISOString()
-            });
-            console.log('☁️ គណនីបុគ្គលិកត្រូវបាន Sync ទៅ Cloud រួចរាល់!');
+            }, { onConflict: 'branch_id' });
+            
+            console.log('☁️ គណនីបុគ្គលិកត្រូវបាន Sync ទៅ Column user_accounts ក្នុង Cloud រួចរាល់!');
         } catch (err) {
             console.warn('⚠️ កំហុសពេល Sync គណនីទៅ Cloud:', err);
         }
     }
 }
 
-// 🌟 មុខងារទាញយកគណនីពី Cloud មកដាក់ក្នុងឧបករណ៍
+// 🌟 មុខងារទាញយកគណនីពី Column user_accounts ក្នុង Cloud មកដាក់ក្នុងឧបករណ៍
 window.syncUsersFromCloud = async function() {
     if (!window.supabaseClient || !navigator.onLine) return;
     try {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         const key = getSafeBranchKey('auth_users_pro');
         
+        // ទាញយកទិន្នន័យពី Column user_accounts ផ្ទាល់
         const { data, error } = await window.supabaseClient
             .from('branch_store')
-            .select('data_json')
+            .select('user_accounts')
             .eq('branch_id', branchId)
             .maybeSingle();
 
-        if (!error && data && data.data_json) {
-            let cloudUsers = data.data_json[key] || data.data_json['auth_users_pro'];
+        if (!error && data && data.user_accounts) {
+            let cloudUsers = data.user_accounts;
             if (typeof cloudUsers === 'string') {
                 try { cloudUsers = JSON.parse(cloudUsers); } catch(e) {}
             }
@@ -87,7 +78,7 @@ window.syncUsersFromCloud = async function() {
                 window.userAccounts = cloudUsers;
                 localStorage.setItem(key, JSON.stringify(window.userAccounts));
                 if (typeof window.renderUsersList === 'function') window.renderUsersList();
-                console.log('✅ បានទាញយកគណនីពី Cloud មកឧបករណ៍នេះជោគជ័យ!');
+                console.log('✅ បានទាញយកគណនីពី Column user_accounts មកឧបករណ៍នេះជោគជ័យ!');
             }
         }
     } catch (err) {
