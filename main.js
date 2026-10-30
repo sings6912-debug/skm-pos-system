@@ -1737,7 +1737,45 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
 };
 
 window.loadDataFromSupabase = async function(userAccountsRef) {
-    await window.manualCloudSync(false);
+    if (!window.supabaseClient || !navigator.onLine) return;
+
+    try {
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        
+        // ១. ទាញយកទិន្នន័យចំពី Column ថ្មីៗនីមួយៗ (Normalized Columns)
+        let { data, error } = await window.supabaseClient
+            .from('branch_store')
+            .select('shop_info, sys_settings, user_accounts, active_plugins')
+            .eq('branch_id', branchId)
+            .maybeSingle();
+
+        if (error) {
+            console.error("Error loading branch data:", error);
+            return;
+        }
+
+        if (data) {
+            // ២. ផាត់ចែកទិន្នន័យចូលទៅក្នុង Variable សកលរបស់ប្រព័ន្ធ POS
+            window.shopName = data.shop_info?.shopName || '';
+            window.shopLogo = data.shop_info?.shopLogo || '';
+            window.shopQR = data.shop_info?.shopQR || '';
+            window.shopPhone = data.shop_info?.shopPhone || '';
+            window.shopAddress = data.shop_info?.shopAddress || '';
+            window.shopTelegram = data.shop_info?.shopTelegram || '';
+
+            window.sysSettings = data.sys_settings || {};
+            window.userAccounts = data.user_accounts || [];
+            window.activePlugins = data.active_plugins || { pos: [], menu: [] };
+
+            // រក្សាទុកក្នុង LocalStorage ទុកប្រើពេល Offline
+            localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
+            localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts));
+
+            console.log("✅ Successfully loaded and mapped normalized data from Supabase!");
+        }
+    } catch (err) {
+        console.error("Fetch exception:", err);
+    }
 };
 
 /* STREAMING_CHUNK:Rest of Main Scripts and Functions... */
