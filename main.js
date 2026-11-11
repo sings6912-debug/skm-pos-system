@@ -1,6 +1,7 @@
-/* STREAMING_CHUNK:Initializing Safe Data Merging & Sys Configs... */
+// main.js
+
 // ==========================================
-// 0. EARLY SETTINGS LOAD (FIX PIN CACHE ISSUE)
+// 0. EARLY SETTINGS LOAD
 // ==========================================
 try {
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
@@ -12,27 +13,32 @@ try {
 }
 
 // ==========================================
-// 0.5 POS CUSTOM SCRIPT LOADER (Runs automatically)
+// 0.5 INITIALIZE LOCAL DATA PRE-FETCH
 // ==========================================
 try {
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    window.inventory = JSON.parse(localStorage.getItem(`ks2_${branchId}_inv_pro`)) || [];
+    window.invoices = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoices_pro`)) || [];
+    window.historyLog = JSON.parse(localStorage.getItem(`ks2_${branchId}_hist_pro`)) || [];
+    window.expenses = JSON.parse(localStorage.getItem(`ks2_${branchId}_expenses_pro`)) || [];
+    window.customers = JSON.parse(localStorage.getItem(`ks2_${branchId}_customers_pro`)) || [];
+    
     const localPosScripts = JSON.parse(localStorage.getItem(`ks2_${branchId}_pos_scripts`));
     if (localPosScripts && Array.isArray(localPosScripts)) {
         window.customPosScripts = localPosScripts;
     }
 } catch(e) {
-    console.warn("Error loading POS scripts from LocalStorage:", e);
+    console.warn("Error loading data from LocalStorage:", e);
+    window.inventory = []; window.invoices = []; window.historyLog = []; window.expenses = []; window.customers = [];
 }
 
 function injectPosScripts() {
     if (!window.customPosScripts || !Array.isArray(window.customPosScripts)) return;
-
     window.customPosScripts.forEach(scriptObj => {
         if (scriptObj && scriptObj.isActive && scriptObj.code) {
             try {
                 const existingScript = document.getElementById(scriptObj.id);
                 if (existingScript) existingScript.remove();
-
                 const scriptEl = document.createElement('script');
                 scriptEl.textContent = scriptObj.code;
                 scriptEl.id = scriptObj.id;
@@ -44,7 +50,6 @@ function injectPosScripts() {
         }
     });
 }
-
 injectPosScripts();
 
 // ==========================================
@@ -59,44 +64,33 @@ function injectMenuScripts() {
             .filter(s => s && (s.isActive || s.active))
             .map(s => s.name || s);
     }
-
     if (!Array.isArray(menuPluginList) || menuPluginList.length === 0) return;
 
-    // Link ទៅកាន់ Folder plugins/menu លើ GitHub តាមរយៈ jsDelivr CDN
     const GITHUB_MENU_CDN = "https://cdn.jsdelivr.net/gh/sings6912-debug/skm-pos-system@main/plugins/menu/";
-
     menuPluginList.forEach(fileName => {
         const cleanName = String(fileName).trim();
         const scriptName = cleanName.endsWith('.js') ? cleanName : `${cleanName}.js`;
         const scriptId = `script-menu-${scriptName.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
 
         if (document.getElementById(scriptId)) return;
-
         const scriptEl = document.createElement('script');
         scriptEl.id = scriptId;
         scriptEl.src = GITHUB_MENU_CDN + encodeURIComponent(scriptName);
         scriptEl.async = true;
-
-        scriptEl.onload = () => {
-            console.log(`✨ Menu Plugin Loaded via GitHub: ${scriptName}`);
-        };
-
+        scriptEl.onload = () => console.log(`✨ Menu Plugin Loaded via GitHub: ${scriptName}`);
         scriptEl.onerror = () => {
             console.warn(`CDN failed for menu, loading local: plugins/menu/${scriptName}`);
             const fallbackScript = document.createElement('script');
             fallbackScript.src = `./plugins/menu/${encodeURIComponent(scriptName)}`;
             document.body.appendChild(fallbackScript);
         };
-
         document.body.appendChild(scriptEl);
     });
 }
-
-// ហៅឱ្យដំណើរការពេលបើកទំព័រ
 injectMenuScripts();
 
 // ==========================================
-// 1. BIND UTILS & CONFIGS TO WINDOW (Fallback safe)
+// 1. BIND UTILS & CONFIGS TO WINDOW
 // ==========================================
 if (typeof window.fDate !== 'function') {
     window.fDate = function() { 
@@ -207,18 +201,40 @@ if (typeof window.generateInvoiceId !== 'function' || true) {
     };
 }
 
-if (typeof window.logAction !== 'function') {
-    window.logAction = function(type, itemName, qty, note, activeUserRef) { 
+// 🌟 ENTERPRISE: Activity Logs Sync To Dedicated Cloud Table
+if (typeof window.logAction !== 'function' || true) {
+    window.logAction = async function(type, itemName, qty, note, activeUserRef) { 
         if(!window.sysSettings || !window.sysSettings.logs) return; 
         let executor = activeUserRef ? (activeUserRef.fullName ? activeUserRef.fullName : activeUserRef.username) : 'system'; 
-        let dateStr = typeof window.fDate==='function' ? window.fDate() : new Date().toLocaleString('km-KH');
+        let dateStr = typeof window.fDate === 'function' ? window.fDate() : new Date().toLocaleString('km-KH');
         if (!window.historyLog) window.historyLog = [];
-        window.historyLog.unshift({ id: Date.now(), date: dateStr, type, itemName, qty, note: `${note} (${executor})` }); 
+        
+        let logId = Date.now();
+        let logNote = `${note} (${executor})`;
+
+        window.historyLog.unshift({ id: logId, date: dateStr, type, itemName, qty, note: logNote }); 
         if(window.historyLog.length > 500) window.historyLog.pop(); 
+        
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        localStorage.setItem(`ks2_${branchId}_hist_pro`, JSON.stringify(window.historyLog));
+        
+        // 🚀 Push immediately to Cloud `pos_history_logs` Table
+        if (window.supabaseClient && navigator.onLine) {
+            try {
+                window.supabaseClient.from('pos_history_logs').insert([{
+                    id: logId,
+                    branch_id: branchId,
+                    type: type,
+                    item_name: itemName,
+                    qty: qty,
+                    note: logNote,
+                    date: dateStr
+                }]).then();
+            } catch (err) {}
+        }
     };
 }
 
-/* STREAMING_CHUNK:Injecting Translations and Handlers... */
 // ==========================================
 // 2. 🌐 FULL 3-LANGUAGE SYSTEM DICTIONARY
 // ==========================================
@@ -393,7 +409,7 @@ window.sysI18n = {
         cantDeleteAdmin: 'មិនអាចលុប',
         setSysTitle: '⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)',
         setSysSub: 'កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។',
-        setStorePinLabel: '🔐 លេខសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖',
+        setStorePinLabel: '🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖',
         setTickerNewsLabel: '📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖',
         setCustLabel: 'អតិថិជន (Customers): អនុញ្ញាតឲ្យកត់ត្រា និងគ្រប់គ្រងទិន្នន័យអតិថិជន។',
         setUnpaidLabel: 'រង់ចាំទូទាត់ (Unpaid Invoices): អនុញ្ញាតឲ្យរក្សាទុកវិក្កយបត្រមិនទាន់ទូទាត់។',
@@ -1242,7 +1258,7 @@ window.changeAppLanguage = function(lang) {
         const formGroups = settingsCards[3].querySelectorAll('.form-group label');
         if (formGroups.length >= 2) {
             formGroups[0].innerText = d.setStorePinLabel || '🔐 លេខសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖';
-            formGroups[1].innerText = d.setTickerNewsLabel || '📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖';
+            formGroups[1].innerText = d.setTickerNewsLabel || '📢 សេចក្តីជូនដំណឹងរត់ខាងក្រោម (News Ticker)៖';
         }
         const sysLabels = settingsCards[3].querySelectorAll('label span');
         if (sysLabels.length >= 6) {
@@ -1484,7 +1500,6 @@ window.setSyncStatus = function(status, text) {
     }
 };
 
-/* STREAMING_CHUNK:Implementing Safe Sync and Save Functions... */
 // ==========================================
 // 6. MASTER REAL-TIME DATA SAVE & SYNC (Unified Sync to DB)
 // ==========================================
@@ -1500,67 +1515,64 @@ window.manualCloudSync = async function(isAuto = false) {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         let hasChanges = false;
 
-        let { data: storeData } = await window.supabaseClient.from('branch_store').select('data_json, updated_at').eq('branch_id', branchId).maybeSingle();
+        let { data: storeData } = await window.supabaseClient.from('branch_store').select('shop_info, sys_settings, user_accounts, active_plugins, updated_at').eq('branch_id', branchId).maybeSingle();
         let localLastUpdate = parseInt(localStorage.getItem(`ks2_${branchId}_last_update`)) || 0;
         let cloudLastUpdate = storeData && storeData.updated_at ? new Date(storeData.updated_at).getTime() : 0;
 
         if (!isAuto || cloudLastUpdate > localLastUpdate) {
-            if (storeData && storeData.data_json) {
-                let d = storeData.data_json;
-                let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
-                let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
-                let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
-
-                if (d.deletedExpenses) deletedExp = [...new Set([...deletedExp, ...d.deletedExpenses])];
-                if (d.deletedCustomers) deletedCust = [...new Set([...deletedCust, ...d.deletedCustomers])];
-                if (d.deletedProducts) deletedProd = [...new Set([...deletedProd, ...d.deletedProducts])];
-
-                localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExp));
-                localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
-                localStorage.setItem('deleted_products_tracker', JSON.stringify(deletedProd));
-
-                // 🔥 បន្ថែមការទាញយកគណនី (auth_users_pro) ពី Cloud ចូលមកវិញ
-                const authKey = window.getBranchKey('auth_users_pro');
-                if (d[authKey]) {
-                    let cloudUsers = d[authKey];
-                    if (typeof cloudUsers === 'string') {
-                        try { cloudUsers = JSON.parse(cloudUsers); } catch(e) {}
-                    }
-                    if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
-                        window.userAccounts = cloudUsers;
-                        localStorage.setItem(authKey, JSON.stringify(window.userAccounts));
-                        if (typeof window.renderUsersList === 'function') window.renderUsersList();
-                    }
-                }
-
-                if (d.customers) {
-                    window.customers = d.customers.filter(c => !deletedCust.includes(String(c.id)));
-                    localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
-                    hasChanges = true;
-                }
-                if (d.expenses) {
-                    window.expenses = d.expenses.filter(e => !deletedExp.includes(String(e.id)));
-                    localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
-                    hasChanges = true;
-                }
-                if (d.sysSettings) {
-                    window.sysSettings = Object.assign({}, window.sysSettings, d.sysSettings);
-                    localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings));
-                }
-                if (d.shopName) window.shopName = d.shopName;
-                if (d.shopLogo) window.shopLogo = d.shopLogo;
-                if (d.shopQR) window.shopQR = d.shopQR;
-
-                localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
-                localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
-                localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
-                localStorage.setItem(`ks2_${branchId}_last_update`, cloudLastUpdate.toString());
+            if (storeData) {
+                window.shopName = storeData.shop_info?.shopName || '';
+                window.shopLogo = storeData.shop_info?.shopLogo || '';
+                window.shopQR = storeData.shop_info?.shopQR || '';
+                window.shopPhone = storeData.shop_info?.shopPhone || '';
+                window.shopAddress = storeData.shop_info?.shopAddress || '';
+                window.shopTelegram = storeData.shop_info?.shopTelegram || '';
+                
+                window.sysSettings = storeData.sys_settings || {};
+                window.userAccounts = storeData.user_accounts || [];
+                
+                localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
+                localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts));
+                localStorage.setItem(window.getBranchKey('shop_name'), window.shopName);
+                localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo);
+                localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR);
 
                 const dispName = document.getElementById('displayShopName');
                 if(dispName) dispName.innerHTML = `${window.shopName || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
+                if(typeof window.renderUsersList === 'function') window.renderUsersList();
+                
+                hasChanges = true;
             }
 
-            // 2. Fetch Products
+            // 1. Fetch Customers
+            let { data: custData } = await window.supabaseClient.from('pos_customers').select('*').eq('branch_id', branchId);
+            if (custData && custData.length > 0) {
+                let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
+                let mappedCust = custData.map(c => ({ id: c.id, name: c.name, phone: c.phone }));
+                window.customers = mappedCust.filter(c => !deletedCust.includes(String(c.id)));
+                localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
+                hasChanges = true;
+            }
+
+            // 2. Fetch Expenses
+            let { data: expData } = await window.supabaseClient.from('pos_expenses').select('*').eq('branch_id', branchId);
+            if (expData && expData.length > 0) {
+                let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+                let mappedExp = expData.map(e => ({ id: e.id, category: e.category, amount: e.amount, note: e.note, timestamp: e.timestamp, date: e.date }));
+                window.expenses = mappedExp.filter(e => !deletedExp.includes(String(e.id)));
+                localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
+                hasChanges = true;
+            }
+
+            // 3. Fetch Logs
+            let { data: logData } = await window.supabaseClient.from('pos_history_logs').select('*').eq('branch_id', branchId).order('id', { ascending: false }).limit(500);
+            if (logData && logData.length > 0) {
+                window.historyLog = logData.map(l => ({ id: l.id, type: l.type, itemName: l.item_name, qty: l.qty, note: l.note, date: l.date }));
+                localStorage.setItem(`ks2_${branchId}_hist_pro`, JSON.stringify(window.historyLog));
+                hasChanges = true;
+            }
+            
+            // 4. Fetch Products
             let { data: productsData } = await window.supabaseClient.from('pos_products').select('*').eq('branch_id', branchId);
             if (productsData && productsData.length > 0) {
                 let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
@@ -1572,7 +1584,7 @@ window.manualCloudSync = async function(isAuto = false) {
                 hasChanges = true;
             }
 
-            // 3. Fetch Orders
+            // 5. Fetch Orders
             let { data: ordersData } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
             if (ordersData && ordersData.length > 0) {
                 let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
@@ -1608,6 +1620,8 @@ window.manualCloudSync = async function(isAuto = false) {
                 localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
                 hasChanges = true;
             }
+            
+            localStorage.setItem(`ks2_${branchId}_last_update`, cloudLastUpdate.toString());
         }
 
         if (!isAuto) {
@@ -1621,6 +1635,9 @@ window.manualCloudSync = async function(isAuto = false) {
             if (typeof window.renderUnpaid === 'function') window.renderUnpaid();
             if (typeof window.renderDashboard === 'function') window.renderDashboard();
             if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+            if (typeof window.renderHistory === 'function') window.renderHistory();
+            if (typeof window.renderCustomers === 'function') window.renderCustomers();
+            if (typeof window.renderExpenses === 'function') window.renderExpenses();
         }
 
     } catch(e) {
@@ -1640,12 +1657,10 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     if (window.expenses) localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
     if (window.customers) localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
 
-    // 🌟 រៀបចំទិន្នន័យបំបែកទៅតាម Column នីមួយៗក្នុង Supabase (Normalized Columns)
     try {
         if(window.supabaseClient && navigator.onLine) {
             const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             
-            // រៀបចំ Object សម្រាប់ Column នីមួយៗ
             const shopInfoPayload = {
                 shopName: window.shopName || '',
                 shopLogo: window.shopLogo || '',
@@ -1665,52 +1680,55 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 activePluginsPayload = window.sysSettings.activePlugins;
             }
 
-            // 🔥 បាញ់ទិន្នន័យចំ Column នីមួយៗក្នុង Table branch_store (មិនបាច់ពឹងផ្អែកលើ data_json ទៀតទេ)
+            // 1. Update general configurations in branch_store
             await window.supabaseClient.from('branch_store').upsert({ 
                 branch_id: branchId, 
                 shop_info: shopInfoPayload,
                 sys_settings: sysSettingsPayload,
                 user_accounts: userAccountsPayload,
                 active_plugins: activePluginsPayload,
+                data_json: {}, // Clean old structure
                 updated_at: new Date().toISOString()
             }, { onConflict: 'branch_id' });
 
-            // ២. រក្សាទុកទំនិញចូលតារាង pos_products ធម្មតា
+            // 2. Upsert Products
             if (window.inventory && window.inventory.length > 0) {
                 const formattedProductsForDB = window.inventory.map(p => ({
-                    id: p.id,
-                    branch_id: branchId,
-                    custom_id: p.customId || p.id,
-                    name: p.name,
-                    category: p.category,
-                    cost: p.cost,
-                    price: p.price,
-                    riel: p.riel,
-                    qty: p.qty,
-                    unit: p.unit,
-                    condition: p.condition,
-                    expiry: p.expiry,
-                    image: p.image
+                    id: p.id, branch_id: branchId, custom_id: p.customId || p.id, name: p.name, category: p.category, cost: p.cost, price: p.price, riel: p.riel, qty: p.qty, unit: p.unit, condition: p.condition, expiry: p.expiry, image: p.image
                 }));
                 await window.supabaseClient.from('pos_products').upsert(formattedProductsForDB);
             }
 
-            // ៣. រក្សាទុកវិក្កយបត្រចូល pos_orders
+            // 3. Upsert Orders
             if (window.invoices && window.invoices.length > 0) {
                 const formattedOrdersForDB = window.invoices.map((inv, idx) => ({
-                    id: String(inv.id || inv.invoiceNo || `INV-${Date.now()}-${idx}`),
-                    branch_id: branchId,
-                    customer_name: inv.customerName || inv.customer || 'អតិថិជនទូទៅ',
-                    customer_phone: inv.customerPhone || inv.phone || 'EMPTY',
-                    total_amount: parseFloat(inv.totalAmount || inv.total || 0),
-                    paid_amount: parseFloat(inv.paidUsd || inv.paidAmount || 0),
-                    status: inv.status || 'unpaid',
-                    seller: inv.seller || inv.cashier || 'System',
-                    order_data: inv.items || [],
-                    note: inv.note || '',
-                    timestamp: inv.timestamp || Date.now()
+                    id: String(inv.id || inv.invoiceNo || `INV-${Date.now()}-${idx}`), branch_id: branchId, customer_name: inv.customerName || inv.customer || 'អតិថិជនទូទៅ', customer_phone: inv.customerPhone || inv.phone || 'EMPTY', total_amount: parseFloat(inv.totalAmount || inv.total || 0), paid_amount: parseFloat(inv.paidUsd || inv.paidAmount || 0), status: inv.status || 'unpaid', seller: inv.seller || inv.cashier || 'System', order_data: inv.items || [], note: inv.note || '', timestamp: inv.timestamp || Date.now()
                 }));
                 await window.supabaseClient.from('pos_orders').upsert(formattedOrdersForDB, { onConflict: 'id' });
+            }
+
+            // 4. Upsert Customers
+            if (window.customers && window.customers.length > 0) {
+                const formattedCust = window.customers.map(c => ({
+                    id: c.id, branch_id: branchId, name: c.name, phone: c.phone
+                }));
+                await window.supabaseClient.from('pos_customers').upsert(formattedCust);
+            }
+
+            // 5. Upsert Expenses
+            if (window.expenses && window.expenses.length > 0) {
+                const formattedExp = window.expenses.map(e => ({
+                    id: e.id, branch_id: branchId, category: e.category, amount: e.amount, note: e.note, timestamp: e.timestamp, date: e.date
+                }));
+                await window.supabaseClient.from('pos_expenses').upsert(formattedExp);
+            }
+
+            // 6. Upsert History Logs
+            if (window.historyLog && window.historyLog.length > 0) {
+                const formattedLogs = window.historyLog.map(h => ({
+                    id: h.id, branch_id: branchId, type: h.type, item_name: h.itemName, qty: h.qty, note: h.note, date: h.date
+                }));
+                await window.supabaseClient.from('pos_history_logs').upsert(formattedLogs);
             }
         }
     } catch(e) { console.warn("Cloud Sync saving failed:", e); }
@@ -1720,7 +1738,6 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         localStorage.setItem(window.getBranchKey('pos_scripts'), JSON.stringify(window.customPosScripts));
     }
     
-    // រក្សាទុកទិន្នន័យ LocalStorage ផ្សេងៗទៀតដូចធម្មតា
     localStorage.setItem(window.getBranchKey('shop_name'), window.shopName || '');
     localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo || '');
     localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR || '');
@@ -1742,7 +1759,6 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
     try {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         
-        // ១. ទាញយកទិន្នន័យចំពី Column ថ្មីៗនីមួយៗ (Normalized Columns)
         let { data, error } = await window.supabaseClient
             .from('branch_store')
             .select('shop_info, sys_settings, user_accounts, active_plugins')
@@ -1755,7 +1771,6 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
         }
 
         if (data) {
-            // ២. ផាត់ចែកទិន្នន័យចូលទៅក្នុង Variable សកលរបស់ប្រព័ន្ធ POS
             window.shopName = data.shop_info?.shopName || '';
             window.shopLogo = data.shop_info?.shopLogo || '';
             window.shopQR = data.shop_info?.shopQR || '';
@@ -1767,7 +1782,6 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             window.userAccounts = data.user_accounts || [];
             window.activePlugins = data.active_plugins || { pos: [], menu: [] };
 
-            // រក្សាទុកក្នុង LocalStorage ទុកប្រើពេល Offline
             localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
             localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts));
 
@@ -1778,7 +1792,6 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
     }
 };
 
-/* STREAMING_CHUNK:Rest of Main Scripts and Functions... */
 // ==========================================
 // 13. GLOBAL UI & APP FLOW METHODS
 // ==========================================
@@ -1849,20 +1862,20 @@ window.applyPermissions = function() {
     if (!window.currentRole) window.currentRole = 'admin';
 
     const isAdmin = (window.currentRole === 'admin');
-    const isManager = (window.currentRole === 'manager'); // 🌟 សិទ្ធិ Manager
+    const isManager = (window.currentRole === 'manager');
     const isSales = (window.currentRole === 'sales');
     const isWarehouse = (window.currentRole === 'warehouse');
     const isGuest = (window.currentRole === 'guest'); 
 
     let sDash = !isGuest && true;
-    let sInv = !isGuest && (isAdmin || isManager || isWarehouse); // 🌟 Manager មើលស្តុកបាន
-    let sPOS = !isGuest && (isAdmin || isManager || isSales); // 🌟 Manager ចូល POS បាន
+    let sInv = !isGuest && (isAdmin || isManager || isWarehouse);
+    let sPOS = !isGuest && (isAdmin || isManager || isSales);
     let sCust = !isGuest && (isAdmin || isManager || (isSales && (window.sysSettings?.cust !== false)));
     let sUnpaid = !isGuest && (isAdmin || isManager || (isSales && (window.sysSettings?.unpaid !== false)));
-    let sExp = !isGuest && (isAdmin || isManager); // 🌟 Manager អាចកត់ចំណាយបាន
-    let sHist = !isGuest && (isAdmin || isManager); // 🌟 Manager មើលប្រវត្តិបាន
-    let sSet = !isGuest && isAdmin; // មានតែ Admin ទេចូល Settings បាន
-    let sAbout = !isGuest && isAdmin; // មានតែ Admin ទេចូល About បាន
+    let sExp = !isGuest && (isAdmin || isManager);
+    let sHist = !isGuest && (isAdmin || isManager);
+    let sSet = !isGuest && isAdmin;
+    let sAbout = !isGuest && isAdmin;
 
     const setFlex = (id, show) => {
         const el = document.getElementById(id);
@@ -1893,13 +1906,13 @@ window.applyPermissions = function() {
     const editIcon = document.getElementById('editShopIcon');
     if (editIcon) editIcon.style.display = isAdmin ? 'inline' : 'none';
 
-    const showCost = (window.sysSettings?.cost !== false) && (isAdmin || isManager); // Manager អាចមើលថ្លៃដើមបាន
+    const showCost = (window.sysSettings?.cost !== false) && (isAdmin || isManager);
     setBlock('costPriceContainer', showCost);
     document.querySelectorAll('.p-cost').forEach(el => el.style.display = showCost ? 'inline' : 'none');
 
-    setBlock('btnAddNewProduct', isAdmin || isManager); // Manager អាចបន្ថែមទំនិញថ្មី
+    setBlock('btnAddNewProduct', isAdmin || isManager);
     setFlex('inventoryExcelAction', isAdmin || isManager);
-    setBlock('adminUserManagementBlock', isAdmin); // មានតែ Admin ទេកែគណនីបាន
+    setBlock('adminUserManagementBlock', isAdmin);
 
     setFlex('posDiscountContainer', window.sysSettings?.discount !== false);
     if (document.getElementById('posTaxContainer')) {
@@ -1932,7 +1945,6 @@ window.renderUsersList = function() {
 
     tbody.innerHTML = (window.userAccounts || []).map(u => { 
         if (!u) return '';
-        // 🌟 បន្ថែម Badge សម្រាប់ Manager
         let badge = u.role === 'admin' ? '<span class="badge badge-admin">👑 Admin</span>' : 
                     (u.role === 'manager' ? '<span class="badge" style="background:rgba(139,92,246,0.15); color:#8b5cf6; border:1px solid rgba(139,92,246,0.3);">💼 Manager</span>' :
                     (u.role === 'sales' ? '<span class="badge badge-sales">🛒 Sales</span>' : '<span class="badge badge-warehouse">📦 Warehouse</span>')); 
@@ -1974,6 +1986,7 @@ window.loadSettingsToUI = function() {
     if(document.getElementById('setTickerText')) {
         document.getElementById('setTickerText').value = window.sysSettings.tickerNews || window.sysSettings.tickerText || '';
     }
+    
     const receiptSel = document.getElementById('setReceiptSize');
     if (receiptSel) {
         receiptSel.querySelectorAll('option[data-custom-preset="true"]').forEach(o => o.remove());
@@ -2009,13 +2022,12 @@ window.saveSysSettings = async function() {
         return;
     }
     
-    // 🌟 ការពារការ Reset ទៅ 1234 ពេលទុក Input ចោល
     if (!window.sysSettings) window.sysSettings = {};
     let currentSavedPin = window.sysSettings.storePin || '1234';
     let pinInputEl = document.getElementById('setStorePin');
     let newStorePin = pinInputEl ? pinInputEl.value.trim() : currentSavedPin;
     if (!newStorePin || newStorePin === '') {
-        newStorePin = currentSavedPin; // យកកូដចាស់មកវិញ បើអត់វាយអី
+        newStorePin = currentSavedPin; 
     }
 
     const adminAccount = window.userAccounts ? window.userAccounts.find(x => x.username === 'admin') : null;
@@ -2027,7 +2039,6 @@ window.saveSysSettings = async function() {
 
     window.sysSettings.storePin = newStorePin;
     
-    // 🌟 ធានាថាវាត្រូវសរសេរចូល LocalStorage គ្រប់កន្លែងទាំងអស់កុំឱ្យកូដចាស់រករឿង
     try {
         localStorage.setItem(window.getBranchKey('store_pin'), newStorePin);
         localStorage.setItem('store_pin', newStorePin);
@@ -2051,6 +2062,7 @@ window.saveSysSettings = async function() {
     
     if(document.getElementById('setEnableSound')) window.sysSettings.enableSound = document.getElementById('setEnableSound').checked;
     if(document.getElementById('setReceiptFooter')) window.sysSettings.receiptFooter = document.getElementById('setReceiptFooter').value.trim();
+    
     if(document.getElementById('setReceiptSize')) {
         const selSize = document.getElementById('setReceiptSize').value || '80mm';
         window.sysSettings.receiptSize = selSize;
@@ -2443,7 +2455,6 @@ window.saveShopName = async function() {
             if (!window.sysSettings.orderTelegramChatId) window.sysSettings.orderTelegramChatId = newChatId;
         }
         
-        // Save Bakong info to sysSettings
         window.sysSettings.bakongId = bakongId;
         window.sysSettings.bakongName = bakongName;
         
@@ -2530,7 +2541,6 @@ window.renderDashboard = function() {
                         let qty = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 0;
                         let price = parseFloat(item.price) || 0;
                         
-                        // ⚡ ពិនិត្យថ្លៃដើម៖ បើគ្មានក្នុងវិក្កយបត្រ (ករណីមកពី Menu) ត្រូវទាញពី Inventory មកជំនួស
                         let realProd = (window.inventory || []).find(p => p && (String(p.id) === String(item.id) || p.name === item.name));
                         let cost = parseFloat(item.cost) || (realProd ? parseFloat(realProd.cost) || 0 : 0);
 
@@ -2709,6 +2719,13 @@ window.clearHistory = function() {
             window.historyLog.length = 0; 
             localStorage.setItem('history_cleared_time', Date.now());
             if(typeof window.saveData==='function') await window.saveData(window.userAccounts); 
+            
+            if (window.supabaseClient && navigator.onLine) {
+                try {
+                    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                    await window.supabaseClient.from('pos_history_logs').delete().eq('branch_id', branchId);
+                } catch(e) {}
+            }
             window.renderHistory();
         }); 
     }
@@ -3134,28 +3151,22 @@ window.printZReport = function() {
 
     // ២. ជួសជុលបញ្ហា Store PIN (ការពារការលោតជាប់លេខចាស់ Autofill)
     const fixPinInputs = () => {
-        // កំណត់តែលើប្រអប់លេខកូដ Settings ទេ មិនប៉ះពាល់ដល់ Login
         const pinInputs = document.querySelectorAll('input[type="password"], input[id*="pin" i], input[id*="Pin" i]');
         pinInputs.forEach(input => {
-            // ការពារ Autofill លោតរំខាន តែមិនត្រូវបិទ Keyboard (readonly) ទេ
             input.setAttribute('autocomplete', 'new-password');
             input.setAttribute('spellcheck', 'false');
         });
     };
 
-    // ៣. បង្ការការចុចមួយលោតពីរលេខ (Double-fire prevention លើទូរសព្ទ)
     let lastPinKey = '';
     let lastClickTime = 0;
     document.addEventListener('click', function(e) {
-        // ស្វែងរកប៊ូតុងដែលត្រូវបានចុច
         const btn = e.target.closest('button');
         if (btn && btn.innerText) {
             let txt = btn.innerText.trim();
-            // បើជាប៊ូតុងលេខកូដ (មានអក្សរតែ ១ ឬប៊ូតុងលុប X)
             if (txt.length === 1 || txt === 'X' || txt === '⌫' || txt.includes('Del')) {
                 const now = Date.now();
                 if (now - lastClickTime < 50) { 
-                    // បើចុចលឿនជាង 0.05 វិនាទី គឺហាមវា (ទប់ជាប់មិនអោយលោត២លេខ)
                     e.preventDefault();
                     e.stopPropagation();
                     return false;
@@ -3165,7 +3176,6 @@ window.printZReport = function() {
         }
     }, true);
 
-    // ដំណើរការកូដនេះពេលទំព័រដើរចប់
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', fixPinInputs);
     } else {
@@ -3197,7 +3207,7 @@ window.realtimeCloudDeduct = async function(soldItems) {
                 let currentCloudQty = parseInt(cloudData.qty) || 0;
                 let newQty = Math.max(0, currentCloudQty - soldQty);
                 
-                // ៣. បាញ់ទិន្នន័យស្តុកថ្មីទៅកាន់ Cloud វិញភ្លាមៗ (ទោះជាន់គ្នាក៏មិនបញ្ហា)
+                // ៣. បាញ់ទិន្នន័យស្តុកថ្មីទៅកាន់ Cloud វិញភ្លាមៗ
                 await window.supabaseClient
                     .from('pos_products')
                     .update({ qty: newQty })
@@ -3219,30 +3229,11 @@ window.realtimeCloudDeduct = async function(soldItems) {
         console.error("Cloud Deduction Error:", err);
     }
 };
-// ==========================================
-// មុខងារកំណត់រូបរាង Logo ស្វ័យប្រវត្តិ (Circle / Rectangle)
-// ==========================================
-setInterval(() => {
-    // ទាញយកការកំណត់ពី Admin Settings
-    let shape = (window.sysSettings && window.sysSettings.logoShape) ? window.sysSettings.logoShape : 'circle';
-    let radius = (shape === 'circle') ? '50%' : '12px'; // បើរង្វង់ 50% បើចតុកោណឱ្យកោងជ្រុង 12px
-    
-    // បង្ខំដូររូបរាង Logo គ្រប់កន្លែងទាំងអស់ឱ្យត្រូវគ្នានឹងការកំណត់
-    let logoIds = ['sidebarLogo', 'shopLogoPreview', 'viewInvoiceLogo'];
-    logoIds.forEach(id => {
-        let el = document.getElementById(id);
-        if (el) el.style.borderRadius = radius;
-    });
-}, 1000); // ឆែកនិង Update រៀងរាល់ ១ វិនាទី
 
-// ==========================================
-// មុខងារទាញយកខ្នាតក្រដាសព្រីន Custom ពី Admin Settings មកបង្ហាញស្វ័យប្រវត្តិ
-// ==========================================
 window.updateReceiptDropdownOptions = function() {
     const select = document.getElementById('setReceiptSize');
     if (!select) return;
 
-    // ១. រៀបចំជម្រើសស្តង់ដារ
     select.innerHTML = `
         <option value="80mm">📄 ខ្នាត 80mm (ម៉ាស៊ីនព្រីនធំស្តង់ដារ)</option>
         <option value="58mm">🧾 ខ្នាត 57x40mm / 58mm (ម៉ាស៊ីនព្រីនតូច)</option>
@@ -3250,7 +3241,6 @@ window.updateReceiptDropdownOptions = function() {
         <option value="custom">⚙️ សរសេរទំហំខ្លួនឯងតាមចិត្ត (Custom)</option>
     `;
 
-    // ២. ទាញយកខ្នាត Custom ដែលបានបង្កើតក្នុង Admin Settings មកបង្ហាញបន្ថែម
     if (window.sysSettings && Array.isArray(window.sysSettings.customPrinterPresets)) {
         window.sysSettings.customPrinterPresets.forEach(preset => {
             if (preset && preset.id) {
@@ -3262,13 +3252,11 @@ window.updateReceiptDropdownOptions = function() {
         });
     }
 
-    // ៣. កំណត់យកខ្នាតដែលកំពុងប្រើបច្ចុប្បន្ន
     if (window.sysSettings && window.sysSettings.receiptSize) {
         select.value = window.sysSettings.receiptSize;
     }
 };
 
-// ហៅមុខងារនេះឲ្យដើរពេលបើកកម្មវិធី ឬពេលឆ្លាស់ Tab
 window.addEventListener('DOMContentLoaded', () => {
     setTimeout(window.updateReceiptDropdownOptions, 500);
 });
