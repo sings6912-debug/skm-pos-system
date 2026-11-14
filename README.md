@@ -29,4 +29,5 @@
 ## 🚀 របៀបដំឡើង និងប្រើប្រាស់ (Getting Started)
 
 1. **ទាញយកគម្រោង (Clone Repository):**
-   ```bash https://github.com/sings6912-debug/skm-pos-system.git
+   ```bash
+(https://github.com/sings6912-debug/skm-pos-system.git)
