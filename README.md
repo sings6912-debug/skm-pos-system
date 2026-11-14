@@ -30,4 +30,4 @@
 
 1. **ទាញយកគម្រោង (Clone Repository):**
    ```bash
-   git clone https://github.com/sings6912-debug/skm-pos-system.git
+https://github.com/sings6912-debug/skm-pos-system.git
