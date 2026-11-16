@@ -405,3 +405,87 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
     
     .print-dashed-line { border-bottom: 1px dashed #000; margin: 6px 0; }
 }
+
+/* 🌟 កែប្រែ UI សម្រាប់ប្រអប់ Input ថ្ងៃខែ ឱ្យធំទូលាយ និងងាយស្រួលចុច ទាំងលើទូរស័ព្ទ និងកុំព្យូទ័រ */
+input[type="datetime-local"], 
+input[type="date"], 
+input[type="month"], 
+input[type="time"] {
+    cursor: pointer;
+    padding: 10px 15px; /* បន្ថែម Padding ឱ្យធំជាងមុន */
+    font-size: var(--fs-14);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background-color: var(--bg-dark);
+    color: var(--text-main);
+    min-height: 44px; /* កំណត់កម្ពស់អប្បបរមាឱ្យស្មើប៊ូតុង */
+    min-width: 220px; /* ពង្រីកប្រអប់ឱ្យវែងជាងមុន */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05); /* បន្ថែមស្រមោលតិចៗ */
+    transition: all 0.2s ease-in-out;
+}
+
+/* 🌟 រចនា Icon កាឡិនឌ័រ ខាងស្តាំឱ្យស្រួលចុច */
+input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+input[type="date"]::-webkit-calendar-picker-indicator {
+    cursor: pointer;
+    padding: 6px;
+    background-color: var(--bg-card); /* ប្តូរពណ៌ផ្ទៃ Icon */
+    border-radius: 6px;
+    filter: invert(0.8); /* ធ្វើឱ្យ Icon លេចច្បាស់លើផ្ទៃងងឹត (Dark Mode) */
+    transition: 0.2s;
+}
+
+:root.light-theme input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+:root.light-theme input[type="date"]::-webkit-calendar-picker-indicator {
+    filter: invert(0); /* ស្តារពណ៌ Icon ដើមវិញសម្រាប់ពន្លឺថ្ងៃ (Light Mode) */
+    background-color: #f1f5f9;
+}
+
+input[type="datetime-local"]::-webkit-calendar-picker-indicator:hover,
+input[type="date"]::-webkit-calendar-picker-indicator:hover {
+    background-color: var(--primary);
+    filter: invert(1) sepia(1) saturate(100) hue-rotate(90deg); /* ប្រែពណ៌ Icon ទៅបៃតងពេល rêvouse ពីលើ */
+}
+
+input[type="datetime-local"]:focus,
+input[type="date"]:focus {
+    border-color: var(--primary);
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
+    outline: none;
+}
+
+/* 🌟 កែសម្រួលប្រអប់ស្វែងរកក្នុងតារាង (Table Filters) កុំឱ្យតូចពេក */
+.col-filter { 
+    width: 100%; 
+    padding: 10px; /* ពង្រីកប្រអប់ Search ក្នុងតារាង */
+    font-size: var(--fs-13); 
+    border-radius: 6px; 
+    border: 1px solid var(--border); 
+    background: var(--bg-dark); 
+    color: var(--text-main); 
+    outline: none; 
+    transition: 0.2s;
+    min-width: 120px;
+}
+
+/* 🌟 កែសម្រួលចន្លោះ (Gap) រវាងប្រអប់ថ្ងៃខែ និងប៊ូតុងនៅលើ Toolbar */
+.toolbar { 
+    display: flex; 
+    gap: 15px; /* ពង្រីកចន្លោះប្រហោង */
+    flex-wrap: wrap; 
+    margin-bottom: 25px; 
+    background: rgba(30,41,59,0.4); 
+    padding: 15px 20px; 
+    border-radius: 12px; 
+    border: 1px solid var(--border); 
+    align-items: center; 
+    transition: background 0.3s;
+}
+
+/* 🌟 ធ្វើឱ្យរលូន (Responsive) ពេលមើលលើទូរស័ព្ទ */
+@media (max-width: 768px) {
+    input[type="datetime-local"], 
+    input[type="date"] {
+        min-width: 100%; /* លើទូរស័ព្ទឱ្យពេញកញ្ចក់តែម្តង ស្រួលចុច */
+    }
+}
