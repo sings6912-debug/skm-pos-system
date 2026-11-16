@@ -928,15 +928,27 @@ window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     if (invoices.length === 0) return notifyFinanceUser("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!", "ជូនដំណឹង", true);
 
-    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
+    // 🌟 [ដំណោះស្រាយថ្មី]: បន្ថែម Column "ម៉ោង" បន្ទាប់ពី "កាលបរិច្ឆេទ"
+    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,ម៉ោង,អតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
     
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // 🌟 [ដំណោះស្រាយ]: ដាក់កាលបរិច្ឆេទក្នុងសញ្ញា "" (Quotes) ដើម្បីការពារកុំឱ្យ Excel បំបែកវាជា ២ Column
-        let rawDate = inv.date || new Date(inv.timestamp).toLocaleString('en-GB'); 
-        let safeDate = `"${String(rawDate).replace(/"/g, '""')}"`; 
+        // 🌟 កាត់ផ្តាច់ ថ្ងៃខែ និង ម៉ោង ជាពីរផ្នែកដាច់ដោយឡែកពីគ្នា
+        let rawDate = inv.date || new Date(inv.timestamp).toLocaleString('en-US'); 
+        let datePart = "";
+        let timePart = "";
+        
+        // ប្រើ split(' ') ដើម្បីពុះកាលបរិច្ឆេទជាកង់ៗ (ឧ. "10/30/2026 7:03:04 PM")
+        let datePartsArray = String(rawDate).split(' ');
+        if (datePartsArray.length >= 2) {
+            datePart = `"${datePartsArray[0].replace(/,/g, '')}"`; // យកកង់ទី១ ជាថ្ងៃខែ
+            timePart = `"${datePartsArray.slice(1).join(' ')}"`; // យកកង់ទី២ (និង AM/PM) ជាម៉ោង
+        } else {
+            datePart = `"${rawDate}"`;
+            timePart = `"-"`;
+        }
         
         const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
         const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
@@ -957,7 +969,8 @@ window.exportInvoicesCSV = function() {
         
         let row = [
             id,
-            safeDate, // 🌟 ឥឡូវវាមានសុវត្ថិភាពក្នុងការ Export ចូល Excel ហើយ
+            datePart,  // Column: កាលបរិច្ឆេទ
+            timePart,  // Column: ម៉ោង
             c,
             p,
             safeItems,
