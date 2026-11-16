@@ -284,6 +284,35 @@ window.saveProduct = function() {
     window.closeModal(); 
     window.saveData(window.userAccounts); 
     window.renderInventory();
+
+    // 🌟 [FIX] បន្ថែមកូដ Save ទៅ Supabase ផ្ទាល់ និងមានការពិពណ៌នា
+    setTimeout(async () => {
+        if (window.supabaseClient && navigator.onLine) {
+            try {
+                const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                await window.supabaseClient.from('pos_products').upsert({
+                    id: data.id,
+                    branch_id: branchId,
+                    name: data.name,
+                    category: data.category,
+                    cost: data.cost,
+                    price: data.price,
+                    riel: data.riel,
+                    qty: data.qty,
+                    unit: data.unit,
+                    condition: data.condition,
+                    expiry: data.expiry,
+                    image: data.image,
+                    description: data.desc, // 🌟 Save ការពិពណ៌នា
+                    custom_id: data.customId,
+                    updated_at: new Date().toISOString()
+                });
+                console.log("✅ Product and description saved to Supabase directly");
+            } catch(err) {
+                console.error("Error saving product to Supabase:", err);
+            }
+        }
+    }, 100);
 };
 
 window.editProduct = function(id) { 
