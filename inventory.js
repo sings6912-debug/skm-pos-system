@@ -333,7 +333,7 @@ window.editProduct = function(id) {
     if(document.getElementById('pRiel')) document.getElementById('pRiel').value = p.riel||''; 
     document.getElementById('pUnit').value = p.unit||''; 
     document.getElementById('pQty').value = p.qty; 
-    document.getElementById('pDesc').value = p.desc||''; 
+    document.getElementById('pDesc').value = p.description || p.desc || ''; 
     document.getElementById('pImage').value = p.image||''; 
     window.updateImagePreview(p.image||''); 
     
