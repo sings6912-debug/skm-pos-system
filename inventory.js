@@ -265,7 +265,7 @@ window.saveProduct = async function() {
         riel: parseFloat(document.getElementById('pRiel').value) || 0, 
         unit: document.getElementById('pUnit').value.trim(), 
         qty: parseInt(document.getElementById('pQty').value) || 0, 
-        desc: document.getElementById('pDesc').value, 
+        description: document.getElementById('pDesc').value, // 🌟 ត្រូវធានាថាវាចាប់ពី id='pDesc' នេះ
         image: document.getElementById('pImage').value,
         condition: document.getElementById('pCondition') ? document.getElementById('pCondition').value || '' : '',
         expiry: (window.sysSettings && window.sysSettings.expiry) ? expiryVal : ''
