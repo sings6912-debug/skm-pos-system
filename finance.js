@@ -70,7 +70,7 @@ window.renderUnpaid = function() {
     });
 
     const searchVal = (document.getElementById('searchUnpaid')?.value || '').toLowerCase().trim();
-    const dateFrom = document.getElementById('invoiceDateFrom')?.value;
+    ateFrom = document.getElementById('invoiceDateFrom')?.value;
     const dateTo = document.getElementById('invoiceDateTo')?.value;
 
     let totalPaid = 0;
