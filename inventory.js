@@ -250,7 +250,7 @@ window.handleImage = function(e) {
     reader.readAsDataURL(file); 
 };
 
-window.saveProduct = function() { 
+window.saveProduct = async function() { 
     const id = document.getElementById('pId').value; 
     const customIdInput = document.getElementById('pCustomId').value.trim();
     let expiryVal = document.getElementById('pExpiry') ? document.getElementById('pExpiry').value : '';
@@ -270,9 +270,11 @@ window.saveProduct = function() {
         condition: document.getElementById('pCondition') ? document.getElementById('pCondition').value || '' : '',
         expiry: (window.sysSettings && window.sysSettings.expiry) ? expiryVal : ''
     }; 
+    
     if(!data.name || (data.price <= 0 && data.riel <= 0)) {
         if(typeof window.ksMsg === 'function') return window.ksMsg("សូមបញ្ចូលឈ្មោះ និងតម្លៃលក់ (យ៉ាងហោចណាស់ ដុល្លារ ឬ រៀល)!"); 
     }
+    
     if(id) { 
         const idx = window.inventory.findIndex(p => p && p.id === id); 
         if(idx !== -1) window.inventory[idx] = data; 
@@ -281,38 +283,39 @@ window.saveProduct = function() {
         window.inventory.push(data); 
         window.logAction('add', data.name, data.qty, 'នាំចូលថ្មី', window.activeUser); 
     } 
+    
     window.closeModal(); 
-    window.saveData(window.userAccounts); 
     window.renderInventory();
 
-    // 🌟 [FIX] បន្ថែមកូដ Save ទៅ Supabase ផ្ទាល់ និងមានការពិពណ៌នា
-    setTimeout(async () => {
-        if (window.supabaseClient && navigator.onLine) {
-            try {
-                const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                await window.supabaseClient.from('pos_products').upsert({
-                    id: data.id,
-                    branch_id: branchId,
-                    name: data.name,
-                    category: data.category,
-                    cost: data.cost,
-                    price: data.price,
-                    riel: data.riel,
-                    qty: data.qty,
-                    unit: data.unit,
-                    condition: data.condition,
-                    expiry: data.expiry,
-                    image: data.image,
-                    description: data.desc, // 🌟 Save ការពិពណ៌នា
-                    custom_id: data.customId,
-                    updated_at: new Date().toISOString()
-                });
-                console.log("✅ Product and description saved to Supabase directly");
-            } catch(err) {
-                console.error("Error saving product to Supabase:", err);
-            }
+    // 🌟 [FIX] រង់ចាំរុញទិន្នន័យ (រួមទាំង Description) ទៅកាន់ Supabase ឱ្យចប់សព្វគ្រប់សិន
+    if (window.supabaseClient && navigator.onLine) {
+        try {
+            const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            await window.supabaseClient.from('pos_products').upsert({
+                id: data.id,
+                branch_id: branchId,
+                name: data.name,
+                category: data.category,
+                cost: data.cost,
+                price: data.price,
+                riel: data.riel,
+                qty: data.qty,
+                unit: data.unit,
+                condition: data.condition,
+                expiry: data.expiry,
+                image: data.image,
+                description: data.desc, // 🌟 Save ការពិពណ៌នា
+                custom_id: data.customId,
+                updated_at: new Date().toISOString()
+            });
+            console.log("✅ Product and description saved to Supabase completely");
+        } catch(err) {
+            console.error("Error saving product to Supabase:", err);
         }
-    }, 100);
+    }
+    
+    // បន្ទាប់ពីបញ្ជូនទៅ Cloud ជោគជ័យ ទើប Save LocalStorage ជាក្រោយ
+    window.saveData(window.userAccounts); 
 };
 
 window.editProduct = function(id) { 
