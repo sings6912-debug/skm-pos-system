@@ -1577,7 +1577,7 @@ window.manualCloudSync = async function(isAuto = false) {
             if (productsData && productsData.length > 0) {
                 let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
                 let formattedProducts = productsData.map(p => ({
-                    id: p.id, customId: p.custom_id || p.id, name: p.name, category: p.category, cost: p.cost, price: p.price, riel: p.riel, qty: p.qty, unit: p.unit, condition: p.condition, expiry: p.expiry, image: p.image
+                    id: p.id, customId: p.custom_id || p.id, name: p.name, category: p.category, cost: p.cost, price: p.price, riel: p.riel, qty: p.qty, unit: p.unit, condition: p.condition, expiry: p.expiry, image: p.image, description: p.description || ''
                 }));
                 window.inventory = formattedProducts.filter(p => !deletedProd.includes(String(p.id)));
                 localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
