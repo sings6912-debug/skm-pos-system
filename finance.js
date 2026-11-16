@@ -934,66 +934,45 @@ window.exportInvoicesCSV = function() {
         return `"${cleanedStr}"`;
     };
 
-    // 🌟 ដាក់ Header ឱ្យមាន Column "ម៉ោង" ត្រឹមត្រូវ (សរុប ១២ Column ស្មើគ្នា)
-    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,ម៉ោង,ឈ្មោះអតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
+    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
     
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // បំបែកថ្ងៃខែ និងម៉ោង
-        const rawDateStr = inv.date || inv.createdAt || '';
-        let datePart = '';
-        let timePart = '';
-
-        if (rawDateStr.includes(',')) {
-            const parts = rawDateStr.split(',');
-            datePart = parts[0].trim();
-            timePart = parts[1] ? parts[1].trim() : '';
-        } else if (rawDateStr.includes(' ')) {
-            const parts = rawDateStr.split(' ');
-            datePart = parts[0].trim();
-            timePart = parts.slice(1).join(' ').trim();
-        } else {
-            datePart = rawDateStr;
-            timePart = '';
-        }
-
-        const d = safeCsvCell(datePart);
-        const t = safeCsvCell(timePart);
+        // 🌟 ប្រើប្រាស់ safeCsvCell ដើម្បីគ្របសញ្ញា "" ការពារកុំឱ្យក្បៀសក្នុងម៉ោងកាត់ផ្តាច់ Column
+        const rawDate = inv.date || inv.createdAt || '';
+        const d = safeCsvCell(rawDate); // លទ្ធផលនឹងក្លាយជា "10/30/2026, 7:03:04 PM" ស្ថិតក្នុង ô តែមួយ
         
         const c = safeCsvCell(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
         const p = safeCsvCell(inv.customerPhone || inv.phone || 'EMPTY');
         
-        // ទំនិញដែលបានទិញ
         let itemsStr = '';
         if (inv.items && Array.isArray(inv.items)) {
             itemsStr = inv.items.map(i => `${i.name} (x${i.cartQty || i.qty})`).join(" + ");
         }
         const safeItems = safeCsvCell(itemsStr);
 
-        const tot = parseFloat(inv.totalAmount || inv.total || 0);
-        const paidAmt = parseFloat(inv.paidUsd || inv.paidAmount || (inv.status === 'paid' ? tot : 0));
+        const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
+        const paidAmt = parseFloat(inv.paidUsd || inv.paidAmount || 0);
         const remainAmt = Math.max(0, tot - paidAmt);
         
         const st = inv.status || 'unpaid';
         const s = safeCsvCell(inv.seller || inv.cashier || 'System');
         const n = safeCsvCell(inv.note || '');
         
-        // រៀបចំលំដាប់ Column ទាំង ១២ ឱ្យត្រូវគ្នាเป๊ะជាមួយ Header ខាងលើ
         let row = [
-            id,                 // A: លេខវិក្កយបត្រ
-            d,                  // B: កាលបរិច្ឆេទ
-            t,                  // C: ម៉ោង
-            c,                  // D: ឈ្មោះអតិថិជន
-            p,                  // E: លេខទូរស័ព្ទ
-            safeItems,          // F: ទំនិញដែលได้ទិញ
-            tot.toFixed(2),     // G: តម្លៃសរុប
-            paidAmt.toFixed(2), // H: ប្រាក់បានបង់
-            remainAmt.toFixed(2),// I: ប្រាក់នៅខ្វះ
-            st,                 // J: ស្ថានភាព
-            s,                  // K: អ្នកលក់
-            n                   // L: ចំណាំ
+            id,
+            d,          // កាលបរិច្ឆេទ និងម៉ោងនឹងនៅ Column B ជាមួយគ្នាដោយសុវត្ថិភាព
+            c,          // ឈ្មោះអតិថិជននឹងត្រូវចូល Column C វិញស្អាត
+            p,
+            safeItems,
+            tot,
+            paidAmt.toFixed(2),
+            remainAmt.toFixed(2),
+            st,
+            s,
+            n
         ].join(",");
         
         csvContent += row + "\n";
