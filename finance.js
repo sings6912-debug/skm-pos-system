@@ -925,47 +925,43 @@ window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     if (invoices.length === 0) return notifyFinanceUser("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!", "ជូនដំណឹង", true);
 
-    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
+    const safeCsvCell = (str) => {
+        if (str === null || str === undefined) return '""';
+        let cleanedStr = String(str).replace(/[\r\n]+/g, ' - ').replace(/"/g, '""');
+        return `"${cleanedStr}"`;
+    };
+
+    // ត្រឡប់ Header ឱ្យនៅស្ដង់ដារដើមវិញ (៨ Column ត្រូវគ្នាเป๊ะ)
+    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ចំណាំ,សរុបទឹកប្រាក់,ស្ថានភាព,អ្នកលក់\n";
     
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // 🌟 ដកសញ្ញាក្បៀស (,) ចេញពីកាលបរិច្ឆេទទាំងស្រុង ជំនួសដោយដកឃ្លាវិញ
-        let rawDate = inv.date || new Date(inv.timestamp).toLocaleString('en-GB'); // ប្រើ en-GB កាត់បន្ថយបញ្ហាក្បៀស
-        let safeDate = String(rawDate).replace(/,/g, ' '); 
+        // 🌟 បំប្លែងកាលបរិច្ឆេទ និងម៉ោង ឱ្យនៅក្រោមកន្លែងតែមួយដោយដកសញ្ញាក្បៀសចេញ (ប្តូរជាដកឃ្លា ឬ -)
+        const rawDateStr = inv.date || inv.createdAt || '';
+        // ឧទាហរណ៍៖ "10/30/2026, 7:03:04 PM" នឹងត្រូវកែជា "10/30/2026 7:03:04 PM" ដោយគ្មានសញ្ញាក្បៀស
+        const cleanDateTime = rawDateStr.replace(/,/g, ''); 
+        const d = safeCsvCell(cleanDateTime);
         
-        const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
-        const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
-        const n = `"${(inv.note || '').replace(/"/g, '""')}"`;
+        const c = safeCsvCell(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
+        const p = safeCsvCell(inv.customerPhone || inv.phone || 'EMPTY');
+        const n = safeCsvCell(inv.note || '');
         
-        let itemsStr = '';
-        if (inv.items && Array.isArray(inv.items)) {
-            itemsStr = inv.items.map(i => `${i.name} (x${i.cartQty || i.qty})`).join(" + ");
-        }
-        let safeItems = `"${itemsStr.replace(/"/g, '""')}"`;
-
         const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
-        const paidAmt = parseFloat(inv.paidUsd || inv.paidAmount || 0);
-        const remainAmt = Math.max(0, tot - paidAmt);
-        
         const st = inv.status || 'unpaid';
-        const s = `"${(inv.seller || inv.cashier || '').replace(/"/g, '""')}"`;
+        const s = safeCsvCell(inv.seller || inv.cashier || 'System');
         
-        // វិចខ្ចប់ជួរនីមួយៗឱ្យត្រូវលំដាប់ Column ១២ ទាំងអស់គ្នា
+        // រៀបចំជួរឱ្យត្រូវលំដាប់ទាំង ៨ ឱ្យត្រូវនឹង Header
         let row = [
             id,
-            d,          // កាលបរិច្ឆេទ
-            t,          // ម៉ោង
-            c,          // អតិថិជន
+            d,          // កាលបរិច្ឆេទ និងម៉ោងរួមគ្នាក្នុង Column B ដោយសុវត្ថិភាព
+            c,          // អតិថិជន (Column C)
             p,          // លេខទូរស័ព្ទ
-            safeItems,  // ទំនិញ
-            tot,        // សរុប
-            paidAmt.toFixed(2),
-            remainAmt.toFixed(2),
-            st,
-            s,
-            n
+            n,          // ចំណាំ
+            tot,        // សរុបទឹកប្រាក់
+            st,         // ស្ថានភាព
+            s           // អ្នកលក់
         ].join(",");
         
         csvContent += row + "\n";
@@ -975,7 +971,7 @@ window.exportInvoicesCSV = function() {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     const branchId = window.SHOP_BRANCH_ID || 'branch_1';
-    link.download = `invoices_${branchId}_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `Invoices_${branchId}_${new Date().toISOString().slice(0,10)}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
