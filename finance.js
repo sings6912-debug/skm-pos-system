@@ -931,37 +931,59 @@ window.exportInvoicesCSV = function() {
         return `"${cleanedStr}"`;
     };
 
-    // ត្រឡប់ Header ឱ្យនៅស្ដង់ដារដើមវិញ (៨ Column ត្រូវគ្នាเป๊ะ)
-    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ចំណាំ,សរុបទឹកប្រាក់,ស្ថានភាព,អ្នកលក់\n";
+    // 🌟 កំណត់ Header ទាំង ១២ ឱ្យត្រូវគ្នាពិតប្រាកដទៅនឹងរូបភាពរបស់បង
+    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,ម៉ោង,ឈ្មោះអតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
     
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // 🌟 បំប្លែងកាលបរិច្ឆេទ និងម៉ោង ឱ្យនៅក្រោមកន្លែងតែមួយដោយដកសញ្ញាក្បៀសចេញ (ប្តូរជាដកឃ្លា ឬ -)
+        // 🌟 បំបែកកាលបរិច្ឆេទ និងម៉ោងដាច់ពីគ្នា (ដាក់ចូល Column B និង Column C)
         const rawDateStr = inv.date || inv.createdAt || '';
-        // ឧទាហរណ៍៖ "10/30/2026, 7:03:04 PM" នឹងត្រូវកែជា "10/30/2026 7:03:04 PM" ដោយគ្មានសញ្ញាក្បៀស
-        const cleanDateTime = rawDateStr.replace(/,/g, ''); 
-        const d = safeCsvCell(cleanDateTime);
+        let datePart = rawDateStr.split(',')[0].trim(); 
+        let timePart = rawDateStr.split(',')[1] ? rawDateStr.split(',')[1].trim() : ''; 
+        
+        if (!timePart && rawDateStr.includes(' ')) {
+            const parts = rawDateStr.split(' ');
+            datePart = parts[0];
+            timePart = parts.slice(1).join(' ');
+        }
+
+        const d = safeCsvCell(datePart);
+        const t = safeCsvCell(timePart);
         
         const c = safeCsvCell(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
         const p = safeCsvCell(inv.customerPhone || inv.phone || 'EMPTY');
-        const n = safeCsvCell(inv.note || '');
         
-        const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
+        // រៀបចំឈ្មោះទំនិញដែលបានទិញ
+        let itemsStr = '';
+        if (inv.items && Array.isArray(inv.items)) {
+            itemsStr = inv.items.map(i => `${i.name} (x${i.cartQty || i.qty})`).join(" + ");
+        }
+        const safeItems = safeCsvCell(itemsStr);
+
+        const tot = parseFloat(inv.totalAmount || inv.total || 0);
+        const paidAmt = parseFloat(inv.paidUsd || inv.paidAmount || (inv.status === 'paid' ? tot : 0));
+        const remainAmt = Math.max(0, tot - paidAmt);
+        
         const st = inv.status || 'unpaid';
         const s = safeCsvCell(inv.seller || inv.cashier || 'System');
+        const n = safeCsvCell(inv.note || '');
         
-        // រៀបចំជួរឱ្យត្រូវលំដាប់ទាំង ៨ ឱ្យត្រូវនឹង Header
+        // រៀបចំជួរទាំង ១២ ឱ្យត្រូវលំដាប់ជួរឈរ (Columns A ដល់ L)
         let row = [
             id,
-            d,          // កាលបរិច្ឆេទ និងម៉ោងរួមគ្នាក្នុង Column B ដោយសុវត្ថិភាព
-            c,          // អតិថិជន (Column C)
-            p,          // លេខទូរស័ព្ទ
-            n,          // ចំណាំ
-            tot,        // សរុបទឹកប្រាក់
-            st,         // ស្ថានភាព
-            s           // អ្នកលក់
+            d,          // Column B: កាលបរិច្ឆេទ
+            t,          // Column C: ម៉ោង
+            c,          // Column D: ឈ្មោះអតិថិជន
+            p,          // Column E: លេខទូរស័ព្ទ
+            safeItems,  // Column F: ទំនិញដែលបានទិញ
+            tot.toFixed(2),     // Column G: តម្លៃសរុប
+            paidAmt.toFixed(2), // Column H: ប្រាក់បានបង់
+            remainAmt.toFixed(2),// Column I: ប្រាក់នៅខ្វះ
+            st,         // Column J: ស្ថានភាព
+            s,          // Column K: អ្នកលក់
+            n           // Column L: ចំណាំ
         ].join(",");
         
         csvContent += row + "\n";
