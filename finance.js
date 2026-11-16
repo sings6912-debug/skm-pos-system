@@ -51,7 +51,6 @@ window.renderUnpaid = function() {
         } catch(e) { invoices = []; }
     }
 
-    // 🛡️ សម្អាតទិន្នន័យខូច (Null/Undefined) ការពារកុំឱ្យគាំង
     invoices = invoices.filter(inv => inv !== null && typeof inv === 'object');
 
     const deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
@@ -70,8 +69,12 @@ window.renderUnpaid = function() {
     });
 
     const searchVal = (document.getElementById('searchUnpaid')?.value || '').toLowerCase().trim();
-    ateFrom = document.getElementById('invoiceDateFrom')?.value;
-    const dateTo = document.getElementById('invoiceDateTo')?.value;
+    
+    // 🌟 កែតម្រូវអថេរ dateFrom និង dateTo ឱ្យមានសុវត្ថិភាព ១០០% លែង Error ទៀតហើយ
+    const dateFromEl = document.getElementById('invoiceDateFrom');
+    const dateToEl = document.getElementById('invoiceDateTo');
+    const dateFrom = dateFromEl ? dateFromEl.value : '';
+    const dateTo = dateToEl ? dateToEl.value : '';
 
     let totalPaid = 0;
     let totalUnpaid = 0;
