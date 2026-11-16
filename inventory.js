@@ -265,7 +265,7 @@ window.saveProduct = async function() {
         riel: parseFloat(document.getElementById('pRiel').value) || 0, 
         unit: document.getElementById('pUnit').value.trim(), 
         qty: parseInt(document.getElementById('pQty').value) || 0, 
-        description: document.getElementById('pDesc').value, // 🌟 ត្រូវធានាថាវាចាប់ពី id='pDesc' នេះ
+        desc: document.getElementById('pDesc').value, // 🌟 [កែទី១] ត្រូវប្រាកដថាប្រើឈ្មោះ 'desc' ដើម្បីឲ្យវាស៊ីគ្នានឹងកូដ Render
         image: document.getElementById('pImage').value,
         condition: document.getElementById('pCondition') ? document.getElementById('pCondition').value || '' : '',
         expiry: (window.sysSettings && window.sysSettings.expiry) ? expiryVal : ''
@@ -277,7 +277,7 @@ window.saveProduct = async function() {
     
     if(id) { 
         const idx = window.inventory.findIndex(p => p && p.id === id); 
-        if(idx !== -1) window.inventory[idx] = data; 
+        if(idx !== -1) window.inventory[idx] = data; // 🌟 [កែទី២] វា Save 'desc' ចូល Array នៅទីនេះហើយ
         window.logAction('update', data.name, 0, 'កែប្រែព័ត៌មាន', window.activeUser); 
     } else { 
         window.inventory.push(data); 
@@ -287,7 +287,7 @@ window.saveProduct = async function() {
     window.closeModal(); 
     window.renderInventory();
 
-    // 🌟 [FIX] រង់ចាំរុញទិន្នន័យ (រួមទាំង Description) ទៅកាន់ Supabase ឱ្យចប់សព្វគ្រប់សិន
+    // បញ្ជូនទៅ Supabase Cloud
     if (window.supabaseClient && navigator.onLine) {
         try {
             const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
@@ -304,7 +304,7 @@ window.saveProduct = async function() {
                 condition: data.condition,
                 expiry: data.expiry,
                 image: data.image,
-                description: data.desc || data.description,
+                description: data.desc, // 🌟 [កែទី៣] បញ្ជូន 'desc' នេះទៅកាន់ 'description' របស់ Supabase
                 custom_id: data.customId,
                 updated_at: new Date().toISOString()
             });
