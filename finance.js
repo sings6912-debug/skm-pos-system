@@ -928,44 +928,37 @@ window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     if (invoices.length === 0) return notifyFinanceUser("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!", "ជូនដំណឹង", true);
 
-    const safeCsvCell = (str) => {
-        if (str === null || str === undefined) return '""';
-        let cleanedStr = String(str).replace(/[\r\n]+/g, ' - ').replace(/"/g, '""');
-        return `"${cleanedStr}"`;
-    };
-
     let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
     
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // 🌟 ដកសញ្ញាក្បៀសចេញពីម៉ោងទាំងស្រុង និងប្តូរជាសញ្ញាដក (-) វិញ ដើម្បីកុំឱ្យ Excel ច្រឡំកាត់ Column
-        let rawDate = inv.date || inv.createdAt || '';
-        let cleanDate = String(rawDate).replace(/,\s*/g, ' - '); // ជំនួស "10/30/2026, 7:03:04 PM" ទៅជា "10/30/2026 - 7:03:04 PM"
-        const d = safeCsvCell(cleanDate);
+        // 🌟 [ដំណោះស្រាយ]: ដាក់កាលបរិច្ឆេទក្នុងសញ្ញា "" (Quotes) ដើម្បីការពារកុំឱ្យ Excel បំបែកវាជា ២ Column
+        let rawDate = inv.date || new Date(inv.timestamp).toLocaleString('en-GB'); 
+        let safeDate = `"${String(rawDate).replace(/"/g, '""')}"`; 
         
-        const c = safeCsvCell(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
-        const p = safeCsvCell(inv.customerPhone || inv.phone || 'EMPTY');
+        const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
+        const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
+        const n = `"${(inv.note || '').replace(/"/g, '""')}"`;
         
         let itemsStr = '';
         if (inv.items && Array.isArray(inv.items)) {
             itemsStr = inv.items.map(i => `${i.name} (x${i.cartQty || i.qty})`).join(" + ");
         }
-        const safeItems = safeCsvCell(itemsStr);
+        let safeItems = `"${itemsStr.replace(/"/g, '""')}"`;
 
         const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
         const paidAmt = parseFloat(inv.paidUsd || inv.paidAmount || 0);
         const remainAmt = Math.max(0, tot - paidAmt);
         
         const st = inv.status || 'unpaid';
-        const s = safeCsvCell(inv.seller || inv.cashier || 'System');
-        const n = safeCsvCell(inv.note || '');
+        const s = `"${(inv.seller || inv.cashier || '').replace(/"/g, '""')}"`;
         
         let row = [
             id,
-            d,          // ឥឡូវនេះ ថ្ងៃខែ និងម៉ោងនឹងស្ថិតក្នុង Column B តែមួយ ដោយគ្មានសញ្ញាក្បៀសបង្កបញ្ហាទេ
-            c,          // ឈ្មោះអតិថិជននឹងរត់មក Column C វិញត្រូវស្អាត
+            safeDate, // 🌟 ឥឡូវវាមានសុវត្ថិភាពក្នុងការ Export ចូល Excel ហើយ
+            c,
             p,
             safeItems,
             tot,
@@ -983,7 +976,7 @@ window.exportInvoicesCSV = function() {
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     const branchId = window.SHOP_BRANCH_ID || 'branch_1';
-    link.download = `Invoices_${branchId}_${new Date().toISOString().slice(0,10)}.csv`;
+    link.download = `invoices_${branchId}_${new Date().toISOString().slice(0,10)}.csv`;
     document.body.appendChild(link);
     link.click();
     link.remove();
