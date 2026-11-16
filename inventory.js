@@ -304,7 +304,7 @@ window.saveProduct = async function() {
                 condition: data.condition,
                 expiry: data.expiry,
                 image: data.image,
-                description: data.desc, // 🌟 Save ការពិពណ៌នា
+                description: data.desc || data.description,
                 custom_id: data.customId,
                 updated_at: new Date().toISOString()
             });
