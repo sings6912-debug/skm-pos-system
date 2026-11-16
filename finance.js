@@ -952,13 +952,15 @@ window.exportInvoicesCSV = function() {
         const st = inv.status || 'unpaid';
         const s = `"${(inv.seller || inv.cashier || '').replace(/"/g, '""')}"`;
         
+        // វិចខ្ចប់ជួរនីមួយៗឱ្យត្រូវលំដាប់ Column ១២ ទាំងអស់គ្នា
         let row = [
             id,
-            safeDate, // ប្រើកាលបរិច្ឆេទដែលគ្មានក្បៀស
-            c,
-            p,
-            safeItems,
-            tot,
+            d,          // កាលបរិច្ឆេទ
+            t,          // ម៉ោង
+            c,          // អតិថិជន
+            p,          // លេខទូរស័ព្ទ
+            safeItems,  // ទំនិញ
+            tot,        // សរុប
             paidAmt.toFixed(2),
             remainAmt.toFixed(2),
             st,
