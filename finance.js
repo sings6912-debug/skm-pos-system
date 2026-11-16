@@ -928,13 +928,18 @@ window.exportInvoicesCSV = function() {
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
-        const d = inv.date || inv.createdAt || '';
+        
+        // 🌟 [កែប្រែ] ដាក់សញ្ញាធ្មេញកណ្តុរ "" គ្របពីលើកាលបរិច្ឆេទ ដើម្បីការពារកុំឱ្យវាដាច់ Column
+        const rawDate = inv.date || inv.createdAt || '';
+        const d = `"${String(rawDate).replace(/"/g, '""')}"`;
+        
         const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
         const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
         const n = `"${(inv.note || '').replace(/"/g, '""')}"`;
         const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
         const st = inv.status || 'unpaid';
         const s = `"${(inv.seller || inv.cashier || '').replace(/"/g, '""')}"`;
+        
         csvContent += `${id},${d},${c},${p},${n},${tot},${st},${s}\n`;
     });
 
