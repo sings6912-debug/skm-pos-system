@@ -925,36 +925,48 @@ window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     if (invoices.length === 0) return notifyFinanceUser("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!", "ជូនដំណឹង", true);
 
-    // 🌟 អនុគមន៍ពិសេស សម្រាប់សំអាតទិន្នន័យឲ្យមានសុវត្ថិភាព មុននឹងដាក់ចូល CSV
-    const safeCsvCell = (str) => {
-        if (str === null || str === undefined) return '""';
-        // បំប្លែងទៅជាអក្សរ, ដកសញ្ញា Enter (\n, \r) ចេញ ហើយជំនួសដោយសញ្ញាដក (-) និងប្តូរ " ទៅជា ""
-        let cleanedStr = String(str).replace(/[\r\n]+/g, ' - ').replace(/"/g, '""');
-        return `"${cleanedStr}"`;
-    };
-
-    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ចំណាំ,សរុបទឹកប្រាក់,ស្ថានភាព,អ្នកលក់\n";
+    let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
     
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // ប្រើប្រាស់អនុគមន៍ safeCsvCell ដើម្បីសំអាតរាល់ Field ទាំងអស់
-        const rawDate = inv.date || inv.createdAt || '';
-        const d = safeCsvCell(rawDate);
+        // 🌟 ដកសញ្ញាក្បៀស (,) ចេញពីកាលបរិច្ឆេទទាំងស្រុង ជំនួសដោយដកឃ្លាវិញ
+        let rawDate = inv.date || new Date(inv.timestamp).toLocaleString('en-GB'); // ប្រើ en-GB កាត់បន្ថយបញ្ហាក្បៀស
+        let safeDate = String(rawDate).replace(/,/g, ' '); 
         
-        const c = safeCsvCell(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
-        const p = safeCsvCell(inv.customerPhone || inv.phone || 'EMPTY');
-        const n = safeCsvCell(inv.note || '');
+        const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
+        const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
+        const n = `"${(inv.note || '').replace(/"/g, '""')}"`;
         
+        let itemsStr = '';
+        if (inv.items && Array.isArray(inv.items)) {
+            itemsStr = inv.items.map(i => `${i.name} (x${i.cartQty || i.qty})`).join(" + ");
+        }
+        let safeItems = `"${itemsStr.replace(/"/g, '""')}"`;
+
         const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
+        const paidAmt = parseFloat(inv.paidUsd || inv.paidAmount || 0);
+        const remainAmt = Math.max(0, tot - paidAmt);
+        
         const st = inv.status || 'unpaid';
-        const s = safeCsvCell(inv.seller || inv.cashier || 'System');
+        const s = `"${(inv.seller || inv.cashier || '').replace(/"/g, '""')}"`;
         
-        // 🌟 ចំណាំ៖ ដោយសារនៅក្នុងតារាង (UI) របស់បង ជួរឈរមានតែ ៨ (លេខវិក្កយបត្រ, កាលបរិច្ឆេទ, អតិថិជន, ទូរស័ព្ទ, ចំណាំ, សរុបទឹកប្រាក់, ស្ថានភាព, អ្នកលក់) 
-        // ទើបខ្ញុំមិនបានដាក់បញ្ចូល "ទំនិញដែលបានទិញ" និង "ប្រាក់បានបង់" នៅទីនេះ ដើម្បីឱ្យវាស៊ីគ្នានឹង Header។ បើបងចង់ថែម អាចប្រាប់ខ្ញុំបាន។
+        let row = [
+            id,
+            safeDate, // ប្រើកាលបរិច្ឆេទដែលគ្មានក្បៀស
+            c,
+            p,
+            safeItems,
+            tot,
+            paidAmt.toFixed(2),
+            remainAmt.toFixed(2),
+            st,
+            s,
+            n
+        ].join(",");
         
-        csvContent += `${id},${d},${c},${p},${n},${tot},${st},${s}\n`;
+        csvContent += row + "\n";
     });
 
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
