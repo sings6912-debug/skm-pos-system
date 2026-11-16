@@ -288,10 +288,13 @@ window.saveProduct = async function() {
     window.renderInventory();
 
     // បញ្ជូនទៅ Supabase Cloud
+    // បញ្ជូនទៅ Supabase Cloud
     if (window.supabaseClient && navigator.onLine) {
         try {
             const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-            await window.supabaseClient.from('pos_products').upsert({
+            
+            // បន្ថែម { error } ដើម្បីចាប់យកកំហុសផ្ទាល់ពី Supabase
+            const { error } = await window.supabaseClient.from('pos_products').upsert({
                 id: data.id,
                 branch_id: branchId,
                 name: data.name,
@@ -304,11 +307,19 @@ window.saveProduct = async function() {
                 condition: data.condition,
                 expiry: data.expiry,
                 image: data.image,
-                description: data.desc, // 🌟 [កែទី៣] បញ្ជូន 'desc' នេះទៅកាន់ 'description' របស់ Supabase
+                description: data.desc, // ត្រូវប្រាកដថាក្នុង Database ឈ្មោះ description
                 custom_id: data.customId,
                 updated_at: new Date().toISOString()
             });
-            console.log("✅ Product and description saved to Supabase completely");
+
+            if (error) {
+                // ប្រសិនបើ Error វានឹងលោតផ្ទាំង Alert ប្រាប់ចំៗថាខុស Column មួយណា
+                console.error("🔥 Supabase Error:", error);
+                alert("បរាជ័យក្នុងការបញ្ជូនទៅ Cloud: \n" + error.message);
+            } else {
+                console.log("✅ Product and description saved to Supabase completely");
+            }
+
         } catch(err) {
             console.error("Error saving product to Supabase:", err);
         }
