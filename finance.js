@@ -920,25 +920,39 @@ window.downloadInvoicePNG = function() {
     });
 };
 
+// 2. Export Excel សម្រាប់វិក្កយបត្រ (Invoices / Orders)
 window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     if (invoices.length === 0) return notifyFinanceUser("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!", "ជូនដំណឹង", true);
 
+    // 🌟 អនុគមន៍ពិសេស សម្រាប់សំអាតទិន្នន័យឲ្យមានសុវត្ថិភាព មុននឹងដាក់ចូល CSV
+    const safeCsvCell = (str) => {
+        if (str === null || str === undefined) return '""';
+        // បំប្លែងទៅជាអក្សរ, ដកសញ្ញា Enter (\n, \r) ចេញ ហើយជំនួសដោយសញ្ញាដក (-) និងប្តូរ " ទៅជា ""
+        let cleanedStr = String(str).replace(/[\r\n]+/g, ' - ').replace(/"/g, '""');
+        return `"${cleanedStr}"`;
+    };
+
     let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,អតិថិជន,លេខទូរស័ព្ទ,ចំណាំ,សរុបទឹកប្រាក់,ស្ថានភាព,អ្នកលក់\n";
+    
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // 🌟 [កែប្រែ] ដាក់សញ្ញាធ្មេញកណ្តុរ "" គ្របពីលើកាលបរិច្ឆេទ ដើម្បីការពារកុំឱ្យវាដាច់ Column
+        // ប្រើប្រាស់អនុគមន៍ safeCsvCell ដើម្បីសំអាតរាល់ Field ទាំងអស់
         const rawDate = inv.date || inv.createdAt || '';
-        const d = `"${String(rawDate).replace(/"/g, '""')}"`;
+        const d = safeCsvCell(rawDate);
         
-        const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
-        const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
-        const n = `"${(inv.note || '').replace(/"/g, '""')}"`;
+        const c = safeCsvCell(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
+        const p = safeCsvCell(inv.customerPhone || inv.phone || 'EMPTY');
+        const n = safeCsvCell(inv.note || '');
+        
         const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
         const st = inv.status || 'unpaid';
-        const s = `"${(inv.seller || inv.cashier || '').replace(/"/g, '""')}"`;
+        const s = safeCsvCell(inv.seller || inv.cashier || 'System');
+        
+        // 🌟 ចំណាំ៖ ដោយសារនៅក្នុងតារាង (UI) របស់បង ជួរឈរមានតែ ៨ (លេខវិក្កយបត្រ, កាលបរិច្ឆេទ, អតិថិជន, ទូរស័ព្ទ, ចំណាំ, សរុបទឹកប្រាក់, ស្ថានភាព, អ្នកលក់) 
+        // ទើបខ្ញុំមិនបានដាក់បញ្ចូល "ទំនិញដែលបានទិញ" និង "ប្រាក់បានបង់" នៅទីនេះ ដើម្បីឱ្យវាស៊ីគ្នានឹង Header។ បើបងចង់ថែម អាចប្រាប់ខ្ញុំបាន។
         
         csvContent += `${id},${d},${c},${p},${n},${tot},${st},${s}\n`;
     });
