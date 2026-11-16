@@ -934,22 +934,29 @@ window.exportInvoicesCSV = function() {
         return `"${cleanedStr}"`;
     };
 
-    // 🌟 កំណត់ Header ទាំង ១២ ឱ្យត្រូវគ្នាពិតប្រាកដទៅនឹងរូបភាពរបស់បង
+    // 🌟 ដាក់ Header ឱ្យមាន Column "ម៉ោង" ត្រឹមត្រូវ (សរុប ១២ Column ស្មើគ្នា)
     let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,ម៉ោង,ឈ្មោះអតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
     
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // 🌟 បំបែកកាលបរិច្ឆេទ និងម៉ោងដាច់ពីគ្នា (ដាក់ចូល Column B និង Column C)
+        // បំបែកថ្ងៃខែ និងម៉ោង
         const rawDateStr = inv.date || inv.createdAt || '';
-        let datePart = rawDateStr.split(',')[0].trim(); 
-        let timePart = rawDateStr.split(',')[1] ? rawDateStr.split(',')[1].trim() : ''; 
-        
-        if (!timePart && rawDateStr.includes(' ')) {
+        let datePart = '';
+        let timePart = '';
+
+        if (rawDateStr.includes(',')) {
+            const parts = rawDateStr.split(',');
+            datePart = parts[0].trim();
+            timePart = parts[1] ? parts[1].trim() : '';
+        } else if (rawDateStr.includes(' ')) {
             const parts = rawDateStr.split(' ');
-            datePart = parts[0];
-            timePart = parts.slice(1).join(' ');
+            datePart = parts[0].trim();
+            timePart = parts.slice(1).join(' ').trim();
+        } else {
+            datePart = rawDateStr;
+            timePart = '';
         }
 
         const d = safeCsvCell(datePart);
@@ -958,7 +965,7 @@ window.exportInvoicesCSV = function() {
         const c = safeCsvCell(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
         const p = safeCsvCell(inv.customerPhone || inv.phone || 'EMPTY');
         
-        // រៀបចំឈ្មោះទំនិញដែលបានទិញ
+        // ទំនិញដែលបានទិញ
         let itemsStr = '';
         if (inv.items && Array.isArray(inv.items)) {
             itemsStr = inv.items.map(i => `${i.name} (x${i.cartQty || i.qty})`).join(" + ");
@@ -973,20 +980,20 @@ window.exportInvoicesCSV = function() {
         const s = safeCsvCell(inv.seller || inv.cashier || 'System');
         const n = safeCsvCell(inv.note || '');
         
-        // រៀបចំជួរទាំង ១២ ឱ្យត្រូវលំដាប់ជួរឈរ (Columns A ដល់ L)
+        // រៀបចំលំដាប់ Column ទាំង ១២ ឱ្យត្រូវគ្នាเป๊ะជាមួយ Header ខាងលើ
         let row = [
-            id,
-            d,          // Column B: កាលបរិច្ឆេទ
-            t,          // Column C: ម៉ោង
-            c,          // Column D: ឈ្មោះអតិថិជន
-            p,          // Column E: លេខទូរស័ព្ទ
-            safeItems,  // Column F: ទំនិញដែលបានទិញ
-            tot.toFixed(2),     // Column G: តម្លៃសរុប
-            paidAmt.toFixed(2), // Column H: ប្រាក់បានបង់
-            remainAmt.toFixed(2),// Column I: ប្រាក់នៅខ្វះ
-            st,         // Column J: ស្ថានភាព
-            s,          // Column K: អ្នកលក់
-            n           // Column L: ចំណាំ
+            id,                 // A: លេខវិក្កយបត្រ
+            d,                  // B: កាលបរិច្ឆេទ
+            t,                  // C: ម៉ោង
+            c,                  // D: ឈ្មោះអតិថិជន
+            p,                  // E: លេខទូរស័ព្ទ
+            safeItems,          // F: ទំនិញដែលได้ទិញ
+            tot.toFixed(2),     // G: តម្លៃសរុប
+            paidAmt.toFixed(2), // H: ប្រាក់បានបង់
+            remainAmt.toFixed(2),// I: ប្រាក់នៅខ្វះ
+            st,                 // J: ស្ថានភាព
+            s,                  // K: អ្នកលក់
+            n                   // L: ចំណាំ
         ].join(",");
         
         csvContent += row + "\n";
