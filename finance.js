@@ -940,9 +940,10 @@ window.exportInvoicesCSV = function() {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // 🌟 ប្រើប្រាស់ safeCsvCell ដើម្បីគ្របសញ្ញា "" ការពារកុំឱ្យក្បៀសក្នុងម៉ោងកាត់ផ្តាច់ Column
-        const rawDate = inv.date || inv.createdAt || '';
-        const d = safeCsvCell(rawDate); // លទ្ធផលនឹងក្លាយជា "10/30/2026, 7:03:04 PM" ស្ថិតក្នុង ô តែមួយ
+        // 🌟 ដកសញ្ញាក្បៀសចេញពីម៉ោងទាំងស្រុង និងប្តូរជាសញ្ញាដក (-) វិញ ដើម្បីកុំឱ្យ Excel ច្រឡំកាត់ Column
+        let rawDate = inv.date || inv.createdAt || '';
+        let cleanDate = String(rawDate).replace(/,\s*/g, ' - '); // ជំនួស "10/30/2026, 7:03:04 PM" ទៅជា "10/30/2026 - 7:03:04 PM"
+        const d = safeCsvCell(cleanDate);
         
         const c = safeCsvCell(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
         const p = safeCsvCell(inv.customerPhone || inv.phone || 'EMPTY');
@@ -963,8 +964,8 @@ window.exportInvoicesCSV = function() {
         
         let row = [
             id,
-            d,          // កាលបរិច្ឆេទ និងម៉ោងនឹងនៅ Column B ជាមួយគ្នាដោយសុវត្ថិភាព
-            c,          // ឈ្មោះអតិថិជននឹងត្រូវចូល Column C វិញស្អាត
+            d,          // ឥឡូវនេះ ថ្ងៃខែ និងម៉ោងនឹងស្ថិតក្នុង Column B តែមួយ ដោយគ្មានសញ្ញាក្បៀសបង្កបញ្ហាទេ
+            c,          // ឈ្មោះអតិថិជននឹងរត់មក Column C វិញត្រូវស្អាត
             p,
             safeItems,
             tot,
