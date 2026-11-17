@@ -162,78 +162,73 @@ if (typeof window.playOrderSound !== 'function') {
     };
 }
 
-if (typeof window.generateInvoiceId !== 'function' || true) {
-    window.generateInvoiceId = function() {
-        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        let d = new Date(); 
-        let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
-        let prefix = `INV-${todayStr}-`;
-        
-        let maxSeq = 0;
-        if (window.invoices && window.invoices.length > 0) {
-            window.invoices.forEach(inv => {
-                let id = inv.id || inv.invoiceNo || '';
-                if (id.startsWith(prefix)) {
-                    let parts = id.split('-');
-                    if (parts.length >= 3) {
-                        let seq = parseInt(parts[2]);
-                        if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
-                    }
+window.generateInvoiceId = function() {
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    let d = new Date(); 
+    let todayStr = String(d.getFullYear()).slice(-2) + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0');
+    let prefix = `INV-${todayStr}-`;
+    
+    let maxSeq = 0;
+    if (window.invoices && window.invoices.length > 0) {
+        window.invoices.forEach(inv => {
+            let id = inv.id || inv.invoiceNo || '';
+            if (id.startsWith(prefix)) {
+                let parts = id.split('-');
+                if (parts.length >= 3) {
+                    let seq = parseInt(parts[2]);
+                    if (!isNaN(seq) && seq > maxSeq) maxSeq = seq;
                 }
-            });
-        }
+            }
+        });
+    }
 
-        let counters = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoice_counter`)) || { lastDate: '', seq: 0 };
-        if (counters.lastDate === todayStr && counters.seq > maxSeq) {
-            maxSeq = counters.seq;
-        }
-        
-        let nextSeq = maxSeq + 1;
-        counters.lastDate = todayStr;
-        counters.seq = nextSeq;
-        localStorage.setItem(`ks2_${branchId}_invoice_counter`, JSON.stringify(counters)); 
-        
-        let hh = String(d.getHours()).padStart(2, '0');
-        let mm = String(d.getMinutes()).padStart(2, '0');
-        let ss = String(d.getSeconds()).padStart(2, '0');
-        
-        return `${prefix}${String(nextSeq).padStart(3, '0')}-${hh}${mm}${ss}`;
-    };
-}
+    let counters = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoice_counter`)) || { lastDate: '', seq: 0 };
+    if (counters.lastDate === todayStr && counters.seq > maxSeq) {
+        maxSeq = counters.seq;
+    }
+    
+    let nextSeq = maxSeq + 1;
+    counters.lastDate = todayStr;
+    counters.seq = nextSeq;
+    localStorage.setItem(`ks2_${branchId}_invoice_counter`, JSON.stringify(counters)); 
+    
+    let hh = String(d.getHours()).padStart(2, '0');
+    let mm = String(d.getMinutes()).padStart(2, '0');
+    let ss = String(d.getSeconds()).padStart(2, '0');
+    
+    return `${prefix}${String(nextSeq).padStart(3, '0')}-${hh}${mm}${ss}`;
+};
 
 // 🌟 ENTERPRISE: Activity Logs Sync To Dedicated Cloud Table
-if (typeof window.logAction !== 'function' || true) {
-    window.logAction = async function(type, itemName, qty, note, activeUserRef) { 
-        if(!window.sysSettings || !window.sysSettings.logs) return; 
-        let executor = activeUserRef ? (activeUserRef.fullName ? activeUserRef.fullName : activeUserRef.username) : 'system'; 
-        let dateStr = typeof window.fDate === 'function' ? window.fDate() : new Date().toLocaleString('km-KH');
-        if (!window.historyLog) window.historyLog = [];
-        
-        let logId = Date.now();
-        let logNote = `${note} (${executor})`;
+window.logAction = async function(type, itemName, qty, note, activeUserRef) { 
+    if(!window.sysSettings || !window.sysSettings.logs) return; 
+    let executor = activeUserRef ? (activeUserRef.fullName ? activeUserRef.fullName : activeUserRef.username) : 'system'; 
+    let dateStr = typeof window.fDate === 'function' ? window.fDate() : new Date().toLocaleString('km-KH');
+    if (!window.historyLog) window.historyLog = [];
+    
+    let logId = Date.now();
+    let logNote = `${note} (${executor})`;
 
-        window.historyLog.unshift({ id: logId, date: dateStr, type, itemName, qty, note: logNote }); 
-        if(window.historyLog.length > 500) window.historyLog.pop(); 
-        
-        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-        localStorage.setItem(`ks2_${branchId}_hist_pro`, JSON.stringify(window.historyLog));
-        
-        // 🚀 Push immediately to Cloud `pos_history_logs` Table
-        if (window.supabaseClient && navigator.onLine) {
-            try {
-                window.supabaseClient.from('pos_history_logs').insert([{
-                    id: logId,
-                    branch_id: branchId,
-                    type: type,
-                    item_name: itemName,
-                    qty: qty,
-                    note: logNote,
-                    date: dateStr
-                }]).then();
-            } catch (err) {}
-        }
-    };
-}
+    window.historyLog.unshift({ id: logId, date: dateStr, type, itemName, qty, note: logNote }); 
+    if(window.historyLog.length > 500) window.historyLog.pop(); 
+    
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    localStorage.setItem(`ks2_${branchId}_hist_pro`, JSON.stringify(window.historyLog));
+    
+    if (window.supabaseClient && navigator.onLine) {
+        try {
+            window.supabaseClient.from('pos_history_logs').insert([{
+                id: logId,
+                branch_id: branchId,
+                type: type,
+                item_name: itemName,
+                qty: qty,
+                note: logNote,
+                date: dateStr
+            }]).then();
+        } catch (err) {}
+    }
+};
 
 // ==========================================
 // 2. 🌐 FULL 3-LANGUAGE SYSTEM DICTIONARY
@@ -1530,12 +1525,21 @@ window.manualCloudSync = async function(isAuto = false) {
                 
                 window.sysSettings = storeData.sys_settings || {};
                 window.userAccounts = storeData.user_accounts || [];
+
+                // 🌟 ធានាថា Telegram Bot Token & Chat ID ត្រូវបាន Sync មកគ្រប់ឧបករណ៍
+                window.telegramBotToken = storeData.shop_info?.telegramBotToken || window.sysSettings.telegramBotToken || window.telegramBotToken || '';
+                window.telegramChatId = storeData.shop_info?.telegramChatId || window.sysSettings.telegramChatId || window.telegramChatId || '';
                 
                 localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
                 localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts));
                 localStorage.setItem(window.getBranchKey('shop_name'), window.shopName);
                 localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo);
                 localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR);
+                localStorage.setItem(window.getBranchKey('shop_phone'), window.shopPhone);
+                localStorage.setItem(window.getBranchKey('shop_address'), window.shopAddress);
+                localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram);
+                localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken);
+                localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId);
 
                 const dispName = document.getElementById('displayShopName');
                 if(dispName) dispName.innerHTML = `${window.shopName || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
@@ -1665,7 +1669,6 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
         localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(userAccountsRef));
     }
     
-    // 🌟 [FIX] រក្សាទុកត្រឹម LocalStorage បានហើយ! ការបាញ់ទៅ Cloud គឺទុកឱ្យ file មួយៗធ្វើការរៀងខ្លួន
     if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
     if (window.invoices) localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
     if (window.expenses) localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
@@ -1682,6 +1685,8 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 shopPhone: window.shopPhone || '',
                 shopAddress: window.shopAddress || '',
                 shopTelegram: window.shopTelegram || '',
+                telegramBotToken: window.telegramBotToken || window.sysSettings?.telegramBotToken || '',
+                telegramChatId: window.telegramChatId || window.sysSettings?.telegramChatId || '',
                 bakongName: window.sysSettings?.bakongName || '',
                 bakongId: window.sysSettings?.bakongId || ''
             };
@@ -1694,20 +1699,15 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 activePluginsPayload = window.sysSettings.activePlugins;
             }
 
-            // 1. Update general configurations in branch_store
             await window.supabaseClient.from('branch_store').upsert({ 
                 branch_id: branchId, 
                 shop_info: shopInfoPayload,
                 sys_settings: sysSettingsPayload,
                 user_accounts: userAccountsPayload,
                 active_plugins: activePluginsPayload,
-                data_json: {}, // Clean old structure
+                data_json: {},
                 updated_at: new Date().toISOString()
             }, { onConflict: 'branch_id' });
-            
-            // 🌟 ចំណាំ៖ ការ Upload ផលិតផល, វិក្កយបត្រ, អតិថិជន និងប្រវត្តិ គឺធ្វើឡើងដោយស្វ័យប្រវត្តិ
-            // នៅក្នុង file របស់វានីមួយៗ (inventory.js, pos.js, etc.) ពេលដែលមានសកម្មភាព។
-            // ដូច្នេះលែងមានបញ្ហាគាំងពេល Upload ម្តងទាំងអស់ទៀតហើយ!
         }
     } catch(e) { console.warn("Cloud Sync config saving failed:", e); }
 
@@ -1757,8 +1757,19 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             window.userAccounts = data.user_accounts || [];
             window.activePlugins = data.active_plugins || { pos: [], menu: [] };
 
+            window.telegramBotToken = data.shop_info?.telegramBotToken || window.sysSettings.telegramBotToken || '';
+            window.telegramChatId = data.shop_info?.telegramChatId || window.sysSettings.telegramChatId || '';
+
             localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
             localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts));
+            localStorage.setItem(window.getBranchKey('shop_name'), window.shopName);
+            localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo);
+            localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR);
+            localStorage.setItem(window.getBranchKey('shop_phone'), window.shopPhone);
+            localStorage.setItem(window.getBranchKey('shop_address'), window.shopAddress);
+            localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram);
+            localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken);
+            localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId);
 
             console.log("✅ Successfully loaded and mapped normalized data from Supabase!");
         }
@@ -1774,7 +1785,6 @@ window.switchTab = function(tabId, title, elem) {
     document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active')); 
     if(elem) elem.classList.add('active'); 
 
-    // ចងចាំឈ្មោះផ្ទាំង (Tab) ចុងក្រោយទុកក្នុង localStorage
     localStorage.setItem('skm_last_active_tab', tabId);
 
     const lang = localStorage.getItem('app_lang') || 'km';
@@ -2314,8 +2324,8 @@ window.openShopNameModal = function() {
     document.getElementById('newShopPhoneInput').value = window.shopPhone || ''; 
     document.getElementById('newShopAddressInput').value = window.shopAddress || ''; 
     document.getElementById('newShopTelegramInput').value = window.shopTelegram || ''; 
-    document.getElementById('newBotTokenInput').value = window.telegramBotToken || ''; 
-    document.getElementById('newChatIdInput').value = window.telegramChatId || ''; 
+    document.getElementById('newBotTokenInput').value = window.telegramBotToken || window.sysSettings?.telegramBotToken || ''; 
+    document.getElementById('newChatIdInput').value = window.telegramChatId || window.sysSettings?.telegramChatId || ''; 
     
     const preview = document.getElementById('shopLogoPreview'); 
     if(window.shopLogo) { preview.src = window.shopLogo; preview.style.display = 'block'; } else preview.style.display = 'none'; 
@@ -2397,41 +2407,41 @@ window.saveShopName = async function() {
     }
     
     if(newName !== "") { 
+        window.shopName = newName;
+        if(globalThis.shopLogo !== undefined) window.shopLogo = globalThis.shopLogo;
+        if(globalThis.shopQR !== undefined) window.shopQR = globalThis.shopQR;
+        window.shopPhone = newPhone;
+        window.shopAddress = newAddress;
+        window.shopTelegram = newTelegram;
+        window.telegramBotToken = newBotToken;
+        window.telegramChatId = newChatId;
+
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        localStorage.setItem(`ks2_${branchId}_shop_phone`, newPhone);
+        localStorage.setItem(`ks2_${branchId}_shop_address`, newAddress);
+
         if(typeof window.updateShopInfo === 'function') {
             window.updateShopInfo(
                 newName, 
-                globalThis.shopLogo !== undefined ? globalThis.shopLogo : window.shopLogo, 
-                globalThis.shopQR !== undefined ? globalThis.shopQR : window.shopQR, 
+                window.shopLogo, 
+                window.shopQR, 
                 newPhone, 
                 newAddress, 
                 newTelegram, 
                 newBotToken, 
                 newChatId
             );
-        } else {
-            window.shopName = newName;
-            if(globalThis.shopLogo !== undefined) window.shopLogo = globalThis.shopLogo;
-            if(globalThis.shopQR !== undefined) window.shopQR = globalThis.shopQR;
-            window.shopPhone = newPhone;
-            window.shopAddress = newAddress;
-            window.shopTelegram = newTelegram;
-            window.telegramBotToken = newBotToken;
-            window.telegramChatId = newChatId;
         }
 
         if (!window.sysSettings) window.sysSettings = {};
         if (window.shopQR && !window.sysSettings.menuQR) window.sysSettings.menuQR = window.shopQR;
-        if (newBotToken) {
-            window.sysSettings.telegramBotToken = newBotToken;
-            if (!window.sysSettings.orderTelegramBotToken) window.sysSettings.orderTelegramBotToken = newBotToken;
-        }
-        if (newChatId) {
-            window.sysSettings.telegramChatId = newChatId;
-            if (!window.sysSettings.orderTelegramChatId) window.sysSettings.orderTelegramChatId = newChatId;
-        }
+        window.sysSettings.telegramBotToken = newBotToken;
+        window.sysSettings.orderTelegramBotToken = newBotToken;
+        window.sysSettings.telegramChatId = newChatId;
+        window.sysSettings.orderTelegramChatId = newChatId;
         
-        window.sysSettings.bakongId = bakongId;
-        window.sysSettings.bakongName = bakongName;
+        if (bakongId) window.sysSettings.bakongId = bakongId;
+        if (bakongName) window.sysSettings.bakongName = bakongName;
         
         const dispName = document.getElementById('displayShopName');
         if(dispName) dispName.innerHTML = `${window.shopName} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
@@ -2707,67 +2717,8 @@ window.clearHistory = function() {
 };
 
 // ==========================================
-// 17. EXPORT & IMPORT UTILITIES
+// 17. EXPORT & IMPORT UTILITIES (JSON BACKUP)
 // ==========================================
-window.importCSV = function(e) {
-    const file = e.target.files[0]; if (!file) return; 
-    const r = new FileReader();
-    r.onload = async (ev) => {
-        const lines = ev.target.result.split('\n'); let count = 0;
-        for(let i=1; i<lines.length; i++) {
-            const row = lines[i].trim().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/); 
-            if(row.length >= 8) {
-                const id = row[0].replace(/(^"|"$)/g, '').trim(); 
-                const name = row[1].replace(/(^"|"$)/g, '').trim(); 
-                if(!name) continue; 
-                
-                const existing = (window.inventory || []).find(p => p && (p.id === id || p.name === name));
-                
-                let conditionVal = '';
-                let expiryVal = '';
-                let descVal = '';
-                if (row.length > 10) {
-                    conditionVal = row[8].replace(/(^"|"$)/g, '').trim();
-                    expiryVal = row[9].replace(/(^"|"$)/g, '').trim();
-                    descVal = row[10] ? row[10].replace(/(^"|"$)/g, '').trim() : '';
-                } else if (row.length > 9) {
-                    conditionVal = row[8].replace(/(^"|"$)/g, '').trim();
-                    descVal = row[9] ? row[9].replace(/(^"|"$)/g, '').trim() : '';
-                } else if (row.length === 9) {
-                    descVal = row[8] ? row[8].replace(/(^"|"$)/g, '').trim() : '';
-                }
-
-                let d = { 
-                    name: name, 
-                    category: row[2].replace(/(^"|"$)/g, '').trim(), 
-                    cost: parseFloat(row[3])||0, 
-                    price: parseFloat(row[4])||0, 
-                    riel: parseFloat(row[5])||0, 
-                    unit: row[6]?row[6].replace(/(^"|"$)/g, '').trim():'', 
-                    qty: parseInt(row[7])||0, 
-                    condition: conditionVal,
-                    expiry: expiryVal,
-                    desc: descVal
-                };
-                if(existing) { 
-                    Object.assign(existing, d); 
-                } else { 
-                    d.id = id || 'P_'+Date.now()+count; 
-                    d.customId = d.id; 
-                    d.image = ''; 
-                    window.inventory.push(d); 
-                } 
-                count++;
-            }
-        } 
-        if(typeof window.saveData==='function') await window.saveData(window.userAccounts); 
-        if(typeof window.ksMsg==='function') window.ksMsg(`បាននាំចូលទិន្នន័យពី Excel ចំនួន ${count} មុខ!`, 'ជោគជ័យ');
-        if(typeof window.renderInventory==='function') window.renderInventory();
-    }; 
-    r.readAsText(file); 
-    e.target.value = '';
-};
-
 window.exportData = function() { 
     const dataToBackup = { 
         inventory: window.inventory, 
@@ -2909,7 +2860,6 @@ window.runSmartDatabaseMaintenance = function() {
 window.onload = async () => {
     if(typeof window.loadThemeSettings==='function') window.loadThemeSettings(); 
     
-    // 🌟 [FIX] ទាញយកទិន្នន័យពី LocalStorage មកប្រើមុនពេល Cloud Sync ដើរ (ការពារកុំឱ្យបាត់ទិន្នន័យពេល Offline)
     window.inventory = JSON.parse(localStorage.getItem(window.getBranchKey('inv_pro'))) || [];
     window.invoices = JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     window.expenses = JSON.parse(localStorage.getItem(window.getBranchKey('expenses_pro'))) || [];
@@ -2929,10 +2879,9 @@ window.onload = async () => {
         if (!isLicenseValid) return; 
     }
 
-    // 🔥🔥 បាញ់ទិន្នន័យចាស់ចូល Cloud ដោយស្វ័យប្រវត្តិ ពេលបើក App (Auto-Migrate)
     if(typeof window.manualCloudSync === 'function') {
         setTimeout(async () => {
-            await window.manualCloudSync(true); // Run ស្ងាត់ៗអត់ឱ្យរំខាន
+            await window.manualCloudSync(true);
         }, 3000);
     }
 
@@ -2986,7 +2935,6 @@ window.onload = async () => {
     if (header) { header.classList.remove('hidden-header'); } 
     window.lastInvoiceCount = window.invoices ? window.invoices.length : 0; 
     
-    // ⚡ Auto Real-time Update Sync Listener
     setInterval(() => {
         if(typeof window.manualCloudSync === 'function') window.manualCloudSync(true);
     }, 30000); 
@@ -3085,10 +3033,8 @@ window.printZReport = function() {
 // 20. UI/UX PATCHES & BUG FIXES (Import/Export UI & PIN Pad)
 // ==========================================
 (function applyGlobalFixes() {
-    // ១. កែសម្រួល CSS កុំឱ្យរូប Icon ហៀរចេញពីប៊ូតុង Import/Export ជាដាច់ខាត (Aggressive CSS Force)
     const styleFix = document.createElement('style');
     styleFix.innerHTML = `
-        /* Excel Buttons Fix */
         #inventoryExcelAction {
             display: flex !important;
             flex-direction: row !important;
@@ -3124,7 +3070,6 @@ window.printZReport = function() {
     `;
     document.head.appendChild(styleFix);
 
-    // ២. ជួសជុលបញ្ហា Store PIN (ការពារការលោតជាប់លេខចាស់ Autofill)
     const fixPinInputs = () => {
         const pinInputs = document.querySelectorAll('input[type="password"], input[id*="pin" i], input[id*="Pin" i]');
         pinInputs.forEach(input => {
@@ -3133,7 +3078,6 @@ window.printZReport = function() {
         });
     };
 
-    let lastPinKey = '';
     let lastClickTime = 0;
     document.addEventListener('click', function(e) {
         const btn = e.target.closest('button');
@@ -3169,7 +3113,6 @@ window.realtimeCloudDeduct = async function(soldItems) {
         for (let item of soldItems) {
             let soldQty = parseInt(item.cartQty || item.qty || 1);
             
-            // ១. ទាញយកចំនួនស្តុកពិតប្រាកដ និងចុងក្រោយបំផុតពី Cloud ផ្ទាល់
             let { data: cloudData } = await window.supabaseClient
                 .from('pos_products')
                 .select('qty')
@@ -3178,24 +3121,20 @@ window.realtimeCloudDeduct = async function(soldItems) {
                 .single();
                 
             if (cloudData) {
-                // ២. កាត់ស្តុកចេញពីចំនួនពិតប្រាកដនៅលើ Cloud
                 let currentCloudQty = parseInt(cloudData.qty) || 0;
                 let newQty = Math.max(0, currentCloudQty - soldQty);
                 
-                // ៣. បាញ់ទិន្នន័យស្តុកថ្មីទៅកាន់ Cloud វិញភ្លាមៗ
                 await window.supabaseClient
                     .from('pos_products')
                     .update({ qty: newQty })
                     .eq('id', item.id)
                     .eq('branch_id', branchId);
                     
-                // ៤. កែប្រែស្តុកក្នុងកុំព្យូទ័រ/ទូរស័ព្ទ (Local) ឱ្យត្រូវគ្នានឹង Cloud វិញ
                 let localItem = (window.inventory || []).find(i => String(i.id) === String(item.id));
                 if (localItem) localItem.qty = newQty;
             }
         }
         
-        // Save Local រួច Refresh ផ្ទាំង UI សារជាថ្មី
         localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
         if (typeof window.renderInventory === 'function') window.renderInventory();
         if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
@@ -3238,50 +3177,3 @@ window.addEventListener('DOMContentLoaded', () => {
 window.addEventListener('visibilitychange', function() {
     if (!document.hidden) setTimeout(window.updateReceiptDropdownOptions, 500);
 });
-
-// ==========================================
-// 🌟 មុខងារទាញយក EXCEL ថ្មី (ត្រឹមត្រូវ ១០០%)
-// ==========================================
-
-// 1. Export Excel សម្រាប់ស្តុកទំនិញ (Inventory)
-window.exportCSV = function() { 
-    if (!window.inventory || window.inventory.length === 0) {
-        if(typeof window.ksMsg === 'function') window.ksMsg("មិនមានទិន្នន័យសម្រាប់ Export ទេ!", "ជូនដំណឹង");
-        return;
-    }
-    
-    // បន្ថែម \uFEFF ដើម្បីឱ្យ Excel ស្គាល់អក្សរខ្មែរ (UTF-8 BOM)
-    let csvContent = "\uFEFFចំណាត់ថ្នាក់,បាកូដ,ឈ្មោះទំនិញ,តម្លៃដើម($),តម្លៃលក់($),តម្លៃលក់(៛),ចំនួនស្តុក,ខ្នាត,ស្ថានភាព,ថ្ងៃផុតកំណត់,ការពិពណ៌នា\n";
-    
-    window.inventory.forEach((p, index) => {
-        if(!p) return;
-        let safeId = `"${String(p.customId || p.id || '').replace(/"/g, '""')}"`;
-        let safeName = `"${String(p.name || '').replace(/"/g, '""')}"`;
-        let safeUnit = `"${String(p.unit || '').replace(/"/g, '""')}"`;
-        let safeCond = `"${String(p.condition || '').replace(/"/g, '""')}"`;
-        let safeDesc = `"${String(p.desc || p.description || '').replace(/"/g, '""')}"`;
-
-        let row = [
-            index + 1, 
-            safeId, 
-            safeName, 
-            p.cost || 0, 
-            p.price || 0, 
-            p.riel || 0, 
-            p.qty || 0, 
-            safeUnit, 
-            safeCond, 
-            p.expiry || '', 
-            safeDesc
-        ].join(",");
-        
-        csvContent += row + "\n";
-    });
-
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([csvContent], { type: "text/csv;charset=utf-8;" }));
-    link.download = `Inventory_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-};
