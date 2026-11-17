@@ -3251,32 +3251,7 @@ window.exportCSV = function() {
         let safeName = `"${String(p.name || '').replace(/"/g, '""')}"`;
         let safeUnit = `"${String(p.unit || '').replace(/"/g, '""')}"`;
         let safeCond = `"${String(p.condition || '').replace(/"/g, '""')}"`;
-        let safeDesc = `"${String(p.desc || p.description || '').replace(/"/g, '""')}"`;
-
-        let row = [
-            index + 1, 
-            safeId, 
-            safeName, 
-            p.cost || 0, 
-            p.price || 0, 
-            p.riel || 0, 
-            p.qty || 0, 
-            safeUnit, 
-            safeCond, 
-            p.expiry || '', 
-            safeDesc
-        ].join(",");
         
-        csvContent += row + "\n";
-    });
-
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(new Blob([csvContent], { type: "text/csv;charset=utf-8;" }));
-    link.download = `Inventory_${new Date().toISOString().slice(0, 10)}.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-};
 
 // 2. Export Excel សម្រាប់វិក្កយបត្រ (Invoices / Orders)
 window.exportInvoicesCSV = function() {
