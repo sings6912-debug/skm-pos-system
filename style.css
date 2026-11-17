@@ -2,7 +2,7 @@
 
 ROOT VARIABLES & THEMES
 ========================================================================== */
-@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@300;400;500;600;700&family=Battambang:wght@400;700&family=Nunito:wght@400;600;700;800&display=swap');
 
 :root {
 --primary: #10b981;
@@ -46,9 +46,16 @@ ROOT VARIABLES & THEMES
 /* ==========================================================================
 2. BASE & RESET STYLES
 ========================================================================== */
-
-{ box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kantumruy Pro', 'Nunito', sans-serif; -webkit-tap-highlight-color: transparent; }
-input, select, textarea, button { font-family: 'Kantumruy Pro', 'Nunito', sans-serif; }
+*, *::before, *::after {
+box-sizing: border-box;
+margin: 0;
+padding: 0;
+font-family: 'Kantumruy Pro', 'Nunito', 'Battambang', sans-serif;
+-webkit-tap-highlight-color: transparent;
+}
+html, body, div, span, h1, h2, h3, h4, h5, h6, p, a, th, td, label, input, select, textarea, button {
+font-family: 'Kantumruy Pro', 'Nunito', 'Battambang', sans-serif;
+}
 html, body { overscroll-behavior-y: none; overscroll-behavior-x: none; height: 100%; height: 100dvh; overflow: hidden; }
 body { background: var(--bg-dark); color: var(--text-main); display: flex; font-size: var(--fs-14); transition: background 0.3s, color 0.3s; }
 
@@ -327,7 +334,6 @@ scrollbar-width: none;
 .cart-items { flex: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; min-height: 0;}
 .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed var(--border); }
 
-/* កែប្រែទំហំអក្សរប៊ូតុងបង្រួម/ពង្រីក ឱ្យតូចល្មមលើ PC កុំឱ្យបាំង */
 .cart-summary-toggle {
 background: var(--primary); color: white; text-align: center;
 padding: 12px 10px; font-size: var(--fs-13); font-weight: bold;
@@ -352,7 +358,6 @@ appearance: textfield;
 -moz-appearance: textfield;
 }
 
-/* រៀបចំប៊ូតុង Checkout និងប៊ូតុងផ្សេងៗទៀតឲ្យមានសណ្តាប់ធ្នាប់ */
 .pos-checkout-btns {
 display: flex;
 flex-wrap: wrap;
@@ -427,7 +432,6 @@ body { overflow: hidden; } .main-content { overflow: hidden; }
     transition: transform 0.3s ease;
 }
 
-/* កែសម្រួលការបង្ហាញនៅលើទូរស័ព្ទ */
 .cart-header { display: flex; padding: 12px 20px; }
 .cart-items { max-height: 25vh; overflow-y: auto; display: none; margin-bottom: 5px; } 
 #cartSummaryBody { display: none; padding-bottom: 25px; max-height: 40vh; overflow-y: auto;}
