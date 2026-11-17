@@ -20,6 +20,60 @@ window.invListItemsPerPage = 20;
 window.expCurrentPage = 1;
 window.expItemsPerPage = 20;
 
+// ជំនួយការសម្រាប់បាញ់ទិន្នន័យវិក្កយបត្រដែលបានកែប្រែ ឬទូទាត់រួចទៅកាន់ Cloud (pos_orders)
+async function syncInvoiceToCloud(inv) {
+    if (!window.supabaseClient || !navigator.onLine || !inv) return;
+    try {
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const invId = inv.id || inv.invoiceNo;
+        if (!invId) return;
+
+        await window.supabaseClient.from('pos_orders').upsert({
+            id: invId,
+            branch_id: branchId,
+            customer_name: inv.customerName || inv.customer || 'អតិថិជនទូទៅ',
+            customer_phone: inv.customerPhone || inv.phone || '',
+            total_amount: parseFloat(inv.totalAmount || inv.total || 0),
+            paid_amount: parseFloat(inv.paidUsd || inv.paidAmount || 0),
+            status: inv.status || 'unpaid',
+            seller: inv.seller || inv.cashier || '',
+            order_data: inv.items || [],
+            note: inv.note || '',
+            timestamp: inv.timestamp || Date.now()
+        });
+    } catch (e) {
+        console.warn("Cloud Invoice Sync Warning:", e);
+    }
+}
+
+// 🌟 មុខងារបាញ់ទិន្នន័យចំណាយក្នុងម៉ាស៊ីន (Local) ទៅកាន់ Cloud ដោយស្វ័យប្រវត្តិ
+window.syncLocalExpensesToCloud = async function() {
+    if (!window.supabaseClient || !navigator.onLine) return;
+    try {
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('expenses_pro') : `ks2_${branchId}_expenses_pro`;
+        let localExps = window.expenses && window.expenses.length > 0 ? window.expenses : (JSON.parse(localStorage.getItem(branchKey)) || []);
+        let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+
+        localExps = localExps.filter(e => e && !deletedExps.includes(String(e.id)));
+        if (localExps.length === 0) return;
+
+        const payload = localExps.map(e => ({
+            id: String(e.id),
+            branch_id: branchId,
+            category: e.category || 'ចំណាយផ្សេងៗ',
+            amount: parseFloat(e.amount) || 0,
+            note: e.note || '',
+            timestamp: e.timestamp || Date.now(),
+            date: e.date || new Date(e.timestamp || Date.now()).toLocaleString('km-KH')
+        }));
+
+        await window.supabaseClient.from('pos_expenses').upsert(payload, { onConflict: 'id' });
+    } catch (e) {
+        console.warn("Auto Expense Sync Warning:", e);
+    }
+};
+
 /* ========================================================
    🌟 ផ្នែកទី ១៖ គ្រប់គ្រងវិក្កយបត្រ (Invoices & Debt)
    ======================================================== */
@@ -70,7 +124,6 @@ window.renderUnpaid = function() {
 
     const searchVal = (document.getElementById('searchUnpaid')?.value || '').toLowerCase().trim();
     
-    // 🌟 កែតម្រូវអថេរ dateFrom និង dateTo ឱ្យមានសុវត្ថិភាព ១០០% លែង Error ទៀតហើយ
     const dateFromEl = document.getElementById('invoiceDateFrom');
     const dateToEl = document.getElementById('invoiceDateTo');
     const dateFrom = dateFromEl ? dateFromEl.value : '';
@@ -266,6 +319,7 @@ window.notifyCustomerOrderDone = async function(invId) {
     
     window.invoices = invoices;
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
+    await syncInvoiceToCloud(inv);
 
     const shopName = window.shopName || localStorage.getItem(window.getBranchKey('shop_name')) || 'ហាងរបស់យើង';
     const noteLine = inv.note ? `\n📝 ចំណាំ៖ ${inv.note}` : '';
@@ -400,6 +454,7 @@ window.processDebtPayment = async function() {
     invoices[invIndex] = inv;
     window.invoices = invoices;
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
+    await syncInvoiceToCloud(inv);
 
     if (typeof window.logAction === 'function') {
         window.logAction('update', inv.customer || inv.customerName, 0, `បានទូទាត់ប្រាក់ $${totalPaidNow.toFixed(2)} សម្រាប់វិក្កយបត្រ ${inv.id || inv.invoiceNo || 'ចាស់'}`, window.activeUser);
@@ -641,6 +696,7 @@ window.saveInvoiceChanges = async function() {
     window.invoices = invoices;
 
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(invoices));
+    await syncInvoiceToCloud(window.currentEditingInvoice);
 
     if (typeof window.setAutoRegisterCustomer === 'function') window.setAutoRegisterCustomer(newName, newPhone);
     setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
@@ -928,7 +984,6 @@ window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     if (invoices.length === 0) return notifyFinanceUser("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!", "ជូនដំណឹង", true);
 
-    // 🌟 មាន ១២ ជួរឈរ (Columns) ត្រឹមត្រូវ៖ លេខវិក្កយបត្រ, កាលបរិច្ឆេទ, ម៉ោង, ឈ្មោះអតិថិជន...
     let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,ម៉ោង,ឈ្មោះអតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
     
     invoices.forEach((inv, idx) => {
@@ -1101,6 +1156,7 @@ window.editExpense = function(id) {
     document.getElementById('expenseModal').style.display = 'flex';
 };
 
+// 🌟 កត់ត្រា និងកែប្រែចំណាយ ព្រមទាំងបាញ់ទៅកាន់ Cloud (pos_expenses) ភ្លាមៗ
 window.saveExpense = async function() {
     const id = document.getElementById('expId').value;
     const cat = document.getElementById('expCategory').value;
@@ -1125,22 +1181,50 @@ window.saveExpense = async function() {
 
     if (!window.expenses) window.expenses = [];
 
+    let savedExpObj = null;
     if (id) {
         const index = window.expenses.findIndex(e => String(e.id) === String(id));
         if (index !== -1) {
             window.expenses[index] = { ...window.expenses[index], category: cat, amount, note, date: finalDate, timestamp };
+            savedExpObj = window.expenses[index];
         }
     } else {
-        window.expenses.unshift({
+        savedExpObj = {
             id: 'EXP-' + Date.now(),
             date: finalDate,
             timestamp: timestamp,
             category: cat,
             amount: amount,
             note: note
-        });
+        };
+        window.expenses.unshift(savedExpObj);
     }
 
+    // ១. រក្សាទុកក្នុង LocalStorage ភ្លាមៗ
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('expenses_pro') : `ks2_${branchId}_expenses_pro`;
+    localStorage.setItem(branchKey, JSON.stringify(window.expenses));
+
+    // ២. បាញ់ទិន្នន័យចំណាយទៅកាន់តារាង pos_expenses នៅលើ Supabase Cloud
+    if (window.supabaseClient && navigator.onLine && savedExpObj) {
+        try {
+            const { error } = await window.supabaseClient.from('pos_expenses').upsert({
+                id: String(savedExpObj.id),
+                branch_id: branchId,
+                category: savedExpObj.category,
+                amount: savedExpObj.amount,
+                note: savedExpObj.note || '',
+                timestamp: savedExpObj.timestamp,
+                date: savedExpObj.date
+            }, { onConflict: 'id' });
+
+            if (error) console.error("Supabase Expense Save Error:", error);
+        } catch (err) {
+            console.error("Failed to sync expense to cloud:", err);
+        }
+    }
+
+    // ៣. ធ្វើបច្ចុប្បន្នភាពម៉ោង Sync រួមនៅលើ branch_store
     if (typeof window.saveData === 'function') {
         await window.saveData(window.userAccounts);
     }
@@ -1161,8 +1245,15 @@ window.renderExpenses = function() {
     const tbody = document.getElementById('expenseTableBody') || document.querySelector('#mainExpenseTable tbody');
     if (!tbody) return;
 
+    if (!Array.isArray(window.expenses) || window.expenses.length === 0) {
+        try {
+            const raw = localStorage.getItem(window.getBranchKey('expenses_pro'));
+            if (raw) window.expenses = JSON.parse(raw) || [];
+        } catch(e) {}
+    }
+
     let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
-    let validExpenses = (window.expenses || []).filter(e => !deletedExps.includes(String(e.id)));
+    let validExpenses = (window.expenses || []).filter(e => e && !deletedExps.includes(String(e.id)));
     window.expenses = validExpenses;
 
     let filtered = validExpenses.filter(e => {
@@ -1247,7 +1338,7 @@ window.renderExpenses = function() {
             pageContainer.innerHTML = '';
         } else {
             let pageHtml = `<button class="btn btn-outline" ${window.expCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeExpensePage(${window.expCurrentPage - 1})"`}>◀ មុន</button>`;
-            pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.expCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} វិក្កយបត្រ)</small></span>`;
+            pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.expCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} កំណត់ត្រា)</small></span>`;
             pageHtml += `<button class="btn btn-outline" ${window.expCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeExpensePage(${window.expCurrentPage + 1})"`}>បន្ទាប់ ▶</button>`;
             pageContainer.innerHTML = pageHtml;
         }
@@ -1259,6 +1350,7 @@ window.renderExpenses = function() {
     if(typeof window.filterTable === 'function') setTimeout(() => window.filterTable('mainExpenseTable'), 50);
 };
 
+// 🌟 លុបចំណាយទាំងក្នុងម៉ាស៊ីន និងលុបចេញពី Cloud (pos_expenses) ភ្លាមៗ
 window.deleteExpense = function(id) {
     if (window.currentRole !== 'admin' && window.currentRole !== 'manager') {
         return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិលុបទិន្នន័យនេះទេ!", "គ្មានសិទ្ធិ", true);
@@ -1266,10 +1358,23 @@ window.deleteExpense = function(id) {
 
     const executeDeleteExp = async () => {
         let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
-        deletedExps.push(String(id));
-        localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
+        if (!deletedExps.includes(String(id))) {
+            deletedExps.push(String(id));
+            localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
+        }
 
-        window.expenses = window.expenses.filter(e => String(e.id) !== String(id));
+        window.expenses = (window.expenses || []).filter(e => String(e.id) !== String(id));
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('expenses_pro') : `ks2_${branchId}_expenses_pro`;
+        localStorage.setItem(branchKey, JSON.stringify(window.expenses));
+
+        if (window.supabaseClient && navigator.onLine) {
+            try {
+                await window.supabaseClient.from('pos_expenses').delete().eq('id', String(id)).eq('branch_id', branchId);
+            } catch (err) {
+                console.error("Failed to delete expense from cloud:", err);
+            }
+        }
         
         if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
         window.renderExpenses();
@@ -1317,3 +1422,10 @@ window.markAsDone = async function(invId) {
     }
     if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
 };
+
+// ដំណើរការ Sync ទិន្នន័យចំណាយចាស់ៗដែលមានក្នុងម៉ាស៊ីនទៅកាន់ Cloud ដោយស្វ័យប្រវត្តិពេលបើកទំព័រ
+setTimeout(() => {
+    if (typeof window.syncLocalExpensesToCloud === 'function') {
+        window.syncLocalExpensesToCloud();
+    }
+}, 2500);
