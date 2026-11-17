@@ -68,7 +68,7 @@ window.renderUnpaid = function() {
         return timeB - timeA;
     });
 
-    const searchVal = (document.getElementById('searchUnpaid')?.value || '').toLowerCase().trim();​ម
+    const searchVal = (document.getElementById('searchUnpaid')?.value || '').toLowerCase().trim();​
     
     // 🌟 កែតម្រូវអថេរ dateFrom និង dateTo ឱ្យមានសុវត្ថិភាព ១០០% លែង Error ទៀតហើយ
     const dateFromEl = document.getElementById('invoiceDateFrom');
