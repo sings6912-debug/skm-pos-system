@@ -165,7 +165,6 @@ th[onclick]:hover { background: rgba(16, 185, 129, 0.1); color: var(--primary); 
 
 .toolbar { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; background: rgba(30,41,59,0.5); padding: 15px; border-radius: 10px; border: 1px solid var(--border); align-items: center; transition: background 0.3s;}
 
-/* រចនាប្រអប់ថ្ងៃខែឱ្យស្អាត និងស្មើគ្នាជាមួយប្រអប់ផ្សេងៗ */
 input[type="datetime-local"],
 input[type="date"],
 input[type="month"],
@@ -282,7 +281,6 @@ scrollbar-width: none;
 .cart-items { flex: 1; overflow-y: auto; padding: 15px; -webkit-overflow-scrolling: touch; min-height: 0;}
 .cart-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px dashed var(--border); }
 
-/* កែប្រែទំហំអក្សរប៊ូតុងបង្រួម/ពង្រីក ឱ្យតូចល្មមលើ PC កុំឱ្យបាំង */
 .cart-summary-toggle {
 background: var(--primary); color: white; text-align: center;
 padding: 12px 10px; font-size: var(--fs-13); font-weight: bold;
@@ -307,7 +305,6 @@ appearance: textfield;
 -moz-appearance: textfield;
 }
 
-/* រៀបចំប៊ូតុង Checkout និងប៊ូតុងផ្សេងៗទៀតឲ្យមានសណ្តាប់ធ្នាប់ */
 .pos-checkout-btns {
 display: flex;
 flex-wrap: wrap;
@@ -382,7 +379,6 @@ body { overflow: hidden; } .main-content { overflow: hidden; }
     transition: transform 0.3s ease;
 }
 
-/* កែសម្រួលការបង្ហាញនៅលើទូរស័ព្ទ */
 .cart-header { display: flex; padding: 12px 20px; }
 .cart-items { max-height: 25vh; overflow-y: auto; display: none; margin-bottom: 5px; } 
 #cartSummaryBody { display: none; padding-bottom: 25px; max-height: 40vh; overflow-y: auto;}
@@ -425,7 +421,7 @@ body { overflow: hidden; } .main-content { overflow: hidden; }
 }
 .toolbar input[type="date"],
 .toolbar input[type="datetime-local"] {
-    width: auto !important;
+    width: calc(50% - 10px) !important;
     flex: 1 1 0 !important;
     min-width: 0 !important;
     padding: 8px 8px !important;
