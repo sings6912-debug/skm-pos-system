@@ -285,7 +285,7 @@
 
             <!-- 🎟️ PROMO CODES MANAGER -->
             <div class="section-title" style="color: var(--success);"><i class="fa-solid fa-ticket"></i> កុម្ម៉ង់ និងគ្រប់គ្រងកូដបញ្ចុះតម្លៃ (Promo Codes Manager)</div>
-            <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, FREESHIP) កំណត់ប្រភេទបញ្ចុះតម្លៃ (% , $ ឬ ដឹកជញ្ជូនឥតគិតថ្លៃ) និងកំណត់ចំនួនដងដែលអាចប្រើប្រាស់បាន。</p>
+            <p class="help-text">បង្កើតកូដបញ្ចុះតម្លៃ (ឧ. SKM10, FREESHIP) កំណត់ប្រភេទបញ្ចុះតម្លៃ (% , $ ឬ ដឹកជញ្ជូនឥតគិតថ្លៃ) និងកំណត់ចំនួនដងដែលអាចប្រើប្រាស់បាន។</p>
             
             <div class="toggle-row" style="background: rgba(239, 68, 68, 0.06); border-color: rgba(239, 68, 68, 0.25);">
                 <span style="color: var(--text-dark);"><i class="fa-solid fa-eye-slash" style="color: var(--danger);"></i> លាក់ស្លាកកូដប្រូម៉ូសិនកុំឱ្យបង្ហាញលើ Banner អតិថិជន (Hide Promo Badge on Banner)</span>
@@ -832,6 +832,20 @@
         catch (err) { console.error("Supabase init error:", err); }
     }
 
+    // ជំនួយការសម្រាប់ធ្វើឱ្យតម្លៃ active និង isActive របស់ Script ត្រូវគ្នាជានិច្ច (១០០%)
+    function normalizeScriptsArray(arr) {
+        if (!Array.isArray(arr)) return [];
+        return arr.filter(s => s && typeof s === 'object').map((s, idx) => {
+            const isOn = s.active !== undefined ? Boolean(s.active) : Boolean(s.isActive);
+            return {
+                ...s,
+                id: s.id || ('script_' + Date.now() + '_' + idx),
+                active: isOn,
+                isActive: isOn
+            };
+        });
+    }
+
     (async function verifyAdminAccess() {
         let isSupabaseAuthed = false;
         if (supabaseClient) {
@@ -927,7 +941,6 @@
         preview.style.transform = `scale(${scale})`;
     }
 
-    // 🌟 មុខងារពេលវាយបញ្ចូល Logo URL ផ្ទាល់ 🌟
     function onLogoUrlInput(val) {
         val = val.trim();
         window.shopLogo = val;
@@ -948,7 +961,6 @@
         }
     }
 
-    // 🌟 មុខងារពេលវាយបញ្ចូល QR URL ផ្ទាល់ 🌟
     function onQrUrlInput(val) {
         val = val.trim();
         window.shopQR = val;
@@ -966,7 +978,6 @@
         updateLiveReceiptPreview();
     }
 
-    // 🌟 មុខងារ Upload Logo ចូល Supabase Storage ឬកាត់បន្ថយទំហំ 🌟
     function handleShopLogo(e) { 
         const file = e.target.files[0]; if(!file) return; 
         showToast("កំពុងដំណើរការ Upload Logo...", false);
@@ -1147,9 +1158,10 @@
             promoCodesList[editPromoIndex] = { code, type, value, limit, usedCount: promoCodesList[editPromoIndex].usedCount || 0, oneTimePerUser }; showToast('បានកែប្រែកូដប្រូម៉ូសិនជោគជ័យ!');
         }
         cancelPromoEdit();
+        saveAdminSettings();
     }
 
-    function deletePromoCode(idx) { promoCodesList.splice(idx, 1); if (editPromoIndex === idx) cancelPromoEdit(); renderPromoCodesList(); showToast('បានលុបកូដប្រូម៉ូសិន!'); }
+    function deletePromoCode(idx) { promoCodesList.splice(idx, 1); if (editPromoIndex === idx) cancelPromoEdit(); renderPromoCodesList(); saveAdminSettings(); showToast('បានលុបកូដប្រូម៉ូសិន!'); }
 
     function renderAdminBanners() {
         const container = document.getElementById('bannerListContainer'); container.innerHTML = '';
@@ -1170,8 +1182,8 @@
         });
     }
     function addAdminBanner() { adminBanners.push(''); renderAdminBanners(); }
-    function removeAdminBanner(index) { adminBanners.splice(index, 1); renderAdminBanners(); }
-    function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); }
+    function removeAdminBanner(index) { adminBanners.splice(index, 1); renderAdminBanners(); saveAdminSettings(); }
+    function updateAdminBanner(index, val) { adminBanners[index] = val; renderAdminBanners(); saveAdminSettings(); }
     
     function uploadAdminBanner(e, index) {
         const file = e.target.files[0]; if(!file) return; showToast("កំពុង Upload រូបភាពចូល Cloud...", false);
@@ -1276,179 +1288,171 @@
         }; reader.readAsText(file);
     }
 
+    // 🌟 មុខងារគោលសម្រាប់បញ្ចូលទិន្នន័យទៅក្នុងផ្ទាំង UI ទាំងអស់ 🌟
+    function applyAdminDataToUI(sys, shopInfo) {
+        if (shopInfo.shopName) document.getElementById('setShopName').value = shopInfo.shopName;
+        if (shopInfo.shopPhone) document.getElementById('setShopPhone').value = shopInfo.shopPhone;
+        if (shopInfo.shopAddress) document.getElementById('setShopAddress').value = shopInfo.shopAddress;
+
+        if (shopInfo.shopLogo) {
+            window.shopLogo = shopInfo.shopLogo;
+            document.getElementById('setShopLogoUrl').value = window.shopLogo;
+            const lp = document.getElementById('shopLogoPreview');
+            lp.src = window.shopLogo; lp.style.display = 'block';
+            document.getElementById('logoPreviewContainer').style.display = 'flex';
+            document.getElementById('logoControlsWrapper').style.display = 'block';
+        }
+        document.getElementById('logoShapeSelect').value = sys.logoShape || 'circle';
+        document.getElementById('logoScaleSlider').value = sys.logoScale || 1;
+        updateLogoPreview();
+
+        if (sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
+        if (sys.menuBanners && sys.menuBanners.length > 0) adminBanners = sys.menuBanners;
+        else if (sys.menuBanner) adminBanners = [sys.menuBanner];
+        renderAdminBanners();
+
+        if (sys.promoCodes && Array.isArray(sys.promoCodes)) promoCodesList = sys.promoCodes;
+        renderPromoCodesList();
+        if (document.getElementById('toggleHideBannerPromoBadge')) {
+            document.getElementById('toggleHideBannerPromoBadge').checked = !!(sys.hideBannerPromoBadge || sys.hidePromoOnBanner);
+        }
+
+        const qrVal = sys.menuQR || shopInfo.shopQR || window.shopQR || '';
+        if (qrVal) {
+            window.shopQR = qrVal;
+            document.getElementById('setMenuQR').value = qrVal;
+            const qp = document.getElementById('menuQRPreview');
+            qp.src = qrVal; qp.style.display = 'block';
+            document.getElementById('qrPreviewContainer').style.display = 'block';
+        }
+
+        if (sys.bakongId || shopInfo.bakongId) document.getElementById('setBakongId').value = sys.bakongId || shopInfo.bakongId;
+        if (sys.bakongName || shopInfo.bakongName) document.getElementById('setBakongName').value = sys.bakongName || shopInfo.bakongName;
+        if (sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
+        if (sys.socialIcon) document.getElementById('setSocialIcon').value = sys.socialIcon;
+        if (sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
+        if (sys.socialLink) document.getElementById('setSocialLink').value = sys.socialLink;
+
+        const tickerTxt = sys.tickerText || sys.tickerNews || '';
+        document.getElementById('toggleTicker').checked = !!(sys.toggleTicker || tickerTxt);
+        document.getElementById('setTickerText').value = tickerTxt;
+        document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
+        document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
+        if (sys.welcomeImg) updateWelcomePreview(sys.welcomeImg);
+        if (document.getElementById('setPopupRepeatInterval')) {
+            document.getElementById('setPopupRepeatInterval').value = String(sys.popupRepeatInterval || sys.popupRepeatMinutes || '1');
+        }
+        document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
+        document.getElementById('setOpenTime').value = sys.openTime || '08:00';
+        document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
+        document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
+
+        document.getElementById('toggleTableFeature').checked = !!sys.toggleTableFeature;
+        document.getElementById('setTotalTables').value = sys.totalTables || 20;
+        document.getElementById('setTablePrefix').value = sys.tablePrefix || 'តុលេខ';
+        if (document.getElementById('setCustomTables')) {
+            document.getElementById('setCustomTables').value = sys.customTables !== undefined ? sys.customTables : (sys.customTablesList !== undefined ? sys.customTablesList : 'VIP 1, VIP 2, VIP 3');
+        }
+
+        if (sys.customPrinterPresets && Array.isArray(sys.customPrinterPresets)) customPrinterPresets = sys.customPrinterPresets;
+        renderCustomPrinterPresets();
+        if (sys.receiptSize && document.getElementById('setAdminReceiptSize')) document.getElementById('setAdminReceiptSize').value = sys.receiptSize;
+        if (sys.receiptFooter && document.getElementById('setAdminReceiptFooter')) document.getElementById('setAdminReceiptFooter').value = sys.receiptFooter;
+        if (sys.customReceiptConfig) applyReceiptConfigToInputs(sys.customReceiptConfig);
+        else applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[sys.receiptSize || '80mm']);
+
+        if (sys.deptPrinters) deptPrinters = sys.deptPrinters;
+        if (sys.categoryRouting) categoryRouting = sys.categoryRouting;
+        if (document.getElementById('toggleMultiPrinter')) document.getElementById('toggleMultiPrinter').checked = !!sys.toggleMultiPrinter;
+        if (document.getElementById('printAllSync')) document.getElementById('printAllSync').checked = !!sys.printAllSync;
+
+        const orderTok = sys.orderTelegramBotToken || sys.telegramBotToken || shopInfo.telegramBotToken || '';
+        const orderChat = sys.orderTelegramChatId || sys.telegramChatId || shopInfo.telegramChatId || '';
+        if (orderTok) document.getElementById('setOrderTelegramBotToken').value = orderTok;
+        if (orderChat) document.getElementById('setOrderTelegramChatId').value = orderChat;
+        if (sys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = sys.serviceTelegramBotToken;
+        if (sys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = sys.serviceTelegramChatId;
+
+        renderDeptPrinters();
+        renderMenuScripts();
+        renderPosScripts();
+    }
+
     async function initAdmin() {
         try {
-            let shopName = localStorage.getItem(`ks2_${BRANCH}_shop_name`) || 'SKM INTEGRATE';
-            let shopPhone = localStorage.getItem(`ks2_${BRANCH}_shop_phone`) || '';
-            let shopAddress = localStorage.getItem(`ks2_${BRANCH}_shop_address`) || '';
-            window.shopLogo = localStorage.getItem(`ks2_${BRANCH}_shop_logo`) || '';
-            window.shopQR = localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '';
-            
-            document.getElementById('setShopName').value = shopName;
-            document.getElementById('setShopPhone').value = shopPhone;
-            document.getElementById('setShopAddress').value = shopAddress;
+            let localShopInfo = {
+                shopName: localStorage.getItem(`ks2_${BRANCH}_shop_name`) || 'SKM INTEGRATE',
+                shopPhone: localStorage.getItem(`ks2_${BRANCH}_shop_phone`) || '',
+                shopAddress: localStorage.getItem(`ks2_${BRANCH}_shop_address`) || '',
+                shopLogo: localStorage.getItem(`ks2_${BRANCH}_shop_logo`) || '',
+                shopQR: localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '',
+                telegramBotToken: localStorage.getItem(`ks2_${BRANCH}_telegram_bot_token`) || '',
+                telegramChatId: localStorage.getItem(`ks2_${BRANCH}_telegram_chat_id`) || ''
+            };
 
-            let localSys = {}; let localPosScripts = [];
+            let localSys = {};
+            let localPosScripts = [];
             try { const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`); if (rawSys) localSys = JSON.parse(rawSys); } catch(e) {}
             try { const rawPos = localStorage.getItem(`ks2_${BRANCH}_pos_scripts`); if (rawPos) localPosScripts = JSON.parse(rawPos); } catch(e) {}
-            
-            if (localSys.customMenuScripts) menuScripts = localSys.customMenuScripts;
-            if (localSys.promoCodes) promoCodesList = localSys.promoCodes;
-            if (localPosScripts.length > 0) posScripts = localPosScripts;
-            
-            if (localSys.menuThemeColor) document.getElementById('setMenuThemeColor').value = localSys.menuThemeColor;
-            if (localSys.menuBanners && localSys.menuBanners.length > 0) adminBanners = localSys.menuBanners; else if (localSys.menuBanner) adminBanners = [localSys.menuBanner];
-            renderAdminBanners();
 
-            const localQr = window.shopQR || localSys.menuQR || '';
-            if (localQr) {
-                document.getElementById('setMenuQR').value = localQr;
-                const qp = document.getElementById('menuQRPreview'); qp.src = localQr; qp.style.display = 'block';
-                document.getElementById('qrPreviewContainer').style.display = 'block';
-            }
-            
-            if (window.shopLogo) {
-                document.getElementById('setShopLogoUrl').value = window.shopLogo;
-                const lp = document.getElementById('shopLogoPreview');
-                lp.src = window.shopLogo; lp.style.display = 'block';
-                document.getElementById('logoPreviewContainer').style.display = 'flex';
-                document.getElementById('logoControlsWrapper').style.display = 'block';
-            }
-            document.getElementById('logoShapeSelect').value = localSys.logoShape || 'circle';
-            document.getElementById('logoScaleSlider').value = localSys.logoScale || 1;
-            updateLogoPreview();
-            
-            if (localSys.bakongId) document.getElementById('setBakongId').value = localSys.bakongId;
-            if (localSys.bakongName) document.getElementById('setBakongName').value = localSys.bakongName;
-            if (localSys.chatLink) document.getElementById('setChatLink').value = localSys.chatLink;
-            if (localSys.socialIcon) document.getElementById('setSocialIcon').value = localSys.socialIcon;
-            if (localSys.socialLabel) document.getElementById('setSocialLabel').value = localSys.socialLabel;
-            if (localSys.socialLink) document.getElementById('setSocialLink').value = localSys.socialLink;
+            if (localSys.customMenuScripts) menuScripts = normalizeScriptsArray(localSys.customMenuScripts);
+            if (localPosScripts.length > 0) posScripts = normalizeScriptsArray(localPosScripts);
+            else if (localSys.customPosScripts) posScripts = normalizeScriptsArray(localSys.customPosScripts);
 
-            document.getElementById('toggleWelcomePopup').checked = !!localSys.toggleWelcomePopup;
-            document.getElementById('setWelcomeImg').value = localSys.welcomeImg || '';
-            if (localSys.welcomeImg) updateWelcomePreview(localSys.welcomeImg);
-            document.getElementById('toggleStoreHours').checked = !!localSys.toggleStoreHours;
-            document.getElementById('setOpenTime').value = localSys.openTime || '08:00';
-            document.getElementById('setCloseTime').value = localSys.closeTime || '21:00';
-            document.getElementById('togglePreorder').checked = localSys.preorder !== undefined ? localSys.preorder : true;
-
-            if (localSys.orderTelegramBotToken) document.getElementById('setOrderTelegramBotToken').value = localSys.orderTelegramBotToken;
-            if (localSys.orderTelegramChatId) document.getElementById('setOrderTelegramChatId').value = localSys.orderTelegramChatId;
-            if (localSys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = localSys.serviceTelegramBotToken;
-            if (localSys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = localSys.serviceTelegramChatId;
-
-            document.getElementById('toggleTicker').checked = !!(localSys.toggleTicker || localSys.tickerText || localSys.tickerNews);
-            document.getElementById('setTickerText').value = localSys.tickerText || localSys.tickerNews || '';
-            document.getElementById('toggleTableFeature').checked = !!localSys.toggleTableFeature;
-            document.getElementById('setTotalTables').value = localSys.totalTables || 20;
-            document.getElementById('setTablePrefix').value = localSys.tablePrefix || 'តុលេខ';
-            if (document.getElementById('setCustomTables')) document.getElementById('setCustomTables').value = localSys.customTables !== undefined ? localSys.customTables : (localSys.customTablesList !== undefined ? localSys.customTablesList : 'VIP 1, VIP 2, VIP 3');
-            if (document.getElementById('toggleHideBannerPromoBadge')) document.getElementById('toggleHideBannerPromoBadge').checked = !!(localSys.hideBannerPromoBadge || localSys.hidePromoOnBanner);
-            if (document.getElementById('setPopupRepeatInterval')) document.getElementById('setPopupRepeatInterval').value = String(localSys.popupRepeatInterval || localSys.popupRepeatMinutes || '1');
-
-            if (localSys.customPrinterPresets && Array.isArray(localSys.customPrinterPresets)) customPrinterPresets = localSys.customPrinterPresets;
-            renderCustomPrinterPresets();
-            if (localSys.receiptSize && document.getElementById('setAdminReceiptSize')) document.getElementById('setAdminReceiptSize').value = localSys.receiptSize;
-            if (localSys.receiptFooter && document.getElementById('setAdminReceiptFooter')) document.getElementById('setAdminReceiptFooter').value = localSys.receiptFooter;
-            if (localSys.customReceiptConfig) applyReceiptConfigToInputs(localSys.customReceiptConfig); else applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[localSys.receiptSize || '80mm']);
-
-            if (localSys.deptPrinters) deptPrinters = localSys.deptPrinters;
-            if (localSys.categoryRouting) categoryRouting = localSys.categoryRouting;
-            if (document.getElementById('toggleMultiPrinter')) document.getElementById('toggleMultiPrinter').checked = !!localSys.toggleMultiPrinter;
-            if (document.getElementById('printAllSync')) document.getElementById('printAllSync').checked = !!localSys.printAllSync;
-            
             try {
                 let cats = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_categories`));
                 if (cats && Array.isArray(cats) && cats.length > 0) posCategories = cats;
-                else { let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`)) || []; posCategories = [...new Set(localInv.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))]; }
+                else {
+                    let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`)) || [];
+                    posCategories = [...new Set(localInv.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))];
+                }
             } catch(e) {}
-            
-            renderDeptPrinters(); renderMenuScripts(); renderPosScripts(); renderPromoCodesList();
 
+            applyAdminDataToUI(localSys, localShopInfo);
+
+            // 🌟 ទាញទិន្នន័យពី Supabase Cloud (គាំទ្រទាំង Column ថ្មី sys_settings/shop_info និង data_json ចាស់)
             if (supabaseClient && navigator.onLine) {
-                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                if (data && data.data_json) {
-                    let d = data.data_json; let sys = d.sysSettings || {};
-                    
-                    if(d.shopName) document.getElementById('setShopName').value = d.shopName;
-                    if(d.shopPhone) document.getElementById('setShopPhone').value = d.shopPhone;
-                    if(d.shopAddress) document.getElementById('setShopAddress').value = d.shopAddress;
-                    
-                    if(d.shopLogo) {
-                        window.shopLogo = d.shopLogo;
-                        document.getElementById('setShopLogoUrl').value = window.shopLogo;
-                        const lp = document.getElementById('shopLogoPreview');
-                        lp.src = window.shopLogo; lp.style.display = 'block';
-                        document.getElementById('logoPreviewContainer').style.display = 'flex';
-                        document.getElementById('logoControlsWrapper').style.display = 'block';
+                let { data } = await supabaseClient
+                    .from('branch_store')
+                    .select('shop_info, sys_settings, active_plugins, data_json')
+                    .eq('branch_id', BRANCH)
+                    .maybeSingle();
+
+                if (data) {
+                    let d = data.data_json || {};
+                    let cloudSys = Object.assign({}, d.sysSettings || {}, data.sys_settings || {});
+                    let cloudShop = Object.assign({}, {
+                        shopName: d.shopName,
+                        shopPhone: d.shopPhone,
+                        shopAddress: d.shopAddress,
+                        shopLogo: d.shopLogo,
+                        shopQR: d.shopQR,
+                        telegramBotToken: d.telegramBotToken,
+                        telegramChatId: d.telegramChatId
+                    }, data.shop_info || {});
+
+                    if (cloudSys.customMenuScripts && Array.isArray(cloudSys.customMenuScripts)) {
+                        menuScripts = normalizeScriptsArray(cloudSys.customMenuScripts);
                     }
-                    document.getElementById('logoShapeSelect').value = sys.logoShape || 'circle';
-                    document.getElementById('logoScaleSlider').value = sys.logoScale || 1;
-                    updateLogoPreview();
-
-                    if(sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
-                    if(sys.menuBanners && sys.menuBanners.length > 0) adminBanners = sys.menuBanners; else if(sys.menuBanner) adminBanners = [sys.menuBanner];
-                    renderAdminBanners();
-                    
-                    if(sys.promoCodes && Array.isArray(sys.promoCodes)) promoCodesList = sys.promoCodes;
-                    renderPromoCodesList();
-                    if (document.getElementById('toggleHideBannerPromoBadge')) document.getElementById('toggleHideBannerPromoBadge').checked = !!sys.hideBannerPromoBadge;
-
-                    if(sys.menuQR || d.shopQR) {
-                        window.shopQR = sys.menuQR || d.shopQR;
-                        document.getElementById('setMenuQR').value = window.shopQR;
-                        const qp = document.getElementById('menuQRPreview'); qp.src = window.shopQR; qp.style.display = 'block';
-                        document.getElementById('qrPreviewContainer').style.display = 'block';
+                    if (cloudSys.customPosScripts && Array.isArray(cloudSys.customPosScripts)) {
+                        posScripts = normalizeScriptsArray(cloudSys.customPosScripts);
+                    } else if (d.customPosScripts && Array.isArray(d.customPosScripts)) {
+                        posScripts = normalizeScriptsArray(d.customPosScripts);
                     }
-                    
-                    if(sys.bakongId) document.getElementById('setBakongId').value = sys.bakongId;
-                    if(sys.bakongName) document.getElementById('setBakongName').value = sys.bakongName;
-                    if(sys.chatLink) document.getElementById('setChatLink').value = sys.chatLink;
-                    if(sys.socialIcon) document.getElementById('setSocialIcon').value = sys.socialIcon;
-                    if(sys.socialLabel) document.getElementById('setSocialLabel').value = sys.socialLabel;
-                    if(sys.socialLink) document.getElementById('setSocialLink').value = sys.socialLink;
-                    
-                    const cloudTicker = sys.tickerText || sys.tickerNews || '';
-                    document.getElementById('toggleTicker').checked = !!(sys.toggleTicker || cloudTicker);
-                    document.getElementById('setTickerText').value = cloudTicker;
-                    document.getElementById('toggleWelcomePopup').checked = !!sys.toggleWelcomePopup;
-                    document.getElementById('setWelcomeImg').value = sys.welcomeImg || '';
-                    if (sys.welcomeImg) updateWelcomePreview(sys.welcomeImg);
-                    if (document.getElementById('setPopupRepeatInterval') && sys.popupRepeatInterval) document.getElementById('setPopupRepeatInterval').value = String(sys.popupRepeatInterval);
-                    document.getElementById('toggleStoreHours').checked = !!sys.toggleStoreHours;
-                    document.getElementById('setOpenTime').value = sys.openTime || '08:00';
-                    document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
-                    document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
 
-                    document.getElementById('toggleTableFeature').checked = !!sys.toggleTableFeature;
-                    document.getElementById('setTotalTables').value = sys.totalTables || 20;
-                    document.getElementById('setTablePrefix').value = sys.tablePrefix || 'តុលេខ';
-                    if (document.getElementById('setCustomTables')) document.getElementById('setCustomTables').value = sys.customTables !== undefined ? sys.customTables : 'VIP 1, VIP 2, VIP 3';
+                    // រក្សាទុកត្រឡប់ចូល LocalStorage ដើម្បីឱ្យ POS និង Admin Settings ស៊ីគ្នា ១០០%
+                    cloudSys.customMenuScripts = menuScripts;
+                    cloudSys.customPosScripts = posScripts;
+                    localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(cloudSys));
+                    localStorage.setItem(`ks2_${BRANCH}_pos_scripts`, JSON.stringify(posScripts));
 
-                    if (sys.customPrinterPresets && Array.isArray(sys.customPrinterPresets)) customPrinterPresets = sys.customPrinterPresets;
-                    renderCustomPrinterPresets();
-                    if (sys.receiptSize && document.getElementById('setAdminReceiptSize')) document.getElementById('setAdminReceiptSize').value = sys.receiptSize;
-                    if (sys.receiptFooter && document.getElementById('setAdminReceiptFooter')) document.getElementById('setAdminReceiptFooter').value = sys.receiptFooter;
-                    if (sys.customReceiptConfig) applyReceiptConfigToInputs(sys.customReceiptConfig); else applyReceiptConfigToInputs(DEFAULT_RECEIPT_PRESETS[sys.receiptSize || '80mm']);
+                    if (cloudShop.shopName) localStorage.setItem(`ks2_${BRANCH}_shop_name`, cloudShop.shopName);
+                    if (cloudShop.shopPhone) localStorage.setItem(`ks2_${BRANCH}_shop_phone`, cloudShop.shopPhone);
+                    if (cloudShop.shopAddress) localStorage.setItem(`ks2_${BRANCH}_shop_address`, cloudShop.shopAddress);
+                    if (cloudShop.shopLogo) localStorage.setItem(`ks2_${BRANCH}_shop_logo`, cloudShop.shopLogo);
+                    if (cloudShop.shopQR) localStorage.setItem(`ks2_${BRANCH}_shop_qr`, cloudShop.shopQR);
 
-                    if(sys.deptPrinters) deptPrinters = sys.deptPrinters;
-                    if(sys.categoryRouting) categoryRouting = sys.categoryRouting;
-                    if (document.getElementById('toggleMultiPrinter')) document.getElementById('toggleMultiPrinter').checked = !!sys.toggleMultiPrinter;
-                    if (document.getElementById('printAllSync')) document.getElementById('printAllSync').checked = !!sys.printAllSync;
-                    
-                    if (d.categories && Array.isArray(d.categories) && d.categories.length > 0) posCategories = d.categories; else if (d.inventory && Array.isArray(d.inventory)) posCategories = [...new Set(d.inventory.filter(p => p && p.category).map(p => String(p.category).trim()).filter(Boolean))];
-                    renderDeptPrinters();
-
-                    if(sys.orderTelegramBotToken || d.telegramBotToken) document.getElementById('setOrderTelegramBotToken').value = sys.orderTelegramBotToken || d.telegramBotToken || '';
-                    if(sys.orderTelegramChatId || d.telegramChatId) document.getElementById('setOrderTelegramChatId').value = sys.orderTelegramChatId || d.telegramChatId || '';
-                    if(sys.serviceTelegramBotToken) document.getElementById('setServiceTelegramBotToken').value = sys.serviceTelegramBotToken || '';
-                    if(sys.serviceTelegramChatId) document.getElementById('setServiceTelegramChatId').value = sys.serviceTelegramChatId || '';
-
-                    if(sys.customMenuScripts && Array.isArray(sys.customMenuScripts)) menuScripts = sys.customMenuScripts;
-                    if(d.customPosScripts && Array.isArray(d.customPosScripts)) posScripts = d.customPosScripts;
-                    
-                    renderMenuScripts(); renderPosScripts();
+                    applyAdminDataToUI(cloudSys, cloudShop);
                 }
             }
         } catch(e) { console.error("Init admin error:", e); }
@@ -1456,13 +1460,15 @@
 
     function buildSysSettingsPayload(existingSys) {
         let sys = existingSys || {};
+        menuScripts = normalizeScriptsArray(menuScripts);
+        posScripts = normalizeScriptsArray(posScripts);
+
         sys.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
         sys.menuBanners = adminBanners.filter(b => b.trim() !== '');
         sys.promoCodes = promoCodesList;
         sys.hideBannerPromoBadge = document.getElementById('toggleHideBannerPromoBadge')?.checked || false;
         sys.hidePromoOnBanner = sys.hideBannerPromoBadge;
         
-        // 🌟 Save Logo Controls 🌟
         sys.logoShape = document.getElementById('logoShapeSelect').value;
         sys.logoScale = parseFloat(document.getElementById('logoScaleSlider').value);
 
@@ -1506,7 +1512,13 @@
         let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim(); let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
         let servTok = document.getElementById('setServiceTelegramBotToken').value.trim(); let servChat = document.getElementById('setServiceTelegramChatId').value.trim();
         sys.orderTelegramBotToken = orderTok; sys.orderTelegramChatId = orderChat; sys.serviceTelegramBotToken = servTok; sys.serviceTelegramChatId = servChat; sys.telegramBotToken = orderTok; sys.telegramChatId = orderChat;
+        
         sys.customMenuScripts = menuScripts;
+        sys.customPosScripts = posScripts;
+        sys.activePlugins = {
+            menu: menuScripts.filter(s => s.active && s.isActive).map(s => s.name),
+            pos: posScripts.filter(s => s.active && s.isActive).map(s => s.name)
+        };
         return { sys, orderTok, orderChat };
     }
 
@@ -1515,35 +1527,76 @@
             document.querySelectorAll('.btn-save').forEach(b => { b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> រក្សាទុក...'; b.disabled = true; });
             
             let d = {};
-            if (supabaseClient && navigator.onLine) {
-                try { let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle(); if (data && data.data_json) d = data.data_json; } catch(err) {}
-            }
-            if(!d.sysSettings) { try { d.sysSettings = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`)) || {}; } catch(e) { d.sysSettings = {}; } }
-            
-            const { sys, orderTok, orderChat } = buildSysSettingsPayload(d.sysSettings);
-            d.sysSettings = sys;
-            d.telegramBotToken = orderTok; d.telegramChatId = orderChat;  
-            d.customPosScripts = posScripts;
+            let existingSys = {};
+            let existingShopInfo = {};
+            try { existingSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`)) || {}; } catch(e) {}
 
-            d.shopName = document.getElementById('setShopName').value.trim();
-            d.shopPhone = document.getElementById('setShopPhone').value.trim();
-            d.shopAddress = document.getElementById('setShopAddress').value.trim();
+            if (supabaseClient && navigator.onLine) {
+                try {
+                    let { data } = await supabaseClient
+                        .from('branch_store')
+                        .select('shop_info, sys_settings, data_json')
+                        .eq('branch_id', BRANCH)
+                        .maybeSingle();
+                    if (data) {
+                        if (data.data_json) d = data.data_json;
+                        if (data.sys_settings) existingSys = Object.assign({}, existingSys, data.sys_settings);
+                        if (data.shop_info) existingShopInfo = data.shop_info;
+                    }
+                } catch(err) {}
+            }
+            
+            const { sys, orderTok, orderChat } = buildSysSettingsPayload(existingSys);
+            const shopNameVal = document.getElementById('setShopName').value.trim();
+            const shopPhoneVal = document.getElementById('setShopPhone').value.trim();
+            const shopAddressVal = document.getElementById('setShopAddress').value.trim();
+
+            const shopInfoPayload = Object.assign({}, existingShopInfo, {
+                shopName: shopNameVal,
+                shopPhone: shopPhoneVal,
+                shopAddress: shopAddressVal,
+                shopLogo: window.shopLogo || existingShopInfo.shopLogo || '',
+                shopQR: window.shopQR || sys.menuQR || existingShopInfo.shopQR || '',
+                telegramBotToken: orderTok,
+                telegramChatId: orderChat,
+                bakongId: sys.bakongId || '',
+                bakongName: sys.bakongName || ''
+            });
+
+            d.sysSettings = sys;
+            d.telegramBotToken = orderTok;
+            d.telegramChatId = orderChat;
+            d.customPosScripts = posScripts;
+            d.shopName = shopNameVal;
+            d.shopPhone = shopPhoneVal;
+            d.shopAddress = shopAddressVal;
             if (window.shopLogo) d.shopLogo = window.shopLogo;
             if (window.shopQR) d.shopQR = window.shopQR;
 
-            localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
+            localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sys));
             localStorage.setItem(`ks2_${BRANCH}_pos_scripts`, JSON.stringify(posScripts));
-            localStorage.setItem(`ks2_${BRANCH}_shop_name`, d.shopName);
-            localStorage.setItem(`ks2_${BRANCH}_shop_phone`, d.shopPhone);
-            localStorage.setItem(`ks2_${BRANCH}_shop_address`, d.shopAddress);
+            localStorage.setItem(`ks2_${BRANCH}_shop_name`, shopNameVal);
+            localStorage.setItem(`ks2_${BRANCH}_shop_phone`, shopPhoneVal);
+            localStorage.setItem(`ks2_${BRANCH}_shop_address`, shopAddressVal);
             if (window.shopLogo) localStorage.setItem(`ks2_${BRANCH}_shop_logo`, window.shopLogo);
             if (window.shopQR) localStorage.setItem(`ks2_${BRANCH}_shop_qr`, window.shopQR);
             
             if (orderTok) localStorage.setItem(`ks2_${BRANCH}_telegram_bot_token`, orderTok);
             if (orderChat) localStorage.setItem(`ks2_${BRANCH}_telegram_chat_id`, orderChat);
 
+            const nowIso = new Date().toISOString();
+            localStorage.setItem(`ks2_${BRANCH}_last_update`, new Date(nowIso).getTime().toString());
+
+            // 🌟 រក្សាទុកចូលទាំង Column ថ្មី (shop_info, sys_settings, active_plugins) និង data_json ដើម្បីឱ្យ POS និង Menu ស្គាល់គ្នា ១០០%
             if (supabaseClient && navigator.onLine) {
-                let { error } = await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' });
+                let { error } = await supabaseClient.from('branch_store').upsert({
+                    branch_id: BRANCH,
+                    shop_info: shopInfoPayload,
+                    sys_settings: sys,
+                    active_plugins: sys.activePlugins,
+                    data_json: d,
+                    updated_at: nowIso
+                }, { onConflict: 'branch_id' });
                 if (error) throw error;
             }
             showToast('✅ រក្សាទុកបានជោគជ័យ! (Saved!)');
@@ -1723,7 +1776,7 @@
             };
             reader.readAsText(file);
         });
-        e.target.value = ''; // Reset
+        e.target.value = '';
     }
     
     function renderMenuScripts() {
@@ -1741,7 +1794,7 @@
 
         for (let idx = 0; idx < showCount; idx++) {
             const script = menuScripts[idx];
-            const isScriptOn = (script.active || script.isActive);
+            const isScriptOn = Boolean(script.active);
             const activeClass = isScriptOn ? 'btn-toggle-on' : 'btn-toggle-off';
             const activeIcon = isScriptOn ? 'fa-toggle-on' : 'fa-toggle-off';
             container.innerHTML += `
@@ -1765,7 +1818,7 @@
     }
 
     function toggleMenuScript(idx) { 
-        const nextState = !(menuScripts[idx].active || menuScripts[idx].isActive);
+        const nextState = !Boolean(menuScripts[idx].active);
         menuScripts[idx].active = nextState; 
         menuScripts[idx].isActive = nextState;
         renderMenuScripts(); 
@@ -1773,7 +1826,12 @@
     }
 
     function deleteMenuScript(idx) { menuScripts.splice(idx, 1); renderMenuScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
-    function toggleAllMenuScripts() { showAllMenuScripts = !showAllMenuScripts; menuScripts.forEach(s => s.active = showAllMenuScripts); renderMenuScripts(); saveAdminSettings(); }
+    function toggleAllMenuScripts() { 
+        showAllMenuScripts = !showAllMenuScripts; 
+        menuScripts.forEach(s => { s.active = showAllMenuScripts; s.isActive = showAllMenuScripts; }); 
+        renderMenuScripts(); 
+        saveAdminSettings(); 
+    }
     function deleteAllMenuScripts() { if(confirm("តើអ្នកពិតជាចង់លុបកូដ Menu JS ទាំងអស់មែនទេ?")) { menuScripts = []; renderMenuScripts(); saveAdminSettings(); showToast('🗑️ លុបទាំងអស់ជោគជ័យ!'); } }
     
     function exportMenuScriptsBackup() {
@@ -1782,12 +1840,12 @@
     }
     function importMenuScriptsBackup(e) {
         const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
-        reader.onload = function(ev) { try { menuScripts = JSON.parse(ev.target.result); renderMenuScripts(); saveAdminSettings(); showToast("✅ Restore JSON បានជោគជ័យ!"); } catch (err) { showToast("❌ ឯកសារមិនត្រឹមត្រូវ!", true); } };
+        reader.onload = function(ev) { try { menuScripts = normalizeScriptsArray(JSON.parse(ev.target.result)); renderMenuScripts(); saveAdminSettings(); showToast("✅ Restore JSON បានជោគជ័យ!"); } catch (err) { showToast("❌ ឯកសារមិនត្រឹមត្រូវ!", true); } };
         reader.readAsText(file); e.target.value = '';
     }
 
     // ==========================================
-    // មុខងារសម្រាប់ POS CUSTOM JS
+    // 🌟 មុខងារសម្រាប់ POS CUSTOM JS (កែឱ្យស៊ីគ្នាទាំង active និង isActive ១០០%) 🌟
     // ==========================================
     let posScriptsExpanded = false;
 
@@ -1805,12 +1863,15 @@
                     targetScript = posScripts.splice(existingIdx, 1)[0];
                     targetScript.code = ev.target.result;
                     targetScript.active = true; 
+                    targetScript.isActive = true;
+                    if (!targetScript.id) targetScript.id = 'pos_script_' + Date.now();
                 } else {
                     targetScript = { 
                         id: 'pos_script_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7),
                         name: file.name, 
                         code: ev.target.result, 
-                        active: true 
+                        active: true,
+                        isActive: true
                     };
                 }
                 
@@ -1824,7 +1885,7 @@
             };
             reader.readAsText(file);
         });
-        e.target.value = ''; // Reset
+        e.target.value = '';
     }
 
     function renderPosScripts() {
@@ -1838,13 +1899,14 @@
 
         for (let idx = 0; idx < showCount; idx++) {
             const script = posScripts[idx];
-            const activeClass = script.active ? 'btn-toggle-on' : 'btn-toggle-off';
-            const activeIcon = script.active ? 'fa-toggle-on' : 'fa-toggle-off';
+            const isScriptOn = Boolean(script.active);
+            const activeClass = isScriptOn ? 'btn-toggle-on' : 'btn-toggle-off';
+            const activeIcon = isScriptOn ? 'fa-toggle-on' : 'fa-toggle-off';
             container.innerHTML += `
                 <div class="script-item">
                     <div class="script-name">📜 ${script.name}</div>
                     <div class="script-actions">
-                        <button class="btn-script ${activeClass}" onclick="togglePosScript(${idx})"><i class="fa-solid ${activeIcon}"></i> ${script.active ? 'On' : 'Off'}</button>
+                        <button class="btn-script ${activeClass}" onclick="togglePosScript(${idx})"><i class="fa-solid ${activeIcon}"></i> ${isScriptOn ? 'On' : 'Off'}</button>
                         <button class="btn-script btn-delete" onclick="deletePosScript(${idx})"><i class="fa-solid fa-trash"></i></button>
                     </div>
                 </div>`;
@@ -1860,9 +1922,20 @@
         }
     }
 
-    function togglePosScript(idx) { posScripts[idx].active = !posScripts[idx].active; renderPosScripts(); saveAdminSettings(); }
+    function togglePosScript(idx) { 
+        const nextState = !Boolean(posScripts[idx].active);
+        posScripts[idx].active = nextState; 
+        posScripts[idx].isActive = nextState;
+        renderPosScripts(); 
+        saveAdminSettings(); 
+    }
     function deletePosScript(idx) { posScripts.splice(idx, 1); renderPosScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
-    function toggleAllPosScripts() { showAllPosScripts = !showAllPosScripts; posScripts.forEach(s => s.active = showAllPosScripts); renderPosScripts(); saveAdminSettings(); }
+    function toggleAllPosScripts() { 
+        showAllPosScripts = !showAllPosScripts; 
+        posScripts.forEach(s => { s.active = showAllPosScripts; s.isActive = showAllPosScripts; }); 
+        renderPosScripts(); 
+        saveAdminSettings(); 
+    }
     function deleteAllPosScripts() { if(confirm("តើអ្នកពិតជាចង់លុបកូដ POS JS ទាំងអស់មែនទេ?")) { posScripts = []; renderPosScripts(); saveAdminSettings(); showToast('🗑️ លុបទាំងអស់ជោគជ័យ!'); } }
 
     function exportPosScriptsBackup() {
@@ -1871,7 +1944,7 @@
     }
     function importPosScriptsBackup(e) {
         const file = e.target.files[0]; if (!file) return; const reader = new FileReader();
-        reader.onload = function(ev) { try { posScripts = JSON.parse(ev.target.result); renderPosScripts(); saveAdminSettings(); showToast("✅ Restore JSON បានជោគជ័យ!"); } catch (err) { showToast("❌ ឯកសារមិនត្រឹមត្រូវ!", true); } };
+        reader.onload = function(ev) { try { posScripts = normalizeScriptsArray(JSON.parse(ev.target.result)); renderPosScripts(); saveAdminSettings(); showToast("✅ Restore JSON បានជោគជ័យ!"); } catch (err) { showToast("❌ ឯកសារមិនត្រឹមត្រូវ!", true); } };
         reader.readAsText(file); e.target.value = '';
     }
     

@@ -7,10 +7,30 @@ try {
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
     const sysKey = `ks2_${branchId}_sys_settings`;
     const loadedSys = JSON.parse(localStorage.getItem(sysKey));
-    if (loadedSys) window.sysSettings = loadedSys; 
+    if (loadedSys) window.sysSettings = Object.assign({}, window.sysSettings || {}, loadedSys); 
 } catch(e) {
     console.warn("Early sysSettings load skipped.");
 }
+
+// ជំនួយការសម្រាប់ផ្ទៀងផ្ទាត់ថាតើកូដបន្ថែម (Custom JS) ត្រូវបានបើក (On) ឬបិទ (Off)
+window.isCustomScriptEnabled = function(scriptObj) {
+    if (!scriptObj || typeof scriptObj !== 'object') return false;
+    if (scriptObj.active === false || scriptObj.isActive === false) return false;
+    return Boolean(scriptObj.active || scriptObj.isActive);
+};
+
+window.normalizeCustomScriptsList = function(list) {
+    if (!Array.isArray(list)) return [];
+    return list.filter(s => s && typeof s === 'object').map((s, idx) => {
+        const enabled = window.isCustomScriptEnabled(s);
+        return {
+            ...s,
+            id: s.id || ('pos_script_' + idx),
+            active: enabled,
+            isActive: enabled
+        };
+    });
+};
 
 // ==========================================
 // 0.5 INITIALIZE LOCAL DATA PRE-FETCH
@@ -23,22 +43,58 @@ try {
     window.expenses = JSON.parse(localStorage.getItem(`ks2_${branchId}_expenses_pro`)) || [];
     window.customers = JSON.parse(localStorage.getItem(`ks2_${branchId}_customers_pro`)) || [];
     
-    const localPosScripts = JSON.parse(localStorage.getItem(`ks2_${branchId}_pos_scripts`));
-    if (localPosScripts && Array.isArray(localPosScripts)) {
-        window.customPosScripts = localPosScripts;
+    let rawPosScripts = JSON.parse(localStorage.getItem(`ks2_${branchId}_pos_scripts`));
+    if ((!rawPosScripts || !Array.isArray(rawPosScripts)) && window.sysSettings && Array.isArray(window.sysSettings.customPosScripts)) {
+        rawPosScripts = window.sysSettings.customPosScripts;
+    }
+    if (Array.isArray(rawPosScripts)) {
+        window.customPosScripts = window.normalizeCustomScriptsList(rawPosScripts);
+        localStorage.setItem(`ks2_${branchId}_pos_scripts`, JSON.stringify(window.customPosScripts));
+    } else {
+        window.customPosScripts = [];
     }
 } catch(e) {
     console.warn("Error loading data from LocalStorage:", e);
-    window.inventory = []; window.invoices = []; window.historyLog = []; window.expenses = []; window.customers = [];
+    window.inventory = []; window.invoices = []; window.historyLog = []; window.expenses = []; window.customers = []; window.customPosScripts = [];
 }
 
-function injectPosScripts() {
+// ការពារកុំឱ្យកូដបន្ថែមដំណើរការជាន់គ្នា ២ ដង (Duplicate Injection Guard)
+window._injectedPosScriptCodes = window._injectedPosScriptCodes || new Set();
+(function setupDuplicateScriptGuard() {
+    if (window._posScriptGuardInstalled || !document.body) return;
+    window._posScriptGuardInstalled = true;
+    const origAppendChild = document.body.appendChild.bind(document.body);
+    document.body.appendChild = function(node) {
+        if (node && node.tagName === 'SCRIPT' && !node.id && node.textContent) {
+            if (window._injectedPosScriptCodes.has(node.textContent.trim())) {
+                return node;
+            }
+        }
+        return origAppendChild(node);
+    };
+})();
+
+window.injectPosScripts = function() {
     if (!window.customPosScripts || !Array.isArray(window.customPosScripts)) return;
+    window.customPosScripts = window.normalizeCustomScriptsList(window.customPosScripts);
+
     window.customPosScripts.forEach(scriptObj => {
-        if (scriptObj && scriptObj.isActive && scriptObj.code) {
+        if (!scriptObj) return;
+        const isEnabled = window.isCustomScriptEnabled(scriptObj);
+        const existingScript = document.getElementById(scriptObj.id);
+
+        if (!isEnabled) {
+            if (existingScript) existingScript.remove();
+            return;
+        }
+
+        if (isEnabled && scriptObj.code) {
             try {
-                const existingScript = document.getElementById(scriptObj.id);
+                const trimmedCode = String(scriptObj.code).trim();
+                if (existingScript && window._injectedPosScriptCodes.has(trimmedCode)) return;
                 if (existingScript) existingScript.remove();
+
+                window._injectedPosScriptCodes.add(trimmedCode);
                 const scriptEl = document.createElement('script');
                 scriptEl.textContent = scriptObj.code;
                 scriptEl.id = scriptObj.id;
@@ -49,8 +105,8 @@ function injectPosScripts() {
             }
         }
     });
-}
-injectPosScripts();
+};
+window.injectPosScripts();
 
 // ==========================================
 // 0.6 MENU CUSTOM SCRIPT LOADER (GitHub CDN)
@@ -1510,28 +1566,57 @@ window.manualCloudSync = async function(isAuto = false) {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         let hasChanges = false;
 
-        let { data: storeData } = await window.supabaseClient.from('branch_store').select('shop_info, sys_settings, user_accounts, active_plugins, updated_at').eq('branch_id', branchId).maybeSingle();
+        let { data: storeData } = await window.supabaseClient
+            .from('branch_store')
+            .select('shop_info, sys_settings, user_accounts, active_plugins, data_json, updated_at')
+            .eq('branch_id', branchId)
+            .maybeSingle();
+
         let localLastUpdate = parseInt(localStorage.getItem(`ks2_${branchId}_last_update`)) || 0;
         let cloudLastUpdate = storeData && storeData.updated_at ? new Date(storeData.updated_at).getTime() : 0;
 
         if (!isAuto || cloudLastUpdate > localLastUpdate) {
             if (storeData) {
-                window.shopName = storeData.shop_info?.shopName || '';
-                window.shopLogo = storeData.shop_info?.shopLogo || '';
-                window.shopQR = storeData.shop_info?.shopQR || '';
-                window.shopPhone = storeData.shop_info?.shopPhone || '';
-                window.shopAddress = storeData.shop_info?.shopAddress || '';
-                window.shopTelegram = storeData.shop_info?.shopTelegram || '';
-                
-                window.sysSettings = storeData.sys_settings || {};
-                window.userAccounts = storeData.user_accounts || [];
+                const dJson = storeData.data_json || {};
+                const sInfo = Object.assign({}, {
+                    shopName: dJson.shopName,
+                    shopLogo: dJson.shopLogo,
+                    shopQR: dJson.shopQR,
+                    shopPhone: dJson.shopPhone,
+                    shopAddress: dJson.shopAddress,
+                    shopTelegram: dJson.shopTelegram,
+                    telegramBotToken: dJson.telegramBotToken,
+                    telegramChatId: dJson.telegramChatId
+                }, storeData.shop_info || {});
 
-                // 🌟 ធានាថា Telegram Bot Token & Chat ID ត្រូវបាន Sync មកគ្រប់ឧបករណ៍
-                window.telegramBotToken = storeData.shop_info?.telegramBotToken || window.sysSettings.telegramBotToken || window.telegramBotToken || '';
-                window.telegramChatId = storeData.shop_info?.telegramChatId || window.sysSettings.telegramChatId || window.telegramChatId || '';
+                window.shopName = sInfo.shopName || window.shopName || '';
+                window.shopLogo = sInfo.shopLogo || window.shopLogo || '';
+                window.shopQR = sInfo.shopQR || window.shopQR || '';
+                window.shopPhone = sInfo.shopPhone || window.shopPhone || '';
+                window.shopAddress = sInfo.shopAddress || window.shopAddress || '';
+                window.shopTelegram = sInfo.shopTelegram || window.shopTelegram || '';
+                
+                window.sysSettings = Object.assign({}, dJson.sysSettings || {}, storeData.sys_settings || {});
+                if (storeData.user_accounts && Array.isArray(storeData.user_accounts) && storeData.user_accounts.length > 0) {
+                    window.userAccounts = storeData.user_accounts;
+                } else if (dJson.userAccounts && Array.isArray(dJson.userAccounts)) {
+                    window.userAccounts = dJson.userAccounts;
+                }
+
+                // Sync កូដបន្ថែម POS Custom JS ពី Cloud មកកាន់ម៉ាស៊ីន
+                const cloudPosScripts = window.sysSettings.customPosScripts || dJson.customPosScripts;
+                if (Array.isArray(cloudPosScripts)) {
+                    window.customPosScripts = window.normalizeCustomScriptsList(cloudPosScripts);
+                    window.sysSettings.customPosScripts = window.customPosScripts;
+                    localStorage.setItem(`ks2_${branchId}_pos_scripts`, JSON.stringify(window.customPosScripts));
+                    if (typeof window.injectPosScripts === 'function') window.injectPosScripts();
+                }
+
+                window.telegramBotToken = sInfo.telegramBotToken || window.sysSettings.telegramBotToken || window.telegramBotToken || '';
+                window.telegramChatId = sInfo.telegramChatId || window.sysSettings.telegramChatId || window.telegramChatId || '';
                 
                 localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
-                localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts));
+                localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts || []));
                 localStorage.setItem(window.getBranchKey('shop_name'), window.shopName);
                 localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo);
                 localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR);
@@ -1543,6 +1628,10 @@ window.manualCloudSync = async function(isAuto = false) {
 
                 const dispName = document.getElementById('displayShopName');
                 if(dispName) dispName.innerHTML = `${window.shopName || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
+                if(typeof window.applySidebarLogoSettings === 'function') window.applySidebarLogoSettings();
+                if(typeof window.loadTableSettingsForPOS === 'function') window.loadTableSettingsForPOS();
+                if(typeof window.loadSettingsToUI === 'function') window.loadSettingsToUI();
+                if(typeof window.applyPermissions === 'function') window.applyPermissions();
                 if(typeof window.renderUsersList === 'function') window.renderUsersList();
                 
                 hasChanges = true;
@@ -1674,6 +1763,12 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
     if (window.expenses) localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
     if (window.customers) localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
 
+    if (!window.sysSettings) window.sysSettings = {};
+    if (window.customPosScripts && Array.isArray(window.customPosScripts)) {
+        window.customPosScripts = window.normalizeCustomScriptsList(window.customPosScripts);
+        window.sysSettings.customPosScripts = window.customPosScripts;
+    }
+
     try {
         if(window.supabaseClient && navigator.onLine) {
             const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
@@ -1699,14 +1794,31 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 activePluginsPayload = window.sysSettings.activePlugins;
             }
 
+            // រក្សាទុកក្នុង data_json ផងដែរ ដើម្បីឱ្យ menu.html, welcome.html និង admin_settings.html ស្គាល់គ្នា ១០០%
+            const dataJsonCompatPayload = {
+                sysSettings: sysSettingsPayload,
+                shopName: shopInfoPayload.shopName,
+                shopLogo: shopInfoPayload.shopLogo,
+                shopQR: shopInfoPayload.shopQR,
+                shopPhone: shopInfoPayload.shopPhone,
+                shopAddress: shopInfoPayload.shopAddress,
+                shopTelegram: shopInfoPayload.shopTelegram,
+                telegramBotToken: shopInfoPayload.telegramBotToken,
+                telegramChatId: shopInfoPayload.telegramChatId,
+                customPosScripts: window.customPosScripts || []
+            };
+
+            const nowIso = new Date().toISOString();
+            localStorage.setItem(`ks2_${branchId}_last_update`, new Date(nowIso).getTime().toString());
+
             await window.supabaseClient.from('branch_store').upsert({ 
                 branch_id: branchId, 
                 shop_info: shopInfoPayload,
                 sys_settings: sysSettingsPayload,
                 user_accounts: userAccountsPayload,
                 active_plugins: activePluginsPayload,
-                data_json: {},
-                updated_at: new Date().toISOString()
+                data_json: dataJsonCompatPayload,
+                updated_at: nowIso
             }, { onConflict: 'branch_id' });
         }
     } catch(e) { console.warn("Cloud Sync config saving failed:", e); }
@@ -1736,7 +1848,7 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
         
         let { data, error } = await window.supabaseClient
             .from('branch_store')
-            .select('shop_info, sys_settings, user_accounts, active_plugins')
+            .select('shop_info, sys_settings, user_accounts, active_plugins, data_json')
             .eq('branch_id', branchId)
             .maybeSingle();
 
@@ -1746,22 +1858,46 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
         }
 
         if (data) {
-            window.shopName = data.shop_info?.shopName || '';
-            window.shopLogo = data.shop_info?.shopLogo || '';
-            window.shopQR = data.shop_info?.shopQR || '';
-            window.shopPhone = data.shop_info?.shopPhone || '';
-            window.shopAddress = data.shop_info?.shopAddress || '';
-            window.shopTelegram = data.shop_info?.shopTelegram || '';
+            const dJson = data.data_json || {};
+            const sInfo = Object.assign({}, {
+                shopName: dJson.shopName,
+                shopLogo: dJson.shopLogo,
+                shopQR: dJson.shopQR,
+                shopPhone: dJson.shopPhone,
+                shopAddress: dJson.shopAddress,
+                shopTelegram: dJson.shopTelegram,
+                telegramBotToken: dJson.telegramBotToken,
+                telegramChatId: dJson.telegramChatId
+            }, data.shop_info || {});
 
-            window.sysSettings = data.sys_settings || {};
-            window.userAccounts = data.user_accounts || [];
-            window.activePlugins = data.active_plugins || { pos: [], menu: [] };
+            window.shopName = sInfo.shopName || window.shopName || '';
+            window.shopLogo = sInfo.shopLogo || window.shopLogo || '';
+            window.shopQR = sInfo.shopQR || window.shopQR || '';
+            window.shopPhone = sInfo.shopPhone || window.shopPhone || '';
+            window.shopAddress = sInfo.shopAddress || window.shopAddress || '';
+            window.shopTelegram = sInfo.shopTelegram || window.shopTelegram || '';
 
-            window.telegramBotToken = data.shop_info?.telegramBotToken || window.sysSettings.telegramBotToken || '';
-            window.telegramChatId = data.shop_info?.telegramChatId || window.sysSettings.telegramChatId || '';
+            window.sysSettings = Object.assign({}, dJson.sysSettings || {}, data.sys_settings || {});
+            if (data.user_accounts && Array.isArray(data.user_accounts) && data.user_accounts.length > 0) {
+                window.userAccounts = data.user_accounts;
+            } else if (dJson.userAccounts && Array.isArray(dJson.userAccounts)) {
+                window.userAccounts = dJson.userAccounts;
+            }
+            window.activePlugins = data.active_plugins || window.sysSettings.activePlugins || { pos: [], menu: [] };
+
+            const cloudPosScripts = window.sysSettings.customPosScripts || dJson.customPosScripts;
+            if (Array.isArray(cloudPosScripts)) {
+                window.customPosScripts = window.normalizeCustomScriptsList(cloudPosScripts);
+                window.sysSettings.customPosScripts = window.customPosScripts;
+                localStorage.setItem(`ks2_${branchId}_pos_scripts`, JSON.stringify(window.customPosScripts));
+                if (typeof window.injectPosScripts === 'function') window.injectPosScripts();
+            }
+
+            window.telegramBotToken = sInfo.telegramBotToken || window.sysSettings.telegramBotToken || '';
+            window.telegramChatId = sInfo.telegramChatId || window.sysSettings.telegramChatId || '';
 
             localStorage.setItem(`ks2_${branchId}_sys_settings`, JSON.stringify(window.sysSettings));
-            localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts));
+            localStorage.setItem(`ks2_${branchId}_auth_users_pro`, JSON.stringify(window.userAccounts || []));
             localStorage.setItem(window.getBranchKey('shop_name'), window.shopName);
             localStorage.setItem(window.getBranchKey('shop_logo'), window.shopLogo);
             localStorage.setItem(window.getBranchKey('shop_qr'), window.shopQR);
@@ -1770,6 +1906,9 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             localStorage.setItem(window.getBranchKey('shop_telegram'), window.shopTelegram);
             localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken);
             localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId);
+
+            if (typeof window.applySidebarLogoSettings === 'function') window.applySidebarLogoSettings();
+            if (typeof window.loadTableSettingsForPOS === 'function') window.loadTableSettingsForPOS();
 
             console.log("✅ Successfully loaded and mapped normalized data from Supabase!");
         }

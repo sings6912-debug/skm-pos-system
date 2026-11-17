@@ -18,7 +18,7 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-    <!-- 🌟 CSS សម្រាប់ផ្ទាំង Login បែប Glassmorphism 🌟 -->
+    <!-- 🌟 CSS សម្រាប់ផ្ទាំង Login បែប Glassmorphism និងតម្រង់ជួរប្រអប់ Toolbar ឱ្យស្មើគ្នា 🌟 -->
     <style>
         /* ជួសជុលបញ្ហាលោតបន្ទាត់ខ្មៅពេលលោតផ្ទាំង Alert */
         .modal-overlay, #ksMsgBox {
@@ -70,6 +70,56 @@
         }
         .glass-btn:active {
             transform: scale(0.97);
+        }
+
+        /* 🌟 កំណត់ឱ្យគ្រប់ប្រអប់ និងប៊ូតុងក្នុង Toolbar មានកម្ពស់ 42px ស្មើគ្នាគ្រប់ផ្ទាំង 🌟 */
+        .toolbar .form-control,
+        .toolbar select.form-control,
+        .toolbar .btn,
+        #tab-pos .form-control,
+        #tab-pos .btn {
+            height: 42px !important;
+            min-height: 42px !important;
+            box-sizing: border-box !important;
+        }
+
+        .toolbar-date-range {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-dark);
+            padding: 0 6px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            height: 42px !important;
+            box-sizing: border-box;
+            flex-wrap: nowrap;
+        }
+        :root.light-theme .toolbar-date-range {
+            background: #ffffff;
+        }
+        .toolbar-date-range input[type="datetime-local"] {
+            height: 38px !important;
+            min-height: 38px !important;
+            min-width: 0 !important;
+            width: 185px;
+            padding: 0 8px !important;
+            border: none !important;
+            background: transparent !important;
+            box-shadow: none !important;
+            font-size: var(--fs-13) !important;
+        }
+        @media (max-width: 768px) {
+            .toolbar-date-range {
+                width: 100% !important;
+                justify-content: space-between;
+            }
+            .toolbar-date-range input[type="datetime-local"] {
+                flex: 1 1 0 !important;
+                width: 100% !important;
+                font-size: 12px !important;
+                padding: 0 4px !important;
+            }
         }
     </style>
 </head>
@@ -175,9 +225,7 @@
     <!-- របារបញ្ជីចំហៀង (Sidebar) -->
     <div class="sidebar" id="appSidebar">
         <div class="brand" onclick="window.openShopNameModal()" title="ចុចដើម្បីប្តូរឈ្មោះហាង ឬ Logo (Admin ប៉ុណ្ណោះ)">
-            <!-- បានដកយក border និង background ចេញពី Container ខាងក្រៅ -->
             <div id="sidebarLogoWrapper" style="width: 120px; height: 120px; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; border-radius: 50%;">
-                <!-- បានបន្ថែម border និង padding ចូលទៅក្នុងរូបភាពផ្ទាល់វិញ ដើម្បីឱ្យពេល Scale វារីកធំមកទាំងអស់ -->
                 <img id="sidebarLogo" src="" style="display:none; width: 100%; height: 100%; object-fit: cover; transition: transform 0.2s ease; border: 2px solid var(--primary); background: rgba(0,0,0,0.05); border-radius: 50%;">
             </div>
             <span id="displayShopName" style="display: flex; align-items: center; justify-content: center; gap: 5px;">SKM INTEGRATE <i id="editShopIcon" style="font-size: var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i></span>
@@ -250,13 +298,15 @@
                 <div class="toolbar" style="margin-bottom: 20px; display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px;">
                     <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
                         <span style="font-size: var(--fs-14); font-weight:bold; color: var(--text-main);">📅 ជ្រើសរើសកាលបរិច្ឆេទបង្ហាញ៖ </span>
-                        <input type="datetime-local" step="1" id="dashDateFrom" class="form-control" style="width: 195px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
-                        <span style="color: var(--text-muted); font-size: var(--fs-14);">ដល់</span>
-                        <input type="datetime-local" step="1" id="dashDateTo" class="form-control" style="width: 195px; font-size: var(--fs-13);" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
-                        <button class="btn btn-outline" style="padding: 8px 14px; font-size: var(--fs-12);" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
+                        <div class="toolbar-date-range">
+                            <input type="datetime-local" step="1" id="dashDateFrom" class="form-control" onchange="window.renderDashboard()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
+                            <span style="color: var(--text-muted); font-size: var(--fs-13);">ដល់</span>
+                            <input type="datetime-local" step="1" id="dashDateTo" class="form-control" onchange="window.renderDashboard()" title="ដល់ថ្ងៃទី និងម៉ោង">
+                        </div>
+                        <button class="btn btn-outline" style="padding: 8px 14px; font-size: var(--fs-12); height: 42px;" onclick="window.resetDashboardDate()">បង្ហាញទាំងអស់</button>
                     </div>
                     <!-- Z-Report Button -->
-                    <button class="btn btn-outline" style="padding: 8px 14px; font-size: var(--fs-12); border-color: #8b5cf6; color: #8b5cf6;" onclick="if(typeof window.printZReport === 'function') window.printZReport()">🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)</button>
+                    <button class="btn btn-outline" style="padding: 8px 14px; font-size: var(--fs-12); border-color: #8b5cf6; color: #8b5cf6; height: 42px;" onclick="if(typeof window.printZReport === 'function') window.printZReport()">🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)</button>
                 </div>
 
                 <div class="stats-grid">
@@ -313,20 +363,20 @@
                         <input type="text" id="searchInput" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ (លេខកូដ, ឈ្មោះ)..." oninput="window.debounceInventorySearch ? window.debounceInventorySearch() : window.renderInventory()" style="flex: 1; height: 42px;">
                         
                         <div class="view-toggle-group" style="display: flex; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; height: 42px; align-items: center; padding: 2px; gap: 2px;">
-                            <button id="btnGridView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: var(--primary); color: #fff; height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setInventoryView('grid')" title="មើលជារូបភាព">🔲</button>
-                            <button id="btnListView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: transparent; color: var(--text-main); height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setInventoryView('list')" title="មើលជាបញ្ជីអក្សរ">📄</button>
+                            <button id="btnGridView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: var(--primary); color: #fff; height: 36px !important; min-height: 36px !important; display: flex; align-items: center; justify-content: center;" onclick="window.setInventoryView('grid')" title="មើលជារូបភាព">🔲</button>
+                            <button id="btnListView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: transparent; color: var(--text-main); height: 36px !important; min-height: 36px !important; display: flex; align-items: center; justify-content: center;" onclick="window.setInventoryView('list')" title="មើលជាបញ្ជីអក្សរ">📄</button>
                         </div>
                     </div>
                     
                     <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap;">
-                        <select id="filterCategory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ប្រភេទ</option></select>
-                        <select id="filterStatus" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;"><option value="all">គ្រប់ស្ថានភាពស្តុក</option><option value="in_stock">✅ នៅមានស្តុក (>0)</option><option value="out_stock">❌ អស់ស្តុក (0)</option></select>
-                        <select id="sortInventory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 50px;">
+                        <select id="filterCategory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 42px;"><option value="all">គ្រប់ប្រភេទ</option></select>
+                        <select id="filterStatus" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 42px;"><option value="all">គ្រប់ស្ថានភាពស្តុក</option><option value="in_stock">✅ នៅមានស្តុក (>0)</option><option value="out_stock">❌ អស់ស្តុក (0)</option></select>
+                        <select id="sortInventory" class="form-control" onchange="window.renderInventory()" style="flex: 1; min-width: 130px; height: 42px;">
                             <option value="newest">ថ្មីបំផុត</option>
                             <option value="qty_asc">ស្តុកតិចទៅច្រើន</option>
                             <option value="qty_desc">ស្តុកច្រើនទៅតិច</option>
                         </select>
-                        <select id="itemsPerPageSelect" class="form-control" onchange="window.changeItemsPerPage(this.value)" style="flex: 1; min-width: 100px; height: 50px;">
+                        <select id="itemsPerPageSelect" class="form-control" onchange="window.changeItemsPerPage(this.value)" style="flex: 1; min-width: 100px; height: 42px;">
                             <option value="10">បង្ហាញ 10</option>
                             <option value="20" selected>បង្ហាញ 20</option>
                             <option value="50">បង្ហាញ 50</option>
@@ -358,8 +408,8 @@
                             <input type="text" id="posSearch" class="form-control" placeholder="🔍 ស្វែងរក ឬ ស្កេនបាកូដ រួចចុច Enter..." oninput="window.debouncePosSearch ? window.debouncePosSearch() : window.renderPOSProducts()" onkeypress="window.handleBarcodeScan(event)" style="flex: 1; min-width: 150px; width: auto; height: 42px;">
                             
                             <div class="view-toggle-group" style="display: flex; background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; width: auto; height: 42px; align-items: center; padding: 2px; gap: 2px;">
-                                <button id="btnPOSGridView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: var(--primary); color: #fff; height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setPOSView('grid')" title="មើលជារូបភាព">🔲</button>
-                                <button id="btnPOSListView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: transparent; color: var(--text-main); height: 36px; display: flex; align-items: center; justify-content: center;" onclick="window.setPOSView('list')" title="មើលជាបញ្ជីអក្សរ">📄</button>
+                                <button id="btnPOSGridView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: var(--primary); color: #fff; height: 36px !important; min-height: 36px !important; display: flex; align-items: center; justify-content: center;" onclick="window.setPOSView('grid')" title="មើលជារូបភាព">🔲</button>
+                                <button id="btnPOSListView" class="btn" style="border: none; border-radius: 6px; padding: 6px 10px; background: transparent; color: var(--text-main); height: 36px !important; min-height: 36px !important; display: flex; align-items: center; justify-content: center;" onclick="window.setPOSView('list')" title="មើលជាបញ្ជីអក្សរ">📄</button>
                             </div>
                         </div>
                         
@@ -384,15 +434,15 @@
 
                             <div class="summary-row" style="align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
                                 <span id="lblRateText" style="font-size: var(--fs-13); color: var(--text-muted);">អត្រាប្តូរប្រាក់ (Rate):</span>
-                                <span style="display:flex; align-items:center; gap:5px;"><input type="number" id="globalExchangeRate" class="form-control" style="width: 80px; padding: 2px 5px; height: 28px; text-align: center;" value="4000" oninput="window.renderCart()"> ៛</span>
+                                <span style="display:flex; align-items:center; gap:5px;"><input type="number" id="globalExchangeRate" class="form-control" style="width: 80px; padding: 2px 5px; height: 28px !important; min-height: 28px !important; text-align: center;" value="4000" oninput="window.renderCart()"> ៛</span>
                             </div>
                             <div class="summary-row" style="margin-top: 10px;"><span id="lblQtyText">សរុបចំនួន (Qty):</span><span id="cartTotalQty" style="font-weight:bold;">0</span></div>
                             
                             <div class="summary-row" id="posDiscountContainer" style="align-items: center;">
                                 <span style="display:flex; align-items:center; gap:5px;">
                                     <span id="lblDiscountText">បញ្ចុះតម្លៃ:</span> 
-                                    <input type="number" id="posDiscount" class="form-control" style="width: 60px; padding: 2px 5px; height: 28px; text-align: center;" placeholder="0" oninput="window.renderCart()" min="0">
-                                    <select id="posDiscountType" class="form-control" style="width: 50px; padding: 2px; height: 28px; font-size: var(--fs-13);" onchange="window.renderCart()">
+                                    <input type="number" id="posDiscount" class="form-control" style="width: 60px; padding: 2px 5px; height: 28px !important; min-height: 28px !important; text-align: center;" placeholder="0" oninput="window.renderCart()" min="0">
+                                    <select id="posDiscountType" class="form-control" style="width: 50px; padding: 2px; height: 28px !important; min-height: 28px !important; font-size: var(--fs-13);" onchange="window.renderCart()">
                                         <option value="%">%</option>
                                         <option value="$">$</option>
                                     </select>
@@ -415,14 +465,14 @@
                             <div id="posTableInputContainer" style="background: rgba(6, 182, 212, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 12px; border: 1px dashed var(--primary); display: none;">
                                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; gap: 5px;">
                                     <label style="font-size: var(--fs-13); font-weight: bold; color: var(--text-main); margin: 0;">🪑 ជ្រើសរើសតុ / VIP:</label>
-                                    <button type="button" class="btn btn-outline" style="padding: 3px 8px; font-size: 11px; border-color: var(--primary); color: var(--primary);" onclick="window.toggleAddCustomTableBox()">➕ ថែមតុ / VIP</button>
+                                    <button type="button" class="btn btn-outline" style="padding: 3px 8px; font-size: 11px; border-color: var(--primary); color: var(--primary); height: 28px !important; min-height: 28px !important;" onclick="window.toggleAddCustomTableBox()">➕ ថែមតុ / VIP</button>
                                 </div>
                                 <select id="posTableSelect" class="form-control" style="width: 100%; font-size: var(--fs-14); font-weight: bold; border-color: var(--primary);" onchange="window.handleTableSelectionChange()">
                                     <option value="">-- សូមជ្រើសរើសតុ --</option>
                                 </select>
                                 <div id="posQuickAddTableBox" style="display: none; margin-top: 8px; gap: 6px; align-items: center;">
-                                    <input type="text" id="posNewCustomTableInput" class="form-control" placeholder="ឧ. VIP 1, បន្ទប់ VIP, តុថែម..." style="font-size: 12px; padding: 6px 10px; height: 34px;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.addQuickCustomTable();}">
-                                    <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 12px; height: 34px;" onclick="window.addQuickCustomTable()">រក្សាទុក</button>
+                                    <input type="text" id="posNewCustomTableInput" class="form-control" placeholder="ឧ. VIP 1, បន្ទប់ VIP, តុថែម..." style="font-size: 12px; padding: 6px 10px; height: 34px !important; min-height: 34px !important;" onkeydown="if(event.key==='Enter'){event.preventDefault(); window.addQuickCustomTable();}">
+                                    <button type="button" class="btn btn-primary" style="padding: 6px 10px; font-size: 12px; height: 34px !important; min-height: 34px !important;" onclick="window.addQuickCustomTable()">រក្សាទុក</button>
                                 </div>
                             </div>
 
@@ -438,15 +488,15 @@
 
             <!-- ផ្ទាំងវិក្កយបត្ររង់ចាំទូទាត់ (Unpaid/Invoices) -->
             <div id="tab-unpaid" class="tab-content">
-                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceUnpaidSearch ? window.debounceUnpaidSearch() : window.renderUnpaid()" style="flex: 1; min-width: 180px;">
-                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
-                        <input type="datetime-local" step="1" id="invoiceDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
+                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    <input type="text" id="searchUnpaid" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceUnpaidSearch ? window.debounceUnpaidSearch() : window.renderUnpaid()" style="flex: 1; min-width: 180px; height: 42px;">
+                    <div class="toolbar-date-range">
+                        <input type="datetime-local" step="1" id="invoiceDateFrom" class="form-control" onchange="window.renderUnpaid()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
-                        <input type="datetime-local" step="1" id="invoiceDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderUnpaid()" title="ដល់ថ្ងៃទី និងម៉ោង">
+                        <input type="datetime-local" step="1" id="invoiceDateTo" class="form-control" onchange="window.renderUnpaid()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     </div>
                     
-                    <select id="invoiceItemsPerPageSelect" class="form-control" onchange="window.changeInvoiceItemsPerPage(this.value)" style="width: 120px;">
+                    <select id="invoiceItemsPerPageSelect" class="form-control" onchange="window.changeInvoiceItemsPerPage(this.value)" style="width: 120px; height: 42px;">
                         <option value="10">បង្ហាញ 10</option>
                         <option value="20" selected>បង្ហាញ 20</option>
                         <option value="50">បង្ហាញ 50</option>
@@ -454,7 +504,7 @@
                         <option value="all">ទាំងអស់</option>
                     </select>
                     
-                    <button class="btn btn-outline" style="color: var(--success); border-color: var(--success);" onclick="window.exportInvoicesCSV()">📥 ទាញយក (Excel)</button>
+                    <button class="btn btn-outline" style="color: var(--success); border-color: var(--success); height: 42px;" onclick="window.exportInvoicesCSV()">📥 ទាញយក (Excel)</button>
                 </div>
                 
                 <div class="table-responsive">
@@ -495,16 +545,16 @@
 
             <!-- ផ្ទាំងការចំណាយ (Expenses) -->
             <div id="tab-expenses" class="tab-content">
-                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.debounceExpenseSearch ? window.debounceExpenseSearch() : window.renderExpenses()" style="flex: 1; min-width: 180px;">
+                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    <input type="text" id="searchExpense" class="form-control" placeholder="🔍 ស្វែងរកការចំណាយ..." oninput="window.debounceExpenseSearch ? window.debounceExpenseSearch() : window.renderExpenses()" style="flex: 1; min-width: 180px; height: 42px;">
                     
-                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
-                        <input type="datetime-local" step="1" id="expenseDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderExpenses()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
+                    <div class="toolbar-date-range">
+                        <input type="datetime-local" step="1" id="expenseDateFrom" class="form-control" onchange="window.renderExpenses()" title="ចាប់ពីថ្ងៃទី និងម៉ោង">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
-                        <input type="datetime-local" step="1" id="expenseDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderExpenses()" title="ដល់ថ្ងៃទី និងម៉ោង">
+                        <input type="datetime-local" step="1" id="expenseDateTo" class="form-control" onchange="window.renderExpenses()" title="ដល់ថ្ងៃទី និងម៉ោង">
                     </div>
 
-                    <select id="expenseItemsPerPageSelect" class="form-control" onchange="window.changeExpenseItemsPerPage(this.value)" style="width: 120px;">
+                    <select id="expenseItemsPerPageSelect" class="form-control" onchange="window.changeExpenseItemsPerPage(this.value)" style="width: 120px; height: 42px;">
                         <option value="10">បង្ហាញ 10</option>
                         <option value="20" selected>បង្ហាញ 20</option>
                         <option value="50">បង្ហាញ 50</option>
@@ -512,7 +562,7 @@
                         <option value="all">ទាំងអស់</option>
                     </select>
 
-                    <button class="btn btn-primary" onclick="window.openExpenseModal()">➕ កត់ត្រាចំណាយថ្មី</button>
+                    <button class="btn btn-primary" style="height: 42px;" onclick="window.openExpenseModal()">➕ កត់ត្រាចំណាយថ្មី</button>
                 </div>
                 
                 <div class="table-responsive">
@@ -546,10 +596,10 @@
 
             <!-- ផ្ទាំងអតិថិជន (Customers) -->
             <div id="tab-customers" class="tab-content">
-                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceCustomerSearch ? window.debounceCustomerSearch() : window.renderCustomers()" style="flex: 1; min-width: 200px;">
+                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    <input type="text" id="searchCustomer" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceCustomerSearch ? window.debounceCustomerSearch() : window.renderCustomers()" style="flex: 1; min-width: 200px; height: 42px;">
                     
-                    <select id="customerItemsPerPageSelect" class="form-control" onchange="window.changeCustomerItemsPerPage(this.value)" style="width: 120px;">
+                    <select id="customerItemsPerPageSelect" class="form-control" onchange="window.changeCustomerItemsPerPage(this.value)" style="width: 120px; height: 42px;">
                         <option value="10">បង្ហាញ 10</option>
                         <option value="20" selected>បង្ហាញ 20</option>
                         <option value="50">បង្ហាញ 50</option>
@@ -559,9 +609,9 @@
 
                     <div style="display: flex; gap: 5px; flex-wrap: wrap;">
                         <input type="file" id="importCustomerFile" accept=".json" style="display: none;" onchange="window.importCustomers(event)">
-                        <button class="btn btn-outline" onclick="window.exportCustomers()">📤 Export JSON</button>
-                        <button class="btn btn-outline" onclick="document.getElementById('importCustomerFile').click()">📥 Import JSON</button>
-                        <button class="btn btn-primary" onclick="window.openCustomerModal()">➕ បន្ថែមអតិថិជន</button>
+                        <button class="btn btn-outline" style="height: 42px;" onclick="window.exportCustomers()">📤 Export JSON</button>
+                        <button class="btn btn-outline" style="height: 42px;" onclick="document.getElementById('importCustomerFile').click()">📥 Import JSON</button>
+                        <button class="btn btn-primary" style="height: 42px;" onclick="window.openCustomerModal()">➕ បន្ថែមអតិថិជន</button>
                     </div>
                 </div>
                 <div class="table-responsive">
@@ -591,15 +641,15 @@
 
             <!-- ផ្ទាំងប្រវត្តិប្រតិបត្តិការ (History Log) -->
             <div id="tab-history" class="tab-content">
-                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px;">
-                    <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceHistorySearch ? window.debounceHistorySearch() : window.renderHistory()" style="flex: 1; min-width: 180px;">
-                    <div style="display: flex; align-items: center; gap: 5px; background: var(--bg-dark); padding: 2px; border-radius: 8px; border: 1px solid var(--border); flex-wrap: wrap;">
-                        <input type="datetime-local" step="1" id="historyDateFrom" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
+                <div class="toolbar" style="display: flex; flex-wrap: wrap; gap: 10px; align-items: center;">
+                    <input type="text" id="historySearch" class="form-control" placeholder="🔍 ស្វែងរកទូទៅ..." oninput="window.debounceHistorySearch ? window.debounceHistorySearch() : window.renderHistory()" style="flex: 1; min-width: 180px; height: 42px;">
+                    <div class="toolbar-date-range">
+                        <input type="datetime-local" step="1" id="historyDateFrom" class="form-control" onchange="window.renderHistory()">
                         <span style="color: var(--text-muted); font-size: var(--fs-12);">-</span>
-                        <input type="datetime-local" step="1" id="historyDateTo" class="form-control" style="width: 190px; font-size: var(--fs-12); border: none;" onchange="window.renderHistory()">
+                        <input type="datetime-local" step="1" id="historyDateTo" class="form-control" onchange="window.renderHistory()">
                     </div>
                     
-                    <select id="historyItemsPerPageSelect" class="form-control" onchange="window.changeHistoryItemsPerPage(this.value)" style="width: 120px;">
+                    <select id="historyItemsPerPageSelect" class="form-control" onchange="window.changeHistoryItemsPerPage(this.value)" style="width: 120px; height: 42px;">
                         <option value="10">បង្ហាញ 10</option>
                         <option value="20" selected>បង្ហាញ 20</option>
                         <option value="50">បង្ហាញ 50</option>
@@ -607,7 +657,7 @@
                         <option value="all">ទាំងអស់</option>
                     </select>
                     
-                    <button class="btn btn-outline" onclick="window.clearHistory()">🗑️ លុបប្រវត្តិទាំងអស់</button>
+                    <button class="btn btn-outline" style="height: 42px;" onclick="window.clearHistory()">🗑️ លុបប្រវត្តិទាំងអស់</button>
                 </div>
                 <div class="table-responsive">
                     <table id="mainHistoryTable">
@@ -787,7 +837,7 @@
                         </div>
                     </div>
 
-                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស (លាក់ទុក និងការពារដោយ Password ដោយមិនប្រើ prompt/alert) -->
+                    <!-- 🛠️ ផ្ទាំងឧបករណ៍ជំនួយពិសេស -->
                     <div style="background: var(--bg-card); padding: 30px; border-radius: 12px; border: 1px solid var(--border); border-left: 4px solid #06b6d4;">
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
                             <h2 style="font-size: var(--fs-20); color: #06b6d4; cursor: pointer; display: flex; align-items: center; gap: 8px;" onclick="window.toggleQuickToolsPassBox()" title="ចុចទីនេះដើម្បីដោះសោ">
@@ -1243,53 +1293,51 @@
         // 🌟 មុខងារគ្រប់គ្រងទំហំ និងរូបរាង Logo លើ Sidebar (Scale & Shape)
         // ==========================================
         window.applySidebarLogoSettings = function() {
-    const logoImg = document.getElementById('sidebarLogo');
-    const logoWrapper = document.getElementById('sidebarLogoWrapper');
-    if (!logoImg) return;
+            const logoImg = document.getElementById('sidebarLogo');
+            const logoWrapper = document.getElementById('sidebarLogoWrapper');
+            if (!logoImg) return;
 
-    const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-    let sys = window.sysSettings || {};
-    try {
-        const rawSys = localStorage.getItem(`ks2_${branchId}_sys_settings`);
-        if (rawSys) sys = Object.assign({}, sys, JSON.parse(rawSys));
-    } catch(e) {}
+            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            let sys = window.sysSettings || {};
+            try {
+                const rawSys = localStorage.getItem(`ks2_${branchId}_sys_settings`);
+                if (rawSys) sys = Object.assign({}, sys, JSON.parse(rawSys));
+            } catch(e) {}
 
-    const logoSrc = localStorage.getItem(`ks2_${branchId}_shop_logo`) || sys.shopLogo || '';
-    if (logoSrc) {
-        logoImg.src = logoSrc;
-        logoImg.style.display = 'block';
-    }
+            const logoSrc = localStorage.getItem(`ks2_${branchId}_shop_logo`) || sys.shopLogo || '';
+            if (logoSrc) {
+                logoImg.src = logoSrc;
+                logoImg.style.display = 'block';
+            }
 
-    const scale = parseFloat(sys.logoScale) || 1.0;
-    const shape = sys.logoShape || 'circle';
+            const scale = parseFloat(sys.logoScale) || 1.0;
+            const shape = sys.logoShape || 'circle';
 
-    // 🌟 កំណត់ទំហំ Wrapper ឱ្យថេរ 120px ស្របតាមរចនាប័ទ្ម Sidebar
-    if (logoWrapper) {
-        logoWrapper.style.setProperty('width', '120px', 'important');
-        logoWrapper.style.setProperty('height', '120px', 'important');
-        logoWrapper.style.setProperty('overflow', 'hidden', 'important');
-        logoWrapper.style.setProperty('display', 'flex', 'important');
-        logoWrapper.style.setProperty('align-items', 'center', 'important');
-        logoWrapper.style.setProperty('justify-content', 'center', 'important');
-    }
+            if (logoWrapper) {
+                logoWrapper.style.setProperty('width', '120px', 'important');
+                logoWrapper.style.setProperty('height', '120px', 'important');
+                logoWrapper.style.setProperty('overflow', 'hidden', 'important');
+                logoWrapper.style.setProperty('display', 'flex', 'important');
+                logoWrapper.style.setProperty('align-items', 'center', 'important');
+                logoWrapper.style.setProperty('justify-content', 'center', 'important');
+            }
 
-    // 🌟 ទំហំរូបភាព និងប្រើ transform: scale() ឱ្យដូច Admin Settings បេះបិទ
-    logoImg.style.setProperty('width', '120px', 'important');
-    logoImg.style.setProperty('height', '120px', 'important');
-    logoImg.style.setProperty('max-width', 'none', 'important');
-    logoImg.style.setProperty('transform', `scale(${scale})`, 'important');
-    logoImg.style.setProperty('transform-origin', 'center center', 'important');
+            logoImg.style.setProperty('width', '120px', 'important');
+            logoImg.style.setProperty('height', '120px', 'important');
+            logoImg.style.setProperty('max-width', 'none', 'important');
+            logoImg.style.setProperty('transform', `scale(${scale})`, 'important');
+            logoImg.style.setProperty('transform-origin', 'center center', 'important');
 
-    if (shape === 'circle') {
-        if (logoWrapper) logoWrapper.style.setProperty('border-radius', '50%', 'important');
-        logoImg.style.setProperty('border-radius', '50%', 'important');
-        logoImg.style.setProperty('object-fit', 'cover', 'important');
-    } else {
-        if (logoWrapper) logoWrapper.style.setProperty('border-radius', '12px', 'important');
-        logoImg.style.setProperty('border-radius', '12px', 'important');
-        logoImg.style.setProperty('object-fit', 'contain', 'important');
-    }
-};
+            if (shape === 'circle') {
+                if (logoWrapper) logoWrapper.style.setProperty('border-radius', '50%', 'important');
+                logoImg.style.setProperty('border-radius', '50%', 'important');
+                logoImg.style.setProperty('object-fit', 'cover', 'important');
+            } else {
+                if (logoWrapper) logoWrapper.style.setProperty('border-radius', '12px', 'important');
+                logoImg.style.setProperty('border-radius', '12px', 'important');
+                logoImg.style.setProperty('object-fit', 'contain', 'important');
+            }
+        };
 
         // ==========================================
         // 🌟 មុខងារប្តូររូបភាព Background ផ្ទាំង Login
@@ -1524,7 +1572,6 @@
                             throw new Error("ទ្រង់ទ្រាយឯកសារមិនត្រឹមត្រូវ");
                         }
 
-                        // Save ចូល LocalStorage សិន
                         Object.keys(backupData).forEach(key => {
                             localStorage.setItem(key, backupData[key]);
                         });
@@ -1905,33 +1952,20 @@
             if(typeof window.closeCustomerHistoryModal !== 'function') window.closeCustomerHistoryModal = () => document.getElementById('customerHistoryModal').style.display = 'none';
         });
     </script>
+
     <!-- ========================================== -->
-    <!-- មុខងារទាញយក និងដំណើរការ POS Custom JS ស្វ័យប្រវត្តិ -->
+    <!-- 🌟 គ្រប់គ្រងការទាញយក POS Custom JS តាមរយៈ main.js (មិនឱ្យដើរស្ទួន ២ ដង) 🌟 -->
     <!-- ========================================== -->
     <script>
         window.addEventListener('DOMContentLoaded', () => {
             setTimeout(() => {
-                const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                try {
-                    const rawScripts = localStorage.getItem(`ks2_${branchId}_pos_scripts`);
-                    if (rawScripts) {
-                        const scripts = JSON.parse(rawScripts);
-                        scripts.forEach(s => {
-                            if (s.active && s.code) {
-                                const scriptTag = document.createElement('script');
-                                scriptTag.textContent = s.code;
-                                document.body.appendChild(scriptTag);
-                                console.log('✅ កំពុងដំណើរការ Custom JS:', s.name);
-                            }
-                        });
-                    }
-                } catch (error) {
-                    console.error('កំហុសក្នុងការអាន POS Custom JS:', error);
+                if (typeof window.injectPosScripts === 'function') {
+                    window.injectPosScripts();
                 }
-            }, 1000); 
+            }, 600);
         });
 
-        // 🔑 មុខងារផ្ទៀងផ្ទាត់ License (ដំណើរការទាំងលើ About និង Lock Screen)
+        // 🔑 មុខងារផ្ទៀងផ្ទាត់ License (ដំណើរការទាំងលើ About និង Lock Screen ដោយមិនប្រើ alert)
         window.verifyNewLicense = async function() {
             const inputEl = document.getElementById('aboutLicenseInput') || document.getElementById('licenseInputBox');
             const key = inputEl ? String(inputEl.value).trim() : '';
@@ -1939,13 +1973,13 @@
 
             if (!key) {
                 if (typeof window.ksMsg === 'function') window.ksMsg("សូមបញ្ចូលលេខកូដ License ជាមុនសិន!", "បរាជ័យ");
-                else alert("សូមបញ្ចូលលេខកូដ License ជាមុនសិន!");
+                else if (typeof window.showToast === 'function') window.showToast("សូមបញ្ចូលលេខកូដ License ជាមុនសិន!", true);
                 return;
             }
 
             if (!navigator.onLine || !window.supabaseClient) {
                 if (typeof window.ksMsg === 'function') window.ksMsg("គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់បានទេ។", "បរាជ័យ");
-                else alert("គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់បានទេ។");
+                else if (typeof window.showToast === 'function') window.showToast("គ្មានអ៊ីនធឺណិត! មិនអាចផ្ទៀងផ្ទាត់បានទេ។", true);
                 return;
             }
 
@@ -1997,7 +2031,6 @@
             }
         };
 
-        // ភ្ជាប់ឈ្មោះ Function ទាំងពីរឱ្យស្គាល់គ្នាពេលប្រព័ន្ធជាប់សោរ
         window.verifyAndSaveLicense = window.verifyNewLicense;
     </script>
 </body>
