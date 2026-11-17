@@ -55,7 +55,11 @@ window.renderInventory = function() {
         
         let filtered = window.inventory.filter(p => {
             if(!p) return false;
-            return (p.name?String(p.name).toLowerCase():'').includes(search) || (p.customId?String(p.customId).toLowerCase():'').includes(search) || (p.desc?String(p.desc).toLowerCase():'').includes(search) || (p.id?String(p.id).toLowerCase():'').includes(search);
+            const descText = p.description || p.desc || '';
+            return (p.name?String(p.name).toLowerCase():'').includes(search) || 
+                   (p.customId?String(p.customId).toLowerCase():'').includes(search) || 
+                   String(descText).toLowerCase().includes(search) || 
+                   (p.id?String(p.id).toLowerCase():'').includes(search);
         });
         
         if(cat !== 'all') filtered = filtered.filter(p => p && p.category === cat); 
@@ -254,6 +258,7 @@ window.saveProduct = async function() {
     const id = document.getElementById('pId').value; 
     const customIdInput = document.getElementById('pCustomId').value.trim();
     let expiryVal = document.getElementById('pExpiry') ? document.getElementById('pExpiry').value : '';
+    const descVal = document.getElementById('pDesc') ? document.getElementById('pDesc').value.trim() : '';
 
     const data = { 
         id: id ? id : 'P_' + Date.now(), 
@@ -265,7 +270,8 @@ window.saveProduct = async function() {
         riel: parseFloat(document.getElementById('pRiel').value) || 0, 
         unit: document.getElementById('pUnit').value.trim(), 
         qty: parseInt(document.getElementById('pQty').value) || 0, 
-        desc: document.getElementById('pDesc').value, // 🌟 [កែទី១] ត្រូវប្រាកដថាប្រើឈ្មោះ 'desc' ដើម្បីឲ្យវាស៊ីគ្នានឹងកូដ Render
+        desc: descVal,
+        description: descVal,
         image: document.getElementById('pImage').value,
         condition: document.getElementById('pCondition') ? document.getElementById('pCondition').value || '' : '',
         expiry: (window.sysSettings && window.sysSettings.expiry) ? expiryVal : ''
@@ -277,7 +283,7 @@ window.saveProduct = async function() {
     
     if(id) { 
         const idx = window.inventory.findIndex(p => p && p.id === id); 
-        if(idx !== -1) window.inventory[idx] = data; // 🌟 [កែទី២] វា Save 'desc' ចូល Array នៅទីនេះហើយ
+        if(idx !== -1) window.inventory[idx] = data; 
         window.logAction('update', data.name, 0, 'កែប្រែព័ត៌មាន', window.activeUser); 
     } else { 
         window.inventory.push(data); 
@@ -288,12 +294,9 @@ window.saveProduct = async function() {
     window.renderInventory();
 
     // បញ្ជូនទៅ Supabase Cloud
-    // បញ្ជូនទៅ Supabase Cloud
     if (window.supabaseClient && navigator.onLine) {
         try {
             const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-            
-            // បន្ថែម { error } ដើម្បីចាប់យកកំហុសផ្ទាល់ពី Supabase
             const { error } = await window.supabaseClient.from('pos_products').upsert({
                 id: data.id,
                 branch_id: branchId,
@@ -307,25 +310,24 @@ window.saveProduct = async function() {
                 condition: data.condition,
                 expiry: data.expiry,
                 image: data.image,
-                description: data.desc, // ត្រូវប្រាកដថាក្នុង Database ឈ្មោះ description
+                description: data.description,
                 custom_id: data.customId,
                 updated_at: new Date().toISOString()
             });
 
             if (error) {
-                // ប្រសិនបើ Error វានឹងលោតផ្ទាំង Alert ប្រាប់ចំៗថាខុស Column មួយណា
                 console.error("🔥 Supabase Error:", error);
-                alert("បរាជ័យក្នុងការបញ្ជូនទៅ Cloud: \n" + error.message);
+                if (typeof window.ksMsg === 'function') {
+                    window.ksMsg("បរាជ័យក្នុងការបញ្ជូនទៅ Cloud: " + error.message, "បរាជ័យ");
+                }
             } else {
                 console.log("✅ Product and description saved to Supabase completely");
             }
-
         } catch(err) {
             console.error("Error saving product to Supabase:", err);
         }
     }
     
-    // បន្ទាប់ពីបញ្ជូនទៅ Cloud ជោគជ័យ ទើប Save LocalStorage ជាក្រោយ
     window.saveData(window.userAccounts); 
 };
 
@@ -415,7 +417,6 @@ window.exportCSV = function() {
         return;
     }
     const showCost = window.sysSettings && window.sysSettings.cost && window.currentRole === 'admin';
-    // បន្ថែម Column រូបភាព(URL)
     let csv = '\uFEFF"លេខកូដ","ឈ្មោះទំនិញ","ប្រភេទ","តម្លៃដើម($)","តម្លៃលក់($)","តម្លៃរៀល(៛)","ខ្នាត","ស្តុក","ស្ថានភាព","ផុតកំណត់","រូបភាព(URL)","ការពណ៌នា"\n';
     
     window.inventory.forEach(p => {
@@ -430,8 +431,8 @@ window.exportCSV = function() {
         let qty = parseInt(p.qty) || 0;
         let condition = `"${(p.condition || '').replace(/"/g, '""')}"`;
         let expiry = `"${p.expiry || ''}"`;
-        let img = `"${(p.image || '').replace(/"/g, '""')}"`; // ទាញយក URL រូបភាព
-        let desc = `"${(p.desc || '').replace(/"/g, '""')}"`;
+        let img = `"${(p.image || '').replace(/"/g, '""')}"`;
+        let desc = `"${(p.description || p.desc || '').replace(/"/g, '""')}"`;
         
         csv += `${id},${name},${cat},${cost},${price},${riel},${unit},${qty},${condition},${expiry},${img},${desc}\n`;
     });
@@ -459,7 +460,6 @@ window.importCSV = function() {
         const reader = new FileReader();
         reader.onload = async function(event) {
             const text = event.target.result;
-            // រំលង Header និងបំបែកជួរដេក
             const lines = text.split('\n').filter(l => l.trim() !== '');
             if(lines.length <= 1) return window.ksMsg('ឯកសារ CSV គ្មានទិន្នន័យទេ!', 'បរាជ័យ', true);
 
@@ -467,17 +467,16 @@ window.importCSV = function() {
             let updatedCount = 0;
 
             for(let i = 1; i < lines.length; i++) {
-                // កាត់យក Column នីមួយៗ (ឆ្លាតវៃជាមួយសញ្ញា " ដែលមាន , នៅកណ្តាល)
                 const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
                 if(!cols || cols.length < 5) continue;
 
-                // សម្អាតសញ្ញាធ្មេញកណ្តុរ " " 
                 const clean = (str) => str ? str.replace(/^"|"$/g, '').replace(/""/g, '"').trim() : '';
                 
                 const customId = clean(cols[0]);
                 const name = clean(cols[1]);
-                if(!name) continue; // បើអត់ឈ្មោះមិនបញ្ចូលទេ
+                if(!name) continue;
 
+                const descClean = clean(cols[11]);
                 const newObj = {
                     customId: customId || ('SKM' + Math.floor(100000 + Math.random() * 900000)),
                     name: name,
@@ -489,13 +488,14 @@ window.importCSV = function() {
                     qty: parseInt(clean(cols[7])) || 0,
                     condition: clean(cols[8]),
                     expiry: clean(cols[9]),
-                    image: clean(cols[10]), // ចាប់យក Column រូបភាព
-                    desc: clean(cols[11])
+                    image: clean(cols[10]),
+                    desc: descClean,
+                    description: descClean
                 };
 
                 const existingIdx = window.inventory.findIndex(p => p.customId === customId && customId !== '');
                 if (existingIdx !== -1) {
-                    newObj.id = window.inventory[existingIdx].id; // រក្សាទុក ID ដើម
+                    newObj.id = window.inventory[existingIdx].id;
                     window.inventory[existingIdx] = { ...window.inventory[existingIdx], ...newObj };
                     updatedCount++;
                 } else {

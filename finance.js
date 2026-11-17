@@ -68,7 +68,7 @@ window.renderUnpaid = function() {
         return timeB - timeA;
     });
 
-    const searchVal = (document.getElementById('searchUnpaid')?.value || '').toLowerCase().trim();​
+    const searchVal = (document.getElementById('searchUnpaid')?.value || '').toLowerCase().trim();
     
     // 🌟 កែតម្រូវអថេរ dateFrom និង dateTo ឱ្យមានសុវត្ថិភាព ១០០% លែង Error ទៀតហើយ
     const dateFromEl = document.getElementById('invoiceDateFrom');
@@ -928,14 +928,13 @@ window.exportInvoicesCSV = function() {
     const invoices = window.invoices || JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
     if (invoices.length === 0) return notifyFinanceUser("⚠️ គ្មានទិន្នន័យវិក្កយបត្រសម្រាប់ Export ទេ!", "ជូនដំណឹង", true);
 
-    // 🌟 [កន្លែងកែតម្រូវ]: ត្រូវប្រាកដថាមានពាក្យ "ម៉ោង," បន្ទាប់ពី "កាលបរិច្ឆេទ," ដើម្បីឱ្យគ្រប់ ១២ ជួរឈរ
+    // 🌟 មាន ១២ ជួរឈរ (Columns) ត្រឹមត្រូវ៖ លេខវិក្កយបត្រ, កាលបរិច្ឆេទ, ម៉ោង, ឈ្មោះអតិថិជន...
     let csvContent = "\uFEFFលេខវិក្កយបត្រ,កាលបរិច្ឆេទ,ម៉ោង,ឈ្មោះអតិថិជន,លេខទូរស័ព្ទ,ទំនិញដែលបានទិញ,តម្លៃសរុប($),ប្រាក់បានបង់($),ប្រាក់នៅខ្វះ($),ស្ថានភាព,អ្នកលក់,ចំណាំ\n";
     
     invoices.forEach((inv, idx) => {
         if (!inv) return;
         const id = inv.id || inv.invoiceNo || `ORD-${idx}`;
         
-        // កាត់ផ្តាច់ ថ្ងៃខែ និង ម៉ោង ជាពីរផ្នែកដាច់ដោយឡែកពីគ្នា
         let rawDate = inv.date || new Date(inv.timestamp).toLocaleString('en-US'); 
         let datePart = "";
         let timePart = "";
@@ -968,9 +967,9 @@ window.exportInvoicesCSV = function() {
         
         let row = [
             id,
-            datePart,  // Column 2: កាលបរិច្ឆេទ
-            timePart,  // Column 3: ម៉ោង
-            c,         // Column 4: ឈ្មោះអតិថិជន
+            datePart,
+            timePart,
+            c,
             p,
             safeItems,
             tot,
@@ -987,7 +986,7 @@ window.exportInvoicesCSV = function() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    const branchId = window.SHOP_BRANCH_ID || 'branch_1';
+    const branchId = typeof window.SHOP_BRANCH_ID !== 'undefined' ? window.SHOP_BRANCH_ID : 'branch_1';
     link.download = `invoices_${branchId}_${new Date().toISOString().slice(0,10)}.csv`;
     document.body.appendChild(link);
     link.click();
