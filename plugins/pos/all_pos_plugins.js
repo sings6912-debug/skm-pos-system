@@ -2,7 +2,7 @@
 
  * ============================================================================
 
- * SKM INTEGRATE POS - ALL-IN-ONE POS PLUGINS BUNDLE (48 Toggleable Plugins)
+ * SKM INTEGRATE POS - ALL-IN-ONE POS PLUGINS BUNDLE (43 Toggleable Plugins)
 
  * File: plugins/pos/all_pos_plugins.js
 
@@ -20,8 +20,8 @@
     window.__SKM_PLUGIN_CONTROLLER_READY__ = true;
 
     const DEFAULT_ENABLED = {
-        menu: ["ai_assistant.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (4).js", "delivery_notes.js", "digital_member_id.js", "quick_price_check.js", "quick_reorder.js", "scheduled_pickup.js", "store_status.js", "substitute_finder.js", "voice_search.js"],
-        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🎯 គោលដៅការលក់ (Shift Sales Target).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
+        menu: ["ai_gemini_ai_concierge.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (4).js", "delivery_notes.js", "digital_member_id.js", "quick_price_check.js", "quick_reorder.js", "scheduled_pickup.js", "store_status.js", "substitute_finder.js", "voice_search.js"],
+        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
     };
 
     const registry = { menu: {}, pos: {} };
@@ -469,7 +469,7 @@
 })();
 
 ;
-// === [1/48] កំណត់ និងជ្រើសរើសលេខតុលេខកូដទីតាំងមុនពេលកុម្មង់ (Location  Counter Selection Plugin).js ===
+// === [1/43] កំណត់ និងជ្រើសរើសលេខតុលេខកូដទីតាំងមុនពេលកុម្មង់ (Location  Counter Selection Plugin).js ===
 window.skmRegisterBundledPlugin('pos', "កំណត់ និងជ្រើសរើសលេខតុលេខកូដទីតាំងមុនពេលកុម្មង់ (Location  Counter Selection Plugin).js", function() {
 /* STREAMING_CHUNK:Initializing General Store Location Manager Plugin */
 (function() {
@@ -533,7 +533,7 @@ window.skmRegisterBundledPlugin('pos', "កំណត់ និងជ្រើស
         <div class="skm-table-modal-box" onclick="event.stopPropagation()">
             <div style="font-size: 36px; margin-bottom: 10px;">📍</div>
             <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 6px;">សូមជ្រើសរើស ឬវាយបញ្ចូលលេខតុ / លេខទីតាំង</h3>
-            <p style="font-size: 12px; color: var(--text-muted, #64748b); margin-bottom: 15px;">กรุณาระบุโต๊ะ/ตำแหน่งก่อนสั่งซื้อ (Table / Location)</p>
+            <p style="font-size: 12px; color: var(--text-muted, #64748b); margin-bottom: 15px;">សូមបញ្ជាក់លេខតុ ឬទីតាំងមុនពេលកុម្ម៉ង់ (Table / Location)</p>
             
             <div class="skm-table-grid" id="skmTableGrid">
                 <div class="skm-table-pill" onclick="selectQuickLocation('1')">តុ 1</div>
@@ -629,7 +629,7 @@ window.skmRegisterBundledPlugin('pos', "កំណត់ និងជ្រើស
 });
 
 ;
-// === [2/48] គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js ===
+// === [2/43] គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js ===
 window.skmRegisterBundledPlugin('pos', "គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", function() {
 (function() {
     console.log("🎯 POS Sales Goal Plugin (Standalone Tool) Initialized!");
@@ -867,7 +867,7 @@ window.skmRegisterBundledPlugin('pos', "គោលដៅលក់ប្រចា�
 });
 
 ;
-// === [3/48] ចង្កូត (Shortcut Navigator).js ===
+// === [3/43] ចង្កូត (Shortcut Navigator).js ===
 window.skmRegisterBundledPlugin('pos', "ចង្កូត (Shortcut Navigator).js", function() {
 (function() {
     // ⚡ ការពារមិនឱ្យកូដនេះរត់ជាន់គ្នា ២ដង (Anti-Duplicate Guard)
@@ -1004,503 +1004,7 @@ window.skmRegisterBundledPlugin('pos', "ចង្កូត (Shortcut Navigator).
 });
 
 ;
-// === [4/48] ចាក់សោរ (Lock).js ===
-window.skmRegisterBundledPlugin('pos', "ចាក់សោរ (Lock).js", function() {
-(function() {
-    // ⚡ ការពារមិនឱ្យកូដដំណើរការជាន់គ្នា (Anti-Duplicate & Anti-Lag Guard)
-    if (window.skmCgiLockV5) return;
-    window.skmCgiLockV5 = true;
-
-    console.log("🚀 POS OS-Level CGI Lock (VVIP MacOS Style) Initialized!");
-
-    const DEFAULT_PIN = "1234"; 
-    // ⚡ វានឹងទាញយកនាទីដែលមេធ្លាប់បានកំណត់ បើអត់មាន វាប្រើ ៥ នាទីជាស្តង់ដារ
-    let IDLE_TIMEOUT_MINUTES = parseFloat(localStorage.getItem('pos_idle_time')) || 5; 
-
-    let idleTimer, clockInterval, sleepTimer;
-    let isLocked = false, isLoginMode = false;
-    let currentEnteredPin = ""; 
-    
-    let cgiAnimationId;
-    let isWarpSpeed = false;
-    let canvas, ctx;
-    let stars = [];
-    let w, h;
-
-    // ==========================================
-    // 🎨 1. បញ្ចូលរចនាប័ទ្ម (VVIP Glassmorphism CSS)
-    // ==========================================
-    if(document.getElementById('skm-cgi-lock-style')) document.getElementById('skm-cgi-lock-style').remove();
-    const style = document.createElement('style');
-    style.id = 'skm-cgi-lock-style';
-    style.innerHTML = `
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@200;300;400;500&display=swap');
-        
-        @keyframes osLockEnter { 0% { transform: scale(1.15); filter: blur(20px); opacity: 0; } 100% { transform: scale(1); filter: blur(0px); opacity: 1; } }
-        @keyframes osWarpExit { 0% { transform: scale(1); filter: blur(0px); opacity: 1; } 100% { transform: scale(4); filter: blur(25px); opacity: 0; } }
-        @keyframes numpadDrop { 0% { transform: translateY(0) scale(1); opacity: 1; } 100% { transform: translateY(120px) scale(0.9); opacity: 0; } }
-        @keyframes numpadRise { 0% { transform: translateY(40px) scale(0.95); opacity: 0; } 100% { transform: translateY(0) scale(1); opacity: 1; } }
-        @keyframes skmBlink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
-        @keyframes skmPulseTap { 0%, 100% { transform: translateY(0); opacity: 0.5; } 50% { transform: translateY(-8px); opacity: 1; } }
-        @keyframes iconBounce { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.5); } }
-        @keyframes skmShakeError { 0%, 100% { transform: translateX(0); } 20%, 60% { transform: translateX(-12px); } 40%, 80% { transform: translateX(12px); } }
-        
-        .skm-error-shake { animation: skmShakeError 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
-        
-        /* Premium Compact Numpad */
-        .skm-numpad-btn {
-            width: 65px; height: 65px; border-radius: 50%;
-            background: rgba(255, 255, 255, 0.03); 
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            display: flex; justify-content: center; align-items: center;
-            font-size: 28px; font-weight: 300; color: #fff; cursor: pointer; 
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-            user-select: none; font-family: 'Outfit', sans-serif;
-            box-shadow: inset 0 2px 5px rgba(255,255,255,0.05);
-        }
-        .skm-numpad-btn:hover { background: rgba(255,255,255,0.12); transform: scale(1.08); border-color: rgba(255,255,255,0.2); }
-        .skm-numpad-btn:active { background: rgba(255,255,255,0.3); transform: scale(0.9); box-shadow: 0 0 15px rgba(255,255,255,0.4); }
-        
-        .skm-pin-dot { 
-            width: 14px; height: 14px; border-radius: 50%; 
-            border: 1.5px solid rgba(255,255,255,0.3); 
-            transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1); 
-        }
-        .skm-pin-dot.filled { 
-            background: #fff; border-color: #fff; 
-            box-shadow: 0 0 15px rgba(255,255,255,0.8); 
-            transform: scale(1.3); 
-        }
-        
-        .skm-glass-panel {
-            background: rgba(10, 15, 25, 0.55); 
-            backdrop-filter: blur(30px); -webkit-backdrop-filter: blur(30px);
-            border: 1px solid rgba(255,255,255,0.15); border-radius: 40px;
-            box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 2px rgba(255,255,255,0.2); 
-            padding: 40px 35px;
-        }
-
-        #skm-cgi-canvas { transition: filter 0.8s cubic-bezier(0.16, 1, 0.3, 1); }
-    `;
-    document.head.appendChild(style);
-
-    // ==========================================
-    // 🖥️ 2. បង្កើត UI ទុកជាមុន (Pre-build HTML)
-    // ==========================================
-    if(document.getElementById('skm-master-lock-overlay')) document.getElementById('skm-master-lock-overlay').remove();
-    const overlay = document.createElement('div');
-    overlay.id = 'skm-master-lock-overlay';
-    overlay.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        z-index: 100000; display: none; flex-direction: column; 
-        justify-content: center; align-items: center; color: white; 
-        font-family: 'Outfit', 'Battambang', sans-serif; overflow: hidden;
-        background: #000;
-    `;
-    
-    overlay.innerHTML = `
-        <!-- HTML5 Canvas Background -->
-        <canvas id="skm-cgi-canvas" style="position: absolute; top:0; left:0; width:100%; height:100%; z-index: 1;"></canvas>
-        
-        <!-- ⚙️ នេះជាប៊ូតុងកង់ស្ពឺសម្រាប់ចុចដូរនាទី Auto-Lock -->
-        <div id="skm-btn-autolock-setup" style="position: absolute; top: 30px; right: 30px; cursor: pointer; color: rgba(255,255,255,0.4); font-size: 26px; z-index: 30; padding: 10px; transition: 0.3s;" onmouseover="this.style.color='#fff'; this.style.transform='rotate(90deg)';" onmouseout="this.style.color='rgba(255,255,255,0.4)'; this.style.transform='rotate(0deg)';">⚙️</div>
-
-        <!-- ដំណាក់កាលទី១: Screensaver (Apple Style) -->
-        <div id="skm-stage1-wrapper" style="position: absolute; z-index: 10; display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; height: 100%; cursor: pointer; transition: all 0.8s cubic-bezier(0.16, 1, 0.3, 1);">
-            <div id="skm-lock-icon" style="font-size: 40px; margin-bottom: 15px; filter: drop-shadow(0 0 15px rgba(255,255,255,0.4));">🔒</div>
-            <div class="skm-lock-time" style="font-size: 130px; font-weight: 200; line-height: 1; letter-spacing: -4px; text-shadow: 0 10px 40px rgba(0,0,0,0.5);">--:--</div>
-            <div class="skm-lock-date" style="font-size: 16px; color: rgba(255,255,255,0.8); letter-spacing: 4px; margin-top: 15px; font-weight: 400; text-shadow: 0 2px 10px rgba(0,0,0,0.5);">...</div>
-            <div style="margin-top: 80px; font-size: 15px; font-weight: 400; letter-spacing: 1.5px; animation: skmPulseTap 2.5s infinite; font-family: 'Battambang'; color: rgba(255,255,255,0.9); display: flex; align-items: center; gap: 10px; background: rgba(0,0,0,0.3); padding: 10px 25px; border-radius: 30px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">
-                <span style="font-size: 22px;">👆</span> ប៉ះអេក្រង់ដើម្បីដោះសោរ
-            </div>
-        </div>
-
-        <!-- ដំណាក់កាលទី២: ផ្ទាំងក្ដារចុច (Glassmorphism Numpad) -->
-        <div id="skm-stage2-wrapper" class="skm-glass-panel" style="position: absolute; z-index: 20; display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 320px; opacity: 0; transform: translateY(40px) scale(0.95); pointer-events: none; transition: all 0.6s cubic-bezier(0.16, 1, 0.3, 1);">
-            
-            <div style="font-size: 14px; font-weight: bold; letter-spacing: 1px; margin-bottom: 30px; color: #fff; font-family: 'Battambang'; text-shadow: 0 2px 5px rgba(0,0,0,0.5);">សូមបញ្ចូលលេខសម្ងាត់</div>
-            
-            <div id="skm-pin-dots-container" style="display: flex; gap: 20px; margin-bottom: 35px;">
-                <div class="skm-pin-dot" id="dot-1"></div>
-                <div class="skm-pin-dot" id="dot-2"></div>
-                <div class="skm-pin-dot" id="dot-3"></div>
-                <div class="skm-pin-dot" id="dot-4"></div>
-            </div>
-            
-            <div id="skm-lock-error" style="color: #ef4444; font-size: 12px; height: 16px; opacity: 0; transition: 0.3s; margin-bottom: 20px; font-family: 'Battambang'; font-weight: bold; text-shadow: 0 0 10px rgba(239, 68, 68, 0.5);">លេខសម្ងាត់មិនត្រឹមត្រូវ!</div>
-            
-            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px 22px; justify-items: center;">
-                <div class="skm-numpad-btn" data-val="1">1</div>
-                <div class="skm-numpad-btn" data-val="2">2</div>
-                <div class="skm-numpad-btn" data-val="3">3</div>
-                <div class="skm-numpad-btn" data-val="4">4</div>
-                <div class="skm-numpad-btn" data-val="5">5</div>
-                <div class="skm-numpad-btn" data-val="6">6</div>
-                <div class="skm-numpad-btn" data-val="7">7</div>
-                <div class="skm-numpad-btn" data-val="8">8</div>
-                <div class="skm-numpad-btn" data-val="9">9</div>
-                <div class="skm-numpad-btn" id="skm-btn-cancel" style="font-size: 13px; font-family: 'Battambang'; font-weight: bold; color: rgba(255,255,255,0.6); background: transparent; border: none; box-shadow: none;">បោះបង់</div>
-                <div class="skm-numpad-btn" data-val="0">0</div>
-                <div class="skm-numpad-btn" id="skm-btn-delete" style="font-size: 22px; color: #fca5a5; background: transparent; border: none; box-shadow: none;">⌫</div>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(overlay);
-
-    // ==========================================
-    // ⏱️ 3. មុខងារនាឡិកា និង CGI Canvas
-    // ==========================================
-    function startClock() {
-        const timeEls = document.querySelectorAll('.skm-lock-time');
-        const dateEls = document.querySelectorAll('.skm-lock-date');
-        
-        function updateTime() {
-            const now = new Date();
-            let hours = now.getHours();
-            let minutes = now.getMinutes();
-            hours = hours % 12; hours = hours ? hours : 12; 
-            let hStr = hours < 10 ? '0' + hours : hours;
-            let mStr = minutes < 10 ? '0' + minutes : minutes;
-            
-            timeEls.forEach(el => {
-                el.innerHTML = `${hStr}<span style="opacity: 0.3; animation: skmBlink 2s infinite;">:</span>${mStr}`;
-            });
-            
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-            dateEls.forEach(el => {
-                el.innerText = now.toLocaleDateString('km-KH', options) + " | " + now.toLocaleDateString('en-US', options).toUpperCase();
-            });
-        }
-        updateTime();
-        clearInterval(clockInterval);
-        clockInterval = setInterval(updateTime, 1000);
-    }
-
-    /* ⚡ Optimized CGI Wallpaper ធានាថាមិនស៊ីថ្ម និងមិនគាំង */
-    function startCGIWallpaper() {
-        canvas = document.getElementById('skm-cgi-canvas');
-        if (!canvas) return;
-        ctx = canvas.getContext('2d');
-        w = canvas.width = window.innerWidth;
-        h = canvas.height = window.innerHeight;
-
-        window.addEventListener('resize', () => {
-            if(!isLocked) return;
-            w = canvas.width = window.innerWidth;
-            h = canvas.height = window.innerHeight;
-        });
-
-        // បង្កើតគ្រាប់ផ្កាយ ៣០០ គ្រាប់
-        stars = Array(300).fill().map(() => ({
-            x: Math.random() * w - w/2,
-            y: Math.random() * h - h/2,
-            z: Math.random() * 1000
-        }));
-
-        function drawCGI() {
-            if(!isLocked) return; // ⚡ បញ្ឈប់ការ Render ដាច់ខាតពេលដោះសោររួច (Anti-Lag / Battery Saver)
-            
-            // ពណ៌ Background លំហអាកាស (Dark Navy)
-            ctx.fillStyle = 'rgba(2, 6, 23, 0.6)'; 
-            ctx.fillRect(0, 0, w, h);
-            
-            let cx = w / 2;
-            let cy = h / 2;
-            let speed = isWarpSpeed ? 80 : 1.5; 
-
-            stars.forEach(star => {
-                star.z -= speed;
-                if (star.z <= 0) {
-                    star.x = Math.random() * w - w/2;
-                    star.y = Math.random() * h - h/2;
-                    star.z = 1000;
-                }
-
-                let x = cx + star.x / (star.z / 200);
-                let y = cy + star.y / (star.z / 200);
-                let radius = (1 - star.z / 1000) * 2.8;
-
-                ctx.beginPath();
-                ctx.arc(x, y, radius, 0, Math.PI * 2);
-                
-                if (isWarpSpeed) {
-                    // ពន្លឺ Warp Speed
-                    ctx.fillStyle = `rgba(255, 255, 255, ${1 - star.z/1000})`;
-                    ctx.shadowBlur = 15;
-                    ctx.shadowColor = '#fff';
-                } else {
-                    // ពន្លឺផ្កាយធម្មតា (Cyan/Blue)
-                    ctx.fillStyle = `rgba(56, 189, 248, ${1 - star.z/1000})`; 
-                    ctx.shadowBlur = 10;
-                    ctx.shadowColor = '#38bdf8';
-                }
-                ctx.fill();
-
-                if (isWarpSpeed) {
-                    let prevX = cx + star.x / ((star.z + speed*2.5) / 200);
-                    let prevY = cy + star.y / ((star.z + speed*2.5) / 200);
-                    ctx.beginPath();
-                    ctx.moveTo(x, y);
-                    ctx.lineTo(prevX, prevY);
-                    ctx.strokeStyle = `rgba(255, 255, 255, ${0.8 - star.z/1000})`;
-                    ctx.lineWidth = radius;
-                    ctx.stroke();
-                }
-            });
-
-            cgiAnimationId = requestAnimationFrame(drawCGI);
-        }
-        
-        cancelAnimationFrame(cgiAnimationId);
-        drawCGI();
-    }
-
-    // ==========================================
-    // ⚙️ 4. គ្រប់គ្រង Stage 1 ទៅ Stage 2
-    // ==========================================
-    const stage1 = document.getElementById('skm-stage1-wrapper');
-    const stage2 = document.getElementById('skm-stage2-wrapper');
-    const bglayer = document.getElementById('skm-cgi-canvas');
-
-    function showLoginPanel() {
-        if(isLoginMode) return;
-        isLoginMode = true;
-        
-        bglayer.style.filter = 'blur(18px)';
-        
-        stage1.style.opacity = '0';
-        stage1.style.transform = 'translateY(-15vh) scale(0.9)';
-        stage1.style.pointerEvents = 'none';
-        
-        stage2.style.animation = 'numpadRise 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-        stage2.style.pointerEvents = 'auto';
-        
-        resetSleepTimer(); 
-    }
-
-    function hideLoginPanel() {
-        if(!isLoginMode) return;
-        isLoginMode = false;
-        
-        bglayer.style.filter = 'blur(0px)';
-        
-        stage1.style.opacity = '1';
-        stage1.style.transform = 'translateY(0) scale(1)';
-        stage1.style.pointerEvents = 'auto';
-        
-        stage2.style.animation = 'none';
-        stage2.style.opacity = '0';
-        stage2.style.transform = 'translateY(40px) scale(0.95)';
-        stage2.style.pointerEvents = 'none';
-        
-        clearPin();
-        clearTimeout(sleepTimer);
-    }
-
-    stage1.addEventListener('click', showLoginPanel);
-    document.getElementById('skm-btn-cancel').addEventListener('click', (e) => {
-        e.stopPropagation();
-        hideLoginPanel();
-    });
-
-    // ==========================================
-    // ⌨️ 5. ប្រព័ន្ធបញ្ចូលលេខសម្ងាត់ (Numpad)
-    // ==========================================
-    function updateDots() {
-        for(let i = 1; i <= 4; i++) {
-            const dot = document.getElementById(`dot-${i}`);
-            if(!dot) continue;
-            if(i <= currentEnteredPin.length) dot.classList.add('filled');
-            else dot.classList.remove('filled');
-        }
-    }
-
-    function clearPin() {
-        currentEnteredPin = ""; updateDots();
-        const err = document.getElementById('skm-lock-error');
-        if(err) err.style.opacity = '0';
-    }
-
-    function handlePinSubmit() {
-        const savedPin = localStorage.getItem('pos_lock_pin') || DEFAULT_PIN;
-        const errorMsg = document.getElementById('skm-lock-error');
-        const dotsContainer = document.getElementById('skm-pin-dots-container');
-        const lockIcon = document.getElementById('skm-lock-icon');
-        
-        if (currentEnteredPin === savedPin || (savedPin.length > 4 && currentEnteredPin === DEFAULT_PIN.substring(0,4))) {
-            // 🎬 ចាប់ផ្តើម Warp Speed Sequence
-            lockIcon.innerText = '🔓';
-            lockIcon.style.animation = 'iconBounce 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-            
-            setTimeout(() => {
-                stage2.style.animation = 'numpadDrop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards';
-                isWarpSpeed = true; 
-            }, 200);
-
-            setTimeout(() => {
-                overlay.style.animation = 'osWarpExit 0.6s cubic-bezier(0.5, 0, 0, 1) forwards';
-            }, 600);
-
-            setTimeout(() => {
-                overlay.style.display = 'none';
-                cancelAnimationFrame(cgiAnimationId); // ⚡ បិទ GPU Rendering
-                isLocked = false; 
-                clearInterval(clockInterval); 
-                currentEnteredPin = "";
-                updateDots();
-                resetIdleTimer();
-            }, 1200);
-
-        } else {
-            if(errorMsg) errorMsg.style.opacity = '1';
-            if(dotsContainer) {
-                dotsContainer.classList.remove('skm-error-shake');
-                void dotsContainer.offsetWidth;
-                dotsContainer.classList.add('skm-error-shake');
-            }
-            setTimeout(() => { clearPin(); }, 400);
-        }
-    }
-
-    // On-Screen Numpad
-    overlay.addEventListener('click', (e) => {
-        const btn = e.target.closest('.skm-numpad-btn[data-val]');
-        if (btn && isLocked && !isWarpSpeed) {
-            resetSleepTimer();
-            const val = btn.getAttribute('data-val');
-            if (currentEnteredPin.length < 4) {
-                currentEnteredPin += val;
-                updateDots();
-                if (currentEnteredPin.length === 4) handlePinSubmit();
-            }
-        }
-    });
-
-    document.getElementById('skm-btn-delete').addEventListener('click', () => {
-        if (currentEnteredPin.length > 0 && !isWarpSpeed) {
-            resetSleepTimer();
-            currentEnteredPin = currentEnteredPin.slice(0, -1);
-            updateDots();
-        }
-    });
-
-    // Physical Keyboard
-    document.addEventListener('keydown', (e) => {
-        if (!isLocked || isWarpSpeed) return;
-        
-        if (!isLoginMode && (e.key === 'Enter' || e.key === ' ')) {
-            showLoginPanel();
-            return;
-        }
-
-        if(!isLoginMode) return;
-        resetSleepTimer();
-        
-        if (e.key >= '0' && e.key <= '9' && currentEnteredPin.length < 4) {
-            currentEnteredPin += e.key;
-            updateDots();
-            if (currentEnteredPin.length === 4) handlePinSubmit();
-        } else if (e.key === 'Backspace' || e.key === 'Delete') {
-            if (currentEnteredPin.length > 0) {
-                currentEnteredPin = currentEnteredPin.slice(0, -1);
-                updateDots();
-            }
-        } else if (e.key === 'Escape') {
-            hideLoginPanel();
-        }
-    });
-
-    // ==========================================
-    // ⚙️ 6. ការកំណត់ (Settings) និង Idle Timer
-    // ==========================================
-    // ⚡ នេះជាកន្លែងដែលមេអាចចុចលើកង់ស្ពឺ ដើម្បីកែចំនួននាទី!
-    document.getElementById('skm-btn-autolock-setup').addEventListener('click', function() {
-        const pin = prompt("🔒 សូមបញ្ចូលលេខសម្ងាត់ (PIN) ដើម្បីចូលទៅការកំណត់៖");
-        if (pin === (localStorage.getItem('pos_lock_pin') || DEFAULT_PIN)) {
-            let mins = prompt(`⏱️ តើចង់ឱ្យប្រព័ន្ធចាក់សោរដោយស្វ័យប្រវត្តិ បើទុកចោលប៉ុន្មាននាទី?\n(បច្ចុប្បន្ន: ${IDLE_TIMEOUT_MINUTES} នាទី | វាយលេខ 0 ដើម្បីបិទ Auto-Lock)`);
-            if(mins !== null && !isNaN(mins) && mins >= 0) {
-                IDLE_TIMEOUT_MINUTES = parseFloat(mins);
-                localStorage.setItem('pos_idle_time', IDLE_TIMEOUT_MINUTES);
-                alert(`✅ បានកំណត់ Auto-Lock រយៈពេល ${IDLE_TIMEOUT_MINUTES} នាទី រួចរាល់!`);
-                resetIdleTimer();
-            }
-        } else if (pin !== null) alert("❌ លេខសម្ងាត់មិនត្រឹមត្រូវ!");
-    });
-
-    // បិទក្ដារចុច បើទុកចោល ២០ វិនាទី
-    function resetSleepTimer() {
-        clearTimeout(sleepTimer);
-        if (isLocked && isLoginMode) {
-            sleepTimer = setTimeout(() => {
-                document.getElementById('skm-btn-cancel').click(); 
-            }, 20000); 
-        }
-    }
-
-    function resetIdleTimer() {
-        clearTimeout(idleTimer);
-        if (IDLE_TIMEOUT_MINUTES > 0 && !isLocked) {
-            let timeoutMS = IDLE_TIMEOUT_MINUTES * 60 * 1000; 
-            idleTimer = setTimeout(() => {
-                if (!isLocked) window.openLockScreen();
-            }, timeoutMS);
-        }
-    }
-
-    const events = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'];
-    events.forEach(event => document.addEventListener(event, resetIdleTimer, true));
-
-    // ==========================================
-    // 🚀 7. ដំណើរការប្រព័ន្ធបញ្ជា (Main Executor)
-    // ==========================================
-    window.openLockScreen = function() {
-        if (isLocked) return;
-        isLocked = true;
-        isLoginMode = false;
-        currentEnteredPin = "";
-        isWarpSpeed = false; 
-
-        overlay.style.display = 'flex';
-        
-        // Reset ទៅ Stage 1
-        bglayer.style.filter = 'blur(0px)';
-        stage1.style.opacity = '1';
-        stage1.style.transform = 'translateY(0) scale(1)';
-        stage1.style.pointerEvents = 'auto';
-        
-        stage2.style.animation = 'none';
-        stage2.style.opacity = '0';
-        stage2.style.transform = 'translateY(40px) scale(0.95)';
-        stage2.style.pointerEvents = 'none';
-        
-        // លោតចូល
-        const lockIcon = document.getElementById('skm-lock-icon');
-        overlay.style.animation = 'none';
-        lockIcon.innerText = '🔒';
-        lockIcon.style.animation = 'none';
-        void overlay.offsetWidth; 
-        overlay.style.animation = 'osLockEnter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-
-        startClock(); 
-        startCGIWallpaper();
-    };
-
-    let attempts = 0;
-    const initInt = setInterval(() => {
-        if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🔒', 'ចាក់សោរ (Lock)', window.openLockScreen, "ចាក់សោរ (Lock).js");
-            clearInterval(initInt);
-            resetIdleTimer();
-            console.log("🚀 VVIP OS-Level CGI Lock successfully registered!");
-        }
-        attempts++;
-        if(attempts > 20) clearInterval(initInt);
-    }, 500);
-})();
-});
-
-;
-// === [5/48] ចាក់សោរអេក្រង់ (Privacy Lock).js ===
+// === [4/43] ចាក់សោរអេក្រង់ (Privacy Lock).js ===
 window.skmRegisterBundledPlugin('pos', "ចាក់សោរអេក្រង់ (Privacy Lock).js", function() {
 (function() {
     // ⚡ ការពារកុំឱ្យកូដដំណើរការជាន់គ្នា២ដង
@@ -1839,7 +1343,7 @@ window.skmRegisterBundledPlugin('pos', "ចាក់សោរអេក្រង�
 });
 
 ;
-// === [6/48] បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js ===
+// === [5/43] បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js ===
 window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", function() {
 /* STREAMING_CHUNK:Initializing POS Pending Invoices Summary Pro v20 */
 (function() {
@@ -2153,7 +1657,7 @@ window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយ�
 });
 
 ;
-// === [7/48] បូកសរុបវិក្កយបត្រប្រចាំតុ (Table Bill Summary).js ===
+// === [6/43] បូកសរុបវិក្កយបត្រប្រចាំតុ (Table Bill Summary).js ===
 window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយបត្រប្រចាំតុ (Table Bill Summary).js", function() {
 /* STREAMING_CHUNK:Initializing POS Ultra-Premium Table Bill Summary (Smart Multi-Select V3.2) */
 (function() {
@@ -2604,7 +2108,7 @@ window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយ�
 });
 
 ;
-// === [8/48] ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js ===
+// === [7/43] ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js ===
 window.skmRegisterBundledPlugin('pos', "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", function() {
 (function() {
     // ⚡ ការពារមិនឱ្យកូដនេះរត់ជាន់គ្នា ២ដង
@@ -2736,7 +2240,7 @@ window.skmRegisterBundledPlugin('pos', "ប៊ូតុងគិតលុយរ�
 });
 
 ;
-// === [9/48] ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js ===
+// === [8/43] ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js ===
 window.skmRegisterBundledPlugin('pos', "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", function() {
 (function() {
     // ⚡ ការពារមិនឱ្យកូដនេះរត់ជាន់គ្នាបង្កើតប៊ូតុង ២ដង
@@ -2827,7 +2331,7 @@ window.skmRegisterBundledPlugin('pos', "ប៊ូតុងអណ្តែតស�
 });
 
 ;
-// === [10/48] ផ្អាកកន្ត្រក (Hold Order).js ===
+// === [9/43] ផ្អាកកន្ត្រក (Hold Order).js ===
 window.skmRegisterBundledPlugin('pos', "ផ្អាកកន្ត្រក (Hold Order).js", function() {
 (function() {
     console.log("📌 POS Ultra-Compact Premium Hold Orders Initialized!");
@@ -3101,7 +2605,7 @@ window.skmRegisterBundledPlugin('pos', "ផ្អាកកន្ត្រក (Ho
 });
 
 ;
-// === [11/48] ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js ===
+// === [10/43] ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js ===
 window.skmRegisterBundledPlugin('pos', "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", function() {
 (function() {
     console.log("🧮 POS Ultra-Premium Mini Calculator Initialized!");
@@ -3304,220 +2808,7 @@ window.skmRegisterBundledPlugin('pos', "ម៉ាស៊ីនគិតលេខ�
 });
 
 ;
-// === [12/48] ម៉ាស៊ីនគិតលេខរហ័ស.js ===
-window.skmRegisterBundledPlugin('pos', "ម៉ាស៊ីនគិតលេខរហ័ស.js", function() {
-(function() {
-    console.log("🧮 POS Premium Quick Calculator Plugin Initialized!");
-
-    // មុខងារគណនាលទ្ធផល
-    window.skmQuickCalcResult = function() {
-        const screen = document.getElementById('skm-quick-calc-screen');
-        try {
-            if(screen.value.trim() === '') return;
-            // គណនា និងបង្កត់ទសភាគបើវែងពេក
-            const safeExpr = String(screen.value || '').replace(/\s+/g, '');
-            if (!/^[0-9+\-*/().]+$/.test(safeExpr)) throw new Error('Invalid expression');
-            let result = Function('"use strict"; return (' + safeExpr + ')')();
-            if (!Number.isInteger(result)) {
-                result = parseFloat(result.toFixed(6)); // យក ៦ ខ្ទង់ក្រោយក្បៀស
-            }
-            screen.value = result;
-        } catch(e) {
-            screen.value = 'Error';
-            setTimeout(() => { screen.value = ''; }, 1000);
-        }
-    };
-
-    // មុខងារបិទម៉ាស៊ីនគិតលេខ
-    window.skmCloseQuickCalc = function() {
-        const modal = document.getElementById('skm-quick-calc-modal');
-        if(modal) {
-            modal.style.opacity = '0';
-            modal.querySelector('.skm-calc-glass').style.transform = 'scale(0.95) translateY(20px)';
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
-        }
-    };
-
-    function openCalculator() {
-        let modal = document.getElementById('skm-quick-calc-modal');
-        
-        if(!modal) {
-            // CSS រចនាបថ Premium
-            const style = document.createElement('style');
-            style.innerHTML = `
-                @keyframes skmCalcEnter {
-                    0% { transform: scale(0.9) translateY(20px); opacity: 0; filter: blur(10px); }
-                    100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
-                }
-                
-                .skm-calc-glass {
-                    background: rgba(15, 23, 42, 0.7);
-                    backdrop-filter: blur(35px) saturate(150%);
-                    -webkit-backdrop-filter: blur(35px) saturate(150%);
-                    border: 1px solid rgba(255, 255, 255, 0.15);
-                    border-radius: 28px;
-                    padding: 30px;
-                    width: 320px;
-                    box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.2);
-                    animation: skmCalcEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                    transition: transform 0.3s ease;
-                }
-                
-                .skm-calc-screen {
-                    width: 100%; height: 75px;
-                    font-size: 36px; text-align: right;
-                    margin-bottom: 25px; border-radius: 16px;
-                    border: 1px solid rgba(255,255,255,0.05); 
-                    background: rgba(0,0,0,0.4); color: #10b981; 
-                    padding: 10px 20px; outline: none;
-                    font-family: 'Arial', monospace; letter-spacing: 2px;
-                    box-shadow: inset 0 5px 15px rgba(0,0,0,0.5);
-                    box-sizing: border-box;
-                    text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
-                }
-                
-                .c-btn {
-                    height: 65px; border-radius: 18px; border: 1px solid rgba(255,255,255,0.05);
-                    font-size: 24px; font-weight: 400; cursor: pointer; color: #f8fafc;
-                    background: rgba(255,255,255,0.03); transition: all 0.2s cubic-bezier(0.25, 1, 0.5, 1);
-                    font-family: 'Arial', sans-serif; display: flex; justify-content: center; align-items: center;
-                    box-shadow: inset 0 0 0 rgba(255,255,255,0);
-                }
-                .c-btn:hover { background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.15); transform: translateY(-2px); }
-                .c-btn:active { background: rgba(255,255,255,0.2); transform: translateY(0) scale(0.92); box-shadow: inset 0 4px 10px rgba(0,0,0,0.2); }
-                
-                .c-btn.operator { color: #38bdf8; background: rgba(56, 189, 248, 0.08); border-color: rgba(56, 189, 248, 0.2); }
-                .c-btn.operator:hover { background: rgba(56, 189, 248, 0.15); }
-                
-                .c-btn.clear { color: #ef4444; background: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.2); }
-                .c-btn.clear:hover { background: rgba(239, 68, 68, 0.15); }
-                
-                .c-btn.equal { 
-                    background: linear-gradient(135deg, #10b981, #059669); 
-                    color: white; border: none; box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3); 
-                }
-                .c-btn.equal:hover { transform: translateY(-2px); box-shadow: 0 15px 25px rgba(16, 185, 129, 0.4); filter: brightness(1.1); }
-            `;
-            document.head.appendChild(style);
-
-            modal = document.createElement('div');
-            modal.id = 'skm-quick-calc-modal';
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0, 0, 0, 0.5); z-index: 100000; 
-                display: flex; justify-content: center; align-items: center; 
-                backdrop-filter: blur(8px); opacity: 0; transition: opacity 0.3s ease;
-            `;
-            
-            modal.innerHTML = `
-                <div class="skm-calc-glass" id="skm-quick-calc-container">
-                    
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 15px;">
-                        <div style="color: #94a3b8; font-family: 'Battambang', sans-serif; font-size: 14px; display: flex; align-items: center; gap: 8px;">
-                            <span style="font-size: 18px;">🧮</span> ម៉ាស៊ីនគិតលេខ
-                        </div>
-                        <!-- ប៊ូតុង X តូចល្មម -->
-                        <div onclick="window.skmCloseQuickCalc()" style="color: rgba(255,255,255,0.4); cursor: pointer; font-size: 18px; width: 30px; height: 30px; display: flex; justify-content: center; align-items: center; border-radius: 50%; background: rgba(255,255,255,0.05); transition: 0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='#fff';" onmouseout="this.style.background='rgba(255,255,255,0.05)'; this.style.color='rgba(255,255,255,0.4)';">✕</div>
-                    </div>
-
-                    <input type="text" id="skm-quick-calc-screen" readonly class="skm-quick-calc-screen" placeholder="0">
-                    
-                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px;">
-                        <button class="c-btn clear" style="grid-column: span 2;" onclick="document.getElementById('skm-quick-calc-screen').value=''">AC</button>
-                        <button class="c-btn clear" onclick="let s=document.getElementById('skm-quick-calc-screen'); s.value=s.value.slice(0,-1);">⌫</button>
-                        <button class="c-btn operator" onclick="document.getElementById('skm-quick-calc-screen').value+='/'">÷</button>
-                        
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='7'">7</button>
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='8'">8</button>
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='9'">9</button>
-                        <button class="c-btn operator" onclick="document.getElementById('skm-quick-calc-screen').value+='*'">×</button>
-                        
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='4'">4</button>
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='5'">5</button>
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='6'">6</button>
-                        <button class="c-btn operator" onclick="document.getElementById('skm-quick-calc-screen').value+='-'">-</button>
-                        
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='1'">1</button>
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='2'">2</button>
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='3'">3</button>
-                        <button class="c-btn operator" onclick="document.getElementById('skm-quick-calc-screen').value+='+'">+</button>
-                        
-                        <button class="c-btn num" style="grid-column: span 2;" onclick="document.getElementById('skm-quick-calc-screen').value+='0'">0</button>
-                        <button class="c-btn num" onclick="document.getElementById('skm-quick-calc-screen').value+='.'">.</button>
-                        <button class="c-btn equal" onclick="window.skmQuickCalcResult()">=</button>
-                    </div>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            // 💡 មុខងារចុចខាងក្រៅដើម្បីបិទ (Click Outside)
-            modal.addEventListener('mousedown', function(e) {
-                // ប្រសិនបើកន្លែងដែលចុច គឺចំពីលើផ្ទៃខ្មៅ (modal background) មិនមែនចំក្ដារចុច
-                if (e.target === modal) {
-                    window.skmCloseQuickCalc();
-                }
-            });
-
-            // 💡 មុខងារទទួលការវាយពី Keyboard កុំព្យូទ័រ
-            document.addEventListener('keydown', function(e) {
-                const mod = document.getElementById('skm-quick-calc-modal');
-                if(!mod || mod.style.display === 'none') return; // បើម៉ាស៊ីនគិតលេខបិទ មិនបាច់ខ្វល់ទេ
-                
-                const screen = document.getElementById('skm-quick-calc-screen');
-                const key = e.key;
-                
-                // អនុញ្ញាតតែលេខ និងសញ្ញាគណិតវិទ្យា
-                if (/[0-9\.\+\-\*\/]/.test(key)) {
-                    screen.value += key;
-                    e.preventDefault();
-                } 
-                // ចុច Enter ដើម្បីស្មើ
-                else if (key === 'Enter' || key === '=') {
-                    window.skmQuickCalcResult();
-                    e.preventDefault();
-                } 
-                // ចុច Backspace ដើម្បីលុបម្តងមួយខ្ទង់
-                else if (key === 'Backspace') {
-                    screen.value = screen.value.slice(0, -1);
-                    e.preventDefault();
-                } 
-                // ចុច Esc ដើម្បីបិទម៉ាស៊ីនគិតលេខ
-                else if (key === 'Escape') {
-                    window.skmCloseQuickCalc();
-                    e.preventDefault();
-                }
-            });
-
-        } else {
-            // បើមានស្រាប់ គ្រាន់តែ Show និងលេងចលនាឡើងវិញ
-            modal.style.display = 'flex';
-            setTimeout(() => { modal.style.opacity = '1'; }, 10);
-            
-            const glassPanel = document.getElementById('skm-quick-calc-container');
-            glassPanel.style.animation = 'none';
-            void glassPanel.offsetWidth; // Trigger reflow
-            glassPanel.style.animation = 'skmCalcEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-            
-            // clear អេក្រង់ចោលពេលបើកថ្មី
-            document.getElementById('skm-quick-calc-screen').value = '';
-        }
-
-        // Delay តិចៗដើម្បីឱ្យ Animation opacity ដើរ
-        setTimeout(() => { modal.style.opacity = '1'; }, 10);
-    }
-
-    const initInt = setInterval(() => {
-        if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🧮', 'ម៉ាស៊ីនគិតលេខរហ័ស', openCalculator, "ម៉ាស៊ីនគិតលេខរហ័ស.js");
-            clearInterval(initInt);
-            console.log("✅ Premium Quick Calculator successfully registered!");
-        }
-    }, 500);
-})();
-});
-
-;
-// === [13/48] ⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js ===
+// === [11/43] ⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js ===
 window.skmRegisterBundledPlugin('pos', "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", function() {
 /* STREAMING_CHUNK:Initializing POS Staff Time Clock with Break Time Pro... */
 (function() {
@@ -3720,7 +3011,7 @@ window.skmRegisterBundledPlugin('pos', "⏰ កត់ត្រាម៉ោងក
 });
 
 ;
-// === [14/48] ☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js ===
+// === [12/43] ☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js ===
 window.skmRegisterBundledPlugin('pos', "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", function() {
 /* STREAMING_CHUNK:Initializing POS Daily Shift Checklist Pro Edition... */
 (function() {
@@ -3909,7 +3200,7 @@ window.skmRegisterBundledPlugin('pos', "☑️ កិច្ចការត្រ
 });
 
 ;
-// === [15/48] ⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js ===
+// === [13/43] ⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js ===
 window.skmRegisterBundledPlugin('pos', "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", function() {
 /* STREAMING_CHUNK:Initializing Modern Cash Drawer Audit Plugin... */
 (function() {
@@ -4044,7 +3335,7 @@ window.skmRegisterBundledPlugin('pos', "⚖️ ផ្ទៀងផ្ទាត់
             resBox.style.borderColor = '#e2e8f0';
             varVal.style.color = '#1e293b';
             varVal.innerText = 'សូមបញ្ចូលប្រាក់រាប់ជាក់ស្តែង';
-            window.skmAuditStatus = 'ยังไม่ได้ระบุ';
+            window.skmAuditStatus = 'មិនទាន់បានបញ្ចូល';
             return;
         }
 
@@ -4142,7 +3433,7 @@ window.skmRegisterBundledPlugin('pos', "⚖️ ផ្ទៀងផ្ទាត់
 });
 
 ;
-// === [16/48] ⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js ===
+// === [14/43] ⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js ===
 window.skmRegisterBundledPlugin('pos', "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", function() {
 /* STREAMING_CHUNK:Initializing Fixed Wastage Log Plugin... */
 (function() {
@@ -4433,7 +3724,7 @@ window.skmRegisterBundledPlugin('pos', "⚠️ កត់ត្រាទំនិ
 });
 
 ;
-// === [17/48] ⚡ ទំនិញរហ័ស.js ===
+// === [15/43] ⚡ ទំនិញរហ័ស.js ===
 window.skmRegisterBundledPlugin('pos', "⚡ ទំនិញរហ័ស.js", function() {
 (function() {
     console.log("⚡ POS Ultra-Compact Premium Quick Custom Item Initialized!");
@@ -4687,7 +3978,7 @@ window.skmRegisterBundledPlugin('pos', "⚡ ទំនិញរហ័ស.js", fun
 });
 
 ;
-// === [18/48] ⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js ===
+// === [16/43] ⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js ===
 window.skmRegisterBundledPlugin('pos', "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", function() {
 /* STREAMING_CHUNK:Initializing Loyalty Checker Plugin with Print functionality... */
 (function() {
@@ -4824,7 +4115,7 @@ window.skmRegisterBundledPlugin('pos', "⭐ ពិនិត្យពិន្ទ
 });
 
 ;
-// === [19/48] 🍃 Natural Wind Effect.js ===
+// === [17/43] 🍃 Natural Wind Effect.js ===
 window.skmRegisterBundledPlugin('pos', "🍃 Natural Wind Effect.js", function() {
 (function() {
     // ⚡ ការពារកុំឱ្យកូដនេះរត់ជាន់គ្នាបង្កើតព្រិលទ្វេដង
@@ -4908,7 +4199,7 @@ window.skmRegisterBundledPlugin('pos', "🍃 Natural Wind Effect.js", function()
 });
 
 ;
-// === [20/48] 🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js ===
+// === [18/43] 🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js ===
 window.skmRegisterBundledPlugin('pos', "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", function() {
 /* STREAMING_CHUNK:Initializing VIP & Birthday Plugin with Telegram Sync... */
 (function() {
@@ -5084,191 +4375,7 @@ window.skmRegisterBundledPlugin('pos', "🎂 អតិថិជន VIP & ថ្�
 });
 
 ;
-// === [21/48] 🎯 គោលដៅការលក់ (Shift Sales Target).js ===
-window.skmRegisterBundledPlugin('pos', "🎯 គោលដៅការលក់ (Shift Sales Target).js", function() {
-/* STREAMING_CHUNK:Initializing Modern Sales Target Plugin... */
-(function() {
-    console.log("🎯 POS Modern Shift Sales Target Tracker Plugin Initialized!");
-
-    /* STREAMING_CHUNK:Building Refined Minimalist UI... */
-    function openTargetModal() {
-        if(document.getElementById('skmTargetModal')) {
-            document.getElementById('skmTargetModal').style.display = 'flex';
-            window.calcTargetProgress();
-            return;
-        }
-
-        const modal = document.createElement('div');
-        modal.id = 'skmTargetModal';
-        // Glassmorphism Backdrop
-        modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 23, 42, 0.6); z-index: 100000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(6px); font-family: 'Kantumruy Pro', 'Battambang', sans-serif; padding: 20px; box-sizing: border-box;`;
-        
-        /* STREAMING_CHUNK:Injecting Clean CSS and Modern HTML Layout... */
-        modal.innerHTML = `
-            <style>
-                /* Remove Number Spinners */
-                .skm-tgt-input::-webkit-inner-spin-button, 
-                .skm-tgt-input::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-                .skm-tgt-input { -moz-appearance: textfield; }
-
-                .skm-tgt-box { background: var(--bg-card, #ffffff); color: var(--text-main, #1e293b); padding: 25px; border-radius: 20px; width: 100%; max-width: 420px; box-shadow: 0 20px 40px -15px rgba(0,0,0,0.2); border: 1px solid var(--border, #e2e8f0); display: flex; flex-direction: column; gap: 14px; box-sizing: border-box; }
-                .skm-tgt-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border, #f1f5f9); padding-bottom: 12px; margin-bottom: 5px; }
-                
-                .skm-tgt-input { font-size: 20px; font-weight: 800; text-align: center; padding: 12px; border-radius: 10px; border: 1.5px solid #cbd5e1; width: 100%; transition: all 0.2s ease; color: #0ea5e9; background: var(--store-bg, #f8fafc); outline: none; font-family: 'Nunito', 'Battambang', sans-serif; box-sizing: border-box; }
-                .skm-tgt-input:focus { border-color: #0ea5e9; box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1); background: #ffffff; }
-                
-                .skm-tgt-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; padding: 20px; text-align: center; position: relative; overflow: hidden; }
-                .skm-tgt-sales { font-size: 38px; font-weight: 900; color: #10b981; line-height: 1.2; margin: 5px 0; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 2px rgba(16, 185, 129, 0.1); }
-                .skm-tgt-remaining { font-size: 13px; font-weight: 700; color: #64748b; margin-bottom: 15px; }
-                
-                .skm-tgt-bar-bg { width: 100%; height: 10px; background: #e2e8f0; border-radius: 10px; margin-top: 15px; overflow: hidden; }
-                .skm-tgt-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #10b981, #0ea5e9); border-radius: 10px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 0 8px rgba(16, 185, 129, 0.4); }
-                
-                .skm-tgt-msg { font-size: 13px; font-weight: bold; margin-top: 15px; color: #f59e0b; transition: 0.3s; }
-                .skm-btn-close { background: #f1f5f9; color: #475569; border: 1px solid #cbd5e1; padding: 12px; border-radius: 10px; font-size: 14px; font-weight: bold; cursor: pointer; width: 100%; transition: 0.2s; text-align: center; font-family: inherit; margin-top: 5px; }
-                .skm-btn-close:hover { background: #e2e8f0; color: #1e293b; }
-            </style>
-            
-            <div class="skm-tgt-box">
-                <div class="skm-tgt-header">
-                    <h3 style="margin:0; font-size:16px; display: flex; align-items: center; gap: 8px; color: #0ea5e9; font-weight: 800;">
-                        <span>🎯</span> គោលដៅការលក់ប្រចាំថ្ងៃ
-                    </h3>
-                    <button onclick="document.getElementById('skmTargetModal').style.display='none'" style="background: #fef2f2; border: 1px solid #fca5a5; color: #ef4444; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-weight: bold; font-size: 14px; display: flex; align-items: center; justify-content: center; transition: 0.2s;">✕</button>
-                </div>
-                
-                <div>
-                    <label style="font-size: 11px; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; letter-spacing: 0.5px; display: block; margin-bottom: 6px; text-align: center;">កំណត់គោលដៅសម្រាប់ថ្ងៃនេះ ($ USD):</label>
-                    <input type="number" id="skmDailyTargetInput" class="skm-tgt-input" placeholder="ឧ. 200" oninput="window.saveTargetAndCalc()">
-                </div>
-
-                <div class="skm-tgt-card">
-                    <div style="font-size: 12px; font-weight: 700; color: var(--text-muted, #64748b); text-transform: uppercase; letter-spacing: 0.5px;">លក់បានជាក់ស្តែង</div>
-                    <div id="skmCurrentSalesDisp" class="skm-tgt-sales">$0.00</div>
-                    <div id="skmRemainingDisp" class="skm-tgt-remaining">នៅខ្វះ: <span style="color:#ef4444">$0.00</span></div>
-                    
-                    <div style="display: flex; justify-content: space-between; align-items: flex-end; font-size: 12px; font-weight: 800;">
-                        <span id="skmTargetPercentText" style="color: #0ea5e9;">0%</span>
-                        <span style="color: var(--text-muted, #94a3b8); font-size: 11px; text-transform: uppercase;">គោលដៅ: <span id="skmGoalText">$0</span></span>
-                    </div>
-                    
-                    <div class="skm-tgt-bar-bg">
-                        <div id="skmTargetProgressBar" class="skm-tgt-bar-fill"></div>
-                    </div>
-                    
-                    <div id="skmMotivationMsg" class="skm-tgt-msg">🔥 ខិតខំបន្តទៀត...</div>
-                </div>
-
-                <button class="skm-btn-close" onclick="document.getElementById('skmTargetModal').style.display='none'">បិទផ្ទាំង</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        
-        // ភ្ជាប់ Event សម្រាប់ចុចចេញក្រៅបិទផ្ទាំង
-        modal.addEventListener('click', function(e) {
-            if (e.target === modal) modal.style.display = 'none';
-        });
-        
-        // ទាញយកគោលដៅចាស់ដែលធ្លាប់បាន Save ក្នុង LocalStorage
-        const branchId = window.SHOP_BRANCH_ID || 'branch_1';
-        let savedTarget = localStorage.getItem(`skm_sales_target_${branchId}`);
-        if(savedTarget) {
-            document.getElementById('skmDailyTargetInput').value = savedTarget;
-        } else {
-            document.getElementById('skmDailyTargetInput').value = 200; // Default $200
-        }
-
-        window.calcTargetProgress();
-    }
-
-    /* STREAMING_CHUNK:Implementing Calculation & Persistence Logic... */
-    window.saveTargetAndCalc = function() {
-        const targetInput = document.getElementById('skmDailyTargetInput');
-        if(!targetInput) return;
-        
-        let target = parseFloat(targetInput.value) || 0;
-        const branchId = window.SHOP_BRANCH_ID || 'branch_1';
-        
-        // រក្សាទុកក្នុងប្រព័ន្ធ ដើម្បីកុំឱ្យបាត់ពេល Refresh
-        localStorage.setItem(`skm_sales_target_${branchId}`, target);
-        
-        window.calcTargetProgress();
-    };
-
-    window.calcTargetProgress = function() {
-        const targetInput = document.getElementById('skmDailyTargetInput');
-        const salesDisp = document.getElementById('skmCurrentSalesDisp');
-        const remainingDisp = document.getElementById('skmRemainingDisp');
-        const percentText = document.getElementById('skmTargetPercentText');
-        const progressBar = document.getElementById('skmTargetProgressBar');
-        const motivationMsg = document.getElementById('skmMotivationMsg');
-        const goalText = document.getElementById('skmGoalText');
-        if(!targetInput) return;
-
-        let target = parseFloat(targetInput.value) || 0;
-        
-        // ទាញយកទិន្នន័យការលក់ថ្ងៃនេះពីប្រព័ន្ធ POS ដើម
-        const branchId = window.SHOP_BRANCH_ID || 'branch_1';
-        let invoices = window.invoices || JSON.parse(localStorage.getItem(`ks2_${branchId}_invoices_pro`) || '[]');
-        let today = new Date().toLocaleDateString();
-        let totalSales = 0;
-
-        invoices.forEach(inv => {
-            let invDate = inv.date ? inv.date.split(' ')[0] : '';
-            if (inv.status === 'paid' && invDate === today) {
-                totalSales += parseFloat(inv.totalAmount || 0);
-            }
-        });
-
-        // ធ្វើបច្ចុប្បន្នភាព UI (លក់បាន និង គោលដៅ)
-        salesDisp.innerText = `$${totalSales.toFixed(2)}`;
-        goalText.innerText = `$${target > 0 ? target.toFixed(2) : '0.00'}`;
-        
-        // គណនាប្រាក់នៅខ្វះ
-        let remaining = target - totalSales;
-        if(remaining > 0) {
-            remainingDisp.innerHTML = `នៅខ្វះ: <span style="color:#ef4444; font-weight:800;">$${remaining.toFixed(2)}</span> ដើម្បីដល់គោលដៅ`;
-        } else if (remaining < 0) {
-            remainingDisp.innerHTML = `<span style="color:#10b981; font-weight:800;">📈 លើសគោលដៅ: +$${Math.abs(remaining).toFixed(2)}</span>`;
-        } else {
-            remainingDisp.innerHTML = `<span style="color:#f59e0b; font-weight:800;">✅ ដល់គោលដៅល្មម!</span>`;
-        }
-
-        // គណនាភាគរយ (Percent)
-        let pct = target > 0 ? (totalSales / target) * 100 : 0;
-        let displayPct = Math.min(100, pct); // Limit visual bar to 100%
-        
-        percentText.innerText = `${pct.toFixed(1)}%`;
-        progressBar.style.width = `${displayPct}%`;
-
-        // ផ្លាស់ប្តូរពណ៌ និងសារលើកទឹកចិត្ត
-        if (pct >= 100 && target > 0) {
-            progressBar.style.background = 'linear-gradient(90deg, #f59e0b, #fbbf24)';
-            progressBar.style.boxShadow = '0 0 12px rgba(245, 158, 11, 0.4)';
-            salesDisp.style.color = '#f59e0b';
-            motivationMsg.innerHTML = '🎉 អបអរសាទរ! អ្នកបានសម្រេចគោលដៅហើយ!';
-            motivationMsg.style.color = '#10b981';
-        } else {
-            progressBar.style.background = 'linear-gradient(90deg, #10b981, #0ea5e9)';
-            progressBar.style.boxShadow = '0 0 8px rgba(16, 185, 129, 0.3)';
-            salesDisp.style.color = '#10b981';
-            motivationMsg.innerHTML = '🔥 ខិតខំបន្តទៀត...';
-            motivationMsg.style.color = '#64748b';
-        }
-    };
-
-    /* STREAMING_CHUNK:Registering Plugin to System... */
-    const initInt = setInterval(() => {
-        if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🎯', 'គោលដៅការលក់ប្រចាំថ្ងៃ', openTargetModal, "🎯 គោលដៅការលក់ (Shift Sales Target).js");
-            clearInterval(initInt);
-        }
-    }, 500);
-})();
-});
-
-;
-// === [22/48] 🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js ===
+// === [19/43] 🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js ===
 window.skmRegisterBundledPlugin('pos', "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", function() {
 /* STREAMING_CHUNK:Initializing Staff Commission Plugin with Print Fix... */
 (function() {
@@ -5443,7 +4550,7 @@ window.skmRegisterBundledPlugin('pos', "🏆 គណនាកម្រៃជើ�
 });
 
 ;
-// === [23/48] 🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js ===
+// === [20/43] 🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js ===
 window.skmRegisterBundledPlugin('pos', "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", function() {
 /* STREAMING_CHUNK:Initializing POS Discount Helper with Fixed KHR Conversion Pro... */
 (function() {
@@ -5605,7 +4712,7 @@ window.skmRegisterBundledPlugin('pos', "🏷️ គណនាលក់បញ្�
 });
 
 ;
-// === [24/48] 🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js ===
+// === [21/43] 🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js ===
 window.skmRegisterBundledPlugin('pos', "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", function() {
 /* STREAMING_CHUNK:Initializing POS Price Tag Generator Pro V6... */
 (function() {
@@ -6007,7 +5114,7 @@ window.skmRegisterBundledPlugin('pos', "🏷️ បង្កើតស្លា�
 });
 
 ;
-// === [25/48] 💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js ===
+// === [22/43] 💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js ===
 window.skmRegisterBundledPlugin('pos', "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", function() {
 /* STREAMING_CHUNK:Initializing Unpaid Invoices Reminder Plugin... */
 (function() {
@@ -6123,7 +5230,7 @@ window.skmRegisterBundledPlugin('pos', "💬 សាររំលឹកទារ�
 });
 
 ;
-// === [26/48] 💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js ===
+// === [23/43] 💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js ===
 window.skmRegisterBundledPlugin('pos', "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", function() {
 /* STREAMING_CHUNK:Initializing Precise Dual-Currency Margin Calculator Plugin... */
 (function() {
@@ -6298,7 +5405,7 @@ window.skmRegisterBundledPlugin('pos', "💰 គណនាតម្លៃលក�
 });
 
 ;
-// === [27/48] 💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js ===
+// === [24/43] 💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js ===
 window.skmRegisterBundledPlugin('pos', "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", function() {
 /* STREAMING_CHUNK:Initializing Fixed Payment Breakdown Plugin... */
 (function() {
@@ -6459,7 +5566,7 @@ window.skmRegisterBundledPlugin('pos', "💳 សង្ខេបចំណូល�
 });
 
 ;
-// === [28/48] 💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js ===
+// === [25/43] 💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js ===
 window.skmRegisterBundledPlugin('pos', "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", function() {
 (function() {
     console.log("💵 POS Ultra-Compact Cash Drawer Counter (Performance & Touch Ready)!");
@@ -6718,264 +5825,7 @@ window.skmRegisterBundledPlugin('pos', "💵 ប្រអប់រាប់ស�
 });
 
 ;
-// === [29/48] 💵 រាប់ប្រាក់បិទវេន (USDKHR).js ===
-window.skmRegisterBundledPlugin('pos', "💵 រាប់ប្រាក់បិទវេន (USDKHR).js", function() {
-(function() {
-    console.log("💵 POS Premium Auto-Theme Cash Counter (USD + KHR) Initialized!");
-
-    // មុខងាររាប់លេខឱ្យមានចលនារលូន (គាំទ្រទាំង USD និង KHR)
-    function animateValue(obj, start, end, duration, currency) {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            const currentVal = (progress * (end - start) + start);
-            
-            if (currency === 'USD') {
-                obj.innerHTML = '$' + currentVal.toFixed(2);
-            } else {
-                obj.innerHTML = Math.floor(currentVal).toLocaleString('en-US') + ' ៛';
-            }
-            
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            } else {
-                if (currency === 'USD') obj.innerHTML = '$' + end.toFixed(2);
-                else obj.innerHTML = Math.floor(end).toLocaleString('en-US') + ' ៛';
-            }
-        };
-        window.requestAnimationFrame(step);
-    }
-
-    window.skmCloseCashModal = function() {
-        const modal = document.getElementById('skm-cash-modal');
-        if(modal) {
-            modal.style.opacity = '0';
-            const glass = modal.querySelector('.skm-cash-glass');
-            if(glass) glass.style.transform = 'scale(0.95) translateY(20px)';
-            setTimeout(() => { modal.style.display = 'none'; }, 300);
-        }
-    };
-
-    function openCashCounter() {
-        let modal = document.getElementById('skm-cash-modal');
-        
-        if(!modal) {
-            const style = document.createElement('style');
-            style.innerHTML = `
-                @keyframes skmModalEnter {
-                    0% { transform: scale(0.9) translateY(20px); opacity: 0; filter: blur(10px); }
-                    100% { transform: scale(1) translateY(0); opacity: 1; filter: blur(0); }
-                }
-                
-                .skm-cash-glass {
-                    background: var(--bg-card, rgba(255, 255, 255, 0.95));
-                    color: var(--text-main, #1e293b);
-                    border: 1px solid var(--border, rgba(0, 0, 0, 0.1));
-                    backdrop-filter: blur(25px); -webkit-backdrop-filter: blur(25px);
-                    border-radius: 24px; padding: 25px 30px; width: 100%; max-width: 520px;
-                    box-shadow: 0 30px 60px rgba(0,0,0,0.15);
-                    animation: skmModalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
-                    transition: all 0.3s ease;
-                }
-                
-                @media (prefers-color-scheme: dark) {
-                    .skm-cash-glass {
-                        background: var(--bg-card, rgba(15, 23, 42, 0.85));
-                        color: var(--text-main, #f8fafc);
-                        border: 1px solid var(--border, rgba(255, 255, 255, 0.1));
-                        box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
-                    }
-                }
-                
-                /* Scroll Area សម្រាប់ក្រដាសប្រាក់ច្រើន */
-                .skm-cash-scroll-area {
-                    max-height: 45vh; overflow-y: auto; padding-right: 10px; margin-bottom: 20px;
-                }
-                .skm-cash-scroll-area::-webkit-scrollbar { width: 6px; }
-                .skm-cash-scroll-area::-webkit-scrollbar-track { background: var(--bg-alt, rgba(128,128,128,0.1)); border-radius: 10px; }
-                .skm-cash-scroll-area::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.3); border-radius: 10px; }
-                
-                .skm-cash-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px; }
-                
-                .skm-cash-item {
-                    display: flex; align-items: center; justify-content: space-between;
-                    background: var(--bg-alt, rgba(128, 128, 128, 0.05));
-                    padding: 6px 12px; border-radius: 12px;
-                    border: 1px solid var(--border, rgba(128, 128, 128, 0.1));
-                    transition: 0.2s;
-                }
-                .skm-cash-item.usd:hover { border-color: #10b981; background: rgba(16, 185, 129, 0.05); }
-                .skm-cash-item.khr:hover { border-color: #38bdf8; background: rgba(56, 189, 248, 0.05); }
-                
-                .skm-cash-label { font-size: 14px; font-weight: 600; font-family: 'Arial', sans-serif; display: flex; align-items: center; gap: 8px; }
-                
-                .skm-cash-input {
-                    width: 65px; height: 32px; text-align: center; font-size: 15px; font-weight: bold;
-                    border-radius: 8px; border: 1px solid var(--border, rgba(128,128,128,0.2));
-                    background: var(--bg-input, rgba(255,255,255,0.5));
-                    color: var(--text-main, inherit);
-                    outline: none; transition: 0.2s; font-family: 'Arial', sans-serif;
-                }
-                @media (prefers-color-scheme: dark) { .skm-cash-input { background: var(--bg-input, rgba(0,0,0,0.3)); } }
-                
-                .skm-cash-item.usd .skm-cash-input:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); background: transparent; }
-                .skm-cash-item.khr .skm-cash-input:focus { border-color: #38bdf8; box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.2); background: transparent; }
-                
-                .skm-total-box {
-                    background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(56, 189, 248, 0.08));
-                    border: 1px solid rgba(128, 128, 128, 0.2);
-                    padding: 15px; border-radius: 16px; margin-bottom: 20px;
-                    display: flex; justify-content: space-around; align-items: center;
-                }
-                
-                input[type=number]::-webkit-inner-spin-button, 
-                input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-            `;
-            document.head.appendChild(style);
-
-            modal = document.createElement('div');
-            modal.id = 'skm-cash-modal';
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0, 0, 0, 0.6); z-index: 100000; 
-                display: flex; justify-content: center; align-items: center; 
-                backdrop-filter: blur(5px); opacity: 0; transition: opacity 0.3s ease;
-            `;
-            
-            modal.innerHTML = `
-                <div class="skm-cash-glass">
-                    
-                    <!-- Header -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-                        <h3 style="margin:0; font-size:18px; font-weight:600; display:flex; align-items:center; gap:8px; font-family: 'Battambang';">
-                            <span style="color:#10b981; font-size: 22px;">💵</span> រាប់ប្រាក់បិទវេន (USD/KHR)
-                        </h3>
-                        <div style="display:flex; gap:10px;">
-                            <button id="skm-btn-reset-cash" style="background:rgba(239, 68, 68, 0.1); border:none; color:#ef4444; padding:5px 12px; border-radius:8px; cursor:pointer; font-weight:bold; font-family: 'Battambang'; font-size: 12px; transition:0.2s;">សម្អាត</button>
-                            <button onclick="window.skmCloseCashModal()" style="background:rgba(128,128,128,0.2); border:none; color:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer; font-weight:bold; transition:0.2s;" onmouseover="this.style.background='#ef4444'; this.style.color='white';" onmouseout="this.style.background='rgba(128,128,128,0.2)'; this.style.color='inherit';">✕</button>
-                        </div>
-                    </div>
-                    
-                    <!-- Scrollable Area -->
-                    <div class="skm-cash-scroll-area">
-                        <!-- ផ្នែកដុល្លារ (USD) -->
-                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; color: #10b981; font-family: 'Battambang';">🇺🇸 ប្រាក់ដុល្លារ (USD)</div>
-                        <div class="skm-cash-grid">
-                            <div class="skm-cash-item usd"><span class="skm-cash-label"><span style="color:#10b981;">$</span>100</span><input type="number" min="0" value="0" class="skm-cash-input usd-input" data-val="100"></div>
-                            <div class="skm-cash-item usd"><span class="skm-cash-label"><span style="color:#10b981;">$</span>50</span><input type="number" min="0" value="0" class="skm-cash-input usd-input" data-val="50"></div>
-                            <div class="skm-cash-item usd"><span class="skm-cash-label"><span style="color:#10b981;">$</span>20</span><input type="number" min="0" value="0" class="skm-cash-input usd-input" data-val="20"></div>
-                            <div class="skm-cash-item usd"><span class="skm-cash-label"><span style="color:#10b981;">$</span>10</span><input type="number" min="0" value="0" class="skm-cash-input usd-input" data-val="10"></div>
-                            <div class="skm-cash-item usd"><span class="skm-cash-label"><span style="color:#10b981;">$</span>5</span><input type="number" min="0" value="0" class="skm-cash-input usd-input" data-val="5"></div>
-                            <div class="skm-cash-item usd"><span class="skm-cash-label"><span style="color:#10b981;">$</span>1</span><input type="number" min="0" value="0" class="skm-cash-input usd-input" data-val="1"></div>
-                        </div>
-
-                        <!-- ផ្នែកលុយខ្មែរ (KHR) -->
-                        <div style="font-size: 14px; font-weight: bold; margin-bottom: 10px; margin-top: 15px; color: #38bdf8; font-family: 'Battambang';">🇰🇭 ប្រាក់រៀល (KHR)</div>
-                        <div class="skm-cash-grid">
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>100,000</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="100000"></div>
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>50,000</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="50000"></div>
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>20,000</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="20000"></div>
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>10,000</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="10000"></div>
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>5,000</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="5000"></div>
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>2,000</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="2000"></div>
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>1,000</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="1000"></div>
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>500</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="500"></div>
-                            <div class="skm-cash-item khr"><span class="skm-cash-label"><span style="color:#38bdf8;">៛</span>100</span><input type="number" min="0" value="0" class="skm-cash-input khr-input" data-val="100"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Total Box (សរុបពីរផ្នែក) -->
-                    <div class="skm-total-box">
-                        <div style="text-align: center;">
-                            <div style="font-size: 13px; opacity: 0.8; font-family: 'Battambang'; margin-bottom: 5px;">សរុបដុល្លារ</div>
-                            <div id="skmTotalUSD" style="font-size: 26px; font-weight: 800; color: #10b981; font-family: 'Arial';">$0.00</div>
-                        </div>
-                        <div style="width: 1px; height: 40px; background: rgba(128,128,128,0.3);"></div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 13px; opacity: 0.8; font-family: 'Battambang'; margin-bottom: 5px;">សរុបរៀល</div>
-                            <div id="skmTotalKHR" style="font-size: 26px; font-weight: 800; color: #38bdf8; font-family: 'Arial';">0 ៛</div>
-                        </div>
-                    </div>
-                    
-                    <button onclick="window.skmCloseCashModal()" style="width:100%; background:var(--bg-alt, rgba(128,128,128,0.1)); border:1px solid var(--border, rgba(128,128,128,0.2)); color:inherit; padding:12px; border-radius:12px; font-family:'Battambang'; cursor:pointer; font-weight:600; font-size:15px; transition:0.2s;" onmouseover="this.style.background='rgba(128,128,128,0.2)';" onmouseout="this.style.background='var(--bg-alt, rgba(128,128,128,0.1))';">បិទ (Close)</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            // 💡 ចុចខាងក្រៅដើម្បីបិទ
-            modal.addEventListener('mousedown', function(e) {
-                if (e.target === modal) window.skmCloseCashModal();
-            });
-
-            // 💡 ចុច Esc ដើម្បីបិទ
-            document.addEventListener('keydown', function(e) {
-                if(e.key === 'Escape' && modal.style.display !== 'none') window.skmCloseCashModal();
-            });
-
-            let currentUsd = 0;
-            let currentKhr = 0;
-            const usdInputs = modal.querySelectorAll('.usd-input');
-            const khrInputs = modal.querySelectorAll('.khr-input');
-            const usdDisplay = document.getElementById('skmTotalUSD');
-            const khrDisplay = document.getElementById('skmTotalKHR');
-            
-            const calculateSum = () => {
-                let newUsd = 0;
-                usdInputs.forEach(i => newUsd += (parseInt(i.value) || 0) * parseFloat(i.getAttribute('data-val')));
-                
-                let newKhr = 0;
-                khrInputs.forEach(i => newKhr += (parseInt(i.value) || 0) * parseFloat(i.getAttribute('data-val')));
-                
-                if(newUsd !== currentUsd) {
-                    animateValue(usdDisplay, currentUsd, newUsd, 300, 'USD');
-                    currentUsd = newUsd;
-                }
-                if(newKhr !== currentKhr) {
-                    animateValue(khrDisplay, currentKhr, newKhr, 300, 'KHR');
-                    currentKhr = newKhr;
-                }
-            };
-
-            const allInputs = modal.querySelectorAll('.skm-cash-input');
-            allInputs.forEach(input => {
-                input.addEventListener('input', calculateSum);
-                input.addEventListener('focus', function() {
-                    if(this.value === '0') this.select(); // Auto-Select ពេលយក Mouse ទៅចុច
-                });
-            });
-
-            // មុខងារសម្អាត (Reset)
-            document.getElementById('skm-btn-reset-cash').addEventListener('click', () => {
-                allInputs.forEach(i => i.value = '0');
-                calculateSum();
-            });
-
-        } else {
-            modal.style.display = 'flex';
-            setTimeout(() => { modal.style.opacity = '1'; }, 10);
-            
-            const glassPanel = modal.querySelector('.skm-cash-glass');
-            glassPanel.style.animation = 'none';
-            void glassPanel.offsetWidth; 
-            glassPanel.style.animation = 'skmModalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards';
-        }
-
-        setTimeout(() => { modal.style.opacity = '1'; }, 10);
-    }
-
-    const initInt = setInterval(() => {
-        if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('💵', 'រាប់សាច់ប្រាក់ (USD/KHR)', openCashCounter, "💵 រាប់ប្រាក់បិទវេន (USDKHR).js");
-            clearInterval(initInt);
-            console.log("✅ Adaptive Theme Cash Counter (USD + KHR) successfully registered!");
-        }
-    }, 500);
-})();
-});
-
-;
-// === [30/48] 💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js ===
+// === [26/43] 💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js ===
 window.skmRegisterBundledPlugin('pos', "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", function() {
 (function() {
     console.log("💼 POS Ultra-Compact Cash In/Out Initialized!");
@@ -7300,7 +6150,7 @@ window.skmRegisterBundledPlugin('pos', "💼 ចរន្តសាច់ប្�
 });
 
 ;
-// === [31/48] 📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js ===
+// === [27/43] 📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js ===
 window.skmRegisterBundledPlugin('pos', "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", function() {
 /* STREAMING_CHUNK:Initializing Expense Summary Plugin with Print Fix... */
 (function() {
@@ -7470,7 +6320,7 @@ window.skmRegisterBundledPlugin('pos', "📈 សង្ខេបការចំ�
 });
 
 ;
-// === [32/48] 📉 កត់ត្រាចំណាយរហ័ស.js ===
+// === [28/43] 📉 កត់ត្រាចំណាយរហ័ស.js ===
 window.skmRegisterBundledPlugin('pos', "📉 កត់ត្រាចំណាយរហ័ស.js", function() {
 (function() {
     console.log("📉 POS Ultra-Compact Premium Expense (USD+KHR) Initialized!");
@@ -7801,7 +6651,7 @@ window.skmRegisterBundledPlugin('pos', "📉 កត់ត្រាចំណា�
 });
 
 ;
-// === [33/48] 📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js ===
+// === [29/43] 📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js ===
 window.skmRegisterBundledPlugin('pos', "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", function() {
 (function() {
     console.log("📊 POS Monthly Staff Attendance Report Plugin Initialized!");
@@ -8119,7 +6969,7 @@ window.skmRegisterBundledPlugin('pos', "📊 របាយការណ៍ម៉�
 });
 
 ;
-// === [34/48] 📊 សង្ខេបការលក់ថ្ងៃនេះ.js ===
+// === [30/43] 📊 សង្ខេបការលក់ថ្ងៃនេះ.js ===
 window.skmRegisterBundledPlugin('pos', "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", function() {
 (function() {
     console.log("📊 POS Premium Ultra-Compact Daily Summary Initialized!");
@@ -8328,225 +7178,7 @@ window.skmRegisterBundledPlugin('pos', "📊 សង្ខេបការលក�
 });
 
 ;
-// === [35/48] 📊 សេចក្តីសង្ខេបការលក់ថ្ងៃនេះ.js ===
-window.skmRegisterBundledPlugin('pos', "📊 សេចក្តីសង្ខេបការលក់ថ្ងៃនេះ.js", function() {
-(function() {
-    console.log("📊 POS Premium Daily Summary Plugin Initialized!");
-
-    // មុខងាររាប់លេខឱ្យមានចលនា (Number Counter Animation)
-    function animateValue(obj, start, end, duration, isCurrency = false) {
-        let startTimestamp = null;
-        const step = (timestamp) => {
-            if (!startTimestamp) startTimestamp = timestamp;
-            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-            // ប្រើ ease-out effect ដើម្បីឱ្យវារត់លឿនរួចយឺតនៅចុងបញ្ចប់
-            const easeProgress = 1 - Math.pow(1 - progress, 3); 
-            const currentVal = (progress * (end - start) + start);
-            
-            if (isCurrency) {
-                obj.innerHTML = '$' + currentVal.toFixed(2);
-            } else {
-                obj.innerHTML = Math.floor(currentVal);
-            }
-            
-            if (progress < 1) {
-                window.requestAnimationFrame(step);
-            } else {
-                obj.innerHTML = isCurrency ? '$' + end.toFixed(2) : end;
-            }
-        };
-        window.requestAnimationFrame(step);
-    }
-
-    window.openDailySummary = function() {
-        let modal = document.getElementById('skm-premium-daily-modal');
-        
-        if(!modal) {
-            // បន្ថែម CSS Animations និង UI លំដាប់ខ្ពស់
-            const style = document.createElement('style');
-            style.innerHTML = `
-                @keyframes skmModalEnter {
-                    0% { transform: scale(0.9); opacity: 0; filter: blur(10px); }
-                    100% { transform: scale(1); opacity: 1; filter: blur(0); }
-                }
-                
-                .skm-summary-glass {
-                    background: rgba(15, 23, 42, 0.7);
-                    backdrop-filter: blur(25px);
-                    -webkit-backdrop-filter: blur(25px);
-                    border: 1px solid rgba(255, 255, 255, 0.1);
-                    border-radius: 24px;
-                    box-shadow: 0 30px 60px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.1);
-                }
-                
-                .skm-stat-card {
-                    background: rgba(255, 255, 255, 0.03);
-                    border: 1px solid rgba(255, 255, 255, 0.05);
-                    border-radius: 16px;
-                    padding: 16px;
-                    display: flex;
-                    align-items: center;
-                    gap: 15px;
-                    transition: transform 0.2s;
-                }
-                .skm-stat-card:hover {
-                    transform: translateY(-2px);
-                    background: rgba(255, 255, 255, 0.05);
-                }
-                
-                .skm-stat-icon {
-                    width: 45px; height: 45px;
-                    border-radius: 12px;
-                    display: flex; justify-content: center; align-items: center;
-                    font-size: 20px;
-                }
-            `;
-            document.head.appendChild(style);
-
-            modal = document.createElement('div');
-            modal.id = 'skm-premium-daily-modal';
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-                background: rgba(0, 0, 0, 0.6); z-index: 100000; 
-                display: flex; justify-content: center; align-items: center; 
-                backdrop-filter: blur(8px); font-family: 'Battambang', sans-serif;
-            `;
-            
-            modal.innerHTML = `
-                <div class="skm-summary-glass" style="color: white; padding: 30px; width: 100%; max-width: 400px; animation: skmModalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1);">
-                    
-                    <!-- Header -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:25px;">
-                        <div>
-                            <h3 style="color:#fff; margin:0; font-size:18px; font-weight: 600; display:flex; align-items:center; gap:8px;">
-                                <span style="background: linear-gradient(135deg, #0ea5e9, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">📊 របាយការណ៍ថ្ងៃនេះ</span>
-                            </h3>
-                            <div id="skm-summary-date" style="color:#94a3b8; font-size:12px; margin-top:4px;">...</div>
-                        </div>
-                        <button id="skm-btn-close-summary" style="background:rgba(255,255,255,0.1); border:none; color:#fff; width:32px; height:32px; border-radius:50%; cursor:pointer; font-weight:bold; transition:0.2s;">✕</button>
-                    </div>
-                    
-                    <!-- Content (Stat Cards) -->
-                    <div style="display:flex; flex-direction:column; gap:15px; margin-bottom:30px;">
-                        
-                        <!-- កាតចំនួនវិក្កយបត្រ -->
-                        <div class="skm-stat-card">
-                            <div class="skm-stat-icon" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.2);">🧾</div>
-                            <div style="flex:1;">
-                                <div style="color: #94a3b8; font-size: 13px; margin-bottom: 2px;">ចំនួនវិក្កយបត្រលក់ចេញ</div>
-                                <div style="color: #fff; font-size: 20px; font-weight: 600; font-family: 'Arial', sans-serif;"><span id="skm-val-inv">0</span></div>
-                            </div>
-                        </div>
-                        
-                        <!-- កាតចំនួនទំនិញ -->
-                        <div class="skm-stat-card">
-                            <div class="skm-stat-icon" style="background: rgba(167, 139, 250, 0.1); color: #a78bfa; border: 1px solid rgba(167, 139, 250, 0.2);">📦</div>
-                            <div style="flex:1;">
-                                <div style="color: #94a3b8; font-size: 13px; margin-bottom: 2px;">ចំនួនទំនិញលក់ដាច់សរុប</div>
-                                <div style="color: #fff; font-size: 20px; font-weight: 600; font-family: 'Arial', sans-serif;"><span id="skm-val-qty">0</span></div>
-                            </div>
-                        </div>
-                        
-                        <!-- កាតចំណូលសរុប (Highlight) -->
-                        <div class="skm-stat-card" style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(5, 150, 105, 0.05)); border: 1px solid rgba(16, 185, 129, 0.3);">
-                            <div class="skm-stat-icon" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); font-size: 24px;">💵</div>
-                            <div style="flex:1;">
-                                <div style="color: #10b981; font-size: 13px; margin-bottom: 2px; font-weight: 600;">ចំណូលសរុបប្រចាំថ្ងៃ</div>
-                                <div style="color: #10b981; font-size: 28px; font-weight: 700; font-family: 'Arial', sans-serif; text-shadow: 0 0 15px rgba(16, 185, 129, 0.4);"><span id="skm-val-rev">$0.00</span></div>
-                            </div>
-                        </div>
-
-                    </div>
-                    
-                    <button id="skm-btn-close-summary-full" style="width:100%; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); color:white; padding:12px; border-radius:12px; font-family:'Battambang'; cursor:pointer; font-weight:500; transition:0.2s;">បិទរបាយការណ៍</button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-
-            // មុខងារបិទ Modal
-            const closeFunc = () => {
-                modal.style.opacity = '0';
-                modal.style.pointerEvents = 'none';
-                setTimeout(() => { modal.style.display = 'none'; }, 300);
-            };
-
-            document.getElementById('skm-btn-close-summary').addEventListener('click', closeFunc);
-            document.getElementById('skm-btn-close-summary-full').addEventListener('click', closeFunc);
-            
-            // Hover effect លើប៊ូតុងបិទ
-            const btnClose = document.getElementById('skm-btn-close-summary');
-            btnClose.onmouseover = () => btnClose.style.background = '#ef4444';
-            btnClose.onmouseout = () => btnClose.style.background = 'rgba(255,255,255,0.1)';
-            
-            const btnCloseFull = document.getElementById('skm-btn-close-summary-full');
-            btnCloseFull.onmouseover = () => btnCloseFull.style.background = 'rgba(255,255,255,0.1)';
-            btnCloseFull.onmouseout = () => btnCloseFull.style.background = 'rgba(255,255,255,0.05)';
-        } else {
-            modal.style.display = 'flex';
-            modal.style.opacity = '1';
-            modal.style.pointerEvents = 'auto';
-            // បញ្ជាឱ្យ Animation លោតម្តងទៀត
-            const glassPanel = modal.querySelector('.skm-summary-glass');
-            glassPanel.style.animation = 'none';
-            void glassPanel.offsetWidth;
-            glassPanel.style.animation = 'skmModalEnter 0.4s cubic-bezier(0.16, 1, 0.3, 1)';
-        }
-
-        calcAndAnimateSum();
-    };
-
-    function calcAndAnimateSum() {
-        // ទាញកាលបរិច្ឆេទថ្ងៃនេះ និងបង្ហាញនៅលើ Header
-        const now = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-        document.getElementById('skm-summary-date').innerText = now.toLocaleDateString('km-KH', options);
-
-        // ការទាញយកទិន្នន័យ (គាំទ្រទម្រង់កាលបរិច្ឆេទច្រើនប្រភេទ)
-        let invoices = window.invoices || JSON.parse(localStorage.getItem(`ks2_${window.SHOP_BRANCH_ID || 'branch_1'}_invoices_pro`) || '[]');
-        
-        const todayStr1 = now.toLocaleDateString(); 
-        const todayStr2 = now.toISOString().split('T')[0]; // YYYY-MM-DD
-        
-        let count = 0, totalRev = 0, itemsCount = 0;
-        
-        invoices.forEach(inv => {
-            let invDate = inv.date ? inv.date.split(' ')[0] : '';
-            // ផ្ទៀងផ្ទាត់កាលបរិច្ឆេទឱ្យបានច្បាស់លាស់
-            if (inv.status === 'paid' && (invDate === todayStr1 || invDate === todayStr2 || (inv.date && inv.date.includes(todayStr2)))) {
-                count++;
-                totalRev += parseFloat(inv.totalAmount || 0);
-                if (inv.items) {
-                    inv.items.forEach(it => itemsCount += (parseInt(it.cartQty || it.qty) || 1));
-                }
-            }
-        });
-
-        // ចាប់ផ្តើមចលនាលោតលេខ (Animation Duration: 1វិនាទី)
-        const elInv = document.getElementById('skm-val-inv');
-        const elQty = document.getElementById('skm-val-qty');
-        const elRev = document.getElementById('skm-val-rev');
-
-        animateValue(elInv, 0, count, 1000, false);
-        animateValue(elQty, 0, itemsCount, 1000, false);
-        animateValue(elRev, 0, totalRev, 1200, true); // លុយលោតយូរជាងគេបន្តិចដើម្បីទាក់ទាញ
-    }
-
-    // ភ្ជាប់ជាមួយប្រព័ន្ធ Custom Tool
-    let attempts = 0;
-    const initInt = setInterval(() => {
-        if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📊', 'របាយការណ៍ថ្ងៃនេះ', window.openDailySummary, "📊 សេចក្តីសង្ខេបការលក់ថ្ងៃនេះ.js");
-            clearInterval(initInt);
-            console.log("✅ Premium Daily Summary successfully registered!");
-        }
-        attempts++;
-        if(attempts > 20) clearInterval(initInt);
-    }, 500);
-})();
-});
-
-;
-// === [36/48] 📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js ===
+// === [31/43] 📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js ===
 window.skmRegisterBundledPlugin('pos', "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", function() {
 (function() {
     console.log("📋 POS Premium Ultra-Compact Last Sales Loaded!");
@@ -8756,7 +7388,7 @@ window.skmRegisterBundledPlugin('pos', "📋 វិក្កយបត្រល�
 });
 
 ;
-// === [37/48] 📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js ===
+// === [32/43] 📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js ===
 window.skmRegisterBundledPlugin('pos', "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", function() {
 (function() {
     console.log("📌 POS Noticeboard Plugin Initialized!");
@@ -8990,7 +7622,7 @@ window.skmRegisterBundledPlugin('pos', "📌 ក្ដារខៀនប្រ�
 });
 
 ;
-// === [38/48] 📑 របាយការណ៍បិទវេនលក់ (Z-Report).js ===
+// === [33/43] 📑 របាយការណ៍បិទវេនលក់ (Z-Report).js ===
 window.skmRegisterBundledPlugin('pos', "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", function() {
 (function() {
     console.log("📑 POS Z-Report & Shift Handover Plugin Initialized!");
@@ -9259,7 +7891,7 @@ window.skmRegisterBundledPlugin('pos', "📑 របាយការណ៍បិ�
 });
 
 ;
-// === [39/48] 📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js ===
+// === [34/43] 📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js ===
 window.skmRegisterBundledPlugin('pos', "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", function() {
 (function() {
     console.log("📝 POS Scratchpad Plugin Initialized!");
@@ -9360,7 +7992,7 @@ window.skmRegisterBundledPlugin('pos', "📝 កំណត់ចំណាំរ�
 });
 
 ;
-// === [40/48] 📱 បង្កើត QR ដាក់តុ Table QR Generator.js ===
+// === [35/43] 📱 បង្កើត QR ដាក់តុ Table QR Generator.js ===
 window.skmRegisterBundledPlugin('pos', "📱 បង្កើត QR ដាក់តុ Table QR Generator.js", function() {
 /* STREAMING_CHUNK:Initializing Super Premium Table QR Generator... */
 (function() {
@@ -9578,7 +8210,7 @@ window.skmRegisterBundledPlugin('pos', "📱 បង្កើត QR ដាក់�
 });
 
 ;
-// === [41/48] 🔄 បង្វិលសងប្រាក់ (Quick Refund).js ===
+// === [36/43] 🔄 បង្វិលសងប្រាក់ (Quick Refund).js ===
 window.skmRegisterBundledPlugin('pos', "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", function() {
 /* STREAMING_CHUNK:Initializing Smart Strict Refund System... */
 (function() {
@@ -9912,7 +8544,7 @@ window.skmRegisterBundledPlugin('pos', "🔄 បង្វិលសងប្រ�
 });
 
 ;
-// === [42/48] 🔤 បង្កើត BarcodeSKU (Barcode Generator).js ===
+// === [37/43] 🔤 បង្កើត BarcodeSKU (Barcode Generator).js ===
 window.skmRegisterBundledPlugin('pos', "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", function() {
 /* STREAMING_CHUNK:Initializing Modern Barcode & SKU Generator Plugin... */
 (function() {
@@ -10016,7 +8648,7 @@ window.skmRegisterBundledPlugin('pos', "🔤 បង្កើត BarcodeSKU (Barc
 });
 
 ;
-// === [43/48] 🕒 នាឡិកាមានជីវិត (Blinking Colon).js ===
+// === [38/43] 🕒 នាឡិកាមានជីវិត (Blinking Colon).js ===
 window.skmRegisterBundledPlugin('pos', "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", function() {
 (function() {
     console.log("🕒 POS Ultra-Premium Live Clock Initialized!");
@@ -10107,7 +8739,7 @@ window.skmRegisterBundledPlugin('pos', "🕒 នាឡិកាមានជី�
 });
 
 ;
-// === [44/48] 🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js ===
+// === [39/43] 🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js ===
 window.skmRegisterBundledPlugin('pos', "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", function() {
 (function() {
     console.log("🚚 POS Delivery Tracker Plugin Initialized!");
@@ -10303,7 +8935,7 @@ window.skmRegisterBundledPlugin('pos', "🚚 គ្រប់គ្រងកា�
 });
 
 ;
-// === [45/48] 🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js ===
+// === [40/43] 🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js ===
 window.skmRegisterBundledPlugin('pos', "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", function() {
 /* STREAMING_CHUNK:Initializing POS Reorder Shopping List Plugin Pro... */
 (function() {
@@ -10505,7 +9137,7 @@ window.skmRegisterBundledPlugin('pos', "🛒 បញ្ជីទំនិញត�
 });
 
 ;
-// === [46/48] 🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js ===
+// === [41/43] 🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js ===
 window.skmRegisterBundledPlugin('pos', "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", function() {
 /* STREAMING_CHUNK:Initializing Perfect Layout Shift Handover Log Plugin... */
 (function() {
@@ -10663,7 +9295,7 @@ window.skmRegisterBundledPlugin('pos', "🤝 កំណត់ហេតុផ្�
 });
 
 ;
-// === [47/48] 🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js ===
+// === [42/43] 🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js ===
 window.skmRegisterBundledPlugin('pos', "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", function() {
 /* STREAMING_CHUNK:Initializing Smart Change Helper Plugin... */
 (function() {
@@ -10842,7 +9474,7 @@ window.skmRegisterBundledPlugin('pos', "🪙 គណនាប្រាក់អ�
 });
 
 ;
-// === [48/48] 🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js ===
+// === [43/43] 🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js ===
 window.skmRegisterBundledPlugin('pos', "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js", function() {
 (function() {
     console.log("🪙 POS Opening Float Plugin Initialized!");
