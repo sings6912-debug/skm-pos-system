@@ -377,12 +377,42 @@ window.importCustomers = async function(e) {
             if (Array.isArray(imported)) {
                 if (!window.customers) window.customers = [];
                 let count = 0;
-                imported.forEach(c => {
+                const newlyImported = [];
+                imported.forEach((c, idx) => {
                     if (c && c.name && !window.customers.some(ec => ec && String(ec.name).trim().toLowerCase() === String(c.name).trim().toLowerCase())) {
-                        window.customers.push(c);
+                        const custObj = {
+                            id: c.id ? String(c.id) : ('C_' + Date.now() + '_' + idx + '_' + Math.random().toString(36).slice(2, 6)),
+                            name: String(c.name).trim(),
+                            phone: c.phone ? String(c.phone).trim() : ''
+                        };
+                        window.customers.push(custObj);
+                        newlyImported.push(custObj);
                         count++;
                     }
                 });
+
+                const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('customers_pro') : `ks2_${branchId}_customers_pro`;
+                localStorage.setItem(branchKey, JSON.stringify(window.customers));
+
+                if (newlyImported.length > 0 && window.supabaseClient && navigator.onLine) {
+                    try {
+                        const payload = newlyImported.map(c => ({
+                            id: String(c.id),
+                            branch_id: branchId,
+                            name: c.name,
+                            phone: c.phone || ''
+                        }));
+                        for (let k = 0; k < payload.length; k += 100) {
+                            const chunk = payload.slice(k, k + 100);
+                            const { error } = await window.supabaseClient.from('pos_customers').upsert(chunk, { onConflict: 'id' });
+                            if (error) console.error("Supabase Customer Import Sync Error:", error);
+                        }
+                    } catch (err) {
+                        console.error("Failed to sync imported customers to cloud:", err);
+                    }
+                }
+
                 if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
                 window.renderCustomers();
                 notifyCustomerUser(`បាន Import អតិថិជនថ្មីចំនួន ${count} នាក់!`, 'ជោគជ័យ');
@@ -418,19 +448,42 @@ window.autoFillCustomerPhone = function(mode) {
     }
 };
 
-window.setAutoRegisterCustomer = function(name, phone) {
+window.setAutoRegisterCustomer = async function(name, phone) {
     if (!name || name.trim() === '' || name.trim() === 'អតិថិជនទូទៅ') return;
     const cName = name.trim();
     const cPhone = phone ? phone.trim() : '';
 
     if (!window.customers) window.customers = [];
     const exists = window.customers.find(c => c && String(c.name).trim().toLowerCase() === cName.toLowerCase());
-    
+    let targetCust = null;
+
     if (!exists) {
-        window.customers.push({ id: 'C_' + Date.now() + Math.random(), name: cName, phone: cPhone });
+        targetCust = { id: 'C_' + Date.now() + '_' + Math.random().toString(36).slice(2, 6), name: cName, phone: cPhone };
+        window.customers.push(targetCust);
         if (typeof window.renderCustomers === 'function') window.renderCustomers();
     } else if (!exists.phone && cPhone) {
         exists.phone = cPhone;
+        targetCust = exists;
         if (typeof window.renderCustomers === 'function') window.renderCustomers();
+    }
+
+    if (targetCust) {
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('customers_pro') : `ks2_${branchId}_customers_pro`;
+        localStorage.setItem(branchKey, JSON.stringify(window.customers));
+
+        if (window.supabaseClient && navigator.onLine) {
+            try {
+                const { error } = await window.supabaseClient.from('pos_customers').upsert({
+                    id: String(targetCust.id),
+                    branch_id: branchId,
+                    name: targetCust.name,
+                    phone: targetCust.phone || ''
+                }, { onConflict: 'id' });
+                if (error) console.error("Supabase Auto Customer Sync Error:", error);
+            } catch (err) {
+                console.error("Failed to auto-sync customer to cloud:", err);
+            }
+        }
     }
 };

@@ -153,16 +153,47 @@ window.renderInventory = function() {
     }
 };
 
-window.updateQty = function(id, change) { 
-    const item = window.inventory.find(p => p && p.id === id); 
+window.updateQty = async function(id, change) { 
+    const item = window.inventory.find(p => p && String(p.id) === String(id)); 
     if(item) { 
         let old = parseInt(item.qty)||0; 
         item.qty = Math.max(0, old + change); 
         let diff = item.qty - old; 
         if(diff !== 0) { 
+            const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('inv_pro') : `ks2_${branchId}_inv_pro`;
+            localStorage.setItem(branchKey, JSON.stringify(window.inventory));
+
             window.logAction(diff > 0 ? 'add' : 'update', item.name, Math.abs(diff), diff > 0 ? 'បន្ថែមស្តុក' : 'ដកស្តុកចេញ', window.activeUser); 
-            window.saveData(window.userAccounts); 
             window.renderInventory();
+            if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+
+            if (window.supabaseClient && navigator.onLine) {
+                try {
+                    const { error } = await window.supabaseClient.from('pos_products').upsert({
+                        id: String(item.id),
+                        branch_id: branchId,
+                        name: item.name,
+                        category: item.category || '',
+                        cost: parseFloat(item.cost) || 0,
+                        price: parseFloat(item.price) || 0,
+                        riel: parseFloat(item.riel) || 0,
+                        qty: item.qty,
+                        unit: item.unit || '',
+                        condition: item.condition || '',
+                        expiry: item.expiry || '',
+                        image: item.image || '',
+                        description: item.description || item.desc || '',
+                        custom_id: item.customId || item.id,
+                        updated_at: new Date().toISOString()
+                    }, { onConflict: 'id' });
+                    if (error) console.error("Supabase Qty Sync Error:", error);
+                } catch (err) {
+                    console.error("Failed to sync qty to cloud:", err);
+                }
+            }
+
+            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
         } 
     } 
 };
@@ -470,6 +501,7 @@ window.importCSV = function() {
 
             let addedCount = 0;
             let updatedCount = 0;
+            const syncedItems = [];
 
             for(let i = 1; i < lines.length; i++) {
                 const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
@@ -498,15 +530,51 @@ window.importCSV = function() {
                     description: descClean
                 };
 
-                const existingIdx = window.inventory.findIndex(p => p.customId === customId && customId !== '');
+                const existingIdx = window.inventory.findIndex(p => p && p.customId === customId && customId !== '');
                 if (existingIdx !== -1) {
                     newObj.id = window.inventory[existingIdx].id;
                     window.inventory[existingIdx] = { ...window.inventory[existingIdx], ...newObj };
+                    syncedItems.push(window.inventory[existingIdx]);
                     updatedCount++;
                 } else {
-                    newObj.id = 'P_' + Date.now() + Math.random().toString(36).substr(2, 5);
+                    newObj.id = 'P_' + Date.now() + '_' + Math.random().toString(36).substr(2, 5);
                     window.inventory.push(newObj);
+                    syncedItems.push(newObj);
                     addedCount++;
+                }
+            }
+
+            const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('inv_pro') : `ks2_${branchId}_inv_pro`;
+            localStorage.setItem(branchKey, JSON.stringify(window.inventory));
+
+            if (syncedItems.length > 0 && window.supabaseClient && navigator.onLine) {
+                try {
+                    const nowIso = new Date().toISOString();
+                    const payload = syncedItems.map(p => ({
+                        id: String(p.id),
+                        branch_id: branchId,
+                        name: p.name,
+                        category: p.category || '',
+                        cost: parseFloat(p.cost) || 0,
+                        price: parseFloat(p.price) || 0,
+                        riel: parseFloat(p.riel) || 0,
+                        qty: parseInt(p.qty) || 0,
+                        unit: p.unit || 'ឯកតា',
+                        condition: p.condition || '',
+                        expiry: p.expiry || '',
+                        image: p.image || '',
+                        description: p.description || p.desc || '',
+                        custom_id: p.customId || p.id,
+                        updated_at: nowIso
+                    }));
+                    for (let k = 0; k < payload.length; k += 100) {
+                        const chunk = payload.slice(k, k + 100);
+                        const { error } = await window.supabaseClient.from('pos_products').upsert(chunk, { onConflict: 'id' });
+                        if (error) console.error("Supabase CSV Import Sync Error:", error);
+                    }
+                } catch (err) {
+                    console.error("Failed to sync imported CSV products to cloud:", err);
                 }
             }
             
