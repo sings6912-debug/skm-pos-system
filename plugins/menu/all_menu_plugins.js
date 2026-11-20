@@ -2,7 +2,7 @@
 
  * ============================================================================
 
- * SKM INTEGRATE MENU - ALL-IN-ONE MENU PLUGINS BUNDLE (52 Toggleable Plugins)
+ * SKM INTEGRATE MENU - ALL-IN-ONE MENU PLUGINS BUNDLE (51 Toggleable Plugins)
 
  * File: plugins/menu/all_menu_plugins.js
 
@@ -20,8 +20,8 @@
     window.__SKM_PLUGIN_CONTROLLER_READY__ = true;
 
     const DEFAULT_ENABLED = {
-        menu: ["ai_assistant.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (4).js", "delivery_notes.js", "digital_member_id.js", "quick_price_check.js", "quick_reorder.js", "scheduled_pickup.js", "store_status.js", "substitute_finder.js", "voice_search.js"],
-        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🎯 គោលដៅការលក់ (Shift Sales Target).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
+        menu: ["ai_gemini_ai_concierge.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (4).js", "delivery_notes.js", "digital_member_id.js", "quick_price_check.js", "quick_reorder.js", "scheduled_pickup.js", "store_status.js", "substitute_finder.js", "voice_search.js"],
+        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
     };
 
     const registry = { menu: {}, pos: {} };
@@ -565,7 +565,7 @@
 })();
 
 ;
-// === [1/52] 3d_3d_hologram_showcase.js ===
+// === [1/51] 3d_3d_hologram_showcase.js ===
 window.skmRegisterBundledPlugin('menu', "3d_3d_hologram_showcase.js", function() {
 (function() {
     console.log("🔮 Menu 3D Hologram & Particle Showcase Plugin Initialized!");
@@ -689,7 +689,7 @@ window.skmRegisterBundledPlugin('menu', "3d_3d_hologram_showcase.js", function()
 });
 
 ;
-// === [2/52] achievement_badges.js ===
+// === [2/51] achievement_badges.js ===
 window.skmRegisterBundledPlugin('menu', "achievement_badges.js", function() {
 (function() {
     console.log("🏅 Menu Loyalty Achievement Badges Plugin Initialized!");
@@ -739,72 +739,7 @@ window.skmRegisterBundledPlugin('menu', "achievement_badges.js", function() {
 });
 
 ;
-// === [3/52] ai_assistant.js ===
-window.skmRegisterBundledPlugin('menu', "ai_assistant.js", function() {
-(function() {
-    console.log("🤖 Menu AI Shop Assistant Plugin Initialized!");
-
-    function openAiChatModal() {
-        if(document.getElementById('skmAiChatModal')) {
-            document.getElementById('skmAiChatModal').style.display = 'flex';
-            return;
-        }
-
-        const modal = document.createElement('div');
-        modal.id = 'skmAiChatModal';
-        modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); font-family: 'Battambang', sans-serif; padding: 20px;`;
-        
-        modal.innerHTML = `
-            <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
-                <div style="font-size: 38px; margin-bottom: 10px;">🤖</div>
-                <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #38bdf8;">ជំនួយការហាងឆ្លាតវៃ (AI Assistant)</h3>
-                <p style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">សួរសំណួរទាក់ទងនឹងហាង ពួកយើងជួយឆ្លើយជូន៖</p>
-                
-                <div id="aiChatBox" style="background: rgba(56,189,248,0.06); border: 1px solid var(--border-color); padding: 12px; border-radius: 12px; height: 120px; overflow-y: auto; margin-bottom: 12px; text-align: left; font-size: 11px; display: flex; flex-direction: column; gap: 6px;">
-                    <div style="background: rgba(255,255,255,0.08); padding: 8px; border-radius: 8px;">🤖 សួស្តី! តើខ្ញុំអាចជួយអ្វីដល់លោកអ្នកថ្ងៃនេះ?</div>
-                </div>
-
-                <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                    <input type="text" id="aiUserQ" placeholder="សរសេរសំណួរ..." style="flex: 1; background: var(--store-bg, #0f172a); border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 10px; color: #fff; font-size: 11px; outline: none; font-family: 'Battambang';">
-                    <button onclick="window.sendAiQuery()" style="background: #38bdf8; color: white; border: none; padding: 8px 14px; border-radius: 10px; font-size: 11px; font-weight: bold; cursor: pointer;">បញ្ជូន</button>
-                </div>
-
-                <button class="btn-act btn-outline" style="width: 100%; border:none; background:rgba(56,189,248,0.1); color:#38bdf8;" onclick="document.getElementById('skmAiChatModal').style.display='none'">បិទ</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
-    window.sendAiQuery = function() {
-        const inp = document.getElementById('aiUserQ');
-        const box = document.getElementById('aiChatBox');
-        const q = inp.value.trim();
-        if(!q) return;
-
-        box.innerHTML += `<div style="background: rgba(56,189,248,0.2); padding: 8px; border-radius: 8px; align-self: flex-end; max-width: 85%;">👤 ${q}</div>`;
-        inp.value = '';
-
-        setTimeout(() => {
-            let ans = "ហាងយើងខ្ញុំបើកបំរើការរាល់ថ្ងៃពីម៉ោង ០៨:០០ ព្រឹក ដល់ ០៩:០០ យប់!";
-            if (q.includes('តម្លៃ') || q.includes('ថ្លៃ')) ans = "តម្លៃទំនិញមានបង្ហាញជូនយ៉ាងច្បាស់លាស់លើមុខទំនិញនីមួយៗ!";
-            else if (q.includes('ទីតាំង') || q.includes('នៅឯណា')) ans = "ហាងស្ថិតនៅផ្ទះលេខ ១២៣ ផ្លូវមុនីវង្ស រាជធានីភ្នំពេញ។";
-            
-            box.innerHTML += `<div style="background: rgba(255,255,255,0.08); padding: 8px; border-radius: 8px; max-width: 85%;">🤖 ${ans}</div>`;
-            box.scrollTop = box.scrollHeight;
-        }, 500);
-    };
-
-    const initInt = setInterval(() => {
-        if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🤖', 'ជំនួយការហាងឆ្លាតវៃ (AI Assistant)', openAiChatModal, "ai_assistant.js");
-            clearInterval(initInt);
-        }
-    }, 500);
-})();
-});
-
-;
-// === [4/52] ai_gemini_ai_concierge.js ===
+// === [3/51] ai_gemini_ai_concierge.js ===
 window.skmRegisterBundledPlugin('menu', "ai_gemini_ai_concierge.js", function() {
 (function() {
     console.log("🤖 Menu Gemini AI Concierge Plugin Initialized!");
@@ -949,7 +884,7 @@ window.skmRegisterBundledPlugin('menu', "ai_gemini_ai_concierge.js", function() 
 });
 
 ;
-// === [5/52] ar_ar_guide.js ===
+// === [4/51] ar_ar_guide.js ===
 window.skmRegisterBundledPlugin('menu', "ar_ar_guide.js", function() {
 (function() {
     console.log("📱 Menu AR Preview & Simulation Guide Plugin Initialized!");
@@ -997,7 +932,7 @@ window.skmRegisterBundledPlugin('menu', "ar_ar_guide.js", function() {
 });
 
 ;
-// === [6/52] budget_finder.js ===
+// === [5/51] budget_finder.js ===
 window.skmRegisterBundledPlugin('menu', "budget_finder.js", function() {
 (function() {
     console.log("💵 Menu Budget Finder Plugin Initialized!");
@@ -1075,7 +1010,7 @@ window.skmRegisterBundledPlugin('menu', "budget_finder.js", function() {
 });
 
 ;
-// === [7/52] calorie_burn_calculator.js ===
+// === [6/51] calorie_burn_calculator.js ===
 window.skmRegisterBundledPlugin('menu', "calorie_burn_calculator.js", function() {
 (function() {
     console.log("🏃 Menu Calorie Burn Calculator Plugin Initialized!");
@@ -1122,7 +1057,7 @@ window.skmRegisterBundledPlugin('menu', "calorie_burn_calculator.js", function()
             });
         }
 
-        // สมมติ 1 หน่วย = 250 kcal
+        // ឧបមា ១ មុខ = 250 kcal
         let totalCals = totalItems * 250;
         if (totalCals === 0) totalCals = 250; // Default 1 item equivalent
 
@@ -1150,7 +1085,7 @@ window.skmRegisterBundledPlugin('menu', "calorie_burn_calculator.js", function()
 });
 
 ;
-// === [8/52] camera_barcode_scanner.js ===
+// === [7/51] camera_barcode_scanner.js ===
 window.skmRegisterBundledPlugin('menu', "camera_barcode_scanner.js", function() {
 (function() {
     console.log("📷 Menu Camera Barcode Scanner Plugin Initialized!");
@@ -1226,7 +1161,7 @@ window.skmRegisterBundledPlugin('menu', "camera_barcode_scanner.js", function() 
 });
 
 ;
-// === [9/52] care_recipe_guide.js ===
+// === [8/51] care_recipe_guide.js ===
 window.skmRegisterBundledPlugin('menu', "care_recipe_guide.js", function() {
 (function() {
     console.log("📖 Menu Care & Recipe Guide Plugin Initialized!");
@@ -1274,7 +1209,7 @@ window.skmRegisterBundledPlugin('menu', "care_recipe_guide.js", function() {
 });
 
 ;
-// === [10/52] code_artifact (2).js ===
+// === [9/51] code_artifact (2).js ===
 window.skmRegisterBundledPlugin('menu', "code_artifact (2).js", function() {
 (function() {
     console.log("🎧 Menu Ambient Cafe & Relaxing Sounds Plugin Initialized!");
@@ -1293,7 +1228,7 @@ window.skmRegisterBundledPlugin('menu', "code_artifact (2).js", function() {
             <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
                 <div style="font-size: 38px; margin-bottom: 10px;">🎧</div>
                 <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #38bdf8;">សំឡេងផ្ទៃខាងក្រោយ & សម្រាកលំហែ</h3>
-                <p style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">ស្តាប់សំឡេងតន្ត្រីកាហ្វេ ឬសំឡេងธรรมชาติក្នុងពេលរង់ចាំ៖</p>
+                <p style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">ស្តាប់សំឡេងតន្ត្រីកាហ្វេ ឬសំឡេងធម្មជាតិក្នុងពេលរង់ចាំ៖</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px;">
                     <button onclick="window.playAmbientSound('cafe')" style="background: rgba(56,189,248,0.1); color: #38bdf8; border: 1px solid #38bdf8; padding: 12px; border-radius: 12px; font-size: 13px; font-weight: 800; cursor: pointer; text-align: left;">☕ សំឡេងបរិយាកាសហាងកាហ្វេ (Cafe Vibes)</button>
@@ -1346,7 +1281,7 @@ window.skmRegisterBundledPlugin('menu', "code_artifact (2).js", function() {
 });
 
 ;
-// === [11/52] code_artifact (3).js ===
+// === [10/51] code_artifact (3).js ===
 window.skmRegisterBundledPlugin('menu', "code_artifact (3).js", function() {
 (function() {
     console.log("🐱 Menu Virtual Mascot & Promo Greeter Plugin Initialized!");
@@ -1413,7 +1348,7 @@ window.skmRegisterBundledPlugin('menu', "code_artifact (3).js", function() {
 });
 
 ;
-// === [12/52] code_artifact (4).js ===
+// === [11/51] code_artifact (4).js ===
 window.skmRegisterBundledPlugin('menu', "code_artifact (4).js", function() {
 (function() {
     console.log("📏 Menu Portion & Size Guide Plugin Initialized!");
@@ -1465,7 +1400,7 @@ window.skmRegisterBundledPlugin('menu', "code_artifact (4).js", function() {
 });
 
 ;
-// === [13/52] custom_item_builder.js ===
+// === [12/51] custom_item_builder.js ===
 window.skmRegisterBundledPlugin('menu', "custom_item_builder.js", function() {
 (function() {
     console.log("🛠️ Menu Custom Item Builder Plugin Initialized!");
@@ -1574,7 +1509,7 @@ window.skmRegisterBundledPlugin('menu', "custom_item_builder.js", function() {
 });
 
 ;
-// === [14/52] daily_combo.js ===
+// === [13/51] daily_combo.js ===
 window.skmRegisterBundledPlugin('menu', "daily_combo.js", function() {
 (function() {
     console.log("🍱 Menu Daily Combo & Set Deals Plugin Initialized!");
@@ -1642,7 +1577,7 @@ window.skmRegisterBundledPlugin('menu', "daily_combo.js", function() {
 });
 
 ;
-// === [15/52] daily_motivation.js ===
+// === [14/51] daily_motivation.js ===
 window.skmRegisterBundledPlugin('menu', "daily_motivation.js", function() {
 (function() {
     console.log("🌟 Menu Daily Motivation & Affirmation Plugin Initialized!");
@@ -1698,7 +1633,7 @@ window.skmRegisterBundledPlugin('menu', "daily_motivation.js", function() {
 });
 
 ;
-// === [16/52] delivery_notes.js ===
+// === [15/51] delivery_notes.js ===
 window.skmRegisterBundledPlugin('menu', "delivery_notes.js", function() {
 (function() {
     console.log("📍 Menu Delivery Address & Landmark Notes Plugin Initialized!");
@@ -1771,7 +1706,7 @@ window.skmRegisterBundledPlugin('menu', "delivery_notes.js", function() {
 });
 
 ;
-// === [17/52] digital_jukebox.js ===
+// === [16/51] digital_jukebox.js ===
 window.skmRegisterBundledPlugin('menu', "digital_jukebox.js", function() {
 (function() {
     console.log("🎵 Menu Digital Jukebox & Song Request Plugin Initialized!");
@@ -1825,7 +1760,7 @@ window.skmRegisterBundledPlugin('menu', "digital_jukebox.js", function() {
             <div style="background: rgba(236,72,153,0.06); border: 1px solid var(--border-color); padding: 10px 12px; border-radius: 12px; display: flex; justify-content: space-between; align-items: center;">
                 <div>
                     <b style="color: #ec4899; display: block; font-size: 12px;">🎵 ${s.title}</b>
-                    <span style="font-size: 10px; color: var(--text-muted);">คะแนนโหวต: ${s.votes} votes</span>
+                    <span style="font-size: 10px; color: var(--text-muted);">សំឡេងបោះឆ្នោត: ${s.votes} votes</span>
                 </div>
                 <button onclick="window.voteSong(${idx})" style="background: rgba(236,72,153,0.15); color: #ec4899; border: 1px solid #ec4899; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer;">👍 VOTE</button>
             </div>
@@ -1866,7 +1801,7 @@ window.skmRegisterBundledPlugin('menu', "digital_jukebox.js", function() {
 });
 
 ;
-// === [18/52] digital_member_id.js ===
+// === [17/51] digital_member_id.js ===
 window.skmRegisterBundledPlugin('menu', "digital_member_id.js", function() {
 (function() {
     console.log("🪪 Menu Digital Member ID Card Plugin Initialized!");
@@ -1886,7 +1821,7 @@ window.skmRegisterBundledPlugin('menu', "digital_member_id.js", function() {
             <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 24px; width: 100%; max-width: 380px; text-align: center; border: 1px solid rgba(56,189,248,0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
                 <div style="font-size: 38px; margin-bottom: 5px;">🪪</div>
                 <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #38bdf8;">កាតសមាជិកឌីជីថល (Digital ID)</h3>
-                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px;">បង្ហាញកាតនេះពេលទូទាត់ប្រាក់ដើម្បីรับសិទ្ធិពិសេស៖</p>
+                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px;">បង្ហាញកាតនេះពេលទូទាត់ប្រាក់ដើម្បីទទួលបានសិទ្ធិពិសេស៖</p>
                 
                 <div style="background: linear-gradient(135deg, #0284c7, #06b6d4); color: white; padding: 20px; border-radius: 16px; margin-bottom: 15px; text-align: left; box-shadow: 0 10px 25px rgba(6,182,212,0.4); position: relative; overflow: hidden;">
                     <div style="font-size: 10px; opacity: 0.8; letter-spacing: 1px;">DIGITAL VIP MEMBER CARD</div>
@@ -1935,7 +1870,7 @@ window.skmRegisterBundledPlugin('menu', "digital_member_id.js", function() {
 });
 
 ;
-// === [19/52] dish_anatomy.js ===
+// === [18/51] dish_anatomy.js ===
 window.skmRegisterBundledPlugin('menu', "dish_anatomy.js", function() {
 (function() {
     console.log("🔬 Menu Dish Anatomy & Ingredient Inspector Plugin Initialized!");
@@ -2003,7 +1938,7 @@ window.skmRegisterBundledPlugin('menu', "dish_anatomy.js", function() {
 });
 
 ;
-// === [20/52] dosage_guide.js ===
+// === [19/51] dosage_guide.js ===
 window.skmRegisterBundledPlugin('menu', "dosage_guide.js", function() {
 (function() {
     console.log("💊 Menu Pharmacy Dosage & Usage Guide Plugin Initialized!");
@@ -2036,7 +1971,7 @@ window.skmRegisterBundledPlugin('menu', "dosage_guide.js", function() {
                 </div>
 
                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; background: rgba(128,128,128,0.08); padding: 10px; border-radius: 8px; text-align: left;">
-                    ⚠️ ចាំបាច់ត្រូវអានស្លាកសញ្ញា ឬសឹក្សាជាមួយឱសថការីមុនពេលប្រើប្រាស់។
+                    ⚠️ ចាំបាច់ត្រូវអានស្លាកសញ្ញា ឬពិគ្រោះជាមួយឱសថការីមុនពេលប្រើប្រាស់។
                 </div>
 
                 <button class="btn-act btn-outline" style="width: 100%; border:none; background:rgba(16,185,129,0.1); color:#10b981; border-radius: 12px; padding: 12px;" onclick="document.getElementById('skmDosageModal').style.display='none'">បិទ</button>
@@ -2055,7 +1990,7 @@ window.skmRegisterBundledPlugin('menu', "dosage_guide.js", function() {
 });
 
 ;
-// === [21/52] drug_safety.js ===
+// === [20/51] drug_safety.js ===
 window.skmRegisterBundledPlugin('menu', "drug_safety.js", function() {
 (function() {
     console.log("🩺 Menu Drug Safety & Storage Plugin Initialized!");
@@ -2103,7 +2038,7 @@ window.skmRegisterBundledPlugin('menu', "drug_safety.js", function() {
 });
 
 ;
-// === [22/52] e_gift_card.js ===
+// === [21/51] e_gift_card.js ===
 window.skmRegisterBundledPlugin('menu', "e_gift_card.js", function() {
 (function() {
     console.log("🎁 Menu E-Gift Card Plugin Initialized!");
@@ -2172,7 +2107,7 @@ window.skmRegisterBundledPlugin('menu', "e_gift_card.js", function() {
 });
 
 ;
-// === [23/52] events_schedule.js ===
+// === [22/51] events_schedule.js ===
 window.skmRegisterBundledPlugin('menu', "events_schedule.js", function() {
 (function() {
     console.log("🎶 Menu Live Events & Music Schedule Plugin Initialized!");
@@ -2220,7 +2155,7 @@ window.skmRegisterBundledPlugin('menu', "events_schedule.js", function() {
 });
 
 ;
-// === [24/52] flash_sale.js ===
+// === [23/51] flash_sale.js ===
 window.skmRegisterBundledPlugin('menu', "flash_sale.js", function() {
 (function() {
     console.log("⏳ Menu Flash Deal Countdown Plugin Initialized!");
@@ -2281,7 +2216,7 @@ window.skmRegisterBundledPlugin('menu', "flash_sale.js", function() {
 });
 
 ;
-// === [25/52] flavor_matchmaker.js ===
+// === [24/51] flavor_matchmaker.js ===
 window.skmRegisterBundledPlugin('menu', "flavor_matchmaker.js", function() {
 (function() {
     console.log("🍹 Menu Flavor Matchmaker Plugin Initialized!");
@@ -2358,7 +2293,7 @@ window.skmRegisterBundledPlugin('menu', "flavor_matchmaker.js", function() {
 });
 
 ;
-// === [26/52] fortune_cookie.js ===
+// === [25/51] fortune_cookie.js ===
 window.skmRegisterBundledPlugin('menu', "fortune_cookie.js", function() {
 (function() {
     console.log("🥠 Menu Fortune Cookie & Daily Lucky Plugin Initialized!");
@@ -2426,7 +2361,7 @@ window.skmRegisterBundledPlugin('menu', "fortune_cookie.js", function() {
 });
 
 ;
-// === [27/52] group_order.js ===
+// === [26/51] group_order.js ===
 window.skmRegisterBundledPlugin('menu', "group_order.js", function() {
 (function() {
     console.log("👥 Menu Group Order & Shared Cart Plugin Initialized!");
@@ -2487,7 +2422,7 @@ window.skmRegisterBundledPlugin('menu', "group_order.js", function() {
 });
 
 ;
-// === [28/52] hydration_tracker.js ===
+// === [27/51] hydration_tracker.js ===
 window.skmRegisterBundledPlugin('menu', "hydration_tracker.js", function() {
 (function() {
     console.log("💧 Menu Hydration & Water Intake Tracker Plugin Initialized!");
@@ -2556,7 +2491,7 @@ window.skmRegisterBundledPlugin('menu', "hydration_tracker.js", function() {
 });
 
 ;
-// === [29/52] live_kitchen_tracker.js ===
+// === [28/51] live_kitchen_tracker.js ===
 window.skmRegisterBundledPlugin('menu', "live_kitchen_tracker.js", function() {
 (function() {
     console.log("🍜 Menu Live Kitchen Order Tracker Plugin Initialized!");
@@ -2639,7 +2574,7 @@ window.skmRegisterBundledPlugin('menu', "live_kitchen_tracker.js", function() {
 });
 
 ;
-// === [30/52] loyalty_wallet.js ===
+// === [29/51] loyalty_wallet.js ===
 window.skmRegisterBundledPlugin('menu', "loyalty_wallet.js", function() {
 (function() {
     console.log("💳 Menu Loyalty Points & Rewards Wallet Plugin Initialized!");
@@ -2659,7 +2594,7 @@ window.skmRegisterBundledPlugin('menu', "loyalty_wallet.js", function() {
             <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
                 <div style="font-size: 38px; margin-bottom: 10px;">💳</div>
                 <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #10b981;">កាបូបពិន្ទុ & រង្វាន់សមាជិក</h3>
-                <p style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">ពិនិត្យពិន្ទុสะสม និងប្តូរយករង្វាន់ពិសេស៖</p>
+                <p style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">ពិនិត្យពិន្ទុសន្សំ និងប្តូរយករង្វាន់ពិសេស៖</p>
                 
                 <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 20px; border-radius: 14px; margin-bottom: 15px; text-align: center; box-shadow: 0 10px 20px rgba(16,185,129,0.3);">
                     <div style="font-size: 11px; opacity: 0.9;">ពិន្ទុសរុបរបស់អ្នក (TOTAL POINTS)</div>
@@ -2721,7 +2656,7 @@ window.skmRegisterBundledPlugin('menu', "loyalty_wallet.js", function() {
 });
 
 ;
-// === [31/52] medication_reminder.js ===
+// === [30/51] medication_reminder.js ===
 window.skmRegisterBundledPlugin('menu', "medication_reminder.js", function() {
 (function() {
     console.log("⏰ Menu Medication & Vitamin Reminder Plugin Initialized!");
@@ -2740,7 +2675,7 @@ window.skmRegisterBundledPlugin('menu', "medication_reminder.js", function() {
             <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(56,189,248,0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
                 <div style="font-size: 40px; margin-bottom: 5px;">⏰</div>
                 <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #38bdf8;">មគ្គុទ្ទេសក៍ដាស់តឿនលេបថ្នាំ</h3>
-                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">គន្លឹះក្នុងការកំណត់ម៉ោងเตือนខ្លួនឯងឱ្យលេបថ្នាំ ឬវីតាមីន៖</p>
+                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">គន្លឹះក្នុងការកំណត់ម៉ោងដាស់តឿនខ្លួនឯងឱ្យលេបថ្នាំ ឬវីតាមីន៖</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; text-align: left; font-size: 12px;">
                     <div style="background: rgba(56,189,248,0.08); padding: 12px; border-radius: 12px; border: 1px solid var(--border-color);">
@@ -2754,7 +2689,7 @@ window.skmRegisterBundledPlugin('menu', "medication_reminder.js", function() {
                 </div>
 
                 <div style="font-size: 11px; color: var(--text-muted); margin-bottom: 15px; background: rgba(128,128,128,0.08); padding: 10px; border-radius: 8px; text-align: left;">
-                    💡 អ្នកអាចប្រើប្រាស់កម្មវិធីนาฬิกา (Clock Alarm) ក្នុងទូរស័ព្ទដៃរបស់អ្នកដើម្បីកំណត់ម៉ោងเตือน។
+                    💡 អ្នកអាចប្រើប្រាស់កម្មវិធីនាឡិកា (Clock Alarm) ក្នុងទូរស័ព្ទដៃរបស់អ្នកដើម្បីកំណត់ម៉ោងដាស់តឿន។
                 </div>
 
                 <button class="btn-act btn-outline" style="width: 100%; border:none; background:rgba(56,189,248,0.1); color:#38bdf8; border-radius: 12px; padding: 12px;" onclick="document.getElementById('skmMedAlarmModal').style.display='none'">បិទ</button>
@@ -2773,7 +2708,7 @@ window.skmRegisterBundledPlugin('menu', "medication_reminder.js", function() {
 });
 
 ;
-// === [32/52] mixologist_master.js ===
+// === [31/51] mixologist_master.js ===
 window.skmRegisterBundledPlugin('menu', "mixologist_master.js", function() {
 (function() {
     console.log("🍹 Menu Mixologist & Recipe Pairing Master Plugin Initialized!");
@@ -2792,7 +2727,7 @@ window.skmRegisterBundledPlugin('menu', "mixologist_master.js", function() {
             <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 24px; width: 100%; max-width: 380px; text-align: center; border: 1px solid rgba(236,72,153,0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
                 <div style="font-size: 42px; margin-bottom: 5px;">🍹</div>
                 <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #ec4899;">មេជាងលាយភេសជ្ជៈ (Mixologist)</h3>
-                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px;">រូបមន្តលាយភេសជ្ជៈពិសេស និងការจับคู่គ្រឿងផ្សំ៖</p>
+                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px;">រូបមន្តលាយភេសជ្ជៈពិសេស និងការផ្សំគូគ្រឿងផ្សំ៖</p>
                 
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-bottom: 15px; text-align: left;">
                     <div style="background: rgba(236,72,153,0.08); border: 1px solid #ec4899; padding: 12px; border-radius: 14px;">
@@ -2801,7 +2736,7 @@ window.skmRegisterBundledPlugin('menu', "mixologist_master.js", function() {
                     </div>
                     <div style="background: rgba(56,189,248,0.08); border: 1px solid #38bdf8; padding: 12px; border-radius: 14px;">
                         <b style="color: #38bdf8; font-size: 13px; display: block; margin-bottom: 2px;">☕ កាហ្វេទឹកដោះគោសូកូឡា (Mocha Chill)</b>
-                        <span style="font-size: 11px; color: var(--text-muted);">អេសប្រ៉េសូ + ទឹកដោះគោสด + សូកូឡាស្ងោរ</span>
+                        <span style="font-size: 11px; color: var(--text-muted);">អេសប្រ៉េសូ + ទឹកដោះគោស្រស់ + សូកូឡាស្ងោរ</span>
                     </div>
                 </div>
 
@@ -2821,7 +2756,7 @@ window.skmRegisterBundledPlugin('menu', "mixologist_master.js", function() {
 });
 
 ;
-// === [33/52] mystery_box.js ===
+// === [32/51] mystery_box.js ===
 window.skmRegisterBundledPlugin('menu', "mystery_box.js", function() {
 (function() {
     console.log("🎁 Menu Mystery Box Plugin Initialized!");
@@ -2915,7 +2850,7 @@ window.skmRegisterBundledPlugin('menu', "mystery_box.js", function() {
 });
 
 ;
-// === [34/52] photo_booth.js ===
+// === [33/51] photo_booth.js ===
 window.skmRegisterBundledPlugin('menu', "photo_booth.js", function() {
 (function() {
     console.log("📸 Menu Virtual Photo Booth Plugin Initialized!");
@@ -2988,7 +2923,7 @@ window.skmRegisterBundledPlugin('menu', "photo_booth.js", function() {
 });
 
 ;
-// === [35/52] quick_price_check.js ===
+// === [34/51] quick_price_check.js ===
 window.skmRegisterBundledPlugin('menu', "quick_price_check.js", function() {
 (function() {
     console.log("🔍 Menu Quick Price Check Plugin Initialized!");
@@ -3061,7 +2996,7 @@ window.skmRegisterBundledPlugin('menu', "quick_price_check.js", function() {
 });
 
 ;
-// === [36/52] quick_reorder.js ===
+// === [35/51] quick_reorder.js ===
 window.skmRegisterBundledPlugin('menu', "quick_reorder.js", function() {
 (function() {
     console.log("🔄 Menu Quick Reorder Plugin Initialized!");
@@ -3143,7 +3078,7 @@ window.skmRegisterBundledPlugin('menu', "quick_reorder.js", function() {
 });
 
 ;
-// === [37/52] savings_calculator.js ===
+// === [36/51] savings_calculator.js ===
 window.skmRegisterBundledPlugin('menu', "savings_calculator.js", function() {
 (function() {
     console.log("💰 Menu Savings & Cash Back Goal Calculator Plugin Initialized modularly!");
@@ -3198,7 +3133,7 @@ window.skmRegisterBundledPlugin('menu', "savings_calculator.js", function() {
 });
 
 ;
-// === [38/52] scheduled_pickup.js ===
+// === [37/51] scheduled_pickup.js ===
 window.skmRegisterBundledPlugin('menu', "scheduled_pickup.js", function() {
 (function() {
     console.log("⏰ Menu Scheduled Pickup & Arrival Time Plugin Initialized!");
@@ -3271,7 +3206,7 @@ window.skmRegisterBundledPlugin('menu', "scheduled_pickup.js", function() {
 });
 
 ;
-// === [39/52] scratch_card.js ===
+// === [38/51] scratch_card.js ===
 window.skmRegisterBundledPlugin('menu', "scratch_card.js", function() {
 (function() {
     console.log("🎫 Menu Scratch & Win Card Plugin Initialized!");
@@ -3363,7 +3298,7 @@ window.skmRegisterBundledPlugin('menu', "scratch_card.js", function() {
 });
 
 ;
-// === [40/52] smart_pairing.js ===
+// === [39/51] smart_pairing.js ===
 window.skmRegisterBundledPlugin('menu', "smart_pairing.js", function() {
 (function() {
     console.log("🥐 Menu Smart Food Pairing Plugin Initialized!");
@@ -3411,7 +3346,7 @@ window.skmRegisterBundledPlugin('menu', "smart_pairing.js", function() {
 });
 
 ;
-// === [41/52] spin_the_bottle.js ===
+// === [40/51] spin_the_bottle.js ===
 window.skmRegisterBundledPlugin('menu', "spin_the_bottle.js", function() {
 (function() {
     console.log("🍾 Menu Spin the Bottle Plugin Initialized!");
@@ -3457,7 +3392,7 @@ window.skmRegisterBundledPlugin('menu', "spin_the_bottle.js", function() {
                 '🎉 អបអរសាទរ! បានទទួលកូដ BOTTLE10 (-10%)',
                 '🌟 ឈ្នះកូដបញ្ចុះតម្លៃ $2.00!',
                 '💫 ឈ្នះសេវាដឹកជញ្ជូនឥតគិតថ្លៃ!',
-                '🍀 ទទួលបានពិន្ទុបន្ថែម ២០ ភិន្ទុ!'
+                '🍀 ទទួលបានពិន្ទុបន្ថែម ២០ ពិន្ទុ!'
             ];
             let randReward = rewards[Math.floor(Math.random() * rewards.length)];
             text.innerHTML = `<span style="color: #10b981; font-size: 13px;">${randReward}</span>`;
@@ -3475,7 +3410,7 @@ window.skmRegisterBundledPlugin('menu', "spin_the_bottle.js", function() {
 });
 
 ;
-// === [42/52] store_status.js ===
+// === [41/51] store_status.js ===
 window.skmRegisterBundledPlugin('menu', "store_status.js", function() {
 (function() {
     console.log("🕒 Menu Store Status & Operating Hours Plugin Initialized!");
@@ -3527,7 +3462,7 @@ window.skmRegisterBundledPlugin('menu', "store_status.js", function() {
 });
 
 ;
-// === [43/52] substitute_finder.js ===
+// === [42/51] substitute_finder.js ===
 window.skmRegisterBundledPlugin('menu', "substitute_finder.js", function() {
 (function() {
     console.log("🔄 Menu Substitute & Alternative Finder Plugin Initialized!");
@@ -3549,7 +3484,7 @@ window.skmRegisterBundledPlugin('menu', "substitute_finder.js", function() {
                 <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">វាយឈ្មោះទំនិញ ឬថ្នាំដែលអស់ស្តុក ដើម្បីរកមុខទំនិញស្រដៀងគ្នា៖</p>
                 
                 <div style="display: flex; gap: 8px; margin-bottom: 15px;">
-                    <input type="text" id="subQueryInput" placeholder="ឧ. ប៉ារ៉າເຊតាមុល ឬកាហ្វេ..." style="flex: 1; background: var(--store-bg, #0f172a); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 12px; color: #fff; font-size: 12px; outline: none; font-family: 'Battambang';" onkeydown="if(event.key==='Enter') window.findSubstituteItems()">
+                    <input type="text" id="subQueryInput" placeholder="ឧ. ប៉ារ៉ាសេតាមុល ឬកាហ្វេ..." style="flex: 1; background: var(--store-bg, #0f172a); border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 12px; color: #fff; font-size: 12px; outline: none; font-family: 'Battambang';" onkeydown="if(event.key==='Enter') window.findSubstituteItems()">
                     <button onclick="window.findSubstituteItems()" style="background: linear-gradient(135deg, #38bdf8, #2563eb); color: white; border: none; padding: 10px 16px; border-radius: 12px; font-size: 12px; font-weight: bold; cursor: pointer;">ស្វែងរក</button>
                 </div>
 
@@ -3611,7 +3546,7 @@ window.skmRegisterBundledPlugin('menu', "substitute_finder.js", function() {
 });
 
 ;
-// === [44/52] table_notes_board.js ===
+// === [43/51] table_notes_board.js ===
 window.skmRegisterBundledPlugin('menu', "table_notes_board.js", function() {
 (function() {
     console.log("📝 Menu Table Notes & Greetings Board Plugin Initialized!");
@@ -3705,7 +3640,7 @@ window.skmRegisterBundledPlugin('menu', "table_notes_board.js", function() {
 });
 
 ;
-// === [45/52] tip_jar.js ===
+// === [44/51] tip_jar.js ===
 window.skmRegisterBundledPlugin('menu', "tip_jar.js", function() {
 (function() {
     console.log("💌 Menu Digital Tip Jar & Compliment Plugin Initialized!");
@@ -3779,7 +3714,7 @@ window.skmRegisterBundledPlugin('menu', "tip_jar.js", function() {
 });
 
 ;
-// === [46/52] trivia_challenge.js ===
+// === [45/51] trivia_challenge.js ===
 window.skmRegisterBundledPlugin('menu', "trivia_challenge.js", function() {
 (function() {
     console.log("🧠 Menu Table Trivia & Quiz Challenge Plugin Initialized!");
@@ -3798,7 +3733,7 @@ window.skmRegisterBundledPlugin('menu', "trivia_challenge.js", function() {
             <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 24px; width: 100%; max-width: 400px; text-align: center; border: 1px solid rgba(16,185,129,0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
                 <div style="font-size: 40px; margin-bottom: 5px;">🧠</div>
                 <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #10b981;">ល្បែងសំណួរចំណេះដឹងពេលរង់ចាំ</h3>
-                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px;">ឆ្លើយសំណួរឱ្យត្រូវដើម្បីឈ្នះកូដបញ្ចុះតម្លៃพิเศษ!</p>
+                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px;">ឆ្លើយសំណួរឱ្យត្រូវដើម្បីឈ្នះកូដបញ្ចុះតម្លៃពិសេស!</p>
                 
                 <div style="background: rgba(16,185,129,0.08); border: 1px solid var(--border-color); padding: 14px; border-radius: 16px; margin-bottom: 15px; text-align: left; font-size: 12px;">
                     <b style="color: #10b981; display: block; margin-bottom: 8px;">សំណួរ៖ តើកាហ្វេប្រភេទណាដែលល្បីល្បាញជាងគេលើពិភពលោក?</b>
@@ -3842,7 +3777,7 @@ window.skmRegisterBundledPlugin('menu', "trivia_challenge.js", function() {
 });
 
 ;
-// === [47/52] vip_subscription_pass.js ===
+// === [46/51] vip_subscription_pass.js ===
 window.skmRegisterBundledPlugin('menu', "vip_subscription_pass.js", function() {
 (function() {
     console.log("🎫 Menu VIP Subscription Pass Plugin Initialized!");
@@ -3918,7 +3853,7 @@ window.skmRegisterBundledPlugin('menu', "vip_subscription_pass.js", function() {
 });
 
 ;
-// === [48/52] virtual_pet.js ===
+// === [47/51] virtual_pet.js ===
 window.skmRegisterBundledPlugin('menu', "virtual_pet.js", function() {
 (function() {
     console.log("🐾 Menu Virtual Pet & Mascot Companion Plugin Initialized!");
@@ -3999,7 +3934,7 @@ window.skmRegisterBundledPlugin('menu', "virtual_pet.js", function() {
 });
 
 ;
-// === [49/52] vitamin_tracker.js ===
+// === [48/51] vitamin_tracker.js ===
 window.skmRegisterBundledPlugin('menu', "vitamin_tracker.js", function() {
 (function() {
     console.log("💊 Menu Vitamin & Nutrient Tracker Plugin Initialized!");
@@ -4068,7 +4003,7 @@ window.skmRegisterBundledPlugin('menu', "vitamin_tracker.js", function() {
 });
 
 ;
-// === [50/52] voice_search.js ===
+// === [49/51] voice_search.js ===
 window.skmRegisterBundledPlugin('menu', "voice_search.js", function() {
 (function() {
     console.log("🎙️ Menu Voice Search Plugin Initialized!");
@@ -4144,7 +4079,7 @@ window.skmRegisterBundledPlugin('menu', "voice_search.js", function() {
 });
 
 ;
-// === [51/52] who_pays_game.js ===
+// === [50/51] who_pays_game.js ===
 window.skmRegisterBundledPlugin('menu', "who_pays_game.js", function() {
 (function() {
     console.log("🎮 Menu Who Pays Game & Table Battle Plugin Initialized!");
@@ -4165,7 +4100,7 @@ window.skmRegisterBundledPlugin('menu', "who_pays_game.js", function() {
             <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 24px; width: 100%; max-width: 380px; text-align: center; border: 1px solid rgba(56,189,248,0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
                 <div style="font-size: 44px; margin-bottom: 5px;">🎮</div>
                 <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #38bdf8;">ល្បែងអ្នកណាចេញលុយ? (Who Pays?)</h3>
-                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">បញ្ចូលឈ្មោះអ្នកញ៉ាំទាំងអស់គ្នា (ខណ្ឌដោយសញ្ញាក្បៀស ",") ដើម្បីចាក់ស្รុះរើសអ្នកចេញលុយថ្ងៃនេះ៖</p>
+                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">បញ្ចូលឈ្មោះអ្នកញ៉ាំទាំងអស់គ្នា (ខណ្ឌដោយសញ្ញាក្បៀស ",") ដើម្បីចាប់ឆ្នោតរើសអ្នកចេញលុយថ្ងៃនេះ៖</p>
                 
                 <div style="text-align: left; font-size: 11px; font-weight: bold; margin-bottom: 4px;">ឈ្មោះអ្នកចូលរួម៖</div>
                 <input type="text" id="whoPaysNameInput" placeholder="ឧ. Dara, Vanna, Srey Nich, Borey" style="width: 100%; background: var(--store-bg, #0f172a); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; color: #fff; font-size: 12px; outline: none; margin-bottom: 15px; font-family:'Battambang';">
@@ -4175,7 +4110,7 @@ window.skmRegisterBundledPlugin('menu', "who_pays_game.js", function() {
                     <div id="whoPaysWinnerName" style="font-size: 20px; font-weight: 900; color: #38bdf8;">---</div>
                 </div>
 
-                <button class="btn-act btn-green" style="width: 100%; background: #38bdf8; border: none; border-radius: 12px; padding: 12px; font-weight: bold; margin-bottom: 8px; cursor: pointer;" onclick="window.runWhoPaysBattle()">🎲 ចាក់ស្รុះរើសអ្នកចេញលុយ</button>
+                <button class="btn-act btn-green" style="width: 100%; background: #38bdf8; border: none; border-radius: 12px; padding: 12px; font-weight: bold; margin-bottom: 8px; cursor: pointer;" onclick="window.runWhoPaysBattle()">🎲 ចាប់ឆ្នោតរើសអ្នកចេញលុយ</button>
                 <button class="btn-act btn-outline" style="width: 100%; border:none; background:rgba(56,189,248,0.1); color:#38bdf8; border-radius: 12px; padding: 10px; cursor: pointer;" onclick="document.getElementById('skmWhoPaysModal').style.display='none'">បិទ</button>
             </div>
         `;
@@ -4199,7 +4134,7 @@ window.skmRegisterBundledPlugin('menu', "who_pays_game.js", function() {
         }
 
         box.style.display = 'block';
-        winnerEl.innerText = '🎲 កំពុងចាក់ស្รុះរើស...';
+        winnerEl.innerText = '🎲 កំពុងចាប់ឆ្នោតរើស...';
 
         let count = 0;
         const interval = setInterval(() => {
@@ -4226,7 +4161,7 @@ window.skmRegisterBundledPlugin('menu', "who_pays_game.js", function() {
 });
 
 ;
-// === [52/52] zodiac_lucky_food.js ===
+// === [51/51] zodiac_lucky_food.js ===
 window.skmRegisterBundledPlugin('menu', "zodiac_lucky_food.js", function() {
 (function() {
     console.log("🔮 Menu Zodiac & Horoscope Lucky Food Matcher Plugin Initialized!");
@@ -4256,7 +4191,7 @@ window.skmRegisterBundledPlugin('menu', "zodiac_lucky_food.js", function() {
                     <option value="រោង">🐉 ឆ្នាំរោង (នាគ)</option>
                     <option value="ម្សាញ់">🐍 ឆ្នាំម្សាញ់ (ពស់)</option>
                     <option value="មមី">🐎 ឆ្នាំមមី (សេះ)</option>
-                    <option value="មមែ">🐐 ឆ្នាំមមែ (ពะដី)</option>
+                    <option value="មមែ">🐐 ឆ្នាំមមែ (ពពែ)</option>
                     <option value="វក">🐒 ឆ្នាំវក (ស្វា)</option>
                     <option value="រកា">🐓 ឆ្នាំរកា (មាន់)</option>
                     <option value="ចរ">🐕 ឆ្នាំចរ (ឆ្កែ)</option>
