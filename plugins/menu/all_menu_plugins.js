@@ -75,6 +75,8 @@
         ['pos', 'menu'].forEach(scope => {
             const rawList = Array.isArray(cfg[scope]) ? cfg[scope] : DEFAULT_ENABLED[scope];
             const enabledSet = new Set(rawList.map(normalizeName));
+            if (!window.__SKM_ENABLED_SETS__) window.__SKM_ENABLED_SETS__ = {};
+            window.__SKM_ENABLED_SETS__[scope] = enabledSet;
 
             Object.keys(registry[scope]).forEach(key => {
                 const normKey = normalizeName(key);
@@ -82,10 +84,13 @@
                 if (isOn) {
                     if (!executed[scope].has(normKey)) {
                         executed[scope].add(normKey);
+                        window.__SKM_CURRENT_PLUGIN_KEY__ = normKey;
                         try {
                             registry[scope][key]();
                         } catch(err) {
                             console.error(`[SKM Plugin Error] ${key}:`, err);
+                        } finally {
+                            window.__SKM_CURRENT_PLUGIN_KEY__ = null;
                         }
                     }
                     // Ensure DOM elements are visible if previously hidden
@@ -102,6 +107,8 @@
                 }
             });
         });
+        if (typeof window.__SKM_REFRESH_MENU_TOOLBOX__ === 'function') window.__SKM_REFRESH_MENU_TOOLBOX__();
+        if (typeof window.__SKM_REFRESH_POS_TOOLBOX__ === 'function') window.__SKM_REFRESH_POS_TOOLBOX__();
     };
 
     window.skmRegisterBundledPlugin = function(scope, key, initFn) {
@@ -112,7 +119,9 @@
             const enabledSet = new Set(cfg[scope].map(normalizeName));
             if (enabledSet.has(normalizeName(key)) && !executed[scope].has(normalizeName(key))) {
                 executed[scope].add(normalizeName(key));
+                window.__SKM_CURRENT_PLUGIN_KEY__ = normalizeName(key);
                 try { initFn(); } catch(err) { console.error(`[SKM Plugin Error] ${key}:`, err); }
+                finally { window.__SKM_CURRENT_PLUGIN_KEY__ = null; }
             }
         }
     };
@@ -373,7 +382,9 @@
         let prefs = getToolPrefs();
         let hasPinned = false, hasNormal = false, hasHidden = false;
 
+        const enabledMenuSet = window.__SKM_ENABLED_SETS__ && window.__SKM_ENABLED_SETS__.menu;
         window.skmRegisteredToolsList.forEach((tool, index) => {
+            if (tool.pluginKey && enabledMenuSet && !enabledMenuSet.has(tool.pluginKey)) return;
             let state = prefs[tool.text] || 'normal';
             
             const row = document.createElement('div');
@@ -418,9 +429,11 @@
 
     window.skmSetToolState = function(toolName, newState) { saveToolPref(toolName, newState); };
 
-    window.registerMenuTool = function(icon, text, onClickFunc) {
+    window.__SKM_REFRESH_MENU_TOOLBOX__ = renderToolboxUI;
+    window.registerMenuTool = function(icon, text, onClickFunc, explicitKey) {
+        const pluginKey = explicitKey || window.__SKM_CURRENT_PLUGIN_KEY__ || null;
         if (window.skmRegisteredToolsList.some(t => t.text === text)) return;
-        window.skmRegisteredToolsList.push({ icon, text, onClickFunc });
+        window.skmRegisteredToolsList.push({ icon, text, onClickFunc, pluginKey });
         renderToolboxUI(); 
     };
 
@@ -663,7 +676,7 @@ window.skmRegisterBundledPlugin('menu', "3d_3d_hologram_showcase.js", function()
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🔮', 'បង្ហាញទំនិញ 3D ហូឡូក្រាម', openHologramModal);
+            window.registerMenuTool('🔮', 'បង្ហាញទំនិញ 3D ហូឡូក្រាម', openHologramModal, "3d_3d_hologram_showcase.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -713,7 +726,7 @@ window.skmRegisterBundledPlugin('menu', "achievement_badges.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🏅', 'ពានរង្វាន់ & សមិទ្ធផល (Badges)', openBadgesModal);
+            window.registerMenuTool('🏅', 'ពានរង្វាន់ & សមិទ្ធផល (Badges)', openBadgesModal, "achievement_badges.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -778,7 +791,7 @@ window.skmRegisterBundledPlugin('menu', "ai_assistant.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🤖', 'ជំនួយការហាងឆ្លាតវៃ (AI Assistant)', openAiChatModal);
+            window.registerMenuTool('🤖', 'ជំនួយការហាងឆ្លាតវៃ (AI Assistant)', openAiChatModal, "ai_assistant.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -923,7 +936,7 @@ window.skmRegisterBundledPlugin('menu', "ai_gemini_ai_concierge.js", function() 
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('✨', 'ជំនួយការ AI ឆ្លាតវៃ (Gemini)', openGeminiConciergeModal);
+            window.registerMenuTool('✨', 'ជំនួយការ AI ឆ្លាតវៃ (Gemini)', openGeminiConciergeModal, "ai_gemini_ai_concierge.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -971,7 +984,7 @@ window.skmRegisterBundledPlugin('menu', "ar_ar_guide.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('📱', 'មើលម្ហូបបែប AR (AR View)', openArPreviewModal);
+            window.registerMenuTool('📱', 'មើលម្ហូបបែប AR (AR View)', openArPreviewModal, "ar_ar_guide.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1049,7 +1062,7 @@ window.skmRegisterBundledPlugin('menu', "budget_finder.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('💵', 'ស្វែងរកទំនិញតាមថវិកា (Budget Finder)', openBudgetModal);
+            window.registerMenuTool('💵', 'ស្វែងរកទំនិញតាមថវិកា (Budget Finder)', openBudgetModal, "budget_finder.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1124,7 +1137,7 @@ window.skmRegisterBundledPlugin('menu', "calorie_burn_calculator.js", function()
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🏃', 'គណនាពេលវេលាដុតកាឡូរី (Calorie Burn)', openCalorieBurnModal);
+            window.registerMenuTool('🏃', 'គណនាពេលវេលាដុតកាឡូរី (Calorie Burn)', openCalorieBurnModal, "calorie_burn_calculator.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1200,7 +1213,7 @@ window.skmRegisterBundledPlugin('menu', "camera_barcode_scanner.js", function() 
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('📷', 'ស្វែងរកទំនិញតាមបាកូដ (Scanner)', openCameraScannerModal);
+            window.registerMenuTool('📷', 'ស្វែងរកទំនិញតាមបាកូដ (Scanner)', openCameraScannerModal, "camera_barcode_scanner.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1248,7 +1261,7 @@ window.skmRegisterBundledPlugin('menu', "care_recipe_guide.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('📖', 'មគ្គុទ្ទេសក៍ថែទាំ & រូបមន្ត (Care Guide)', openCareModal);
+            window.registerMenuTool('📖', 'មគ្គុទ្ទេសក៍ថែទាំ & រូបមន្ត (Care Guide)', openCareModal, "care_recipe_guide.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1320,7 +1333,7 @@ window.skmRegisterBundledPlugin('menu', "code_artifact (2).js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎧', 'សំឡេងបរិយាកាសហាង (Ambient)', openAmbientModal);
+            window.registerMenuTool('🎧', 'សំឡេងបរិយាកាសហាង (Ambient)', openAmbientModal, "code_artifact (2).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1387,7 +1400,7 @@ window.skmRegisterBundledPlugin('menu', "code_artifact (3).js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🐱', 'ម៉ាស្កូតហាង & កូដពិសេស', openMascotModal);
+            window.registerMenuTool('🐱', 'ម៉ាស្កូតហាង & កូដពិសេស', openMascotModal, "code_artifact (3).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1439,7 +1452,7 @@ window.skmRegisterBundledPlugin('menu', "code_artifact (4).js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('📏', 'មគ្គុទ្ទេសក៍ទំហំចំណែក (Size Guide)', openPortionModal);
+            window.registerMenuTool('📏', 'មគ្គុទ្ទេសក៍ទំហំចំណែក (Size Guide)', openPortionModal, "code_artifact (4).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1548,7 +1561,7 @@ window.skmRegisterBundledPlugin('menu', "custom_item_builder.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🛠️', 'ច្នៃប្រឌិតម្ហូបតាមចិត្ត (Custom Builder)', openCustomBuilderModal);
+            window.registerMenuTool('🛠️', 'ច្នៃប្រឌិតម្ហូបតាមចិត្ត (Custom Builder)', openCustomBuilderModal, "custom_item_builder.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1616,7 +1629,7 @@ window.skmRegisterBundledPlugin('menu', "daily_combo.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🍱', 'កញ្ចប់ពិសេសប្រចាំថ្ងៃ (Daily Combo)', openDailyComboModal);
+            window.registerMenuTool('🍱', 'កញ្ចប់ពិសេសប្រចាំថ្ងៃ (Daily Combo)', openDailyComboModal, "daily_combo.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1672,7 +1685,7 @@ window.skmRegisterBundledPlugin('menu', "daily_motivation.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🌟', 'កាតលើកទឹកចិត្តប្រចាំថ្ងៃ (Motivation)', openMotivationModal);
+            window.registerMenuTool('🌟', 'កាតលើកទឹកចិត្តប្រចាំថ្ងៃ (Motivation)', openMotivationModal, "daily_motivation.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1744,7 +1757,7 @@ window.skmRegisterBundledPlugin('menu', "delivery_notes.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('📍', 'កត់ចំណាំទីតាំងដឹកជញ្ជូន (Delivery)', openDeliveryNoteModal);
+            window.registerMenuTool('📍', 'កត់ចំណាំទីតាំងដឹកជញ្ជូន (Delivery)', openDeliveryNoteModal, "delivery_notes.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1840,7 +1853,7 @@ window.skmRegisterBundledPlugin('menu', "digital_jukebox.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎵', 'សំណូមពរបទចម្រៀង (Jukebox)', openJukeboxModal);
+            window.registerMenuTool('🎵', 'សំណូមពរបទចម្រៀង (Jukebox)', openJukeboxModal, "digital_jukebox.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1909,7 +1922,7 @@ window.skmRegisterBundledPlugin('menu', "digital_member_id.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🪪', 'កាតសមាជិកឌីជីថល (Digital ID)', openDigitalIdModal);
+            window.registerMenuTool('🪪', 'កាតសមាជិកឌីជីថល (Digital ID)', openDigitalIdModal, "digital_member_id.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -1977,7 +1990,7 @@ window.skmRegisterBundledPlugin('menu', "dish_anatomy.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🔬', 'វិភាគគ្រឿងផ្សំ & ស្រទាប់ម្ហូប (Anatomy)', openAnatomyModal);
+            window.registerMenuTool('🔬', 'វិភាគគ្រឿងផ្សំ & ស្រទាប់ម្ហូប (Anatomy)', openAnatomyModal, "dish_anatomy.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2029,7 +2042,7 @@ window.skmRegisterBundledPlugin('menu', "dosage_guide.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('💊', 'ណែនាំកម្រិតប្រើប្រាស់ថ្នាំ (Dosage)', openDosageModal);
+            window.registerMenuTool('💊', 'ណែនាំកម្រិតប្រើប្រាស់ថ្នាំ (Dosage)', openDosageModal, "dosage_guide.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2077,7 +2090,7 @@ window.skmRegisterBundledPlugin('menu', "drug_safety.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🩺', 'សុវត្ថិភាពថ្នាំ & រក្សាទុក (Safety)', openDrugSafetyModal);
+            window.registerMenuTool('🩺', 'សុវត្ថិភាពថ្នាំ & រក្សាទុក (Safety)', openDrugSafetyModal, "drug_safety.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2146,7 +2159,7 @@ window.skmRegisterBundledPlugin('menu', "e_gift_card.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎁', 'កាតអំណោយឌីជីថល (E-Gift Card)', openEGiftModal);
+            window.registerMenuTool('🎁', 'កាតអំណោយឌីជីថល (E-Gift Card)', openEGiftModal, "e_gift_card.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2194,7 +2207,7 @@ window.skmRegisterBundledPlugin('menu', "events_schedule.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎶', 'កាលវិភាគតន្ត្រី & ព្រឹត្តិការណ៍ (Events)', openEventsModal);
+            window.registerMenuTool('🎶', 'កាលវិភាគតន្ត្រី & ព្រឹត្តិការណ៍ (Events)', openEventsModal, "events_schedule.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2255,7 +2268,7 @@ window.skmRegisterBundledPlugin('menu', "flash_sale.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('⏳', 'Flash Sale រាប់ថយក្រោយ', openFlashDealModal);
+            window.registerMenuTool('⏳', 'Flash Sale រាប់ថយក្រោយ', openFlashDealModal, "flash_sale.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2332,7 +2345,7 @@ window.skmRegisterBundledPlugin('menu', "flavor_matchmaker.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🍹', 'ស្វែងរករសជាតិត្រូវចិត្ត (Flavor Match)', openFlavorModal);
+            window.registerMenuTool('🍹', 'ស្វែងរករសជាតិត្រូវចិត្ត (Flavor Match)', openFlavorModal, "flavor_matchmaker.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2400,7 +2413,7 @@ window.skmRegisterBundledPlugin('menu', "fortune_cookie.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🥠', 'គុកឃីទស្សន៍ទាយសំណាង (Fortune)', openFortuneModal);
+            window.registerMenuTool('🥠', 'គុកឃីទស្សន៍ទាយសំណាង (Fortune)', openFortuneModal, "fortune_cookie.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2461,7 +2474,7 @@ window.skmRegisterBundledPlugin('menu', "group_order.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('👥', 'កន្ត្រកក្រុម (Group Order)', openGroupOrderModal);
+            window.registerMenuTool('👥', 'កន្ត្រកក្រុម (Group Order)', openGroupOrderModal, "group_order.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2530,7 +2543,7 @@ window.skmRegisterBundledPlugin('menu', "hydration_tracker.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('💧', 'តាមដានការផឹកទឹក (Hydration)', openHydrationModal);
+            window.registerMenuTool('💧', 'តាមដានការផឹកទឹក (Hydration)', openHydrationModal, "hydration_tracker.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2613,7 +2626,7 @@ window.skmRegisterBundledPlugin('menu', "live_kitchen_tracker.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🍜', 'តាមដានស្ថានភាពម្ហូប (Kitchen Tracker)', openKitchenTrackerModal);
+            window.registerMenuTool('🍜', 'តាមដានស្ថានភាពម្ហូប (Kitchen Tracker)', openKitchenTrackerModal, "live_kitchen_tracker.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2695,7 +2708,7 @@ window.skmRegisterBundledPlugin('menu', "loyalty_wallet.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('💳', 'កាបូបពិន្ទុ & រង្វាន់សមាជិក', openLoyaltyWalletModal);
+            window.registerMenuTool('💳', 'កាបូបពិន្ទុ & រង្វាន់សមាជិក', openLoyaltyWalletModal, "loyalty_wallet.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2747,7 +2760,7 @@ window.skmRegisterBundledPlugin('menu', "medication_reminder.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('⏰', 'មគ្គុទ្ទេសក៍ដាស់តឿនលេបថ្នាំ (Alarm Guide)', openMedAlarmModal);
+            window.registerMenuTool('⏰', 'មគ្គុទ្ទេសក៍ដាស់តឿនលេបថ្នាំ (Alarm Guide)', openMedAlarmModal, "medication_reminder.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2795,7 +2808,7 @@ window.skmRegisterBundledPlugin('menu', "mixologist_master.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🍹', 'មេជាងលាយភេសជ្ជៈ (Mixologist)', openMixologistModal);
+            window.registerMenuTool('🍹', 'មេជាងលាយភេសជ្ជៈ (Mixologist)', openMixologistModal, "mixologist_master.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2889,7 +2902,7 @@ window.skmRegisterBundledPlugin('menu', "mystery_box.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎁', 'ប្រអប់រង្វាន់អាថ៌កំបាំង (Mystery Box)', openMysteryBoxModal);
+            window.registerMenuTool('🎁', 'ប្រអប់រង្វាន់អាថ៌កំបាំង (Mystery Box)', openMysteryBoxModal, "mystery_box.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -2962,7 +2975,7 @@ window.skmRegisterBundledPlugin('menu', "photo_booth.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('📸', 'ថតរូបអនុស្សាវរីយ៍ (Photo Booth)', openPhotoBoothModal);
+            window.registerMenuTool('📸', 'ថតរូបអនុស្សាវរីយ៍ (Photo Booth)', openPhotoBoothModal, "photo_booth.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3035,7 +3048,7 @@ window.skmRegisterBundledPlugin('menu', "quick_price_check.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🔍', 'ពិនិត្យតម្លៃទំនិញរហ័ស (Price Check)', openPriceCheckModal);
+            window.registerMenuTool('🔍', 'ពិនិត្យតម្លៃទំនិញរហ័ស (Price Check)', openPriceCheckModal, "quick_price_check.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3117,7 +3130,7 @@ window.skmRegisterBundledPlugin('menu', "quick_reorder.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🔄', 'កុម្មង់ឡើងវិញរហ័ស (Quick Reorder)', openQuickReorderModal);
+            window.registerMenuTool('🔄', 'កុម្មង់ឡើងវិញរហ័ស (Quick Reorder)', openQuickReorderModal, "quick_reorder.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3172,7 +3185,7 @@ window.skmRegisterBundledPlugin('menu', "savings_calculator.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('💰', 'គណនាសន្សំប្រាក់ (Savings Calculator)', openSavingsModal);
+            window.registerMenuTool('💰', 'គណនាសន្សំប្រាក់ (Savings Calculator)', openSavingsModal, "savings_calculator.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3245,7 +3258,7 @@ window.skmRegisterBundledPlugin('menu', "scheduled_pickup.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('⏰', 'កុម្មង់ទុកមុន & កំណត់ម៉ោងមកយក', openSchedulePickupModal);
+            window.registerMenuTool('⏰', 'កុម្មង់ទុកមុន & កំណត់ម៉ោងមកយក', openSchedulePickupModal, "scheduled_pickup.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3337,7 +3350,7 @@ window.skmRegisterBundledPlugin('menu', "scratch_card.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎫', 'កាតកោសឈ្នះរង្វាន់ (Scratch Card)', openScratchModal);
+            window.registerMenuTool('🎫', 'កាតកោសឈ្នះរង្វាន់ (Scratch Card)', openScratchModal, "scratch_card.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3385,7 +3398,7 @@ window.skmRegisterBundledPlugin('menu', "smart_pairing.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🥐', 'ការណែនាំម្ហូបគូគ្នា (Smart Pairing)', openPairingModal);
+            window.registerMenuTool('🥐', 'ការណែនាំម្ហូបគូគ្នា (Smart Pairing)', openPairingModal, "smart_pairing.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3449,7 +3462,7 @@ window.skmRegisterBundledPlugin('menu', "spin_the_bottle.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🍾', 'ល្បែងបង្វិលដបឈ្នះរង្វាន់ (Spin)', openBottleSpinModal);
+            window.registerMenuTool('🍾', 'ល្បែងបង្វិលដបឈ្នះរង្វាន់ (Spin)', openBottleSpinModal, "spin_the_bottle.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3501,7 +3514,7 @@ window.skmRegisterBundledPlugin('menu', "store_status.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🕒', 'ស្ថានភាពហាង & ម៉ោងបើក (Status)', openStoreStatusModal);
+            window.registerMenuTool('🕒', 'ស្ថានភាពហាង & ម៉ោងបើក (Status)', openStoreStatusModal, "store_status.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3585,7 +3598,7 @@ window.skmRegisterBundledPlugin('menu', "substitute_finder.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🔄', 'ស្វែងរកទំនិញ/ថ្នាំជំនួស (Substitute)', openSubstituteModal);
+            window.registerMenuTool('🔄', 'ស្វែងរកទំនិញ/ថ្នាំជំនួស (Substitute)', openSubstituteModal, "substitute_finder.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3679,7 +3692,7 @@ window.skmRegisterBundledPlugin('menu', "table_notes_board.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('📝', 'ក្ដារខៀនសារលើតុ (Table Board)', openTableNotesModal);
+            window.registerMenuTool('📝', 'ក្ដារខៀនសារលើតុ (Table Board)', openTableNotesModal, "table_notes_board.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3753,7 +3766,7 @@ window.skmRegisterBundledPlugin('menu', "tip_jar.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('💌', 'ប្រអប់ធីប និងសរសើរអ្នកបំរើ (Tip Jar)', openTipJarModal);
+            window.registerMenuTool('💌', 'ប្រអប់ធីប និងសរសើរអ្នកបំរើ (Tip Jar)', openTipJarModal, "tip_jar.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3807,7 +3820,7 @@ window.skmRegisterBundledPlugin('menu', "trivia_challenge.js", function() {
         if (isCorrect) {
             msg.innerHTML = `<span style="color: #10b981;">🎉 ត្រឹមត្រូវស្ដូក! អ្នកឈ្នះកូដ: <b style="font-size:14px;">TRIVIA15</b> (បញ្ចុះ $1.50)</span>`;
             const promoInput = document.getElementById('cPromo');
-            if (promoInput) const rp = window.skmGetRealPromo('TRIVIA15', 'បញ្ចុះ $1.50'); promoInput.value = rp.code;
+            if (promoInput) { const rp = window.skmGetRealPromo('TRIVIA15', 'បញ្ចុះ $1.50'); promoInput.value = rp.code; }
             if (typeof showToast === 'function') showToast('អបអរសាទរ! បានដាក់កូដ TRIVIA15 ជោគជ័យ!');
         } else {
             msg.innerHTML = `<span style="color: #ef4444;">❌ ខុសហើយ! ចម្លើយដែលត្រឹមត្រូវគឺ ខ. អារ៉ាប៊ីកា។</span>`;
@@ -3816,7 +3829,7 @@ window.skmRegisterBundledPlugin('menu', "trivia_challenge.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🧠', 'ល្បែងសំណួរចំណេះដឹង (Trivia Challenge)', openTriviaModal);
+            window.registerMenuTool('🧠', 'ល្បែងសំណួរចំណេះដឹង (Trivia Challenge)', openTriviaModal, "trivia_challenge.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3892,7 +3905,7 @@ window.skmRegisterBundledPlugin('menu', "vip_subscription_pass.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎫', 'កាតសមាជិកប្រចាំខែ (VIP Pass)', openVipSubModal);
+            window.registerMenuTool('🎫', 'កាតសមាជិកប្រចាំខែ (VIP Pass)', openVipSubModal, "vip_subscription_pass.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -3973,7 +3986,7 @@ window.skmRegisterBundledPlugin('menu', "virtual_pet.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🐾', 'សត្វចិញ្ចឹមកំសាន្ត (Virtual Pet)', openVirtualPetModal);
+            window.registerMenuTool('🐾', 'សត្វចិញ្ចឹមកំសាន្ត (Virtual Pet)', openVirtualPetModal, "virtual_pet.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -4042,7 +4055,7 @@ window.skmRegisterBundledPlugin('menu', "vitamin_tracker.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('💊', 'ត្រួតពិនិត្យវីតាមីន & ជីវជាតិ (Vitamins)', openVitaminModal);
+            window.registerMenuTool('💊', 'ត្រួតពិនិត្យវីតាមីន & ជីវជាតិ (Vitamins)', openVitaminModal, "vitamin_tracker.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -4118,7 +4131,7 @@ window.skmRegisterBundledPlugin('menu', "voice_search.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎙️', 'ស្វែងរកដោយសំឡេង (Voice Search)', openVoiceSearchModal);
+            window.registerMenuTool('🎙️', 'ស្វែងរកដោយសំឡេង (Voice Search)', openVoiceSearchModal, "voice_search.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -4200,7 +4213,7 @@ window.skmRegisterBundledPlugin('menu', "who_pays_game.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🎮', 'ល្បែងអ្នកណាចេញលុយ (Who Pays?)', openWhoPaysModal);
+            window.registerMenuTool('🎮', 'ល្បែងអ្នកណាចេញលុយ (Who Pays?)', openWhoPaysModal, "who_pays_game.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -4285,7 +4298,7 @@ window.skmRegisterBundledPlugin('menu', "zodiac_lucky_food.js", function() {
 
     const initInt = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('🔮', 'ហុងស៊ុយម្ហូបតាមឆ្នាំកំណើត (Zodiac)', openZodiacModal);
+            window.registerMenuTool('🔮', 'ហុងស៊ុយម្ហូបតាមឆ្នាំកំណើត (Zodiac)', openZodiacModal, "zodiac_lucky_food.js");
             clearInterval(initInt);
         }
     }, 500);
