@@ -20,8 +20,8 @@
     window.__SKM_PLUGIN_CONTROLLER_READY__ = true;
 
     const DEFAULT_ENABLED = {
-        menu: ["3d_3d_hologram_showcase.js", "achievement_badges.js", "ai_assistant.js", "ai_gemini_ai_concierge.js", "ar_ar_guide.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (3).js", "code_artifact (4).js", "daily_motivation.js", "delivery_notes.js", "digital_member_id.js", "e_gift_card.js", "flash_sale.js", "fortune_cookie.js", "loyalty_wallet.js", "mystery_box.js", "photo_booth.js", "quick_price_check.js", "quick_reorder.js", "savings_calculator.js", "scheduled_pickup.js", "scratch_card.js", "store_status.js", "substitute_finder.js", "virtual_pet.js", "voice_search.js"],
-        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរ (Lock).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "ម៉ាស៊ីនគិតលេខរហ័ស.js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🎯 គោលដៅការលក់ (Shift Sales Target).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💵 រាប់ប្រាក់បិទវេន (USDKHR).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
+        menu: ["ai_assistant.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (4).js", "delivery_notes.js", "digital_member_id.js", "quick_price_check.js", "quick_reorder.js", "scheduled_pickup.js", "store_status.js", "substitute_finder.js", "voice_search.js"],
+        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🎯 គោលដៅការលក់ (Shift Sales Target).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
     };
 
     const registry = { menu: {}, pos: {} };
@@ -834,7 +834,7 @@ window.skmRegisterBundledPlugin('pos', "គោលដៅលក់ប្រចា�
         if (document.getElementById('skmGoalWidget') && document.getElementById('skmGoalWidget').style.display !== 'none') {
             window.updateGoalProgress();
         }
-    }, 2000);
+    }, 5000);
 
 })();
 });
@@ -1931,7 +1931,7 @@ window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយ�
         // 1. Fetch from Supabase Cloud Database
         if (window.supabase) {
             try {
-                const supabaseClient = window.supabase.createClient('https://uynmpjykedjjjyxczsja.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg');
+                const supabaseClient = window.supabaseClient || window.supabase.createClient('https://qlzyyfqjwudbapgwsugu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ');
                 let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', branchId).maybeSingle();
                 if (data && data.data_json) {
                     let d = data.data_json;
@@ -2704,7 +2704,7 @@ window.skmRegisterBundledPlugin('pos', "ប៊ូតុងគិតលុយរ�
     }
 
     // ត្រួតពិនិត្យរៀងរាល់ ៥០០ មីលីវិនាទី
-    setInterval(injectQuickCashUI, 500);
+    setInterval(() => { if (document.getElementById('checkoutReceivedUsd')) injectQuickCashUI(); }, 1200);
 })();
 });
 
@@ -3288,7 +3288,9 @@ window.skmRegisterBundledPlugin('pos', "ម៉ាស៊ីនគិតលេខ�
         try {
             if(screen.value.trim() === '') return;
             // គណនា និងបង្កត់ទសភាគបើវែងពេក
-            let result = eval(screen.value);
+            const safeExpr = String(screen.value || '').replace(/\s+/g, '');
+            if (!/^[0-9+\-*/().]+$/.test(safeExpr)) throw new Error('Invalid expression');
+            let result = Function('"use strict"; return (' + safeExpr + ')')();
             if (!Number.isInteger(result)) {
                 result = parseFloat(result.toFixed(6)); // យក ៦ ខ្ទង់ក្រោយក្បៀស
             }
@@ -4886,11 +4888,11 @@ window.skmRegisterBundledPlugin('pos', "🎂 អតិថិជន VIP & ថ្�
     console.log("🎂 POS VIP Birthday & Special Reminders Plugin Initialized (With Telegram Sync)!");
 
     // 🔑 Supabase Config សម្រាប់ការអាន Telegram Settings បើចាំបាច់
-    const S_URL = 'https://uynmpjykedjjjyxczsja.supabase.co';
-    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5bm1wanlrZWRqamp5eGN6c2phIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY2MDc1NjIsImV4cCI6MjEwMjE4MzU2Mn0.vw8UpBoEWvbQwl2J5alfTB0nvv7EizB8EpwEsp4ugCg';
+    const S_URL = 'https://qlzyyfqjwudbapgwsugu.supabase.co';
+    const S_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ';
     
-    let pluginSupabase = null;
-    if (window.supabase) {
+    let pluginSupabase = window.supabaseClient || null;
+    if (!pluginSupabase && window.supabase) {
         pluginSupabase = window.supabase.createClient(S_URL, S_KEY, {
             auth: { persistSession: false },
             global: { fetch: (...args) => fetch(args[0], { ...args[1], cache: 'no-store' }) }
