@@ -75,6 +75,8 @@
         ['pos', 'menu'].forEach(scope => {
             const rawList = Array.isArray(cfg[scope]) ? cfg[scope] : DEFAULT_ENABLED[scope];
             const enabledSet = new Set(rawList.map(normalizeName));
+            if (!window.__SKM_ENABLED_SETS__) window.__SKM_ENABLED_SETS__ = {};
+            window.__SKM_ENABLED_SETS__[scope] = enabledSet;
 
             Object.keys(registry[scope]).forEach(key => {
                 const normKey = normalizeName(key);
@@ -82,10 +84,13 @@
                 if (isOn) {
                     if (!executed[scope].has(normKey)) {
                         executed[scope].add(normKey);
+                        window.__SKM_CURRENT_PLUGIN_KEY__ = normKey;
                         try {
                             registry[scope][key]();
                         } catch(err) {
                             console.error(`[SKM Plugin Error] ${key}:`, err);
+                        } finally {
+                            window.__SKM_CURRENT_PLUGIN_KEY__ = null;
                         }
                     }
                     // Ensure DOM elements are visible if previously hidden
@@ -102,6 +107,8 @@
                 }
             });
         });
+        if (typeof window.__SKM_REFRESH_MENU_TOOLBOX__ === 'function') window.__SKM_REFRESH_MENU_TOOLBOX__();
+        if (typeof window.__SKM_REFRESH_POS_TOOLBOX__ === 'function') window.__SKM_REFRESH_POS_TOOLBOX__();
     };
 
     window.skmRegisterBundledPlugin = function(scope, key, initFn) {
@@ -112,7 +119,9 @@
             const enabledSet = new Set(cfg[scope].map(normalizeName));
             if (enabledSet.has(normalizeName(key)) && !executed[scope].has(normalizeName(key))) {
                 executed[scope].add(normalizeName(key));
+                window.__SKM_CURRENT_PLUGIN_KEY__ = normalizeName(key);
                 try { initFn(); } catch(err) { console.error(`[SKM Plugin Error] ${key}:`, err); }
+                finally { window.__SKM_CURRENT_PLUGIN_KEY__ = null; }
             }
         }
     };
@@ -402,7 +411,9 @@
             return bPin - aPin;
         });
 
+        const enabledPosSet = window.__SKM_ENABLED_SETS__ && window.__SKM_ENABLED_SETS__.pos;
         sortedTools.forEach(tool => {
+            if (tool.pluginKey && enabledPosSet && !enabledPosSet.has(tool.pluginKey)) return;
             const pref = toolPrefs[tool.text] || { hidden: false, pinned: false };
             
             const wrapper = document.createElement('div');
@@ -435,9 +446,11 @@
         });
     }
 
-    window.registerCustomTool = function(icon, text, onClickFunc) {
+    window.__SKM_REFRESH_POS_TOOLBOX__ = renderToolboxList;
+    window.registerCustomTool = function(icon, text, onClickFunc, explicitKey) {
+        const pluginKey = explicitKey || window.__SKM_CURRENT_PLUGIN_KEY__ || null;
         if (allRegisteredTools.find(t => t.text === text)) return;
-        allRegisteredTools.push({ icon, text, onClickFunc });
+        allRegisteredTools.push({ icon, text, onClickFunc, pluginKey });
         renderToolboxList();
     };
 })();
@@ -575,17 +588,18 @@ window.skmRegisterBundledPlugin('pos', "កំណត់ និងជ្រើស
 
     // 3. Register Tool in Toolbox Hub automatically
     const initToolboxInterval = setInterval(() => {
-        if (typeof window.registerMenuTool === 'function') {
+        if (typeof window.registerCustomTool === 'function') {
+            window.registerCustomTool('📍', 'កំណត់/ប្តូរទីតាំងតុ (Table)', openStoreLocationModal, "កំណត់ និងជ្រើសរើសលេខតុលេខកូដទីតាំងមុនពេលកុម្មង់ (Location  Counter Selection Plugin).js");
+            clearInterval(initToolboxInterval);
+        } else if (typeof window.registerMenuTool === 'function') {
             window.registerMenuTool('📍', 'កំណត់/ប្តូរទីតាំង (Table)', openStoreLocationModal);
             clearInterval(initToolboxInterval);
         }
     }, 300);
 
-    // 4. Auto prompt on load if location is missing
+    // 4. Only update badge if location exists (no intrusive auto-popup on POS)
     setTimeout(() => {
-        if (!currentLocation) {
-            openStoreLocationModal();
-        } else {
+        if (currentLocation) {
             const tbBadge = document.getElementById('tableBadgeDisplay');
             if (tbBadge) {
                 tbBadge.innerText = `តុលេខ ${currentLocation}`;
@@ -821,7 +835,7 @@ window.skmRegisterBundledPlugin('pos', "គោលដៅលក់ប្រចា�
     // --- ៦. ដំណើរការប្រព័ន្ធ (Init) ---
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🎯', 'កំណត់គោលដៅ (Goal)', window.openGoalSettingsModal);
+            window.registerCustomTool('🎯', 'កំណត់គោលដៅ (Goal)', window.openGoalSettingsModal, "គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js");
             clearInterval(initInt);
         }
         
@@ -1461,7 +1475,7 @@ window.skmRegisterBundledPlugin('pos', "ចាក់សោរ (Lock).js", functi
     let attempts = 0;
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🔒', 'ចាក់សោរ (Lock)', window.openLockScreen);
+            window.registerCustomTool('🔒', 'ចាក់សោរ (Lock)', window.openLockScreen, "ចាក់សោរ (Lock).js");
             clearInterval(initInt);
             resetIdleTimer();
             console.log("🚀 VVIP OS-Level CGI Lock successfully registered!");
@@ -1945,7 +1959,7 @@ window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយ�
 
         // 2. Fetch from LocalStorage
         try {
-            let localInv = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoices`) || '[]');
+            let localInv = JSON.parse(localStorage.getItem(`ks2_${branchId}_invoices_pro`) || localStorage.getItem(`ks2_${branchId}_invoices`) || '[]');
             if(Array.isArray(localInv)) allOrders = [...allOrders, ...localInv];
         } catch(e) {}
 
@@ -2118,7 +2132,7 @@ window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយ�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🧾', 'វិក្កយបត្ររង់ចាំគិតលុយ (Bill Summary)', openCustomerBillModal);
+            window.registerCustomTool('🧾', 'វិក្កយបត្ររង់ចាំគិតលុយ (Bill Summary)', openCustomerBillModal, "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js");
             clearInterval(initInt);
         }
     }, 300);
@@ -2569,7 +2583,7 @@ window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយ�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🧾', 'បូកសរុបវិក្កយបត្រតុ/ភ្ញៀវ', openTableBillModal);
+            window.registerCustomTool('🧾', 'បូកសរុបវិក្កយបត្រតុ/ភ្ញៀវ', openTableBillModal, "បូកសរុបវិក្កយបត្រប្រចាំតុ (Table Bill Summary).js");
             clearInterval(initInt);
         }
     }, 300);
@@ -3481,7 +3495,7 @@ window.skmRegisterBundledPlugin('pos', "ម៉ាស៊ីនគិតលេខ�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🧮', 'ម៉ាស៊ីនគិតលេខរហ័ស', openCalculator);
+            window.registerCustomTool('🧮', 'ម៉ាស៊ីនគិតលេខរហ័ស', openCalculator, "ម៉ាស៊ីនគិតលេខរហ័ស.js");
             clearInterval(initInt);
             console.log("✅ Premium Quick Calculator successfully registered!");
         }
@@ -3685,7 +3699,7 @@ window.skmRegisterBundledPlugin('pos', "⏰ កត់ត្រាម៉ោងក
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('⏰', 'កត់ត្រាម៉ោងការងារ (Time Clock)', openTimeClockModal);
+            window.registerCustomTool('⏰', 'កត់ត្រាម៉ោងការងារ (Time Clock)', openTimeClockModal, "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js");
             clearInterval(initInt);
         }
     }, 300);
@@ -3874,7 +3888,7 @@ window.skmRegisterBundledPlugin('pos', "☑️ កិច្ចការត្រ
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('☑️', 'បញ្ជីកិច្ចការប្រចាំថ្ងៃ (Checklist)', openChecklistModal);
+            window.registerCustomTool('☑️', 'បញ្ជីកិច្ចការប្រចាំថ្ងៃ (Checklist)', openChecklistModal, "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js");
             clearInterval(initInt);
         }
     }, 300);
@@ -4107,7 +4121,7 @@ window.skmRegisterBundledPlugin('pos', "⚖️ ផ្ទៀងផ្ទាត់
     /* STREAMING_CHUNK:Registering Plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('⚖️', 'ពិនិត្យប្រាក់លើស/ខ្វះ (Drawer Audit)', openDrawerAuditModal);
+            window.registerCustomTool('⚖️', 'ពិនិត្យប្រាក់លើស/ខ្វះ (Drawer Audit)', openDrawerAuditModal, "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -4397,7 +4411,7 @@ window.skmRegisterBundledPlugin('pos', "⚠️ កត់ត្រាទំនិ
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('⚠️', 'កត់ត្រាទំនិញខូចខាត', openWastageModal);
+            window.registerCustomTool('⚠️', 'កត់ត្រាទំនិញខូចខាត', openWastageModal, "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -4789,7 +4803,7 @@ window.skmRegisterBundledPlugin('pos', "⭐ ពិនិត្យពិន្ទ
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('⭐', 'ពិនិត្យពិន្ទុសមាជិក (Loyalty)', openLoyaltyModal);
+            window.registerCustomTool('⭐', 'ពិនិត្យពិន្ទុសមាជិក (Loyalty)', openLoyaltyModal, "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -5049,7 +5063,7 @@ window.skmRegisterBundledPlugin('pos', "🎂 អតិថិជន VIP & ថ្�
     /* STREAMING_CHUNK:Registering plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🎂', 'អតិថិជន VIP & ថ្ងៃកំណើត', openVipBirthdayModal);
+            window.registerCustomTool('🎂', 'អតិថិជន VIP & ថ្ងៃកំណើត', openVipBirthdayModal, "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -5233,7 +5247,7 @@ window.skmRegisterBundledPlugin('pos', "🎯 គោលដៅការលក់ (
     /* STREAMING_CHUNK:Registering Plugin to System... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🎯', 'គោលដៅការលក់ប្រចាំថ្ងៃ', openTargetModal);
+            window.registerCustomTool('🎯', 'គោលដៅការលក់ប្រចាំថ្ងៃ', openTargetModal, "🎯 គោលដៅការលក់ (Shift Sales Target).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -5408,7 +5422,7 @@ window.skmRegisterBundledPlugin('pos', "🏆 គណនាកម្រៃជើ�
     /* STREAMING_CHUNK:Registering plugin to the system... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🏆', 'កម្រៃជើងសារបុគ្គលិក (Commission)', openCommissionModal);
+            window.registerCustomTool('🏆', 'កម្រៃជើងសារបុគ្គលិក (Commission)', openCommissionModal, "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -5570,7 +5584,7 @@ window.skmRegisterBundledPlugin('pos', "🏷️ គណនាលក់បញ្�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🏷️️', 'គណនាលក់បញ្ចុះតម្លៃរហ័ស', openDiscountHelper);
+            window.registerCustomTool('🏷️️', 'គណនាលក់បញ្ចុះតម្លៃរហ័ស', openDiscountHelper, "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js");
             clearInterval(initInt);
         }
     }, 300);
@@ -5972,7 +5986,7 @@ window.skmRegisterBundledPlugin('pos', "🏷️ បង្កើតស្លា�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🏷️', 'ព្រីនឡាប៊ែល (Multi-Size)', openPriceTagModal);
+            window.registerCustomTool('🏷️', 'ព្រីនឡាប៊ែល (Multi-Size)', openPriceTagModal, "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js");
             clearInterval(initInt);
         }
     }, 300);
@@ -6088,7 +6102,7 @@ window.skmRegisterBundledPlugin('pos', "💬 សាររំលឹកទារ�
     /* STREAMING_CHUNK:Registering Plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('💬', 'សាររំលឹកវិក្កយបត្ររង់ចាំទូទាត់', openDebtReminderModal);
+            window.registerCustomTool('💬', 'សាររំលឹកវិក្កយបត្ររង់ចាំទូទាត់', openDebtReminderModal, "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -6263,7 +6277,7 @@ window.skmRegisterBundledPlugin('pos', "💰 គណនាតម្លៃលក�
     /* STREAMING_CHUNK:Registering Plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('💰', 'គណនាតម្លៃលក់ & ចំណេញ (Margin)', openProfitModal);
+            window.registerCustomTool('💰', 'គណនាតម្លៃលក់ & ចំណេញ (Margin)', openProfitModal, "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -6424,7 +6438,7 @@ window.skmRegisterBundledPlugin('pos', "💳 សង្ខេបចំណូល�
             window.registerMenuTool('💳', 'សង្ខេបចំណូលប្រចាំថ្ងៃ', window.openPaymentBreakdownModalStandard);
             clearInterval(registerToolInterval);
         } else if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('💳', 'សង្ខេបចំណូលប្រចាំថ្ងៃ', window.openPaymentBreakdownModalStandard);
+            window.registerCustomTool('💳', 'សង្ខេបចំណូលប្រចាំថ្ងៃ', window.openPaymentBreakdownModalStandard, "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js");
             clearInterval(registerToolInterval);
         }
     }, 200);
@@ -6939,7 +6953,7 @@ window.skmRegisterBundledPlugin('pos', "💵 រាប់ប្រាក់ប�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('💵', 'រាប់សាច់ប្រាក់ (USD/KHR)', openCashCounter);
+            window.registerCustomTool('💵', 'រាប់សាច់ប្រាក់ (USD/KHR)', openCashCounter, "💵 រាប់ប្រាក់បិទវេន (USDKHR).js");
             clearInterval(initInt);
             console.log("✅ Adaptive Theme Cash Counter (USD + KHR) successfully registered!");
         }
@@ -7265,7 +7279,7 @@ window.skmRegisterBundledPlugin('pos', "💼 ចរន្តសាច់ប្�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('💼', 'ចរន្តសាច់ប្រាក់ (In/Out)', openCashInOutModal);
+            window.registerCustomTool('💼', 'ចរន្តសាច់ប្រាក់ (In/Out)', openCashInOutModal, "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -7435,7 +7449,7 @@ window.skmRegisterBundledPlugin('pos', "📈 សង្ខេបការចំ�
     /* STREAMING_CHUNK:Registering plugin to the system... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📈', 'សង្ខេបការចំណាយតាមប្រភេទ', openExpenseSummaryModal);
+            window.registerCustomTool('📈', 'សង្ខេបការចំណាយតាមប្រភេទ', openExpenseSummaryModal, "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -7765,7 +7779,7 @@ window.skmRegisterBundledPlugin('pos', "📉 កត់ត្រាចំណា�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📉', 'កត់ត្រាចំណាយរហ័ស', openQuickExpense);
+            window.registerCustomTool('📉', 'កត់ត្រាចំណាយរហ័ស', openQuickExpense, "📉 កត់ត្រាចំណាយរហ័ស.js");
             clearInterval(initInt);
             console.log("✅ Ultra-Compact Expense Modal successfully registered!");
         }
@@ -8084,7 +8098,7 @@ window.skmRegisterBundledPlugin('pos', "📊 របាយការណ៍ម៉�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📊', 'របាយការណ៍ម៉ោងការងារប្រចាំខែ', openMonthlyReportModal);
+            window.registerCustomTool('📊', 'របាយការណ៍ម៉ោងការងារប្រចាំខែ', openMonthlyReportModal, "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js");
             clearInterval(initInt);
         }
     }, 300);
@@ -8292,7 +8306,7 @@ window.skmRegisterBundledPlugin('pos', "📊 សង្ខេបការលក�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📊', 'របាយការណ៍ថ្ងៃនេះ', openDailySummary);
+            window.registerCustomTool('📊', 'របាយការណ៍ថ្ងៃនេះ', openDailySummary, "📊 សង្ខេបការលក់ថ្ងៃនេះ.js");
             clearInterval(initInt);
             console.log("✅ Premium Ultra-Compact Daily Summary successfully registered!");
         }
@@ -8508,7 +8522,7 @@ window.skmRegisterBundledPlugin('pos', "📊 សេចក្តីសង្ខ�
     let attempts = 0;
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📊', 'របាយការណ៍ថ្ងៃនេះ', window.openDailySummary);
+            window.registerCustomTool('📊', 'របាយការណ៍ថ្ងៃនេះ', window.openDailySummary, "📊 សេចក្តីសង្ខេបការលក់ថ្ងៃនេះ.js");
             clearInterval(initInt);
             console.log("✅ Premium Daily Summary successfully registered!");
         }
@@ -8947,7 +8961,7 @@ window.skmRegisterBundledPlugin('pos', "📌 ក្ដារខៀនប្រ�
     let attempts = 0;
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📌', 'ប្រកាសព័ត៌មាន', openNoticeboard);
+            window.registerCustomTool('📌', 'ប្រកាសព័ត៌មាន', openNoticeboard, "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js");
             clearInterval(initInt);
             console.log("✅ Noticeboard successfully registered to Toolbox!");
         }
@@ -9218,7 +9232,7 @@ window.skmRegisterBundledPlugin('pos', "📑 របាយការណ៍បិ�
     let attempts = 0;
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📑', 'របាយការណ៍បិទវេន (Z-Report)', openZReportModal);
+            window.registerCustomTool('📑', 'របាយការណ៍បិទវេន (Z-Report)', openZReportModal, "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js");
             clearInterval(initInt);
             console.log("✅ Z-Report successfully registered!");
         }
@@ -9318,7 +9332,7 @@ window.skmRegisterBundledPlugin('pos', "📝 កំណត់ចំណាំរ�
     let attempts = 0;
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📝', 'កំណត់ចំណាំរហ័ស', openScratchpad);
+            window.registerCustomTool('📝', 'កំណត់ចំណាំរហ័ស', openScratchpad, "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js");
             clearInterval(initInt);
             console.log("✅ Scratchpad successfully registered to Toolbox!");
         }
@@ -9543,7 +9557,7 @@ window.skmRegisterBundledPlugin('pos', "📱 បង្កើត QR ដាក់�
     /* STREAMING_CHUNK:Registering Plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('📱', 'បង្កើត QR Code (ទម្រង់ទូទៅ)', openTableQrModal);
+            window.registerCustomTool('📱', 'បង្កើត QR Code (ទម្រង់ទូទៅ)', openTableQrModal, "📱 បង្កើត QR ដាក់តុ Table QR Generator.js");
             clearInterval(initInt);
         }
     }, 500);
@@ -9877,7 +9891,7 @@ window.skmRegisterBundledPlugin('pos', "🔄 បង្វិលសងប្រ�
     /* STREAMING_CHUNK:Registering Plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🔄', 'បង្វិលសងប្រាក់ (Quick Refund)', openRefundModal);
+            window.registerCustomTool('🔄', 'បង្វិលសងប្រាក់ (Quick Refund)', openRefundModal, "🔄 បង្វិលសងប្រាក់ (Quick Refund).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -9981,7 +9995,7 @@ window.skmRegisterBundledPlugin('pos', "🔤 បង្កើត BarcodeSKU (Barc
     /* STREAMING_CHUNK:Registering Plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🔤', 'បង្កើត Barcode/SKU រហ័ស', openBarcodeModal);
+            window.registerCustomTool('🔤', 'បង្កើត Barcode/SKU រហ័ស', openBarcodeModal, "🔤 បង្កើត BarcodeSKU (Barcode Generator).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -10262,7 +10276,7 @@ window.skmRegisterBundledPlugin('pos', "🚚 គ្រប់គ្រងកា�
     let attempts = 0;
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🚚', 'គ្រប់គ្រងដឹកជញ្ជូន', openDeliveryModal);
+            window.registerCustomTool('🚚', 'គ្រប់គ្រងដឹកជញ្ជូន', openDeliveryModal, "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js");
             clearInterval(initInt);
             console.log("✅ Delivery Tracker successfully registered!");
         }
@@ -10470,7 +10484,7 @@ window.skmRegisterBundledPlugin('pos', "🛒 បញ្ជីទំនិញត�
 
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🛒', 'បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម', openReorderModal);
+            window.registerCustomTool('🛒', 'បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម', openReorderModal, "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js");
             clearInterval(initInt);
         }
     }, 300);
@@ -10628,7 +10642,7 @@ window.skmRegisterBundledPlugin('pos', "🤝 កំណត់ហេតុផ្�
     /* STREAMING_CHUNK:Registering Plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🤝', 'កំណត់ហេតុផ្ទេរវេន (Handover)', openHandoverModal);
+            window.registerCustomTool('🤝', 'កំណត់ហេតុផ្ទេរវេន (Handover)', openHandoverModal, "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -10807,7 +10821,7 @@ window.skmRegisterBundledPlugin('pos', "🪙 គណនាប្រាក់អ�
     /* STREAMING_CHUNK:Registering Plugin... */
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🪙', 'គណនាប្រាក់អាប់រហ័ស', openChangeHelperModal);
+            window.registerCustomTool('🪙', 'គណនាប្រាក់អាប់រហ័ស', openChangeHelperModal, "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js");
             clearInterval(initInt);
         }
     }, 500);
@@ -10969,7 +10983,7 @@ window.skmRegisterBundledPlugin('pos', "🪙 ប្រាក់ដើមក្�
     let attempts = 0;
     const initInt = setInterval(() => {
         if (typeof window.registerCustomTool === 'function') {
-            window.registerCustomTool('🪙', 'ប្រាក់ដើមបើកវេន (Opening Float)', openOpeningCashModal);
+            window.registerCustomTool('🪙', 'ប្រាក់ដើមបើកវេន (Opening Float)', openOpeningCashModal, "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js");
             clearInterval(initInt);
             console.log("✅ Opening Float successfully registered to Toolbox!");
         }
