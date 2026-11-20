@@ -546,7 +546,7 @@
                 <p class="help-text">បិទ ឬ បើកមុខងារនីមួយៗដែលត្រូវបង្ហាញលើទំព័រ <b>Menu អតិថិជន (menu.html)</b>។</p>
                 
                 <div class="action-btn-group">
-                    <input type="text" id="menuPluginSearchInput" class="form-control" placeholder="🔍 ស្វែងរកមុខងារ Menu..." style="flex: 1; min-width: 180px; padding: 8px 12px; font-size: 13px;" oninput="renderMenuScripts()">
+                    <input type="text" id="menuPluginSearchInput" class="input-st" placeholder="🔍 ស្វែងរកមុខងារ Menu..." style="flex: 1; min-width: 180px; padding: 8px 12px; font-size: 13px;" oninput="renderMenuScripts()">
                     <input type="file" id="menuJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadMenuScripts(event)">
                     <button class="btn-action" style="background: var(--brand-cyan); color: white;" onclick="document.getElementById('menuJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS បន្ថែម</button>
                     <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="toggleAllMenuScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
@@ -565,7 +565,7 @@
                 <p class="help-text">បិទ ឬ បើកមុខងារនីមួយៗដែលត្រូវបង្ហាញលើទំព័រ <b>ប្រព័ន្ធគិតលុយកន្លែងលក់ (POS)</b>។</p>
                 
                 <div class="action-btn-group">
-                    <input type="text" id="posPluginSearchInput" class="form-control" placeholder="🔍 ស្វែងរកមុខងារ POS..." style="flex: 1; min-width: 180px; padding: 8px 12px; font-size: 13px;" oninput="renderPosScripts()">
+                    <input type="text" id="posPluginSearchInput" class="input-st" placeholder="🔍 ស្វែងរកមុខងារ POS..." style="flex: 1; min-width: 180px; padding: 8px 12px; font-size: 13px;" oninput="renderPosScripts()">
                     <input type="file" id="posJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadPosScripts(event)">
                     <button class="btn-action" style="background: var(--danger); color: white;" onclick="document.getElementById('posJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS បន្ថែម</button>
                     <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="toggleAllPosScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>

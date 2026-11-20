@@ -859,7 +859,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                             badgeContainer.innerHTML = `<span class="promo-tag promo-fade-in" onclick="quickUsePromoCode('${safeCode}')" title="ចុចដើម្បីប្រើកូដនេះ"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} <span style="color:var(--success); margin-left:2px;">(${pDesc})</span></span>`;
                         }, 300);
                     } else {
-                        badgeContainer.innerHTML = `<span class="promo-tag promo-fade-in" onclick="quickUsePromoCode('${safeCode}')" title="ចុចដើម្បីប្រើកូដនេះ"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} <span style="color:var(--success); margin-left:2px;">(${pDesc})</span></span></span>`;
+                        badgeContainer.innerHTML = `<span class="promo-tag promo-fade-in" onclick="quickUsePromoCode('${safeCode}')" title="ចុចដើម្បីប្រើកូដនេះ"><i class="fa-solid fa-tag" style="color: #f59e0b;"></i> ${p.code} <span style="color:var(--success); margin-left:2px;">(${pDesc})</span></span>`;
                     }
                 };
 
@@ -881,6 +881,15 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
         }
 
         let inventory = [], cart = [], wishlist = [];
+        window.inventory = inventory;
+        window.cart = cart;
+        window.openProductByName = function(name) {
+            if (!name) return;
+            const target = String(name).toLowerCase().trim();
+            const found = inventory.find(p => p && String(p.name || '').toLowerCase().trim() === target)
+                || inventory.find(p => p && String(p.name || '').toLowerCase().includes(target));
+            if (found && typeof openDet === 'function') openDet(found.id);
+        };
         try {
             wishlist = JSON.parse(localStorage.getItem('skm_wl')) || [];
         } catch(e) { console.warn("Wishlist parse error:", e); }
@@ -1020,9 +1029,11 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     let d = storeRow.data_json || {};
                     let shop = storeRow.shop_info || d.shop_info || {};
                     sys = Object.assign({}, d.sysSettings || {}, storeRow.sys_settings || {});
-                    if (storeRow.active_plugins) sys.activePlugins = storeRow.active_plugins;
+                    if (storeRow.active_plugins && (Array.isArray(storeRow.active_plugins.menu) || Array.isArray(storeRow.active_plugins.pos))) {
+                        sys.activePlugins = storeRow.active_plugins;
+                    }
                     window.sysSettings = sys;
-                    if (typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(sys.activePlugins);
+                    if (sys.activePlugins && typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(sys.activePlugins);
 
                     // --- កំណត់រៀបចំ Settings លើ Menu ---
                     if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
@@ -1118,9 +1129,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                             image: p.image,
                             desc: p.desc || '' 
                         }));
-                        inventory = dbProducts.filter(p => p && !deletedProd.includes(String(p.id)));
+                        inventory = dbProducts.filter(p => p && !deletedProd.includes(String(p.id))); window.inventory = inventory;
                     } else if (d.inventory && Array.isArray(d.inventory)) {
-                        inventory = d.inventory.filter(p => p && !deletedProd.includes(String(p.id)));
+                        inventory = d.inventory.filter(p => p && !deletedProd.includes(String(p.id))); window.inventory = inventory;
                     }
                     
                     orderBotToken = (sys.orderTelegramBotToken || sys.telegramBotToken || d.telegramBotToken || '').trim();
@@ -1145,7 +1156,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 let localInv = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`));
                 if (localInv && Array.isArray(localInv)) {
                     let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
-                    inventory = localInv.filter(p => p && !deletedProd.includes(String(p.id)));
+                    inventory = localInv.filter(p => p && !deletedProd.includes(String(p.id))); window.inventory = inventory;
                     buildCats();
                     renderMenu();
                 }
@@ -1443,7 +1454,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 </div>
             `}).join('');
         }
-        function delCart(cid) { cart = cart.filter(c=>c.cartId!==cid); updateCartBadges(); renderCart(); updateTotal(); }
+        function delCart(cid) { cart = cart.filter(c=>c.cartId!==cid); window.cart = cart; updateCartBadges(); renderCart(); updateTotal(); }
 
         function toggleWl(id, btn, event) {
             if(event) event.stopPropagation();
@@ -1749,6 +1760,37 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 }
 
                 if (supabaseClient && navigator.onLine) {
+                    // 1) Insert order into pos_orders so POS (index.html) receives it immediately
+                    try {
+                        await supabaseClient.from('pos_orders').upsert({
+                            id: orderId,
+                            branch_id: BRANCH,
+                            customer_name: n,
+                            customer_phone: ph || '',
+                            total_amount: tot,
+                            paid_amount: 0,
+                            status: 'unpaid',
+                            seller: 'Digital Menu',
+                            order_data: normalizedItems,
+                            note: note,
+                            timestamp: ord.timestamp
+                        }, { onConflict: 'id' });
+                    } catch(orderErr) { console.warn('pos_orders sync warning:', orderErr); }
+
+                    // 2) Deduct stock in pos_products
+                    try {
+                        for (const c of cart) {
+                            const updatedItem = targetInv.find(x => x && String(x.id) === String(c.id));
+                            if (updatedItem) {
+                                await supabaseClient.from('pos_products')
+                                    .update({ qty: updatedItem.qty })
+                                    .eq('branch_id', BRANCH)
+                                    .eq('id', updatedItem.id);
+                            }
+                        }
+                    } catch(prodErr) { console.warn('pos_products deduct warning:', prodErr); }
+
+                    // 3) Update branch_store compat payload
                     const upsertPayload = {
                         branch_id: BRANCH,
                         data_json: d,
@@ -1758,6 +1800,11 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     if (latestShopInfo) upsertPayload.shop_info = latestShopInfo;
                     await supabaseClient.from('branch_store').upsert(upsertPayload, { onConflict: 'branch_id' });
                 }
+                try {
+                    const myHist = JSON.parse(localStorage.getItem('skm_my_orders_history') || '[]');
+                    myHist.unshift(ord);
+                    localStorage.setItem('skm_my_orders_history', JSON.stringify(myHist.slice(0, 30)));
+                } catch(e) {}
 
                 localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(d.invoices));
                 localStorage.setItem(`ks2_${BRANCH}_inv_pro`, JSON.stringify(targetInv));
@@ -1785,7 +1832,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 }
 
                 showToast(`Order Success! ID: ${orderId}`);
-                cart = [];
+                cart = []; window.cart = cart;
                 appliedPromo = null;
                 discount = 0;
                 document.getElementById('cPromo').value = '';
@@ -1810,9 +1857,26 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             try {
                 let invoicesList = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`) || '[]');
                 if (supabaseClient && navigator.onLine) {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                    if (data && data.data_json && data.data_json.invoices) {
-                        invoicesList = data.data_json.invoices;
+                    let { data: ordRows } = await supabaseClient.from('pos_orders')
+                        .select('*')
+                        .eq('branch_id', BRANCH)
+                        .eq('customer_phone', ph)
+                        .order('timestamp', { ascending: false })
+                        .limit(20);
+                    if (ordRows && ordRows.length > 0) {
+                        invoicesList = ordRows.map(o => ({
+                            id: o.id,
+                            phone: o.customer_phone,
+                            customerPhone: o.customer_phone,
+                            totalAmount: o.total_amount,
+                            status: o.status,
+                            date: new Date(o.timestamp || Date.now()).toLocaleString('km-KH')
+                        }));
+                    } else {
+                        let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                        if (data && data.data_json && data.data_json.invoices) {
+                            invoicesList = data.data_json.invoices;
+                        }
                     }
                 }
                 let uOrds = invoicesList.filter(i => i && (i.phone === ph || i.customerPhone === ph));

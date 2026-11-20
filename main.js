@@ -1570,8 +1570,12 @@ window.manualCloudSync = async function(isAuto = false) {
                 window.shopTelegram = sInfo.shopTelegram || window.shopTelegram || '';
                 
                 window.sysSettings = Object.assign({}, dJson.sysSettings || {}, storeData.sys_settings || {});
-                if (storeData.active_plugins) window.sysSettings.activePlugins = storeData.active_plugins;
-                if (typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(window.sysSettings.activePlugins);
+                if (storeData.active_plugins && (Array.isArray(storeData.active_plugins.pos) || Array.isArray(storeData.active_plugins.menu))) {
+                    window.sysSettings.activePlugins = storeData.active_plugins;
+                }
+                if (window.sysSettings.activePlugins && typeof window.skmApplyActivePlugins === 'function') {
+                    window.skmApplyActivePlugins(window.sysSettings.activePlugins);
+                }
                 if (storeData.user_accounts && Array.isArray(storeData.user_accounts) && storeData.user_accounts.length > 0) {
                     window.userAccounts = storeData.user_accounts;
                 } else if (dJson.userAccounts && Array.isArray(dJson.userAccounts)) {
@@ -1764,10 +1768,8 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             const sysSettingsPayload = window.sysSettings || {};
             const userAccountsPayload = userAccountsRef || window.userAccounts || [];
             
-            let activePluginsPayload = { pos: [], menu: [] };
-            if (window.sysSettings && window.sysSettings.activePlugins) {
-                activePluginsPayload = window.sysSettings.activePlugins;
-            }
+            const hasValidActivePlugins = window.sysSettings && window.sysSettings.activePlugins &&
+                (Array.isArray(window.sysSettings.activePlugins.pos) || Array.isArray(window.sysSettings.activePlugins.menu));
 
             // រក្សាទុកក្នុង data_json ផងដែរ ដើម្បីឱ្យ menu.html, welcome.html និង admin_settings.html ស្គាល់គ្នា ១០០%
             const dataJsonCompatPayload = {
@@ -1786,15 +1788,18 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
             const nowIso = new Date().toISOString();
             localStorage.setItem(`ks2_${branchId}_last_update`, new Date(nowIso).getTime().toString());
 
-            await window.supabaseClient.from('branch_store').upsert({ 
+            const branchStoreUpsert = { 
                 branch_id: branchId, 
                 shop_info: shopInfoPayload,
                 sys_settings: sysSettingsPayload,
                 user_accounts: userAccountsPayload,
-                active_plugins: activePluginsPayload,
                 data_json: dataJsonCompatPayload,
                 updated_at: nowIso
-            }, { onConflict: 'branch_id' });
+            };
+            if (hasValidActivePlugins) {
+                branchStoreUpsert.active_plugins = window.sysSettings.activePlugins;
+            }
+            await window.supabaseClient.from('branch_store').upsert(branchStoreUpsert, { onConflict: 'branch_id' });
         }
     } catch(e) { console.warn("Cloud Sync config saving failed:", e); }
 
@@ -1858,9 +1863,16 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             } else if (dJson.userAccounts && Array.isArray(dJson.userAccounts)) {
                 window.userAccounts = dJson.userAccounts;
             }
-            window.activePlugins = data.active_plugins || window.sysSettings.activePlugins || { pos: [], menu: [] };
-            window.sysSettings.activePlugins = window.activePlugins;
-            if (typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(window.activePlugins);
+            const resolvedPlugins = (data.active_plugins && (Array.isArray(data.active_plugins.pos) || Array.isArray(data.active_plugins.menu)))
+                ? data.active_plugins
+                : (window.sysSettings.activePlugins && (Array.isArray(window.sysSettings.activePlugins.pos) || Array.isArray(window.sysSettings.activePlugins.menu))
+                    ? window.sysSettings.activePlugins
+                    : null);
+            if (resolvedPlugins) {
+                window.activePlugins = resolvedPlugins;
+                window.sysSettings.activePlugins = resolvedPlugins;
+                if (typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(resolvedPlugins);
+            }
 
             const cloudPosScripts = window.sysSettings.customPosScripts || dJson.customPosScripts;
             if (Array.isArray(cloudPosScripts)) {
