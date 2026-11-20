@@ -1000,7 +1000,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 if (supabaseClient && navigator.onLine) {
                     // ១. ទាញយកទាំង Column ថ្មី (shop_info, sys_settings) និង Column ចាស់
                     const fetchSettings = supabaseClient.from('branch_store')
-                        .select('shop_info, sys_settings, data_json')
+                        .select('shop_info, sys_settings, active_plugins, data_json')
                         .eq('branch_id', BRANCH)
                         .maybeSingle();
 
@@ -1019,7 +1019,10 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     let storeRow = settingsRes?.data || {};
                     let d = storeRow.data_json || {};
                     let shop = storeRow.shop_info || d.shop_info || {};
-                    sys = storeRow.sys_settings || d.sysSettings || {};
+                    sys = Object.assign({}, d.sysSettings || {}, storeRow.sys_settings || {});
+                    if (storeRow.active_plugins) sys.activePlugins = storeRow.active_plugins;
+                    window.sysSettings = sys;
+                    if (typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(sys.activePlugins);
 
                     // --- កំណត់រៀបចំ Settings លើ Menu ---
                     if (sys.menuThemeColor) document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor);
@@ -1676,10 +1679,20 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     sysSettings: sys || {}
                 };
 
+                let latestSysSettings = Object.assign({}, sys || {});
+                let latestShopInfo = null;
                 if (supabaseClient && navigator.onLine) {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                    if (data && data.data_json) {
-                        d = data.data_json;
+                    let { data } = await supabaseClient
+                        .from('branch_store')
+                        .select('data_json, sys_settings, shop_info')
+                        .eq('branch_id', BRANCH)
+                        .maybeSingle();
+                    if (data) {
+                        if (data.data_json) d = data.data_json;
+                        latestSysSettings = Object.assign({}, d.sysSettings || {}, data.sys_settings || {});
+                        latestShopInfo = data.shop_info || d.shop_info || null;
+                        d.sysSettings = latestSysSettings;
+                        if (latestShopInfo) d.shop_info = latestShopInfo;
                     }
                 }
 
@@ -1736,11 +1749,14 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 }
 
                 if (supabaseClient && navigator.onLine) {
-                    await supabaseClient.from('branch_store').upsert({
+                    const upsertPayload = {
                         branch_id: BRANCH,
                         data_json: d,
+                        sys_settings: d.sysSettings || latestSysSettings || sys || {},
                         updated_at: new Date().toISOString()
-                    }, { onConflict: 'branch_id' });
+                    };
+                    if (latestShopInfo) upsertPayload.shop_info = latestShopInfo;
+                    await supabaseClient.from('branch_store').upsert(upsertPayload, { onConflict: 'branch_id' });
                 }
 
                 localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(d.invoices));

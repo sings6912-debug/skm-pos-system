@@ -109,39 +109,12 @@ window.injectPosScripts = function() {
 window.injectPosScripts();
 
 // ==========================================
-// 0.6 MENU CUSTOM SCRIPT LOADER (GitHub CDN)
+// 0.6 BUNDLED POS PLUGINS TOGGLE SYNC (GitHub Pages Hosted)
 // ==========================================
 function injectMenuScripts() {
-    let menuPluginList = [];
-    if (window.sysSettings && window.sysSettings.activePlugins && window.sysSettings.activePlugins.menu) {
-        menuPluginList = window.sysSettings.activePlugins.menu;
-    } else if (window.customMenuScripts && Array.isArray(window.customMenuScripts)) {
-        menuPluginList = window.customMenuScripts
-            .filter(s => s && (s.isActive || s.active))
-            .map(s => s.name || s);
+    if (typeof window.skmApplyActivePlugins === 'function') {
+        window.skmApplyActivePlugins(window.sysSettings?.activePlugins || null);
     }
-    if (!Array.isArray(menuPluginList) || menuPluginList.length === 0) return;
-
-    const GITHUB_MENU_CDN = "https://cdn.jsdelivr.net/gh/sings6912-debug/skm-pos-system@main/plugins/menu/";
-    menuPluginList.forEach(fileName => {
-        const cleanName = String(fileName).trim();
-        const scriptName = cleanName.endsWith('.js') ? cleanName : `${cleanName}.js`;
-        const scriptId = `script-menu-${scriptName.replace(/[^a-zA-Z0-9_-]/g, '_')}`;
-
-        if (document.getElementById(scriptId)) return;
-        const scriptEl = document.createElement('script');
-        scriptEl.id = scriptId;
-        scriptEl.src = GITHUB_MENU_CDN + encodeURIComponent(scriptName);
-        scriptEl.async = true;
-        scriptEl.onload = () => console.log(`✨ Menu Plugin Loaded via GitHub: ${scriptName}`);
-        scriptEl.onerror = () => {
-            console.warn(`CDN failed for menu, loading local: plugins/menu/${scriptName}`);
-            const fallbackScript = document.createElement('script');
-            fallbackScript.src = `./plugins/menu/${encodeURIComponent(scriptName)}`;
-            document.body.appendChild(fallbackScript);
-        };
-        document.body.appendChild(scriptEl);
-    });
 }
 injectMenuScripts();
 
@@ -1597,6 +1570,8 @@ window.manualCloudSync = async function(isAuto = false) {
                 window.shopTelegram = sInfo.shopTelegram || window.shopTelegram || '';
                 
                 window.sysSettings = Object.assign({}, dJson.sysSettings || {}, storeData.sys_settings || {});
+                if (storeData.active_plugins) window.sysSettings.activePlugins = storeData.active_plugins;
+                if (typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(window.sysSettings.activePlugins);
                 if (storeData.user_accounts && Array.isArray(storeData.user_accounts) && storeData.user_accounts.length > 0) {
                     window.userAccounts = storeData.user_accounts;
                 } else if (dJson.userAccounts && Array.isArray(dJson.userAccounts)) {
@@ -1884,6 +1859,8 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
                 window.userAccounts = dJson.userAccounts;
             }
             window.activePlugins = data.active_plugins || window.sysSettings.activePlugins || { pos: [], menu: [] };
+            window.sysSettings.activePlugins = window.activePlugins;
+            if (typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(window.activePlugins);
 
             const cloudPosScripts = window.sysSettings.customPosScripts || dJson.customPosScripts;
             if (Array.isArray(cloudPosScripts)) {
@@ -3242,35 +3219,47 @@ window.printZReport = function() {
 })();
 
 // ==========================================
-// 🌟 មុខងារកាត់ស្តុកផ្ទាល់ពី Cloud (ការពារស្តុកជាន់គ្នា ១០០%)
+// 🌟 មុខងារកាត់ស្តុកផ្ទាល់ពី Cloud (ការពារស្តុកជាន់គ្នា ១០០% - Single Atomic Path)
 // ==========================================
-window.realtimeCloudDeduct = async function(soldItems) {
-    if (!window.supabaseClient || !navigator.onLine) return;
+window.realtimeCloudDeduct = async function(soldItems, invoiceId = null) {
+    if (!window.supabaseClient || !navigator.onLine || !Array.isArray(soldItems)) return;
+    window.__skmDeductedInvoices = window.__skmDeductedInvoices || new Set();
+    if (invoiceId && window.__skmDeductedInvoices.has(invoiceId)) {
+        console.log("🛡️ ទប់ស្កាត់ការកាត់ស្តុកជាន់គ្នាសម្រាប់វិក្កយបត្រ:", invoiceId);
+        return;
+    }
+    if (invoiceId) window.__skmDeductedInvoices.add(invoiceId);
+
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
     
     try {
         for (let item of soldItems) {
             let soldQty = parseInt(item.cartQty || item.qty || 1);
-            
-            let { data: cloudData } = await window.supabaseClient
-                .from('pos_products')
-                .select('qty')
-                .eq('id', item.id)
-                .eq('branch_id', branchId)
-                .single();
-                
-            if (cloudData) {
-                let currentCloudQty = parseInt(cloudData.qty) || 0;
-                let newQty = Math.max(0, currentCloudQty - soldQty);
-                
-                await window.supabaseClient
+            const { error: rpcError } = await window.supabaseClient.rpc('deduct_stock_safely', {
+                p_product_id: item.id,
+                p_branch_id: branchId,
+                deduct_qty: soldQty
+            });
+
+            if (rpcError) {
+                let { data: cloudData } = await window.supabaseClient
                     .from('pos_products')
-                    .update({ qty: newQty })
+                    .select('qty')
                     .eq('id', item.id)
-                    .eq('branch_id', branchId);
+                    .eq('branch_id', branchId)
+                    .maybeSingle();
                     
-                let localItem = (window.inventory || []).find(i => String(i.id) === String(item.id));
-                if (localItem) localItem.qty = newQty;
+                if (cloudData) {
+                    let currentCloudQty = parseInt(cloudData.qty) || 0;
+                    let newQty = Math.max(0, currentCloudQty - soldQty);
+                    await window.supabaseClient
+                        .from('pos_products')
+                        .update({ qty: newQty })
+                        .eq('id', item.id)
+                        .eq('branch_id', branchId);
+                    let localItem = (window.inventory || []).find(i => String(i.id) === String(item.id));
+                    if (localItem) localItem.qty = newQty;
+                }
             }
         }
         
