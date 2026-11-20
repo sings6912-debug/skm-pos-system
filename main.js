@@ -1548,7 +1548,7 @@ window.manualCloudSync = async function(isAuto = false) {
         let localLastUpdate = parseInt(localStorage.getItem(`ks2_${branchId}_last_update`)) || 0;
         let cloudLastUpdate = storeData && storeData.updated_at ? new Date(storeData.updated_at).getTime() : 0;
 
-        if (!isAuto || cloudLastUpdate > localLastUpdate) {
+        if (!isAuto || (cloudLastUpdate > 0 && cloudLastUpdate !== localLastUpdate) || localLastUpdate === 0) {
             if (storeData) {
                 const dJson = storeData.data_json || {};
                 const sInfo = Object.assign({}, {
@@ -1616,9 +1616,9 @@ window.manualCloudSync = async function(isAuto = false) {
                 hasChanges = true;
             }
 
-            // 1. Fetch Customers
-            let { data: custData } = await window.supabaseClient.from('pos_customers').select('*').eq('branch_id', branchId);
-            if (custData && custData.length > 0) {
+            // 1. Fetch Customers (គាំទ្រការលុបសល់ ០ ជួរលើ Cloud)
+            let { data: custData, error: custErr } = await window.supabaseClient.from('pos_customers').select('*').eq('branch_id', branchId);
+            if (!custErr && Array.isArray(custData)) {
                 let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
                 let mappedCust = custData.map(c => ({ id: c.id, name: c.name, phone: c.phone }));
                 window.customers = mappedCust.filter(c => !deletedCust.includes(String(c.id)));
@@ -1626,9 +1626,9 @@ window.manualCloudSync = async function(isAuto = false) {
                 hasChanges = true;
             }
 
-            // 2. Fetch Expenses
-            let { data: expData } = await window.supabaseClient.from('pos_expenses').select('*').eq('branch_id', branchId);
-            if (expData && expData.length > 0) {
+            // 2. Fetch Expenses (គាំទ្រការលុបសល់ ០ ជួរលើ Cloud)
+            let { data: expData, error: expErr } = await window.supabaseClient.from('pos_expenses').select('*').eq('branch_id', branchId);
+            if (!expErr && Array.isArray(expData)) {
                 let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
                 let mappedExp = expData.map(e => ({ id: e.id, category: e.category, amount: e.amount, note: e.note, timestamp: e.timestamp, date: e.date }));
                 window.expenses = mappedExp.filter(e => !deletedExp.includes(String(e.id)));
@@ -1636,17 +1636,17 @@ window.manualCloudSync = async function(isAuto = false) {
                 hasChanges = true;
             }
 
-            // 3. Fetch Logs
-            let { data: logData } = await window.supabaseClient.from('pos_history_logs').select('*').eq('branch_id', branchId).order('id', { ascending: false }).limit(500);
-            if (logData && logData.length > 0) {
+            // 3. Fetch Logs (គាំទ្រការសម្អាតសល់ ០ ជួរលើ Cloud)
+            let { data: logData, error: logErr } = await window.supabaseClient.from('pos_history_logs').select('*').eq('branch_id', branchId).order('id', { ascending: false }).limit(500);
+            if (!logErr && Array.isArray(logData)) {
                 window.historyLog = logData.map(l => ({ id: l.id, type: l.type, itemName: l.item_name, qty: l.qty, note: l.note, date: l.date }));
                 localStorage.setItem(`ks2_${branchId}_hist_pro`, JSON.stringify(window.historyLog));
                 hasChanges = true;
             }
             
-            // 4. Fetch Products
-            let { data: productsData } = await window.supabaseClient.from('pos_products').select('*').eq('branch_id', branchId);
-            if (productsData && productsData.length > 0) {
+            // 4. Fetch Products (គាំទ្រការលុបសល់ ០ ជួរលើ Cloud)
+            let { data: productsData, error: prodErr } = await window.supabaseClient.from('pos_products').select('*').eq('branch_id', branchId);
+            if (!prodErr && Array.isArray(productsData)) {
                 let deletedProd = JSON.parse(localStorage.getItem('deleted_products_tracker')) || [];
                 let formattedProducts = productsData.map(p => ({
                     id: p.id, 
@@ -1669,9 +1669,9 @@ window.manualCloudSync = async function(isAuto = false) {
                 hasChanges = true;
             }
 
-            // 5. Fetch Orders
-            let { data: ordersData } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
-            if (ordersData && ordersData.length > 0) {
+            // 5. Fetch Orders (គាំទ្រការលុបសល់ ០ ជួរលើ Cloud ដោយគ្មានទិន្នន័យខ្មោច)
+            let { data: ordersData, error: ordersErr } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
+            if (!ordersErr && Array.isArray(ordersData)) {
                 let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
                 let formattedOrders = ordersData.map(o => ({
                     id: o.id, invoiceNo: o.id, customerName: o.customer_name, customerPhone: o.customer_phone, totalAmount: o.total_amount, total: o.total_amount, paidUsd: o.paid_amount, paidAmount: o.paid_amount, status: o.status, seller: o.seller, items: o.order_data, note: o.note, timestamp: o.timestamp, date: new Date(o.timestamp).toLocaleString('km-KH')
@@ -1684,7 +1684,7 @@ window.manualCloudSync = async function(isAuto = false) {
                 
                 window.invoices = window.invoices.filter(localInv => {
                     let localId = String(localInv.id || localInv.invoiceNo).trim().toLowerCase();
-                    let isVeryNew = (nowTime - (localInv.timestamp || 0)) < 120000; 
+                    let isVeryNew = isAuto && (nowTime - (localInv.timestamp || 0)) < 15000; 
                     return cloudIds.includes(localId) || isVeryNew;
                 });
                 

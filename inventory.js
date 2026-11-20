@@ -328,7 +328,7 @@ window.saveProduct = async function() {
         }
     }
     
-    window.saveData(window.userAccounts); 
+    if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
 };
 
 window.editProduct = function(id) { 
@@ -399,8 +399,13 @@ window.deleteProduct = function(id) {
             window.logAction('update', p.name, 0, 'លុបចេញពីប្រព័ន្ធ', window.activeUser); 
             
             if (window.supabaseClient && navigator.onLine) {
-                const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                window.supabaseClient.from('pos_products').delete().eq('id', id).eq('branch_id', bId).then();
+                try {
+                    const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                    const { error } = await window.supabaseClient.from('pos_products').delete().eq('id', String(id)).eq('branch_id', bId);
+                    if (error) console.error("Supabase Product Delete Error:", error);
+                } catch (err) {
+                    console.error("Failed to delete product from cloud:", err);
+                }
             }
 
             if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 

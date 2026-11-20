@@ -746,13 +746,38 @@ window.deleteInvoiceRecord = function(invId) {
                 }
             }
 
+            let deletedInvTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+            if (!deletedInvTracker.includes(targetId)) {
+                deletedInvTracker.push(targetId);
+                localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedInvTracker));
+            }
+
+            const deletedInvObj = invIndex !== -1 ? invoices[invIndex] : null;
             invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
             window.invoices = invoices;
             localStorage.setItem(branchKey, JSON.stringify(invoices));
             
             if (window.supabaseClient && navigator.onLine) {
                 const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                await window.supabaseClient.from('pos_orders').delete().eq('id', invId).eq('branch_id', bId);
+                const { error: delOrdErr } = await window.supabaseClient.from('pos_orders').delete().eq('id', invId).eq('branch_id', bId);
+                if (delOrdErr) console.error("Supabase Invoice Delete Error:", delOrdErr);
+
+                // បាញ់ស្តុកដែលបានបង្វិលត្រឡប់ទៅ pos_products លើ Cloud ផងដែរ
+                const wasPreorder = String(deletedInvObj?.status || '').toLowerCase() === 'preorder';
+                if (!wasPreorder && deletedInvObj && Array.isArray(deletedInvObj.items) && window.inventory) {
+                    for (const item of deletedInvObj.items) {
+                        if (item && item.id) {
+                            const realItem = window.inventory.find(p => p && String(p.id) === String(item.id));
+                            if (realItem) {
+                                await window.supabaseClient.from('pos_products')
+                                    .update({ qty: parseFloat(realItem.qty) || 0, updated_at: new Date().toISOString() })
+                                    .eq('id', String(realItem.id))
+                                    .eq('branch_id', bId);
+                            }
+                        }
+                    }
+                }
+
                 if (typeof window.saveData === 'function') {
                     await window.saveData(window.userAccounts);
                 }
@@ -1370,7 +1395,8 @@ window.deleteExpense = function(id) {
 
         if (window.supabaseClient && navigator.onLine) {
             try {
-                await window.supabaseClient.from('pos_expenses').delete().eq('id', String(id)).eq('branch_id', branchId);
+                const { error } = await window.supabaseClient.from('pos_expenses').delete().eq('id', String(id)).eq('branch_id', branchId);
+                if (error) console.error("Supabase Expense Delete Error:", error);
             } catch (err) {
                 console.error("Failed to delete expense from cloud:", err);
             }
@@ -1423,9 +1449,4 @@ window.markAsDone = async function(invId) {
     if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
 };
 
-// ដំណើរការ Sync ទិន្នន័យចំណាយចាស់ៗដែលមានក្នុងម៉ាស៊ីនទៅកាន់ Cloud ដោយស្វ័យប្រវត្តិពេលបើកទំព័រ
-setTimeout(() => {
-    if (typeof window.syncLocalExpensesToCloud === 'function') {
-        window.syncLocalExpensesToCloud();
-    }
-}, 2500);
+// បានបិទ Auto-Push Local Expenses ពេលបើកទំព័រ ដើម្បីការពារកុំឱ្យទិន្នន័យដែលលុបលើឧបករណ៍ផ្សេងលោតត្រឡប់ឡើង Cloud វិញ

@@ -199,20 +199,42 @@ window.saveCustomer = async function() {
 
     if (!window.customers) window.customers = [];
 
+    let savedCustObj = null;
     if (id) {
         const c = window.customers.find(i => i && String(i.id) === String(id));
         if (c) {
             c.name = name;
             c.phone = phone;
+            savedCustObj = c;
         } else {
-            window.customers.push({ id: id, name, phone });
+            savedCustObj = { id: id, name, phone };
+            window.customers.push(savedCustObj);
         }
     } else {
         const exists = window.customers.find(c => c && String(c.name).trim().toLowerCase() === name.toLowerCase());
         if (exists) {
             return notifyCustomerUser('ឈ្មោះអតិថិជននេះមានរួចហើយ!', 'ជូនដំណឹង', true);
         }
-        window.customers.push({ id: 'C_' + Date.now(), name, phone });
+        savedCustObj = { id: 'C_' + Date.now(), name, phone };
+        window.customers.push(savedCustObj);
+    }
+
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('customers_pro') : `ks2_${branchId}_customers_pro`;
+    localStorage.setItem(branchKey, JSON.stringify(window.customers));
+
+    if (window.supabaseClient && navigator.onLine && savedCustObj) {
+        try {
+            const { error } = await window.supabaseClient.from('pos_customers').upsert({
+                id: String(savedCustObj.id),
+                branch_id: branchId,
+                name: savedCustObj.name,
+                phone: savedCustObj.phone || ''
+            }, { onConflict: 'id' });
+            if (error) console.error("Supabase Customer Save Error:", error);
+        } catch (err) {
+            console.error("Failed to sync customer to cloud:", err);
+        }
     }
 
     if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
@@ -230,10 +252,24 @@ window.deleteCustomer = function(id) {
     
     const executeDeleteCust = async () => {
         let deletedCust = JSON.parse(localStorage.getItem('deleted_customers_tracker')) || [];
-        deletedCust.push(String(id));
-        localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
+        if (!deletedCust.includes(String(id))) {
+            deletedCust.push(String(id));
+            localStorage.setItem('deleted_customers_tracker', JSON.stringify(deletedCust));
+        }
 
         window.customers = (window.customers || []).filter(c => c && String(c.id) !== String(id));
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('customers_pro') : `ks2_${branchId}_customers_pro`;
+        localStorage.setItem(branchKey, JSON.stringify(window.customers));
+
+        if (window.supabaseClient && navigator.onLine) {
+            try {
+                const { error } = await window.supabaseClient.from('pos_customers').delete().eq('id', String(id)).eq('branch_id', branchId);
+                if (error) console.error("Supabase Customer Delete Error:", error);
+            } catch (err) {
+                console.error("Failed to delete customer from cloud:", err);
+            }
+        }
         
         if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
         window.renderCustomers();
