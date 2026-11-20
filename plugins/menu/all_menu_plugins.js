@@ -353,6 +353,7 @@
             </div>
         </div>
     `;
+    container.style.display = 'none';
     document.body.appendChild(container);
 
     /* -------------------------------------------------------------------------
@@ -383,8 +384,10 @@
         let hasPinned = false, hasNormal = false, hasHidden = false;
 
         const enabledMenuSet = window.__SKM_ENABLED_SETS__ && window.__SKM_ENABLED_SETS__.menu;
+        let visibleToolsCount = 0;
         window.skmRegisteredToolsList.forEach((tool, index) => {
             if (tool.pluginKey && enabledMenuSet && !enabledMenuSet.has(tool.pluginKey)) return;
+            visibleToolsCount++;
             let state = prefs[tool.text] || 'normal';
             
             const row = document.createElement('div');
@@ -417,6 +420,8 @@
         document.getElementById('skmPinnedSection').style.display = hasPinned ? 'block' : 'none';
         document.getElementById('skmNormalTitle').style.display = hasPinned && hasNormal ? 'block' : 'none';
         document.getElementById('skmHiddenSection').style.display = hasHidden ? 'block' : 'none';
+        container.style.display = visibleToolsCount > 0 ? 'block' : 'none';
+        const popupEl = document.getElementById('skmMenuToolboxPopup'); if (visibleToolsCount === 0 && popupEl) popupEl.classList.remove('show');
     }
 
     window.skmRunToolAction = function(index) {
