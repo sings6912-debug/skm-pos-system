@@ -232,6 +232,7 @@
             <div class="skm-toolbox-body" id="skmToolboxMenuBody"></div>
         </div>
     `;
+    container.style.display = 'none';
     document.body.appendChild(container);
 
     const miniFab = document.createElement('div');
@@ -337,14 +338,17 @@
         document.getElementById('skmPinBtn').classList.toggle('active', isPinned);
     };
 
+    let isUserMinimized = false;
     window.skmHideFab = function(e) {
         e.stopPropagation();
+        isUserMinimized = true;
         popup.classList.remove('show');
         container.style.display = 'none';
         miniFab.style.display = 'flex';
     };
 
     miniFab.onclick = () => {
+        isUserMinimized = false;
         miniFab.style.display = 'none';
         container.style.display = 'block';
     };
@@ -412,8 +416,10 @@
         });
 
         const enabledPosSet = window.__SKM_ENABLED_SETS__ && window.__SKM_ENABLED_SETS__.pos;
+        let visibleToolsCount = 0;
         sortedTools.forEach(tool => {
             if (tool.pluginKey && enabledPosSet && !enabledPosSet.has(tool.pluginKey)) return;
+            visibleToolsCount++;
             const pref = toolPrefs[tool.text] || { hidden: false, pinned: false };
             
             const wrapper = document.createElement('div');
@@ -444,6 +450,13 @@
             wrapper.appendChild(controls);
             menuBody.appendChild(wrapper);
         });
+        if (visibleToolsCount === 0) {
+            container.style.display = 'none';
+            miniFab.style.display = 'none';
+            popup.classList.remove('show');
+        } else if (!isUserMinimized) {
+            container.style.display = 'block';
+        }
     }
 
     window.__SKM_REFRESH_POS_TOOLBOX__ = renderToolboxList;
