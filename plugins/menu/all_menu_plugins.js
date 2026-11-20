@@ -20,8 +20,8 @@
     window.__SKM_PLUGIN_CONTROLLER_READY__ = true;
 
     const DEFAULT_ENABLED = {
-        menu: ["3d_3d_hologram_showcase.js", "achievement_badges.js", "ai_assistant.js", "ai_gemini_ai_concierge.js", "ar_ar_guide.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (3).js", "code_artifact (4).js", "daily_motivation.js", "delivery_notes.js", "digital_member_id.js", "e_gift_card.js", "flash_sale.js", "fortune_cookie.js", "loyalty_wallet.js", "mystery_box.js", "photo_booth.js", "quick_price_check.js", "quick_reorder.js", "savings_calculator.js", "scheduled_pickup.js", "scratch_card.js", "store_status.js", "substitute_finder.js", "virtual_pet.js", "voice_search.js"],
-        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរ (Lock).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "ម៉ាស៊ីនគិតលេខរហ័ស.js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🎯 គោលដៅការលក់ (Shift Sales Target).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💵 រាប់ប្រាក់បិទវេន (USDKHR).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
+        menu: ["ai_assistant.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (4).js", "delivery_notes.js", "digital_member_id.js", "quick_price_check.js", "quick_reorder.js", "scheduled_pickup.js", "store_status.js", "substitute_finder.js", "voice_search.js"],
+        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🎯 គោលដៅការលក់ (Shift Sales Target).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
     };
 
     const registry = { menu: {}, pos: {} };
@@ -115,6 +115,22 @@
                 try { initFn(); } catch(err) { console.error(`[SKM Plugin Error] ${key}:`, err); }
             }
         }
+    };
+
+    // Smart Promo Helper: pulls real active promo code from Admin Settings if created, else fallback
+    window.skmGetRealPromo = function(fallbackCode, fallbackDesc) {
+        try {
+            const list = (window.sysSettings && Array.isArray(window.sysSettings.promoCodes)) ? window.sysSettings.promoCodes : [];
+            const active = list.filter(p => p && p.code && (!p.limit || (p.usedCount || 0) < p.limit));
+            if (active.length > 0) {
+                const picked = active[Math.floor(Math.random() * active.length)];
+                const desc = picked.type === 'percent'
+                    ? `បញ្ចុះតម្លៃ ${picked.value}%`
+                    : (picked.type === 'fixed' ? `បញ្ចុះតម្លៃ $${parseFloat(picked.value || 0).toFixed(2)}` : 'ដឹកជញ្ជូនឥតគិតថ្លៃ');
+                return { code: picked.code, desc };
+            }
+        } catch(e) {}
+        return { code: fallbackCode, desc: fallbackDesc };
     };
 
     // Fallback check after DOM ready in case branch has never saved activePlugins yet
@@ -1354,7 +1370,7 @@ window.skmRegisterBundledPlugin('menu', "code_artifact (3).js", function() {
             document.getElementById('skmMascotModal').style.display = 'none';
             return;
         }
-        promoInput.value = 'MASCOT5';
+        const rp = window.skmGetRealPromo('MASCOT5', 'បញ្ចុះ $5'); promoInput.value = rp.code;
         document.getElementById('skmMascotModal').style.display = 'none';
         if (typeof applyPromo === 'function') applyPromo();
         if (typeof showToast === 'function') showToast('បានដាក់កូដ MASCOT5 ជោគជ័យ!');
@@ -1733,94 +1749,7 @@ window.skmRegisterBundledPlugin('menu', "delivery_notes.js", function() {
         }
     }, 500);
 })();
-```
-eof
 
-```javascript:កាបូបពិន្ទុ & រង្វាន់សមាជិក (Loyalty Wallet):menu_loyalty_wallet.js
-(function() {
-    console.log("💳 Menu Loyalty Points & Rewards Wallet Plugin Initialized!");
-
-    function openLoyaltyWalletModal() {
-        if(document.getElementById('skmLoyaltyWalletModal')) {
-            document.getElementById('skmLoyaltyWalletModal').style.display = 'flex';
-            updateLoyaltyDisplay();
-            return;
-        }
-
-        const modal = document.createElement('div');
-        modal.id = 'skmLoyaltyWalletModal';
-        modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); font-family: 'Battambang', sans-serif; padding: 20px;`;
-        
-        modal.innerHTML = `
-            <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 20px; width: 100%; max-width: 380px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
-                <div style="font-size: 38px; margin-bottom: 10px;">💳</div>
-                <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 8px; color: #10b981;">កាបូបពិន្ទុ & រង្វាន់សមាជិក</h3>
-                <p style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">ពិនិត្យពិន្ទុสะสม និងប្តូរយករង្វាន់ពិសេស៖</p>
-                
-                <div style="background: linear-gradient(135deg, #10b981, #059669); color: white; padding: 20px; border-radius: 14px; margin-bottom: 15px; text-align: center; box-shadow: 0 10px 20px rgba(16,185,129,0.3);">
-                    <div style="font-size: 11px; opacity: 0.9;">ពិន្ទុសរុបរបស់អ្នក (TOTAL POINTS)</div>
-                    <div id="walletPointsDisplay" style="font-size: 32px; font-weight: 900; margin: 6px 0;">0 pts</div>
-                    <div style="font-size: 11px; background: rgba(255,255,255,0.2); display: inline-block; padding: 2px 10px; border-radius: 6px; font-weight: bold;">GOLD TIER MEMBER</div>
-                </div>
-
-                <div style="font-size: 12px; font-weight: bold; text-align: left; margin-bottom: 6px;">🎁 រង្វាន់អាចប្តូរបាន៖</div>
-                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; text-align: left;">
-                    <div style="background: rgba(16,185,129,0.08); border: 1px dashed #10b981; padding: 10px; border-radius: 10px; display: flex; justify-content: space-between; align-items: center; font-size: 12px;">
-                        <div>
-                            <b style="color: #10b981; display: block;">ប័ណ្ណបញ្ចុះតម្លៃ $2</b>
-                            <span style="font-size: 10px; color: var(--text-muted);">ប្រើប្រាស់ 50 ពិន្ទុ</span>
-                        </div>
-                        <button onclick="window.redeemLoyaltyReward(50, 'SKM2USD')" style="background: #10b981; color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer;">ប្តូរ</button>
-                    </div>
-                </div>
-
-                <button class="btn-act btn-outline" style="width: 100%; border:none; background:rgba(16,185,129,0.1); color:#10b981;" onclick="document.getElementById('skmLoyaltyWalletModal').style.display='none'">បិទ</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        updateLoyaltyDisplay();
-    }
-
-    function updateLoyaltyDisplay() {
-        const disp = document.getElementById('walletPointsDisplay');
-        if (!disp) return;
-        let pts = localStorage.getItem('skm_pts') || '0';
-        disp.innerText = `${pts} pts`;
-    }
-
-    window.redeemLoyaltyReward = function(cost, promoCode) {
-        let pts = parseInt(localStorage.getItem('skm_pts') || '0');
-        if (pts < cost) {
-            alert('ពិន្ទុរបស់អ្នកមិនទាន់គ្រប់គ្រាន់សម្រាប់ប្តូររង្វាន់នេះទេ!');
-            return;
-        }
-
-        pts -= cost;
-        localStorage.setItem('skm_pts', pts);
-        updateLoyaltyDisplay();
-
-        const promoInput = document.getElementById('cPromo');
-        if (promoInput) promoInput.value = promoCode;
-
-        document.getElementById('skmLoyaltyWalletModal').style.display = 'none';
-        if (typeof showToast === 'function') showToast(`ប្តូររង្វាន់ជោគជ័យ! បានដាក់កូដ: ${promoCode}`);
-        else alert(`ប្តូររង្វាន់ជោគជ័យ! បានដាក់កូដ: ${promoCode}`);
-    };
-
-    const initInt = setInterval(() => {
-        if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('💳', 'កាបូបពិន្ទុ & រង្វាន់សមាជិក', openLoyaltyWalletModal);
-            clearInterval(initInt);
-        }
-    }, 500);
-})();
-```
-eof
-
-### របៀបដាក់បញ្ចូល៖
-1. Save កូដទាំងពីរនេះជា File ឈ្មោះ **`menu_delivery_note.js`** និង **`menu_loyalty_wallet.js`**។
-2. ចូលទៅកាន់ Menu Admin ប្រអប់ទី 6 (**Menu Custom JS**) រួច Upload File ទាំងពីរនេះបញ្ចូលគ្នា។
-3. ចុច **Save Changes**។ ប្រសិនបើបងចង់បន្ថែមមុខងារអ្វីផ្សេងទៀត អាចพิมพ์ "ត" បន្ថែមបានគ្រប់ពេល!
 });
 
 ;
@@ -2318,7 +2247,7 @@ window.skmRegisterBundledPlugin('menu', "flash_sale.js", function() {
             document.getElementById('skmFlashModal').style.display = 'none';
             return;
         }
-        promoInput.value = 'FLASH20';
+        const rp = window.skmGetRealPromo('FLASH20', 'បញ្ចុះ 20%'); promoInput.value = rp.code;
         document.getElementById('skmFlashModal').style.display = 'none';
         if (typeof applyPromo === 'function') applyPromo();
         if (typeof showToast === 'function') showToast('បានដាក់កូដ Flash Sale ជោគជ័យ!');
@@ -2932,7 +2861,7 @@ window.skmRegisterBundledPlugin('menu', "mystery_box.js", function() {
             { code: 'FREESHIP', desc: 'សេវាដឹកជញ្ជូនឥតគិតថ្លៃ' }
         ];
         
-        const chosen = rewards[Math.floor(Math.random() * rewards.length)];
+        const fallbackChosen = rewards[Math.floor(Math.random() * rewards.length)]; const chosen = window.skmGetRealPromo(fallbackChosen.code, fallbackChosen.desc);
         const resBox = document.getElementById('mysteryResultBox');
         const rewText = document.getElementById('mysteryRewardText');
 
@@ -3400,7 +3329,7 @@ window.skmRegisterBundledPlugin('menu', "scratch_card.js", function() {
             document.getElementById('skmScratchCardModal').style.display = 'none';
             return;
         }
-        promoInput.value = 'SCRATCH15';
+        const rp = window.skmGetRealPromo('SCRATCH15', 'បញ្ចុះ $1.50'); promoInput.value = rp.code;
         document.getElementById('skmScratchCardModal').style.display = 'none';
         if (typeof applyPromo === 'function') applyPromo();
         if (typeof showToast === 'function') showToast('បានដាក់កូដ SCRATCH15 ជោគជ័យ!');
@@ -3534,15 +3463,25 @@ window.skmRegisterBundledPlugin('menu', "store_status.js", function() {
     console.log("🕒 Menu Store Status & Operating Hours Plugin Initialized!");
 
     function openStoreStatusModal() {
-        if(document.getElementById('skmStatusModal')) {
-            document.getElementById('skmStatusModal').style.display = 'flex';
-            return;
-        }
+        const s = window.sysSettings || {};
+        const openT = s.openTime || '08:00';
+        const closeT = s.closeTime || '21:00';
+        const now = new Date();
+        const curT = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+        const isClosed = Boolean(s.toggleStoreHours) && (curT < openT || curT > closeT);
+        const statusHtml = isClosed
+            ? '<span style="color:#ef4444; font-weight:bold;">បិទសម្រាកបណ្តោះអាសន្ន (CLOSED)</span>'
+            : '<span style="color:#10b981; font-weight:bold;">កំពុងបើកដំណើរការ (OPEN)</span>';
+        const dotIcon = isClosed ? '🔴' : '🟢';
 
-        const modal = document.createElement('div');
-        modal.id = 'skmStatusModal';
-        modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); font-family: 'Battambang', sans-serif; padding: 20px;`;
-        
+        let modal = document.getElementById('skmStatusModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'skmStatusModal';
+            modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 10000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(5px); font-family: 'Battambang', sans-serif; padding: 20px;`;
+            document.body.appendChild(modal);
+        }
+        modal.style.display = 'flex';
         modal.innerHTML = `
             <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 20px; width: 100%; max-width: 360px; text-align: center; border: 1px solid var(--border-color); box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
                 <div style="font-size: 38px; margin-bottom: 10px;">🕒</div>
@@ -3550,15 +3489,14 @@ window.skmRegisterBundledPlugin('menu', "store_status.js", function() {
                 <p style="font-size: 12px; color: var(--text-muted, #94a3b8); margin-bottom: 15px;">ពិនិត្យម៉ោងបម្រើការងាររបស់ហាងយើងខ្ញុំ៖</p>
                 
                 <div style="background: rgba(16,185,129,0.08); border: 1px solid var(--border-color); padding: 15px; border-radius: 14px; margin-bottom: 15px; text-align: left; font-size: 12px; display: flex; flex-direction: column; gap: 8px;">
-                    <div>🟢 <b>ស្ថានភាពបច្ចុប្បន្ន:</b> <span style="color:#10b981; font-weight:bold;">កំពុងបើកដំណើរការ (OPEN)</span></div>
-                    <div>🕒 <b>ម៉ោងបើកហាង:</b> 08:00 ព្រឹក - 09:00 យប់</div>
-                    <div>📅 <b>ថ្ងៃធ្វើការ:</b> បើកបំរើការរាល់ថ្ងៃ (ច័ន្ទ - អាទិត្យ)</div>
+                    <div>${dotIcon} <b>ស្ថានភាពបច្ចុប្បន្ន:</b> ${statusHtml}</div>
+                    <div>🕒 <b>ម៉ោងបើកហាង:</b> ${openT} - ${closeT}</div>
+                    <div>📅 <b>ថ្ងៃធ្វើការ:</b> បើកបម្រើការរាល់ថ្ងៃ (ច័ន្ទ - អាទិត្យ)</div>
                 </div>
 
                 <button class="btn-act btn-outline" style="width: 100%; border:none; background:rgba(16,185,129,0.1); color:#10b981;" onclick="document.getElementById('skmStatusModal').style.display='none'">បិទ</button>
             </div>
         `;
-        document.body.appendChild(modal);
     }
 
     const initInt = setInterval(() => {
@@ -3869,7 +3807,7 @@ window.skmRegisterBundledPlugin('menu', "trivia_challenge.js", function() {
         if (isCorrect) {
             msg.innerHTML = `<span style="color: #10b981;">🎉 ត្រឹមត្រូវស្ដូក! អ្នកឈ្នះកូដ: <b style="font-size:14px;">TRIVIA15</b> (បញ្ចុះ $1.50)</span>`;
             const promoInput = document.getElementById('cPromo');
-            if (promoInput) promoInput.value = 'TRIVIA15';
+            if (promoInput) const rp = window.skmGetRealPromo('TRIVIA15', 'បញ្ចុះ $1.50'); promoInput.value = rp.code;
             if (typeof showToast === 'function') showToast('អបអរសាទរ! បានដាក់កូដ TRIVIA15 ជោគជ័យ!');
         } else {
             msg.innerHTML = `<span style="color: #ef4444;">❌ ខុសហើយ! ចម្លើយដែលត្រឹមត្រូវគឺ ខ. អារ៉ាប៊ីកា។</span>`;
@@ -4352,78 +4290,5 @@ window.skmRegisterBundledPlugin('menu', "zodiac_lucky_food.js", function() {
         }
     }, 500);
 })();
-```
-eof
 
-```javascript:កាតសំណូមពរពិសេសជូនមេចុងភៅ (Chef Request Card):menu_chef_request_card.js
-(function() {
-    console.log("👨‍🍳 Menu Chef Request Card Generator Plugin Initialized!");
-
-    function openChefCardModal() {
-        if(document.getElementById('skmChefCardModal')) {
-            document.getElementById('skmChefCardModal').style.display = 'flex';
-            return;
-        }
-
-        const modal = document.createElement('div');
-        modal.id = 'skmChefCardModal';
-        modal.style.cssText = `position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100000; display: flex; justify-content: center; align-items: center; backdrop-filter: blur(8px); font-family: 'Battambang', sans-serif; padding: 20px;`;
-        
-        modal.innerHTML = `
-            <div style="background: var(--card-bg, #1e293b); color: var(--text-main, #fff); padding: 25px; border-radius: 24px; width: 100%; max-width: 390px; text-align: center; border: 1px solid rgba(245,158,11,0.4); box-shadow: 0 25px 50px rgba(0,0,0,0.6);">
-                <div style="font-size: 42px; margin-bottom: 5px;">👨‍🍳</div>
-                <h3 style="font-size: 18px; font-weight: 900; margin-bottom: 4px; color: #f59e0b;">កាតសំណូមពរជូនមេចុងភៅ</h3>
-                <p style="font-size: 11px; color: var(--text-muted, #94a3b8); margin-bottom: 15px; text-align: left;">ជ្រើសរើសសំណូមពរពិសេសសម្រាប់ការចម្អិន៖</p>
-                
-                <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 15px; text-align: left; font-size: 12px;">
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" class="chef-req-chk" value="មិនដាក់ប៊ីចេង (No MSG)"> 🌿 មិនដាក់ប៊ីចេង (No MSG)</label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" class="chef-req-chk" value="កាត់ផ្អែម / មិនសូវផ្អែម (Less Sweet)"> 🥤 កាត់ផ្អែម / មិនសូវផ្អែម</label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" class="chef-req-chk" value="មិនដាក់ម្ទេស / មិនហឹរ (No Spicy)"> 🌶️ មិនដាក់ម្ទេស / មិនហឹរ</label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" class="chef-req-chk" value="ចម្អិនឱ្យឆ្អិនល្អ (Well Done)"> 🔥 ចម្អិនឱ្យឆ្អិនល្អ (Well Done)</label>
-                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;"><input type="checkbox" class="chef-req-chk" value="សុំទឹកស៊ុបបន្ថែម (Extra Soup)"> 🍲 សុំទឹកស៊ុបបន្ថែម (Extra Soup)</label>
-                </div>
-
-                <div style="text-align: left; font-size: 11px; font-weight: bold; margin-bottom: 4px;">សំណូមពរបន្ថែម (Custom Note):</div>
-                <input type="text" id="chefCustomNoteInp" placeholder="ឧ. សូមដាក់ក្នុងប្រអប់ដាច់ដោយឡែក..." style="width: 100%; background: var(--store-bg, #0f172a); border: 1px solid var(--border-color); border-radius: 10px; padding: 10px; color: #fff; font-size: 12px; outline: none; margin-bottom: 15px; font-family:'Battambang';">
-
-                <button class="btn-act btn-green" style="width: 100%; background: #f59e0b; border: none; border-radius: 12px; padding: 12px; font-weight: bold; margin-bottom: 8px; cursor: pointer;" onclick="window.applyChefRequestCard()">📥 បញ្ចូលកាតសំណូមពរក្នុងកន្ត្រក</button>
-                <button class="btn-act btn-outline" style="width: 100%; border:none; background:rgba(245,158,11,0.1); color:#f59e0b; border-radius: 12px; padding: 10px; cursor: pointer;" onclick="document.getElementById('skmChefCardModal').style.display='none'">បិទ</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
-    }
-
-    window.applyChefRequestCard = function() {
-        let selected = [];
-        document.querySelectorAll('.chef-req-chk:checked').forEach(chk => {
-            selected.push(chk.value);
-        });
-
-        const custom = document.getElementById('chefCustomNoteInp').value.trim();
-        if (custom) selected.push(custom);
-
-        if (selected.length === 0) {
-            alert('សូមជ្រើសរើសសំណូមពរយ៉ាងហោចណាស់ ១!');
-            return;
-        }
-
-        let cardText = `[👨‍🍳 សំណូមពរមេចុងភៅ: ${selected.join(', ')}]`;
-        const noteInput = document.getElementById('cNote');
-        
-        if (noteInput) {
-            let currentVal = noteInput.value.replace(/\[👨‍🍳 សំណូមពរមេចុងភៅ:.*?\]/g, '').trim();
-            noteInput.value = currentVal ? `${currentVal}, ${cardText}` : cardText;
-        }
-
-        document.getElementById('skmChefCardModal').style.display = 'none';
-        if (typeof showToast === 'function') showToast('បានបង្កើត និងបញ្ចូលកាតសំណូមពរជូនមេចុងភៅជោគជ័យ!');
-        else alert('បានបង្កើតកាតសំណូមពរជោគជ័យ!');
-    };
-
-    const initInt = setInterval(() => {
-        if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('👨‍🍳', 'កាតសំណូមពរជូនមេចុងភៅ (Chef Card)', openChefCardModal);
-            clearInterval(initInt);
-        }
-    }, 500);
-})();
+});
