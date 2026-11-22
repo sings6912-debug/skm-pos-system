@@ -5440,6 +5440,7 @@ window.skmRegisterBundledPlugin('pos', "💳 សង្ខេបចំណូល�
         let cashTotal = 0, qrTotal = 0, unpaidTotal = 0, totalCount = 0;
 
         invoices.forEach(inv => {
+            if (!inv || String(inv.status || '').toLowerCase() === 'voided') return;
             let invDate = inv.date ? inv.date.split(' ')[0] : '';
             if (invDate === today) {
                 totalCount++;
@@ -7383,10 +7384,13 @@ window.skmRegisterBundledPlugin('pos', "📋 វិក្កយបត្រល�
             const amtKhr = amtUsd * exchangeRate;
             
             // ពណ៌ Badge តាមស្ថានភាពបង់ប្រាក់
+            const isVoid = (String(inv.status || '').toLowerCase() === 'voided');
             const isPaid = (inv.status === 'paid' || !inv.status);
-            const statusBadge = isPaid 
-                ? '<span class="skm-badge-paid">បង់រួច</span>' 
-                : '<span class="skm-badge-unpaid">ជំពាក់</span>';
+            const statusBadge = isVoid
+                ? '<span class="skm-badge-unpaid" style="background:rgba(239,68,68,0.2); color:#ef4444;">🚫 Void</span>'
+                : (isPaid
+                    ? '<span class="skm-badge-paid">បង់រួច</span>'
+                    : '<span class="skm-badge-unpaid">ជំពាក់</span>');
             
             return `
             <div class="skm-sale-item">

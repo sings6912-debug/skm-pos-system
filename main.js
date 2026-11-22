@@ -1998,7 +1998,7 @@ window.manualCloudSync = async function(isAuto = false) {
             // 2. Fetch Expenses (គាំទ្រការលុបសល់ ០ ជួរលើ Cloud)
             let { data: expData, error: expErr } = await window.supabaseClient.from('pos_expenses').select('*').eq('branch_id', branchId);
             if (!expErr && Array.isArray(expData)) {
-                let deletedExp = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
+                let deletedExp = JSON.parse(localStorage.getItem(window.getBranchKey('deleted_expenses_tracker')) || localStorage.getItem('deleted_expenses_tracker') || '[]');
                 let mappedExp = expData.map(e => ({ id: e.id, category: e.category, amount: e.amount, note: e.note, timestamp: e.timestamp, date: e.date }));
                 window.expenses = mappedExp.filter(e => !deletedExp.includes(String(e.id)));
                 localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
@@ -2041,7 +2041,9 @@ window.manualCloudSync = async function(isAuto = false) {
             // 5. Fetch Orders (គាំទ្រការលុបសល់ ០ ជួរលើ Cloud ដោយគ្មានទិន្នន័យខ្មោច)
             let { data: ordersData, error: ordersErr } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(isAuto ? 250 : 1000);
             if (!ordersErr && Array.isArray(ordersData)) {
-                let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+                let deletedInv = JSON.parse(localStorage.getItem(window.getBranchKey('deleted_invoices_tracker')) || localStorage.getItem('deleted_invoices_tracker') || '[]');
+                let pendingQueue = JSON.parse(localStorage.getItem(window.getBranchKey('pending_cloud_orders')) || '[]');
+                let pendingIds = pendingQueue.map(j => String(j?.orderPayload?.id || '').trim().toLowerCase()).filter(Boolean);
                 let formattedOrders = ordersData.map(o => ({
                     id: o.id, invoiceNo: o.id, customerName: o.customer_name, customerPhone: o.customer_phone, totalAmount: o.total_amount, total: o.total_amount, paidUsd: o.paid_amount, paidAmount: o.paid_amount, status: o.status, seller: o.seller, items: o.order_data, note: o.note, timestamp: o.timestamp, date: new Date(o.timestamp).toLocaleString('km-KH')
                 }));
@@ -2054,7 +2056,7 @@ window.manualCloudSync = async function(isAuto = false) {
                 window.invoices = window.invoices.filter(localInv => {
                     let localId = String(localInv.id || localInv.invoiceNo).trim().toLowerCase();
                     let isVeryNew = isAuto && (nowTime - (localInv.timestamp || 0)) < 15000; 
-                    return cloudIds.includes(localId) || isVeryNew;
+                    return cloudIds.includes(localId) || pendingIds.includes(localId) || isVeryNew;
                 });
                 
                 formattedOrders.forEach(cInv => {
@@ -3001,15 +3003,22 @@ window.renderDashboard = function() {
         
         const dateFrom = document.getElementById('dashDateFrom');
         const dateTo = document.getElementById('dashDateTo'); 
-        const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).getTime() : 0; 
-        const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : Infinity;
+        const parseDashDate = (val, isEnd) => {
+            if (!val) return null;
+            const p = String(val).split('-').map(Number);
+            if (p.length !== 3 || p.some(isNaN)) return null;
+            return isEnd ? new Date(p[0], p[1] - 1, p[2], 23, 59, 59, 999).getTime() : new Date(p[0], p[1] - 1, p[2], 0, 0, 0, 0).getTime();
+        };
+        const fromTime = (dateFrom && dateFrom.value) ? (parseDashDate(dateFrom.value, false) ?? 0) : 0; 
+        const toTime = (dateTo && dateTo.value) ? (parseDashDate(dateTo.value, true) ?? Infinity) : Infinity;
         let totalSalesRevenue = 0, totalUnpaid = 0, totalExpenses = 0, totalCOGS = 0, salesMap = {};
         
         (window.invoices || []).forEach(inv => { 
             if (!inv) return;
+            const st = String(inv.status || 'unpaid').toLowerCase();
+            if (st === 'voided') return;
             let invTime = inv.timestamp || parseInt(String(inv.id).split('_')[1]) || new Date(inv.date || 0).getTime() || 0; 
             if (invTime >= fromTime && invTime <= toTime) { 
-                const st = String(inv.status || 'unpaid').toLowerCase();
                 const totAmt = parseFloat(inv.totalAmount || inv.total || 0);
                 if(st === 'paid') {
                     totalSalesRevenue += totAmt; 
@@ -3024,7 +3033,7 @@ window.renderDashboard = function() {
                         if(!item) return;
                         let pId = item.id ? String(item.id) : (item.name || 'unknown');
                         if(!salesMap[pId]) salesMap[pId] = { name: item.name || item.title || 'ទំនិញ', qty: 0, revenue: 0 }; 
-                        let qty = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 0;
+                        let qty = parseFloat(item.cartQty !== undefined ? item.cartQty : item.qty) || 0;
                         let price = parseFloat(item.price) || 0;
                         
                         let realProd = (window.inventory || []).find(p => p && (String(p.id) === String(item.id) || p.name === item.name));
@@ -3516,17 +3525,24 @@ window.printZReport = function() {
     const startOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
     const endOfDay = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
 
-    const fromTime = (dateFrom && dateFrom.value) ? new Date(dateFrom.value).getTime() : startOfDay; 
-    const toTime = (dateTo && dateTo.value) ? new Date(dateTo.value).getTime() : endOfDay;
+    const parseZDate = (val, isEnd) => {
+        if (!val) return null;
+        const p = String(val).split('-').map(Number);
+        if (p.length !== 3 || p.some(isNaN)) return null;
+        return isEnd ? new Date(p[0], p[1] - 1, p[2], 23, 59, 59, 999).getTime() : new Date(p[0], p[1] - 1, p[2], 0, 0, 0, 0).getTime();
+    };
+    const fromTime = (dateFrom && dateFrom.value) ? (parseZDate(dateFrom.value, false) ?? startOfDay) : startOfDay; 
+    const toTime = (dateTo && dateTo.value) ? (parseZDate(dateTo.value, true) ?? endOfDay) : endOfDay;
     
     let reportDateStr = (dateFrom && dateFrom.value) ? `${new Date(fromTime).toLocaleDateString('km-KH')} - ${new Date(toTime).toLocaleDateString('km-KH')}` : window.fDate().split(' ')[0];
 
     (window.invoices || []).forEach(inv => { 
         if (!inv) return;
+        const st = String(inv.status || 'unpaid').toLowerCase();
+        if (st === 'voided') return;
         let invTime = inv.timestamp || parseInt(String(inv.id).split('_')[1]) || new Date(inv.date || 0).getTime() || 0; 
         if (invTime >= fromTime && invTime <= toTime) { 
             invoiceCount++;
-            const st = String(inv.status || 'unpaid').toLowerCase();
             const totAmt = parseFloat(inv.totalAmount || inv.total || 0);
             
             if(st === 'paid') {

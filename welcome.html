@@ -681,6 +681,19 @@
             isProcessing = false;
             resetPinDisplayNormal();
             updatePinDisplay();
+            // ផ្ទៀង Store PIN ថ្មីបំផុតពី Cloud ក្នុងផ្ទៃខាងក្រោយ
+            if (navigator.onLine && supabaseClient) {
+                supabaseClient.from('branch_store')
+                    .select('sys_settings')
+                    .eq('branch_id', SHOP_BRANCH_ID)
+                    .maybeSingle()
+                    .then(({ data }) => {
+                        if (data && data.sys_settings) {
+                            branchSysSettings = Object.assign({}, branchSysSettings || {}, data.sys_settings);
+                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`, JSON.stringify(branchSysSettings));
+                        }
+                    }).catch(() => {});
+            }
         }
 
         function closePinModal() {
@@ -991,6 +1004,13 @@
                         if (cloudBg) {
                             document.documentElement.style.setProperty('--current-bg', cloudBg);
                             localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, cloudBg);
+                            const foundCloudIdx = wallpaperDatabase.findIndex(item => cloudBg.includes(item.full));
+                            if (foundCloudIdx !== -1) {
+                                currentBgIndex = foundCloudIdx;
+                                document.getElementById('bgCounterText').innerText = `${foundCloudIdx + 1}/100`;
+                            } else {
+                                document.getElementById('bgCounterText').innerText = (i18n[currentLang] || i18n.km).customBg;
+                            }
                         }
                         if (sys) {
                             branchSysSettings = sys;
@@ -1013,6 +1033,35 @@
             updateNetworkStatus();
         }
 
+        function applyWelcomeLogoStyle(sysObj) {
+            try {
+                let sys = sysObj;
+                if (!sys || Object.keys(sys).length === 0) {
+                    const rawSys = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`);
+                    if (rawSys) sys = JSON.parse(rawSys);
+                }
+                if (!sys) return;
+                const logoImg = document.getElementById('dynamicLogo');
+                if (!logoImg) return;
+                const logoBox = logoImg.parentElement;
+                if (sys.logoShape === 'rectangle') {
+                    logoBox.style.borderRadius = '12px';
+                    logoBox.style.border = 'none';
+                    logoImg.style.borderRadius = '12px';
+                    logoImg.style.objectFit = 'contain';
+                } else {
+                    logoBox.style.borderRadius = '50%';
+                    logoBox.style.border = '2px solid rgba(16, 185, 129, 0.5)';
+                    logoImg.style.borderRadius = '50%';
+                    logoImg.style.objectFit = 'cover';
+                }
+                if (sys.logoScale) {
+                    logoImg.style.transform = `scale(${sys.logoScale})`;
+                    logoImg.style.transition = 'transform 0.3s ease';
+                }
+            } catch(e) {}
+        }
+
         function applyShopUI(name, logo) {
             document.getElementById('displayShopName').innerText = name;
             const logoImg = document.getElementById('dynamicLogo');
@@ -1022,6 +1071,7 @@
                 logoImg.style.display = 'block';
                 defaultIcon.style.display = 'none';
             }
+            applyWelcomeLogoStyle(branchSysSettings);
         }
 
         function updateStoreStatus() {
@@ -1032,7 +1082,11 @@
             let isOpen = true;
             if (branchSysSettings && branchSysSettings.toggleStoreHours && branchSysSettings.openTime && branchSysSettings.closeTime) {
                 const currentTime = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-                isOpen = (currentTime >= branchSysSettings.openTime && currentTime <= branchSysSettings.closeTime);
+                if (branchSysSettings.openTime <= branchSysSettings.closeTime) {
+                    isOpen = (currentTime >= branchSysSettings.openTime && currentTime <= branchSysSettings.closeTime);
+                } else {
+                    isOpen = (currentTime >= branchSysSettings.openTime || currentTime <= branchSysSettings.closeTime);
+                }
             } else {
                 const hour = now.getHours();
                 isOpen = (hour >= 8 && hour < 21);

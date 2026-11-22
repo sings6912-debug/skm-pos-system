@@ -49,10 +49,11 @@ window.renderCustomers = function() {
 
     activeInvoices.forEach(inv => {
         if (!inv) return;
+        const status = String(inv.status || 'unpaid').toLowerCase();
+        if (status === 'voided') return;
         const rawName = String(inv.customerName || inv.customer || 'អតិថិជនទូទៅ').trim();
         const normKey = rawName.toLowerCase();
         const total = parseFloat(inv.totalAmount || inv.total || 0);
-        const status = String(inv.status || 'unpaid').toLowerCase();
         const paid = status === 'paid' ? total : parseFloat(inv.paidUsd || inv.paidAmount || 0);
         const unpaid = Math.max(0, total - paid);
 
@@ -323,7 +324,9 @@ window.viewCustomerHistory = function(customerName) {
             const total = parseFloat(inv.totalAmount || inv.total || 0);
             const status = String(inv.status || 'unpaid').toLowerCase();
             let statusBadge = '';
-            if (status === 'paid') {
+            if (status === 'voided') {
+                statusBadge = '<span class="badge" style="background:rgba(239,68,68,0.15); color:#ef4444; padding:4px 8px; border-radius:12px;">🚫 Void</span>';
+            } else if (status === 'paid') {
                 statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981; padding:4px 8px; border-radius:12px;">ទូទាត់រួច</span>';
             } else if (status === 'ready') {
                 statusBadge = '<span class="badge" style="background:rgba(56,189,248,0.15); color:#0284c7; padding:4px 8px; border-radius:12px;">រួចរាល់</span>';

@@ -224,16 +224,17 @@ window.addToCart = function(id) {
     if (!p) return; 
     if (!window.cart) window.cart = [];
     const cItem = window.cart.find(c => c && c.id === id); 
-    let stockQty = parseInt(p.qty) || 0;
+    let stockQty = parseFloat(p.qty) || 0;
 
     const executeAddToCart = () => {
         let globalRateEl = document.getElementById('globalExchangeRate'); 
         let currentRate = parseFloat(globalRateEl ? globalRateEl.value : window.cartRate) || 4000;
         let effectiveUsdPrice = parseFloat(p.price) > 0 ? parseFloat(p.price) : ((parseFloat(p.riel) || 0) / currentRate);
+        const stepQty = (stockQty > 0 && stockQty < 1) ? stockQty : 1;
 
         if (cItem) { 
-            if (cItem.cartQty < stockQty || (window.sysSettings && window.sysSettings.preorder)) { 
-                cItem.cartQty++; 
+            if ((parseFloat(cItem.cartQty) + 1) <= stockQty || (window.sysSettings && window.sysSettings.preorder)) { 
+                cItem.cartQty = Number((parseFloat(cItem.cartQty) + 1).toFixed(3)); 
                 cItem.qty = cItem.cartQty;
                 if (effectiveUsdPrice > 0 && !(parseFloat(cItem.price) > 0)) cItem.price = effectiveUsdPrice;
             } else { 
@@ -243,8 +244,8 @@ window.addToCart = function(id) {
             window.cart.push({
                 ...p,
                 price: effectiveUsdPrice,
-                cartQty: 1,
-                qty: 1
+                cartQty: stepQty,
+                qty: stepQty
             }); 
         } 
         window.renderCart(); 
@@ -272,8 +273,8 @@ window.updateCartQty = function(id, change) {
     const cItem = (window.cart || []).find(c => c && c.id === id); 
     const p = (window.inventory || []).find(i => i && i.id === id); 
     if (!p || !cItem) return;
-    let stockQty = parseInt(p.qty) || 0; 
-    cItem.cartQty += change; 
+    let stockQty = parseFloat(p.qty) || 0; 
+    cItem.cartQty = Number((parseFloat(cItem.cartQty) + change).toFixed(3)); 
     
     if(cItem.cartQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
         cItem.cartQty = stockQty; 
@@ -291,20 +292,20 @@ window.updateCartQty = function(id, change) {
 };
 
 window.setCartQtyManually = function(id, val) {
-    let newQty = parseInt(val);
+    let newQty = parseFloat(val);
     if (isNaN(newQty) || newQty <= 0) { 
         window.cart = (window.cart || []).filter(c => c && c.id !== id);
     } else {
         const cItem = (window.cart || []).find(c => c && c.id === id); 
         const p = (window.inventory || []).find(i => i && i.id === id); 
         if(!p || !cItem) return;
-        let stockQty = parseInt(p.qty) || 0;
+        let stockQty = parseFloat(p.qty) || 0;
         
         if(newQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
             cItem.cartQty = stockQty; 
             notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${window.escapeHTML(p.unit)||'ឯកតា'} ប៉ុណ្ណោះ!`); 
         } else {
-            cItem.cartQty = newQty;
+            cItem.cartQty = Number(newQty.toFixed(3));
         }
         cItem.qty = cItem.cartQty;
     }
@@ -594,14 +595,37 @@ window.executePrint = function(htmlContent, customTitle = 'Print Receipt') {
     doc.write('</head><body><div id="receipt-container">' + htmlContent + '</div></body></html>');
     doc.close();
 
-    setTimeout(() => {
+    let hasPrinted = false;
+    const triggerPrint = () => {
+        if (hasPrinted) return;
+        hasPrinted = true;
         try {
             iframe.contentWindow.focus();
             iframe.contentWindow.print();
         } catch(e) {
             window.print();
         }
-    }, 350);
+    };
+
+    const imgs = Array.from(doc.querySelectorAll('img'));
+    if (imgs.length === 0) {
+        setTimeout(triggerPrint, 200);
+    } else {
+        let doneCount = 0;
+        const onImgDone = () => {
+            doneCount++;
+            if (doneCount >= imgs.length) setTimeout(triggerPrint, 100);
+        };
+        imgs.forEach(img => {
+            if (img.complete) {
+                onImgDone();
+            } else {
+                img.addEventListener('load', onImgDone, { once: true });
+                img.addEventListener('error', onImgDone, { once: true });
+            }
+        });
+        setTimeout(triggerPrint, 2500);
+    }
 };
 
 // 🖨️ Multi-Printer Feature: បាញ់បញ្ជាទៅម៉ាស៊ីនព្រីនផ្ទះបាយ / បារ / ផ្នែករៀបចំ
@@ -657,19 +681,24 @@ window.routeOrderToPrinters = function(order, printerJobs) {
 window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!');
     
-    const custNameInput = window.escapeHTML(document.getElementById('posCustomerName').value.trim()); 
-    const custPhoneInput = window.escapeHTML(document.getElementById('posCustomerPhone').value.trim());
+    const rawCustName = document.getElementById('posCustomerName').value.trim(); 
+    const rawCustPhone = document.getElementById('posCustomerPhone').value.trim();
     const tableSelectEl = document.getElementById('posTableSelect');
-    const selectedTable = (tableSelectEl && tableSelectEl.value) ? window.escapeHTML(tableSelectEl.value.trim()) : '';
+    const rawSelectedTable = (tableSelectEl && tableSelectEl.value) ? tableSelectEl.value.trim() : '';
 
-    if((status === 'unpaid' || status === 'preorder') && !custNameInput) return notifyPosUser('សូមបញ្ចូលឈ្មោះអតិថិជនសិន!');
+    const custNameInput = window.escapeHTML(rawCustName);
+    const custPhoneInput = window.escapeHTML(rawCustPhone);
+    const selectedTable = window.escapeHTML(rawSelectedTable);
+
+    if((status === 'unpaid' || status === 'preorder') && !rawCustName) return notifyPosUser('សូមបញ្ចូលឈ្មោះអតិថិជនសិន!');
     
     let discountValue = parseFloat(document.getElementById('posDiscount') ? document.getElementById('posDiscount').value : 0) || 0; 
     let discountType = document.getElementById('posDiscountType') ? document.getElementById('posDiscountType').value : '%'; 
     let appliedTaxRate = (window.sysSettings && window.sysSettings.tax) ? (parseFloat(window.sysSettings.taxRate) || 0) : 0;
     
     let docType = status === 'paid' ? 'បង្កាន់ដៃទទួលប្រាក់ / Receipt' : (status === 'preorder' ? 'បង្កាន់ដៃកក់ប្រាក់ / Pre-order Receipt' : 'វិក្កយបត្រ / Invoice'); 
-    let currentSellerName = window.activeUser ? window.escapeHTML(window.activeUser.fullName || window.activeUser.username) : 'System'; 
+    let rawSellerName = window.activeUser ? (window.activeUser.fullName || window.activeUser.username) : 'System';
+    let currentSellerName = window.escapeHTML(rawSellerName); 
     let newInvId = window.generateInvoiceId(); 
     let timestampNow = Date.now(); 
 
@@ -737,8 +766,8 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if (status === 'paid') paidUsdAmount = window.cartFinalUsd;
     else if (status === 'preorder') paidUsdAmount = rUsd + (rRiel / window.cartRate);
 
-    const finalCustomerName = custNameInput || selectedTable || 'អតិថិជនទូទៅ';
-    const invoiceNote = (selectedTable && selectedTable !== finalCustomerName) ? `[${selectedTable}]` : '';
+    const finalCustomerName = rawCustName || rawSelectedTable || 'អតិថិជនទូទៅ';
+    const invoiceNote = (rawSelectedTable && rawSelectedTable !== finalCustomerName) ? `[${rawSelectedTable}]` : '';
 
     const newInvoice = { 
         id: newInvId, 
@@ -747,8 +776,8 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         date: window.fDate(), 
         customer: finalCustomerName, 
         customerName: finalCustomerName,
-        phone: custPhoneInput, 
-        customerPhone: custPhoneInput,
+        phone: rawCustPhone, 
+        customerPhone: rawCustPhone,
         note: invoiceNote,
         items: normalizedCartItems, 
         rate: window.cartRate, 
@@ -763,7 +792,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         changeUsd: cUsd, 
         changeRiel: cRiel, 
         status: status, 
-        seller: currentSellerName, 
+        seller: rawSellerName, 
         paidUsd: paidUsdAmount,
         paidAmount: paidUsdAmount
     }; 
@@ -773,8 +802,8 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
     if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
     
-    if(custNameInput && custNameInput !== selectedTable && typeof window.setAutoRegisterCustomer === 'function') {
-        window.setAutoRegisterCustomer(custNameInput, custPhoneInput);
+    if(rawCustName && rawCustName !== rawSelectedTable && typeof window.setAutoRegisterCustomer === 'function') {
+        window.setAutoRegisterCustomer(rawCustName, rawCustPhone);
     }
 
     receiptHTML += `<table style="width:100%; font-size: 12px; margin-top: 5px;">`;
@@ -836,61 +865,9 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     }
     window.executePrint(combinedPrintHTML, `Receipt - ${newInvId}`);
 
-    setTimeout(async () => {
-        if (window.supabaseClient && navigator.onLine) {
-            try {
-                const { error: orderError } = await window.supabaseClient
-                    .from('pos_orders')
-                    .insert([{
-                        id: newInvId,
-                        branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
-                        customer_name: newInvoice.customerName,
-                        customer_phone: newInvoice.customerPhone,
-                        total_amount: newInvoice.totalAmount,
-                        paid_amount: newInvoice.paidUsd || 0,
-                        status: newInvoice.status,
-                        seller: newInvoice.seller,
-                        order_data: newInvoice.items,
-                        note: newInvoice.note,
-                        timestamp: newInvoice.timestamp
-                    }]);
-
-                if (orderError) throw orderError;
-                console.log("✅ វិក្កយបត្រត្រូវបានរក្សាទុកចូល pos_orders");
-
-                if (status !== 'preorder') {
-                    const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                    for (let item of normalizedCartItems) {
-                        const deductQty = parseInt(item.cartQty) || 1;
-                        const { error: stockError } = await window.supabaseClient.rpc('deduct_stock_safely', {
-                            p_product_id: item.id,
-                            p_branch_id: bId,
-                            deduct_qty: deductQty
-                        });
-                        if (stockError) {
-                            console.warn("RPC deduct_stock_safely fallback -> direct update:", stockError);
-                            const localProd = (window.inventory || []).find(p => p && String(p.id) === String(item.id));
-                            if (localProd) {
-                                await window.supabaseClient.from('pos_products')
-                                    .update({ qty: Math.max(0, parseFloat(localProd.qty) || 0), updated_at: new Date().toISOString() })
-                                    .eq('id', String(localProd.id))
-                                    .eq('branch_id', bId);
-                            }
-                        }
-                    }
-                }
-                
-                if (typeof window.touchCloudSync === 'function') window.touchCloudSync();
-                else if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
-
-            } catch (err) {
-                console.error("Supabase Save Error:", err);
-                if (typeof window.touchCloudSync === 'function') window.touchCloudSync();
-                else if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
-            }
-        } else {
-            if (typeof window.touchCloudSync === 'function') window.touchCloudSync();
-            else if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
+    setTimeout(() => {
+        if (typeof window.queueOrPushOrderToCloud === 'function') {
+            window.queueOrPushOrderToCloud(newInvoice, normalizedCartItems, status);
         }
     }, 100);
 };
@@ -985,3 +962,126 @@ window.addEventListener('visibilitychange', function() {
         }
     }
 });
+
+// ==========================================
+// ☁️ Offline Sync Queue: រក្សាទុក Order ពេលដាច់អ៊ីនធឺណិត ហើយរុញឡើង Cloud ស្វ័យប្រវត្តិពេល Online វិញ
+// ==========================================
+function getPendingOrdersKey() {
+    return typeof window.getBranchKey === 'function' ? window.getBranchKey('pending_cloud_orders') : 'pending_cloud_orders';
+}
+
+window.queueOrPushOrderToCloud = async function(newInvoice, normalizedCartItems, status) {
+    const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    const job = {
+        branch_id: bId,
+        status: status,
+        orderPayload: {
+            id: newInvoice.id,
+            branch_id: bId,
+            customer_name: newInvoice.customerName,
+            customer_phone: newInvoice.customerPhone,
+            total_amount: newInvoice.totalAmount,
+            paid_amount: newInvoice.paidUsd || 0,
+            status: newInvoice.status,
+            seller: newInvoice.seller,
+            order_data: newInvoice.items,
+            note: newInvoice.note,
+            timestamp: newInvoice.timestamp
+        },
+        stockItems: (status !== 'preorder')
+            ? (normalizedCartItems || []).map(it => ({ id: it.id, qty: parseFloat(it.cartQty) || 1 }))
+            : []
+    };
+
+    const pushToQueue = (j) => {
+        const q = JSON.parse(localStorage.getItem(getPendingOrdersKey()) || '[]');
+        if (!q.some(x => x && x.orderPayload && x.orderPayload.id === j.orderPayload.id)) {
+            q.push(j);
+            localStorage.setItem(getPendingOrdersKey(), JSON.stringify(q));
+        }
+    };
+
+    if (!window.supabaseClient || !navigator.onLine) {
+        pushToQueue(job);
+        return;
+    }
+
+    try {
+        const { error: orderError } = await window.supabaseClient
+            .from('pos_orders')
+            .upsert([job.orderPayload], { onConflict: 'id' });
+        if (orderError) throw orderError;
+
+        for (const item of job.stockItems) {
+            const { error: stockError } = await window.supabaseClient.rpc('deduct_stock_safely', {
+                p_product_id: item.id,
+                p_branch_id: bId,
+                deduct_qty: item.qty
+            });
+            if (stockError) {
+                console.warn("RPC deduct_stock_safely fallback -> direct update:", stockError);
+                const localProd = (window.inventory || []).find(p => p && String(p.id) === String(item.id));
+                if (localProd) {
+                    await window.supabaseClient.from('pos_products')
+                        .update({ qty: Math.max(0, parseFloat(localProd.qty) || 0), updated_at: new Date().toISOString() })
+                        .eq('id', String(localProd.id))
+                        .eq('branch_id', bId);
+                }
+            }
+        }
+        console.log("✅ វិក្កយបត្រត្រូវបានរក្សាទុកចូល pos_orders");
+        if (typeof window.touchCloudSync === 'function') window.touchCloudSync();
+        else if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+    } catch (err) {
+        console.warn("☁️ រុញ Order ទៅ Cloud មិនទាន់បាន -> រក្សាទុកក្នុងជួររង់ចាំ:", err);
+        pushToQueue(job);
+    }
+};
+
+window.flushPendingCloudOrders = async function() {
+    if (!window.supabaseClient || !navigator.onLine) return;
+    const key = getPendingOrdersKey();
+    let queue = JSON.parse(localStorage.getItem(key) || '[]');
+    if (!Array.isArray(queue) || queue.length === 0) return;
+
+    const remaining = [];
+    for (const job of queue) {
+        try {
+            const { error } = await window.supabaseClient
+                .from('pos_orders')
+                .upsert([job.orderPayload], { onConflict: 'id' });
+            if (error) throw error;
+            for (const item of (job.stockItems || [])) {
+                const { error: sErr } = await window.supabaseClient.rpc('deduct_stock_safely', {
+                    p_product_id: item.id,
+                    p_branch_id: job.branch_id,
+                    deduct_qty: item.qty
+                });
+                if (sErr) {
+                    const localProd = (window.inventory || []).find(p => p && String(p.id) === String(item.id));
+                    if (localProd) {
+                        await window.supabaseClient.from('pos_products')
+                            .update({ qty: Math.max(0, parseFloat(localProd.qty) || 0), updated_at: new Date().toISOString() })
+                            .eq('id', String(localProd.id))
+                            .eq('branch_id', job.branch_id);
+                    }
+                }
+            }
+        } catch (e) {
+            remaining.push(job);
+        }
+    }
+    localStorage.setItem(key, JSON.stringify(remaining));
+    if (remaining.length < queue.length && typeof window.touchCloudSync === 'function') {
+        window.touchCloudSync();
+    }
+};
+
+window.addEventListener('online', () => {
+    if (typeof window.flushPendingCloudOrders === 'function') window.flushPendingCloudOrders();
+});
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(() => window.flushPendingCloudOrders(), 2000));
+} else {
+    setTimeout(() => window.flushPendingCloudOrders(), 2000);
+}
