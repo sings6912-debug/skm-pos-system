@@ -3592,25 +3592,30 @@ window.printZReport = function() {
     const styleFix = document.createElement('style');
     styleFix.innerHTML = `
         #inventoryExcelAction {
-            display: flex !important;
+            display: inline-flex !important;
             flex-direction: row !important;
             flex-wrap: wrap !important;
-            gap: 10px !important;
-            width: 100% !important;
-            padding: 5px 0 !important;
+            gap: 8px !important;
+            width: auto !important;
+            padding: 0 !important;
         }
         #inventoryExcelAction button {
-            flex: 1 !important;
-            display: flex !important;
+            flex: 0 0 auto !important;
+            display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            gap: 8px !important;
-            padding: 12px 10px !important;
+            gap: 6px !important;
+            padding: 8px 14px !important;
             white-space: nowrap !important;
             position: relative !important;
             overflow: hidden !important;
-            min-width: 140px !important;
+            min-width: auto !important;
             border-radius: 8px !important;
+        }
+        @media (max-width: 640px) {
+            #inventoryExcelAction { width: 100% !important; }
+            #inventoryExcelAction button { flex: 1 !important; }
+            #inventoryActionButtonsGroup #btnAddNewProduct { width: 100% !important; justify-content: center !important; }
         }
         #inventoryExcelAction button img,
         #inventoryExcelAction button i,

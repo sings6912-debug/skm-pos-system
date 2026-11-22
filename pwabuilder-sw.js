@@ -1,6 +1,6 @@
 // pwabuilder-sw.js
-// ⚡ ធ្វើបច្ចុប្បន្នភាពទៅ v29 ដើម្បីបង្ខំឱ្យ Browser សម្អាត Cache ចាស់ៗចោល
-const CACHE_NAME = "skm-integrate-pos-offline-v29";
+// ⚡ ធ្វើបច្ចុប្បន្នភាពទៅ v30 ដើម្បីបង្ខំឱ្យ Browser សម្អាត Cache ចាស់ៗចោល
+const CACHE_NAME = "skm-integrate-pos-offline-v30";
 
 // បញ្ជីឯកសារទាំងអស់ក្នុងប្រព័ន្ធដែលត្រូវរក្សាទុកសម្រាប់ប្រើប្រាស់ពេលគ្មានអ៊ីនធឺណិត (Offline Mode)
 const FILES_TO_CACHE = [

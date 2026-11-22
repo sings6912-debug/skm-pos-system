@@ -69,7 +69,8 @@ body, html { background-color: ${t.bgMain} !important; ${pat} color: ${t.textMai
 .form-control:focus, input:focus, select:focus, textarea:focus { border-color: ${t.accent} !important; box-shadow: 0 0 0 3px ${t.accentSoft} !important; }
 table thead th { background: ${t.bgInput} !important; color: ${t.accent} !important; border-bottom: 1px solid ${t.border} !important; }
 table tbody tr:hover { background: ${t.accentSoft} !important; }
-.badge-cat, .p-price { color: ${t.accent} !important; }`;
+.p-price { color: ${t.accent} !important; }
+.product-card .badge-cat, #mainInventoryTable .badge-cat { background: ${t.grad} !important; color: ${t.btnText} !important; font-weight: 800 !important; text-shadow: none !important; }`;
     }
 
     function buildMenuCss(t) {
@@ -223,7 +224,8 @@ body, html { background-color: ${t.bgMain} !important; ${pat} color: ${t.textMai
 .btn-outline { background: ${t.bgInput} !important; border: 1px solid ${t.border} !important; color: ${t.textMain} !important; border-radius: ${brad} !important; }
 .form-control, input[type="text"], input[type="number"], input[type="date"], select, textarea { background: ${t.bgInput} !important; color: ${t.textMain} !important; border: 1px solid ${t.border} !important; border-radius: 12px !important; }
 table thead th { background: ${t.bgInput} !important; color: ${t.accent} !important; border-bottom: 1px solid ${t.border} !important; }
-.badge-cat, .p-price { color: ${t.accent} !important; }`;
+.p-price { color: ${t.accent} !important; }
+.product-card .badge-cat, #mainInventoryTable .badge-cat { background: ${t.grad} !important; color: ${t.btnText} !important; font-weight: 800 !important; text-shadow: none !important; }`;
             document.documentElement.setAttribute('data-pos-lux-theme', 'custom_brand');
         }
     };
