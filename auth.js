@@ -102,7 +102,9 @@ window.checkAuthentication = function(applyPermissionsCallback) {
     }
 
     const authPassed = sessionStorage.getItem('ks2_auth_passed');
-    if (authPassed !== 'true') {
+    if (window.activeUser && authPassed !== 'true') {
+        sessionStorage.setItem('ks2_auth_passed', 'true');
+    } else if (authPassed !== 'true') {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:' && window.location.protocol !== 'file:') {
             window.location.href = `welcome.html?branch=${encodeURIComponent(branchId)}`;
@@ -184,7 +186,6 @@ window.handleLogin = async function() {
         } else {
             sessionStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(window.activeUser));
             localStorage.removeItem(getSafeBranchKey('active_user_obj'));
-        sessionStorage.removeItem(getSafeBranchKey('active_user_obj'));
             localStorage.removeItem(getSafeBranchKey('remembered_username'));
         } 
         
@@ -220,6 +221,7 @@ window.handleLogout = function() {
         window.activeUser = null; 
         window.currentRole = 'guest';
         localStorage.removeItem(getSafeBranchKey('active_user_obj')); 
+        sessionStorage.removeItem(getSafeBranchKey('active_user_obj')); 
         sessionStorage.removeItem('ks2_auth_passed');
 
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';

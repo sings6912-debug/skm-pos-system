@@ -1191,7 +1191,7 @@
         }
         const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
-        try { activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`)); } catch(e) {}
+        try { activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`) || sessionStorage.getItem(`ks2_${BRANCH}_active_user_obj`) || 'null'); } catch(e) {}
 
         const isAdminRole = activeUser && String(activeUser.role).toLowerCase() === 'admin';
         const isPinPassed = authPassed === 'true';
@@ -1217,18 +1217,33 @@
         } catch(e) { return true; }
     }
 
-    function switchTab(tabId) {
+    function switchTab(tabId, skipScroll = false) {
+        const targetPane = document.getElementById(tabId);
+        const targetBtn = document.querySelector(`[onclick="switchTab('${tabId}')"]`);
+        if (!targetPane) return;
         document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById(tabId).classList.add('active');
-        document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-        if(window.innerWidth <= 900) {
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        } else {
-            const ca = document.querySelector('.content-area');
-            if (ca) ca.scrollTo({ top: 0, behavior: 'smooth' });
+        targetPane.classList.add('active');
+        if (targetBtn) targetBtn.classList.add('active');
+        try { localStorage.setItem(`skm_admin_last_tab_${BRANCH}`, tabId); } catch(e) {}
+        if (!skipScroll) {
+            if(window.innerWidth <= 900) {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            } else {
+                const ca = document.querySelector('.content-area');
+                if (ca) ca.scrollTo({ top: 0, behavior: 'smooth' });
+            }
         }
     }
+
+    (function restoreLastAdminTab() {
+        try {
+            const lastTab = localStorage.getItem(`skm_admin_last_tab_${BRANCH}`);
+            if (lastTab && document.getElementById(lastTab)) {
+                switchTab(lastTab, true);
+            }
+        } catch(e) {}
+    })();
 
     function setAdminTheme(themeName) {
         document.documentElement.setAttribute('data-admin-theme', themeName);
@@ -2170,7 +2185,7 @@
         showToast('✅ បានផ្លាស់ប្តូរកញ្ចប់មុខងារតាមប្រភេទអាជីវកម្មរួចរាល់!');
     }
 
-    let menuScriptsExpanded = false;
+    let menuScriptsExpanded = localStorage.getItem(`ks2_${BRANCH}_menu_scripts_expanded`) === 'true';
 
     function uploadMenuScripts(e) {
         const files = e.target.files;
@@ -2322,8 +2337,13 @@
 
             const totalVisiblePos = items.filter(({ s }) => pinnedSet.has(s.name)).length + newIdx + 1;
             if (totalVisiblePos > 8) {
-                if (scope === 'menu') menuScriptsExpanded = true;
-                else posScriptsExpanded = true;
+                if (scope === 'menu') {
+                    menuScriptsExpanded = true;
+                    localStorage.setItem(`ks2_${BRANCH}_menu_scripts_expanded`, 'true');
+                } else {
+                    posScriptsExpanded = true;
+                    localStorage.setItem(`ks2_${BRANCH}_pos_scripts_expanded`, 'true');
+                }
             }
         }
         rerenderScope(scope);
@@ -2447,8 +2467,8 @@
         const toggleFn = isMenu ? 'toggleMenuScript' : 'togglePosScript';
         const deleteFn = isMenu ? 'deleteMenuScript' : 'deletePosScript';
         const expandToggleJs = isMenu
-            ? 'menuScriptsExpanded = !menuScriptsExpanded; renderMenuScripts();'
-            : 'posScriptsExpanded = !posScriptsExpanded; renderPosScripts();';
+            ? "menuScriptsExpanded = !menuScriptsExpanded; localStorage.setItem('ks2_' + BRANCH + '_menu_scripts_expanded', String(menuScriptsExpanded)); renderMenuScripts();"
+            : "posScriptsExpanded = !posScriptsExpanded; localStorage.setItem('ks2_' + BRANCH + '_pos_scripts_expanded', String(posScriptsExpanded)); renderPosScripts();";
 
         let html = '';
         let pinnedRank = 0;
@@ -2526,7 +2546,7 @@
         saveAdminSettings();
     }
 
-    let posScriptsExpanded = false;
+    let posScriptsExpanded = localStorage.getItem(`ks2_${BRANCH}_pos_scripts_expanded`) === 'true';
 
     function uploadPosScripts(e) {
         const files = e.target.files;
