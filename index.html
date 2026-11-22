@@ -1221,7 +1221,10 @@
                         <input type="text" id="pImage" class="form-control" placeholder="URL រូបភាព..." style="flex:1; width: 100%;" oninput="window.updateImagePreview(this.value)">
                         <button class="btn btn-outline" onclick="document.getElementById('imageInput').click()">📸 ជ្រើសរើស</button>
                     </div>
-                    <div style="margin-top: 10px; text-align: center;"><img id="imagePreviewBox" src="" alt="Preview" style="max-height: 120px; max-width: 100%; display: none; border-radius: 8px; border: 1px solid var(--border); margin: auto;"></div>
+                    <div style="margin-top: 10px; text-align: center;">
+                        <img id="imagePreviewBox" src="" alt="Preview" title="ចុចដើម្បីមើលរូបធំ និងពង្រីក" onclick="window.openImageZoom(this.src)" style="max-height: 120px; max-width: 100%; display: none; border-radius: 8px; border: 1px solid var(--border); margin: auto; cursor: zoom-in; transition: transform 0.2s ease, box-shadow 0.2s ease;">
+                        <div id="imagePreviewHint" style="display: none; font-size: 11px; color: var(--text-muted, #94a3b8); margin-top: 5px;">🔍 ចុចលើរូបភាពដើម្បីមើលធំ និងពង្រីក</div>
+                    </div>
                 </div>
             </div>
             <div class="modal-footer"><button class="btn btn-outline" onclick="window.closeModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveProduct()">រក្សាទុក</button></div>
@@ -2069,5 +2072,275 @@
     </script>
     <!-- All-In-One POS Plugins (Loaded from GitHub Pages - 0 Supabase Egress) -->
     <script id="skm-root-pos-plugins" src="all_pos_plugins.js" defer></script>
+
+    <!-- Lightbox មើលរូបភាពធំ និងពង្រីក (Zoom & Pan) -->
+    <style>
+        #imagePreviewBox:hover {
+            transform: scale(1.04);
+            box-shadow: 0 6px 18px rgba(0, 0, 0, 0.35);
+        }
+        #imagePreviewBox[style*="display: block"] + #imagePreviewHint,
+        #imagePreviewBox[style*="display:block"] + #imagePreviewHint {
+            display: block !important;
+        }
+        #imageZoomModal {
+            position: fixed;
+            inset: 0;
+            background: rgba(5, 6, 12, 0.92);
+            backdrop-filter: blur(10px);
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 999995;
+            user-select: none;
+            -webkit-user-select: none;
+            overflow: hidden;
+        }
+        #imageZoomStage {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            touch-action: none;
+        }
+        #zoomModalImg {
+            max-width: 90vw;
+            max-height: 82vh;
+            border-radius: 12px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            object-fit: contain;
+            cursor: zoom-in;
+            transition: transform 0.15s ease-out;
+            will-change: transform;
+        }
+        #imageZoomClose {
+            position: fixed;
+            top: 18px;
+            right: 22px;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            background: rgba(20, 20, 35, 0.75);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 999997;
+            transition: background 0.2s ease, transform 0.2s ease;
+        }
+        #imageZoomClose:hover {
+            background: rgba(239, 68, 68, 0.85);
+            transform: scale(1.08);
+        }
+        #imageZoomToolbar {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 14px;
+            border-radius: 999px;
+            background: rgba(20, 20, 35, 0.82);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(8px);
+            z-index: 999997;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+        }
+        #imageZoomToolbar button {
+            background: rgba(255, 255, 255, 0.12);
+            color: #fff;
+            border: none;
+            border-radius: 999px;
+            padding: 6px 13px;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+        #imageZoomToolbar button:hover {
+            background: rgba(255, 255, 255, 0.26);
+        }
+        #zoomLevelText {
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            min-width: 48px;
+            text-align: center;
+        }
+    </style>
+
+    <div id="imageZoomModal">
+        <button id="imageZoomClose" type="button" onclick="window.closeImageZoom()" title="បិទ (Esc)">✕</button>
+        <div id="imageZoomStage">
+            <img id="zoomModalImg" src="" alt="Zoom Preview" draggable="false">
+        </div>
+        <div id="imageZoomToolbar">
+            <button type="button" onclick="window.adjustImageZoom(-0.3)" title="បង្រួម">➖</button>
+            <span id="zoomLevelText">100%</span>
+            <button type="button" onclick="window.adjustImageZoom(0.3)" title="ពង្រីក">➕</button>
+            <button type="button" onclick="window.resetImageZoom()" title="ទំហំដើម">↺ 100%</button>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            let scale = 1;
+            let translateX = 0;
+            let translateY = 0;
+            let isDragging = false;
+            let startX = 0;
+            let startY = 0;
+            let lastTouchDist = 0;
+            let lastTapTime = 0;
+
+            const modal = document.getElementById('imageZoomModal');
+            const stage = document.getElementById('imageZoomStage');
+            const img = document.getElementById('zoomModalImg');
+            const zoomText = document.getElementById('zoomLevelText');
+
+            function applyTransform(smooth = true) {
+                img.style.transition = smooth ? 'transform 0.15s ease-out' : 'none';
+                img.style.transform = `translate(${translateX}px, ${translateY}px) scale(${scale})`;
+                zoomText.textContent = Math.round(scale * 100) + '%';
+                img.style.cursor = scale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in';
+            }
+
+            window.openImageZoom = function (src) {
+                if (!src || !src.trim()) return;
+                img.src = src;
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                applyTransform(false);
+                modal.style.display = 'flex';
+            };
+
+            window.closeImageZoom = function () {
+                modal.style.display = 'none';
+                img.src = '';
+            };
+
+            window.adjustImageZoom = function (delta) {
+                scale = Math.min(5, Math.max(0.5, +(scale + delta).toFixed(2)));
+                if (scale <= 1) {
+                    translateX = 0;
+                    translateY = 0;
+                }
+                applyTransform(true);
+            };
+
+            window.resetImageZoom = function () {
+                scale = 1;
+                translateX = 0;
+                translateY = 0;
+                applyTransform(true);
+            };
+
+            stage.addEventListener('click', function (e) {
+                if (e.target === stage) window.closeImageZoom();
+            });
+
+            img.addEventListener('dblclick', function (e) {
+                e.stopPropagation();
+                if (scale > 1) {
+                    window.resetImageZoom();
+                } else {
+                    scale = 2.5;
+                    translateX = 0;
+                    translateY = 0;
+                    applyTransform(true);
+                }
+            });
+
+            modal.addEventListener('wheel', function (e) {
+                e.preventDefault();
+                window.adjustImageZoom(e.deltaY < 0 ? 0.25 : -0.25);
+            }, { passive: false });
+
+            img.addEventListener('mousedown', function (e) {
+                if (scale <= 1) return;
+                e.preventDefault();
+                isDragging = true;
+                startX = e.clientX - translateX;
+                startY = e.clientY - translateY;
+                applyTransform(false);
+            });
+
+            window.addEventListener('mousemove', function (e) {
+                if (!isDragging) return;
+                translateX = e.clientX - startX;
+                translateY = e.clientY - startY;
+                applyTransform(false);
+            });
+
+            window.addEventListener('mouseup', function () {
+                if (!isDragging) return;
+                isDragging = false;
+                applyTransform(true);
+            });
+
+            stage.addEventListener('touchstart', function (e) {
+                if (e.touches.length === 2) {
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    lastTouchDist = Math.hypot(dx, dy);
+                } else if (e.touches.length === 1) {
+                    const now = Date.now();
+                    if (now - lastTapTime < 300 && e.target === img) {
+                        if (scale > 1) window.resetImageZoom();
+                        else { scale = 2.5; translateX = 0; translateY = 0; applyTransform(true); }
+                        lastTapTime = 0;
+                        return;
+                    }
+                    lastTapTime = now;
+                    if (scale > 1) {
+                        isDragging = true;
+                        startX = e.touches[0].clientX - translateX;
+                        startY = e.touches[0].clientY - translateY;
+                    }
+                }
+            }, { passive: true });
+
+            stage.addEventListener('touchmove', function (e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const dx = e.touches[0].clientX - e.touches[1].clientX;
+                    const dy = e.touches[0].clientY - e.touches[1].clientY;
+                    const dist = Math.hypot(dx, dy);
+                    if (lastTouchDist > 0) {
+                        scale = Math.min(5, Math.max(0.5, scale * (dist / lastTouchDist)));
+                        if (scale <= 1) { translateX = 0; translateY = 0; }
+                        applyTransform(false);
+                    }
+                    lastTouchDist = dist;
+                } else if (e.touches.length === 1 && isDragging && scale > 1) {
+                    e.preventDefault();
+                    translateX = e.touches[0].clientX - startX;
+                    translateY = e.touches[0].clientY - startY;
+                    applyTransform(false);
+                }
+            }, { passive: false });
+
+            stage.addEventListener('touchend', function () {
+                isDragging = false;
+                lastTouchDist = 0;
+            });
+
+            window.addEventListener('keydown', function (e) {
+                if (modal.style.display !== 'flex') return;
+                if (e.key === 'Escape') window.closeImageZoom();
+                else if (e.key === '+' || e.key === '=') window.adjustImageZoom(0.3);
+                else if (e.key === '-') window.adjustImageZoom(-0.3);
+                else if (e.key === '0') window.resetImageZoom();
+            });
+        })();
+    </script>
 </body>
 </html>
