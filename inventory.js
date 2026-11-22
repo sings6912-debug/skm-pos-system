@@ -89,8 +89,8 @@ window.renderInventory = function() {
             displayItems = filtered.slice(startIndex, endIndex); 
         }
 
-        const showCost = window.sysSettings.cost && window.currentRole === 'admin'; 
-        let enableEdit = window.currentRole === 'admin' ? true : false;
+        const showCost = window.sysSettings.cost && (window.currentRole === 'admin' || window.currentRole === 'manager'); 
+        let enableEdit = (window.currentRole === 'admin' || window.currentRole === 'manager');
         
         if (window.currentInventoryView === 'grid') {
             let finalHtml = `<div class="product-grid">`;
@@ -203,7 +203,7 @@ window.generateProductBarcode = function() {
 };
 
 window.openProductModal = function() { 
-    if(window.currentRole !== 'admin') {
+    if(window.currentRole !== 'admin' && window.currentRole !== 'manager') {
         if(typeof window.ksMsg === 'function') window.ksMsg('គ្មានសិទ្ធិ!', 'បរាជ័យ', true);
         return;
     } 
@@ -363,7 +363,7 @@ window.saveProduct = async function() {
 };
 
 window.editProduct = function(id) { 
-    if(window.currentRole !== 'admin') {
+    if(window.currentRole !== 'admin' && window.currentRole !== 'manager') {
         if(typeof window.ksMsg === 'function') window.ksMsg('គ្មានសិទ្ធិ!', 'បរាជ័យ', true);
         return;
     }
@@ -410,7 +410,7 @@ window.editProduct = function(id) {
 };
 
 window.deleteProduct = function(id) { 
-    if(window.currentRole !== 'admin') {
+    if(window.currentRole !== 'admin' && window.currentRole !== 'manager') {
         if(typeof window.ksMsg === 'function') window.ksMsg('គ្មានសិទ្ធិ!', 'បរាជ័យ', true);
         return;
     }
@@ -452,7 +452,7 @@ window.exportCSV = function() {
         if(typeof window.ksMsg === 'function') return window.ksMsg('គ្មានទិន្នន័យទំនិញដើម្បី Export ទេ!');
         return;
     }
-    const showCost = window.sysSettings && window.sysSettings.cost && window.currentRole === 'admin';
+    const showCost = window.sysSettings && window.sysSettings.cost && (window.currentRole === 'admin' || window.currentRole === 'manager');
     let csv = '\uFEFF"លេខកូដ","ឈ្មោះទំនិញ","ប្រភេទ","តម្លៃដើម($)","តម្លៃលក់($)","តម្លៃរៀល(៛)","ខ្នាត","ស្តុក","ស្ថានភាព","ផុតកំណត់","រូបភាព(URL)","ការពណ៌នា"\n';
     
     window.inventory.forEach(p => {
@@ -481,16 +481,12 @@ window.exportCSV = function() {
 };
 
 // 🌟 មុខងារ Import ទិន្នន័យ (មានរូបភាព)
-window.importCSV = function() {
-    if(window.currentRole !== 'admin') {
-        if(typeof window.ksMsg === 'function') window.ksMsg('មានតែ Admin ប៉ុណ្ណោះដែលអាច Import ទិន្នន័យបាន!', 'គ្មានសិទ្ធិ', true);
+window.importCSV = function(directEvent) {
+    if(window.currentRole !== 'admin' && window.currentRole !== 'manager') {
+        if(typeof window.ksMsg === 'function') window.ksMsg('មានតែ Admin ឬ Manager ប៉ុណ្ណោះដែលអាច Import ទិន្នន័យបាន!', 'គ្មានសិទ្ធិ', true);
         return;
     }
-    const input = document.createElement('input');
-    input.type = 'file';
-    input.accept = '.csv';
-    input.onchange = function(e) {
-        const file = e.target.files[0];
+    const processCsvFile = function(file, inputEl) {
         if(!file) return;
         
         const reader = new FileReader();
@@ -583,6 +579,19 @@ window.importCSV = function() {
             window.ksMsg(`Import រួចរាល់!<br>ទំនិញថ្មី: ${addedCount}<br>កែប្រែ: ${updatedCount}`, 'ជោគជ័យ');
         };
         reader.readAsText(file);
+        if (inputEl) inputEl.value = '';
+    };
+
+    if (directEvent && directEvent.target && directEvent.target.files && directEvent.target.files[0]) {
+        processCsvFile(directEvent.target.files[0], directEvent.target);
+        return;
+    }
+
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.csv';
+    input.onchange = function(e) {
+        processCsvFile(e.target.files[0], e.target);
     };
     input.click();
 };

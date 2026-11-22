@@ -1221,6 +1221,48 @@
 
     <script>
         // 🛡️ សុវត្ថិភាព Escape សម្រាប់ Telegram HTML Messages
+        // ⚡ BAKONG DYNAMIC KHQR GENERATOR (EMVCo Standard + CRC16-CCITT)
+window.generateBakongKHQR = function(bakongId, merchantName, amount, currency = 'USD') {
+    const cleanId = String(bakongId || '').trim();
+    if (!cleanId) return '';
+    const tlv = (tag, val) => {
+        const s = String(val);
+        return tag + String(s.length).padStart(2, '0') + s;
+    };
+    const isKhr = String(currency).toUpperCase() === 'KHR';
+    const currCode = isKhr ? '116' : '840';
+    const numAmt = parseFloat(amount) || 0;
+    const amtStr = numAmt > 0 ? (isKhr ? String(Math.round(numAmt)) : numAmt.toFixed(2)) : '';
+    const safeName = String(merchantName || 'SKM SHOP').replace(/[^\x20-\x7E]/g, '').trim().slice(0, 25) || 'SKM SHOP';
+
+    let payload = '';
+    payload += tlv('00', '01');
+    payload += tlv('01', amtStr ? '12' : '11');
+    payload += tlv('29', tlv('00', cleanId));
+    payload += tlv('52', '5999');
+    payload += tlv('53', currCode);
+    if (amtStr) payload += tlv('54', amtStr);
+    payload += tlv('58', 'KH');
+    payload += tlv('59', safeName);
+    payload += tlv('60', 'Phnom Penh');
+    payload += '6304';
+
+    let crc = 0xFFFF;
+    for (let i = 0; i < payload.length; i++) {
+        crc ^= (payload.charCodeAt(i) << 8);
+        for (let j = 0; j < 8; j++) {
+            crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+            crc &= 0xFFFF;
+        }
+    }
+    return payload + crc.toString(16).toUpperCase().padStart(4, '0');
+};
+window.getBakongQrImageUrl = function(bakongId, merchantName, amount, currency = 'USD') {
+    const khqr = window.generateBakongKHQR(bakongId, merchantName, amount, currency);
+    if (!khqr) return '';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=${encodeURIComponent(khqr)}`;
+};
+
         function escapeTelegramHTML(text) {
             if (!text) return '';
             return String(text)
@@ -2078,6 +2120,14 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             addCartLogic(true);
         }
 
+        function shouldShowCafeAddons(p) {
+            if (sys && sys.toggleCafeAddons === true) return true;
+            if (sys && sys.toggleCafeAddons === false) return false;
+            // Smart auto-detection when Admin hasn't explicitly toggled ON/OFF
+            const txt = `${p?.category || ''} ${p?.name || ''}`.toLowerCase();
+            return /(coffee|cafe|latte|tea|matcha|boba|milk|espresso|frappe|smoothie|juice|soda|drink|beverage|iced|កាហ្វេ|តែ|ភេសជ្ជៈ|ទឹកក្រឡុក|គុជ|សូដា|ដូងក្រអូប)/.test(txt);
+        }
+
         function openDet(id) {
             const p = inventory.find(x=>String(x.id)===String(id)); if(!p) return;
             curProd = p; selVar = (p.variants && p.variants.length) ? p.variants[0] : 'Base';
@@ -2104,8 +2154,43 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 <div style="font-size:16px; font-weight:800; margin-bottom:5px;">${p.name}</div>
                 <div style="font-size:20px; font-weight:900; color:var(--text-dark); margin-bottom:5px;">${fmt(getPrc(p))}</div>
                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">${p.desc || ''}</div>
-                <div style="margin-bottom:5px; font-size:12px; font-weight:800; color:var(--text-muted);">Variant:</div>
-                <div style="margin-bottom:20px;">${vHtml}</div>
+                <div style="margin-bottom:5px; font-size:12px; font-weight:800; color:var(--text-muted);">Variant / ជម្រើស:</div>
+                <div style="margin-bottom:14px;">${vHtml}</div>
+                ${shouldShowCafeAddons(p) ? `
+                <div style="background:var(--store-bg); padding:12px; border-radius:14px; border:1px solid var(--border-color); margin-bottom:16px;">
+                    <div style="font-size:12px; font-weight:800; color:var(--text-dark); margin-bottom:8px;">🧊 កម្រិតស្ករ & ទឹកកក (Options - ស្រេចចិត្ត)</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                        <select id="optSugar" class="input-st" style="margin-bottom:0; padding:8px 10px; font-size:12px; background:var(--card-bg);">
+                            <option value="">ស្ករ៖ ធម្មតា (100%)</option>
+                            <option value="ស្ករ 75%">ស្ករ 75%</option>
+                            <option value="ស្ករ 50%">ស្ករ 50%</option>
+                            <option value="ស្ករ 25%">ស្ករ 25%</option>
+                            <option value="អត់ស្ករ 0%">អត់ស្ករ (0%)</option>
+                        </select>
+                        <select id="optIce" class="input-st" style="margin-bottom:0; padding:8px 10px; font-size:12px; background:var(--card-bg);">
+                            <option value="">ទឹកកក៖ ធម្មតា</option>
+                            <option value="ទឹកកកតិច">ទឹកកកតិច (Less Ice)</option>
+                            <option value="អត់ទឹកកក">អត់ទឹកកក (No Ice)</option>
+                            <option value="ក្តៅ (Hot)">ក្តៅ (Hot)</option>
+                        </select>
+                    </div>
+                    <div style="font-size:12px; font-weight:800; color:var(--text-dark); margin-bottom:6px;">✨ បន្ថែម Topping / Add-ons:</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px;">
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);">
+                            <input type="checkbox" class="skm-addon-chk" data-name="ថែមគុជ" data-price="0.50"> <span>ថែមគុជ (+$0.50)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);">
+                            <input type="checkbox" class="skm-addon-chk" data-name="ថែមគ្រីម" data-price="0.50"> <span>ថែមគ្រីម (+$0.50)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);">
+                            <input type="checkbox" class="skm-addon-chk" data-name="ថែមឈីស" data-price="0.75"> <span>ថែមឈីស (+$0.75)</span>
+                        </label>
+                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);">
+                            <input type="checkbox" class="skm-addon-chk" data-name="ដូរទំហំធំ" data-price="0.50"> <span>ទំហំធំ (+$0.50)</span>
+                        </label>
+                    </div>
+                </div>
+                ` : ''}
                 <button class="btn-act btn-green" style="width:100%; ${btnStyle}" ${btnClick}>Add to Order</button>
             `;
             renderQA(); openModal('detailModal');
@@ -2129,7 +2214,22 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
         }
 
         function addCartLogic(silent=false) {
-            const cid = curProd.id + '_' + selVar;
+            let finalVar = selVar;
+            let addonExtra = 0;
+            if (!silent) {
+                const sugar = document.getElementById('optSugar')?.value || '';
+                const ice = document.getElementById('optIce')?.value || '';
+                const addons = [];
+                document.querySelectorAll('.skm-addon-chk:checked').forEach(chk => {
+                    addons.push('+' + chk.getAttribute('data-name'));
+                    addonExtra += parseFloat(chk.getAttribute('data-price')) || 0;
+                });
+                const parts = [selVar, sugar, ice, ...addons].filter(Boolean);
+                finalVar = parts.join(' | ');
+            }
+            const basePrice = getPrc(curProd);
+            const finalUnitPrice = basePrice + addonExtra;
+            const cid = curProd.id + '_' + finalVar;
             const ex = cart.find(c=>c.cartId === cid);
             const stockLimit = parseFloat(curProd.qty) || 0;
             
@@ -2143,7 +2243,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             } 
             else { 
                 if(stockLimit <= 0 && !(sys && sys.preorder)) return showToast('⚠️ ទំនិញនេះអស់ពីស្តុកហើយ!', true); 
-                cart.push({...curProd, cartId: cid, cartVar: selVar, qty: 1, cartQty: 1}); 
+                cart.push({...curProd, price: finalUnitPrice, riel: Math.round(finalUnitPrice * exRate), cartId: cid, cartVar: finalVar, qty: 1, cartQty: 1}); 
             }
             
             updateCartBadges();
@@ -2166,12 +2266,30 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                             <div class="c-price">${fmt(getPrc(c) * c.qty)}</div>
                         </div>
                         <div class="c-row-bot">
-                            <div class="c-variant">Variant: ${c.cartVar}</div>
-                            <button class="c-delete" onclick="delCart('${safeCid}')">Delete</button>
+                            <div class="c-variant">${c.cartVar}</div>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <button type="button" onclick="changeCartQty('${safeCid}', -1)" style="width:26px; height:26px; border-radius:8px; border:1px solid var(--border-color); background:var(--card-bg); color:var(--text-dark); font-weight:900; cursor:pointer;">−</button>
+                                <span style="min-width:18px; text-align:center; font-size:12.5px; font-weight:800;">${c.qty}</span>
+                                <button type="button" onclick="changeCartQty('${safeCid}', 1)" style="width:26px; height:26px; border-radius:8px; border:1px solid var(--border-color); background:var(--card-bg); color:var(--text-dark); font-weight:900; cursor:pointer;">+</button>
+                                <button class="c-delete" style="margin-left:4px;" onclick="delCart('${safeCid}')" title="លុប"><i class="fa-solid fa-trash"></i></button>
+                            </div>
                         </div>
                     </div>
                 </div>
             `}).join('');
+        }
+        function changeCartQty(cid, delta) {
+            const item = cart.find(c => c.cartId === cid);
+            if (!item) return;
+            const stockLimit = parseFloat(inventory.find(p => String(p.id) === String(item.id))?.qty) || 0;
+            const nextQty = item.qty + delta;
+            if (nextQty <= 0) return delCart(cid);
+            if (delta > 0 && nextQty > stockLimit && !(sys && sys.preorder)) {
+                return showToast('⚠️ មិនអាចថែមបានទេ! (អស់ស្តុក)', true);
+            }
+            item.qty = nextQty;
+            item.cartQty = nextQty;
+            updateCartBadges(); renderCart(); updateTotal();
         }
         function delCart(cid) { cart = cart.filter(c=>c.cartId!==cid); window.cart = cart; updateCartBadges(); renderCart(); updateTotal(); }
 
@@ -2335,6 +2453,17 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
         function updateTotal() {
             const { finalTotal } = calculateOrderBreakdown();
             document.getElementById('cTotal').innerText = fmt(finalTotal);
+            const qrImg = document.getElementById('shopQrImg');
+            const qrBox = document.getElementById('qrBoxContainer');
+            const bakongId = (sys && sys.bakongId) ? String(sys.bakongId).trim() : '';
+            const bakongName = (sys && sys.bakongName) ? sys.bakongName : (document.getElementById('lpName')?.innerText || 'SKM SHOP');
+            if (bakongId && navigator.onLine && finalTotal > 0 && qrImg && qrBox) {
+                const amtForQr = curr === 'KHR' ? Math.round(finalTotal * exRate) : finalTotal;
+                qrImg.src = window.getBakongQrImageUrl(bakongId, bakongName, amtForQr, curr);
+                const lbl = qrBox.querySelector('div');
+                if (lbl) lbl.innerHTML = `<i class="fa-solid fa-qrcode" style="color:var(--success);"></i> ស្កេន Bakong KHQR (លោតទឹកលុយអូតូ: <b>${fmt(finalTotal)}</b>)`;
+                qrBox.style.display = 'block';
+            }
         }
 
         async function submitOrder() {

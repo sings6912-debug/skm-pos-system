@@ -702,6 +702,10 @@
                 <span style="color: var(--success);">📦 អនុញ្ញាតឱ្យភ្ញៀវកុម្ម៉ង់ទំនិញទោះអស់ស្តុក (បើក Pre-order)</span>
                 <input type="checkbox" id="togglePreorder" style="width: 20px; height: 20px; accent-color: var(--success); cursor: pointer;" onchange="saveAdminSettings()">
             </div>
+            <div class="toggle-row" style="background: rgba(217, 119, 6, 0.08); border-color: rgba(217, 119, 6, 0.3);">
+                <span style="color: #b45309;">🧋 បង្ហាញជម្រើស ស្ករ/ទឹកកក & Topping លើ Digital Menu (សម្រាប់ហាងកាហ្វេ/ភេសជ្ជៈ)</span>
+                <input type="checkbox" id="toggleCafeAddons" style="width: 20px; height: 20px; accent-color: #d97706; cursor: pointer;" onchange="saveAdminSettings()">
+            </div>
         </div>
 
         <!-- TAB 5: Payment QR & Chat Link & BOTS -->
@@ -1656,6 +1660,7 @@
         document.getElementById('setOpenTime').value = sys.openTime || '08:00';
         document.getElementById('setCloseTime').value = sys.closeTime || '21:00';
         document.getElementById('togglePreorder').checked = sys.preorder !== undefined ? sys.preorder : true;
+        if (document.getElementById('toggleCafeAddons')) document.getElementById('toggleCafeAddons').checked = !!sys.toggleCafeAddons;
 
         document.getElementById('toggleTableFeature').checked = !!sys.toggleTableFeature;
         document.getElementById('setTotalTables').value = sys.totalTables || 20;
@@ -1807,6 +1812,7 @@
         sys.openTime = document.getElementById('setOpenTime').value;
         sys.closeTime = document.getElementById('setCloseTime').value;
         sys.preorder = document.getElementById('togglePreorder').checked;
+        if (document.getElementById('toggleCafeAddons')) sys.toggleCafeAddons = document.getElementById('toggleCafeAddons').checked;
 
         sys.toggleTableFeature = document.getElementById('toggleTableFeature').checked;
         sys.totalTables = parseInt(document.getElementById('setTotalTables').value) || 20;
@@ -2722,6 +2728,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         activeMenuLuxuryTheme = p.theme;
         activeMenuLayout = p.layout;
         if (document.getElementById('toggleTableFeature')) document.getElementById('toggleTableFeature').checked = p.tables;
+        if (document.getElementById('toggleCafeAddons')) document.getElementById('toggleCafeAddons').checked = (profileKey === 'cafe' || profileKey === 'bakery');
         if (document.getElementById('setAdminReceiptFooter')) document.getElementById('setAdminReceiptFooter').value = p.footer;
 
         // Also apply matching Tab 6 Plugin Preset

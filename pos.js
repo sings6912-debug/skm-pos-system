@@ -1,3 +1,45 @@
+// ⚡ BAKONG DYNAMIC KHQR GENERATOR (EMVCo Standard + CRC16-CCITT)
+window.generateBakongKHQR = function(bakongId, merchantName, amount, currency = 'USD') {
+    const cleanId = String(bakongId || '').trim();
+    if (!cleanId) return '';
+    const tlv = (tag, val) => {
+        const s = String(val);
+        return tag + String(s.length).padStart(2, '0') + s;
+    };
+    const isKhr = String(currency).toUpperCase() === 'KHR';
+    const currCode = isKhr ? '116' : '840';
+    const numAmt = parseFloat(amount) || 0;
+    const amtStr = numAmt > 0 ? (isKhr ? String(Math.round(numAmt)) : numAmt.toFixed(2)) : '';
+    const safeName = String(merchantName || 'SKM SHOP').replace(/[^\x20-\x7E]/g, '').trim().slice(0, 25) || 'SKM SHOP';
+
+    let payload = '';
+    payload += tlv('00', '01');
+    payload += tlv('01', amtStr ? '12' : '11');
+    payload += tlv('29', tlv('00', cleanId));
+    payload += tlv('52', '5999');
+    payload += tlv('53', currCode);
+    if (amtStr) payload += tlv('54', amtStr);
+    payload += tlv('58', 'KH');
+    payload += tlv('59', safeName);
+    payload += tlv('60', 'Phnom Penh');
+    payload += '6304';
+
+    let crc = 0xFFFF;
+    for (let i = 0; i < payload.length; i++) {
+        crc ^= (payload.charCodeAt(i) << 8);
+        for (let j = 0; j < 8; j++) {
+            crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1);
+            crc &= 0xFFFF;
+        }
+    }
+    return payload + crc.toString(16).toUpperCase().padStart(4, '0');
+};
+window.getBakongQrImageUrl = function(bakongId, merchantName, amount, currency = 'USD') {
+    const khqr = window.generateBakongKHQR(bakongId, merchantName, amount, currency);
+    if (!khqr) return '';
+    return `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=${encodeURIComponent(khqr)}`;
+};
+
 /**
  * pos.js - គ្រប់គ្រងប្រព័ន្ធលក់ កន្ត្រកទំនិញ ការស្កេនបាកូដ ការព្រីនបំបែក (Routing) និងសុវត្ថិភាពទិន្នន័យ (Enterprise Point of Sale)
  */
@@ -385,7 +427,13 @@ window.openCheckoutModal = function() {
 
     const qrContainer = document.getElementById('checkoutQrContainer');
     const qrImage = document.getElementById('checkoutQrImage');
-    if (window.shopQR && qrContainer && qrImage) {
+    const sysBakongId = (window.sysSettings && window.sysSettings.bakongId) ? String(window.sysSettings.bakongId).trim() : '';
+    const sysBakongName = (window.sysSettings && window.sysSettings.bakongName) ? window.sysSettings.bakongName : (window.shopName || 'SKM SHOP');
+    if (sysBakongId && navigator.onLine && window.cartFinalUsd > 0 && qrContainer && qrImage) {
+        qrImage.src = window.getBakongQrImageUrl(sysBakongId, sysBakongName, window.cartFinalUsd, 'USD');
+        qrImage.title = `Dynamic Bakong KHQR: $${window.cartFinalUsd.toFixed(2)}`;
+        qrContainer.style.display = 'block';
+    } else if (window.shopQR && qrContainer && qrImage) {
         qrImage.src = window.shopQR;
         qrContainer.style.display = 'block';
     } else if (qrContainer) {
@@ -499,41 +547,64 @@ window.executePrint = function(htmlContent, customTitle = 'Print Receipt') {
         ? `@page { size: A4 portrait; margin: ${cfg.padMm}mm; }`
         : `@page { size: ${cfg.paperMm}mm auto; margin: 0; }`;
 
-    const printWindow = window.open('', '', winFeatures);
-    if (!printWindow) {
-        const fallbackArea = document.getElementById('printReceiptArea');
-        if (fallbackArea) {
-            fallbackArea.style.maxWidth = `${cfg.bodyMm}mm`;
-            fallbackArea.style.fontSize = `${cfg.fontPx}px`;
-            fallbackArea.innerHTML = htmlContent;
-            window.print();
-        }
-        return;
-    }
-    printWindow.document.write(`<html><head><title>${customTitle}</title>`);
-    printWindow.document.write('<link rel="stylesheet" href="print.css" type="text/css">');
-    printWindow.document.write(`<style>
+    // 🖨️ Popup-Free Hidden Iframe Print Engine (មិនជាប់ Popup Block របស់ Browser)
+    let oldFrame = document.getElementById('skmHiddenPrintFrame');
+    if (oldFrame) oldFrame.remove();
+
+    const iframe = document.createElement('iframe');
+    iframe.id = 'skmHiddenPrintFrame';
+    iframe.style.cssText = 'position:fixed; right:0; bottom:0; width:0; height:0; border:0; visibility:hidden;';
+    document.body.appendChild(iframe);
+
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(`<html><head><title>${customTitle}</title>`);
+    doc.write('<link rel="stylesheet" href="print.css" type="text/css">');
+    doc.write(`<style>
         ${pageCss}
         body { margin: 0; padding: 0; background: #fff; color: #000; font-family: 'Kantumruy Pro', 'Battambang', sans-serif; }
         #receipt-container { width: ${cfg.bodyMm}mm; max-width: 100%; margin: 0 auto; padding: ${cfg.padMm}mm; font-size: ${cfg.fontPx}px; line-height: 1.4; box-sizing: border-box; }
         #receipt-container h2 { font-size: ${cfg.titlePx}px !important; }
         #receipt-container img.receipt-logo { width: ${cfg.logoPx}px !important; height: ${cfg.logoPx}px !important; }
         #receipt-container img.receipt-qr { width: ${cfg.qrPx}px !important; height: ${cfg.qrPx}px !important; }
+        .skm-page-break { page-break-after: always; break-after: page; height: 1px; margin: 10px 0; border-top: 1px dashed #ccc; }
     </style>`);
-    printWindow.document.write('</head><body>');
-    printWindow.document.write('<div id="receipt-container">');
-    printWindow.document.write(htmlContent);
-    printWindow.document.write('</div>');
-    printWindow.document.write('</body></html>');
-    printWindow.document.close();
-    printWindow.focus();
+    doc.write('</head><body><div id="receipt-container">' + htmlContent + '</div></body></html>');
+    doc.close();
+
     setTimeout(() => {
-        printWindow.print();
-        printWindow.close();
-    }, 500);
+        try {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+        } catch(e) {
+            window.print();
+        }
+    }, 350);
 };
 
 // 🖨️ Multi-Printer Feature: បាញ់បញ្ជាទៅម៉ាស៊ីនព្រីនផ្ទះបាយ / បារ / ផ្នែករៀបចំ
+window.buildKitchenTicketsHTML = function(order, printerJobs) {
+    const sys = window.sysSettings || {};
+    const deptPrinters = sys.deptPrinters || [];
+    let allTickets = '';
+    for (const [printerId, items] of Object.entries(printerJobs)) {
+        if (printerId === 'cashier' || printerId === 'none') continue;
+        const printerInfo = deptPrinters.find(p => p.id === printerId);
+        if (!printerInfo) continue;
+        allTickets += `<div class="skm-page-break"></div><div style="text-align:center; font-family:'Kantumruy Pro', sans-serif;">`;
+        allTickets += `<h2 style="border: 2px solid #000; padding: 4px; display:inline-block; margin-bottom:5px;">${printerInfo.name}</h2>`;
+        allTickets += `<h3>តុ/ភ្ញៀវ: ${window.escapeHTML(order.customerName)}</h3>`;
+        allTickets += `<p style="font-size:12px;">លេខបញ្ជា: ${order.id} | ${order.date}</p>`;
+        if(order.note) allTickets += `<p style="font-size:12px; font-style:italic;">ចំណាំ: ${window.escapeHTML(order.note)}</p>`;
+        allTickets += `<hr style="border-top:1px dashed #000;"><table style="width:100%; text-align:left; font-size:14px; font-weight:bold; margin-top: 10px;">`;
+        items.forEach(item => {
+            allTickets += `<tr><td style="padding:6px 0; border-bottom: 1px solid #ccc;"><span style="font-size: 16px;">[ ${item.cartQty} ]</span> x ${window.escapeHTML(item.name)}</td></tr>`;
+        });
+        allTickets += `</table><hr style="border-top:1px dashed #000; margin-top:10px;"><p style="font-size: 10px;">បោះពុម្ពម៉ោង: ${new Date().toLocaleTimeString('km-KH')}</p></div>`;
+    }
+    return allTickets;
+};
+
 window.routeOrderToPrinters = function(order, printerJobs) {
     const sys = window.sysSettings || {};
     const deptPrinters = sys.deptPrinters || [];
@@ -708,7 +779,12 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
 
     let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? window.escapeHTML(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
     
-    if (window.shopQR) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">ស្កេនទូទាត់ប្រាក់ (Scan to Pay)</p><img class="receipt-qr" src="${window.shopQR}" style="width: ${rCfg.qrPx}px; height: ${rCfg.qrPx}px; object-fit: contain;"></div>`;
+    const rcptBakongId = (window.sysSettings && window.sysSettings.bakongId) ? String(window.sysSettings.bakongId).trim() : '';
+    const rcptBakongName = (window.sysSettings && window.sysSettings.bakongName) ? window.sysSettings.bakongName : (window.shopName || 'SKM SHOP');
+    const rcptQrUrl = (rcptBakongId && navigator.onLine && window.cartFinalUsd > 0 && typeof window.getBakongQrImageUrl === 'function')
+        ? window.getBakongQrImageUrl(rcptBakongId, rcptBakongName, window.cartFinalUsd, 'USD')
+        : window.shopQR;
+    if (rcptQrUrl) receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">${rcptBakongId && navigator.onLine && window.cartFinalUsd > 0 ? 'ស្កេន Bakong KHQR (លោតលុយអូតូ)' : 'ស្កេនទូទាត់ប្រាក់ (Scan to Pay)'}</p><img class="receipt-qr" src="${rcptQrUrl}" style="width: ${rCfg.qrPx}px; height: ${rCfg.qrPx}px; object-fit: contain;"></div>`;
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${window.cartRate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">${footerText}</p>`; 
     
     // Clear Input
@@ -731,11 +807,12 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(typeof window.renderCustomers === 'function') window.renderCustomers();
     if(typeof window.renderDashboard === 'function') window.renderDashboard();
     
-    window.executePrint(receiptHTML, `Receipt - ${newInvId}`);
-    
+    let combinedPrintHTML = receiptHTML;
     if (window.sysSettings && window.sysSettings.toggleMultiPrinter && Object.keys(printerJobs).length > 0) {
-        window.routeOrderToPrinters(newInvoice, printerJobs);
+        const extraTickets = window.buildKitchenTicketsHTML ? window.buildKitchenTicketsHTML(newInvoice, printerJobs) : '';
+        if (extraTickets) combinedPrintHTML += extraTickets;
     }
+    window.executePrint(combinedPrintHTML, `Receipt - ${newInvId}`);
 
     setTimeout(async () => {
         if (window.supabaseClient && navigator.onLine) {
@@ -760,14 +837,24 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
                 console.log("✅ វិក្កយបត្រត្រូវបានរក្សាទុកចូល pos_orders");
 
                 if (status !== 'preorder') {
+                    const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
                     for (let item of normalizedCartItems) {
                         const deductQty = parseInt(item.cartQty) || 1;
                         const { error: stockError } = await window.supabaseClient.rpc('deduct_stock_safely', {
                             p_product_id: item.id,
-                            p_branch_id: window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1',
+                            p_branch_id: bId,
                             deduct_qty: deductQty
                         });
-                        if (stockError) console.warn("បញ្ហាកាត់ស្តុកលើ Cloud:", stockError);
+                        if (stockError) {
+                            console.warn("RPC deduct_stock_safely fallback -> direct update:", stockError);
+                            const localProd = (window.inventory || []).find(p => p && String(p.id) === String(item.id));
+                            if (localProd) {
+                                await window.supabaseClient.from('pos_products')
+                                    .update({ qty: Math.max(0, parseFloat(localProd.qty) || 0), updated_at: new Date().toISOString() })
+                                    .eq('id', String(localProd.id))
+                                    .eq('branch_id', bId);
+                            }
+                        }
                     }
                 }
                 

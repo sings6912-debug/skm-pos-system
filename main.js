@@ -3021,6 +3021,54 @@ window.importData = function(e) {
                 window.inventory.splice(0, window.inventory.length, ...data);
             }
             
+            if (window.supabaseClient && navigator.onLine) {
+                try {
+                    const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                    const nowIso = new Date().toISOString();
+                    if (Array.isArray(window.inventory) && window.inventory.length > 0) {
+                        const prodRows = window.inventory.filter(Boolean).map(p => ({
+                            id: String(p.id), branch_id: bId, name: p.name || '', category: p.category || '',
+                            cost: parseFloat(p.cost) || 0, price: parseFloat(p.price) || 0, riel: parseFloat(p.riel) || 0,
+                            qty: parseInt(p.qty) || 0, unit: p.unit || '', condition: p.condition || '',
+                            expiry: p.expiry || '', image: p.image || '', description: p.description || p.desc || '',
+                            custom_id: p.customId || p.id, updated_at: nowIso
+                        }));
+                        for (let k = 0; k < prodRows.length; k += 100) {
+                            await window.supabaseClient.from('pos_products').upsert(prodRows.slice(k, k + 100), { onConflict: 'id' });
+                        }
+                    }
+                    if (Array.isArray(window.invoices) && window.invoices.length > 0) {
+                        const ordRows = window.invoices.filter(Boolean).map(o => ({
+                            id: String(o.id || o.invoiceNo), branch_id: bId, customer_name: o.customerName || o.customer || 'អតិថិជនទូទៅ',
+                            customer_phone: o.customerPhone || o.phone || '', total_amount: parseFloat(o.totalAmount || o.total || 0),
+                            paid_amount: parseFloat(o.paidUsd || o.paidAmount || 0), status: o.status || 'unpaid',
+                            seller: o.seller || '', order_data: o.items || [], note: o.note || '', timestamp: o.timestamp || Date.now()
+                        }));
+                        for (let k = 0; k < ordRows.length; k += 100) {
+                            await window.supabaseClient.from('pos_orders').upsert(ordRows.slice(k, k + 100), { onConflict: 'id' });
+                        }
+                    }
+                    if (Array.isArray(window.customers) && window.customers.length > 0) {
+                        const custRows = window.customers.filter(Boolean).map(c => ({
+                            id: String(c.id), branch_id: bId, name: c.name || '', phone: c.phone || ''
+                        }));
+                        for (let k = 0; k < custRows.length; k += 100) {
+                            await window.supabaseClient.from('pos_customers').upsert(custRows.slice(k, k + 100), { onConflict: 'id' });
+                        }
+                    }
+                    if (Array.isArray(window.expenses) && window.expenses.length > 0) {
+                        const expRows = window.expenses.filter(Boolean).map(ex => ({
+                            id: String(ex.id), branch_id: bId, category: ex.category || 'ចំណាយផ្សេងៗ',
+                            amount: parseFloat(ex.amount) || 0, note: ex.note || '', timestamp: ex.timestamp || Date.now(), date: ex.date || ''
+                        }));
+                        for (let k = 0; k < expRows.length; k += 100) {
+                            await window.supabaseClient.from('pos_expenses').upsert(expRows.slice(k, k + 100), { onConflict: 'id' });
+                        }
+                    }
+                } catch(syncErr) {
+                    console.warn("Restore Cloud table sync warning:", syncErr);
+                }
+            }
             if(typeof window.saveData==='function') await window.saveData(window.userAccounts); 
             localStorage.setItem(window.getBranchKey('auth_users_pro'), JSON.stringify(window.userAccounts)); 
             

@@ -46,6 +46,26 @@ async function syncInvoiceToCloud(inv) {
     }
 }
 
+
+async function syncProductsQtyToCloud(itemIds) {
+    if (!window.supabaseClient || !navigator.onLine || !window.inventory) return;
+    try {
+        const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const uniqueIds = [...new Set((itemIds || []).map(x => String(x)))];
+        for (const pid of uniqueIds) {
+            const realItem = window.inventory.find(p => p && String(p.id) === pid);
+            if (realItem) {
+                await window.supabaseClient.from('pos_products')
+                    .update({ qty: Math.max(0, parseFloat(realItem.qty) || 0), updated_at: new Date().toISOString() })
+                    .eq('id', String(realItem.id))
+                    .eq('branch_id', bId);
+            }
+        }
+    } catch (err) {
+        console.warn("Cloud Product Qty Sync Warning:", err);
+    }
+}
+
 // 🌟 មុខងារបាញ់ទិន្នន័យចំណាយក្នុងម៉ាស៊ីន (Local) ទៅកាន់ Cloud ដោយស្វ័យប្រវត្តិ
 window.syncLocalExpensesToCloud = async function() {
     if (!window.supabaseClient || !navigator.onLine) return;
@@ -448,6 +468,7 @@ window.processDebtPayment = async function() {
                 }
             });
             localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+            await syncProductsQtyToCloud(inv.items.map(it => it && it.id).filter(Boolean));
         }
     }
 
@@ -682,6 +703,7 @@ window.saveInvoiceChanges = async function() {
         if (typeof window.getBranchKey === 'function') {
             localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
         }
+        await syncProductsQtyToCloud(Array.from(allItemIds));
     }
 
     const newName = document.getElementById('editInvName').value.trim() || 'អតិថិជនទូទៅ';
@@ -948,14 +970,47 @@ window.reprintInvoice = function() {
         receiptHTML += `<tr><td style="padding-bottom: 4px; font-size: 11px;">$${p.toFixed(2)}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${q}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">$${lineTotal.toFixed(2)}</td></tr>`;
     });
 
+    const repTotalUsd = parseFloat(inv.totalAmount || inv.total || 0);
+    const repTotalRiel = inv.totalRiel > 0 ? Math.round(inv.totalRiel) : Math.round(repTotalUsd * rate);
+    const repDisc = parseFloat(inv.discount || 0);
+    const repTax = parseFloat(inv.taxRate || 0);
+    const repPaid = parseFloat(inv.paidUsd || inv.paidAmount || 0);
+    const repStatus = String(inv.status || 'unpaid').toLowerCase();
+
     receiptHTML += `</tbody></table><div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>`;
     receiptHTML += `<table style="width:100%; font-size: 12px; margin-top: 5px;">`;
-    receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">$${parseFloat(inv.totalAmount || inv.total || 0).toFixed(2)}</td></tr>`;
+    if (repDisc > 0) receiptHTML += `<tr><td>បញ្ចុះតម្លៃ:</td><td style="text-align:right;">-${inv.discountType === '%' ? `${repDisc}%` : `$${repDisc.toFixed(2)}`}</td></tr>`;
+    if (repTax > 0) receiptHTML += `<tr><td>VAT (${repTax}%):</td><td style="text-align:right;">បូកបញ្ចូល</td></tr>`;
+    receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">$${repTotalUsd.toFixed(2)}</td></tr>`;
+    if (repTotalRiel > 0) receiptHTML += `<tr><td></td><td style="text-align:right; font-weight:bold; font-size:13px;">${repTotalRiel.toLocaleString()} ៛</td></tr>`;
+    if (repStatus === 'paid' && (parseFloat(inv.receivedUsd || 0) > 0 || parseFloat(inv.receivedRiel || 0) > 0)) {
+        let rParts = [];
+        if (parseFloat(inv.receivedUsd || 0) > 0) rParts.push(`$${parseFloat(inv.receivedUsd).toFixed(2)}`);
+        if (parseFloat(inv.receivedRiel || 0) > 0) rParts.push(`${Math.round(inv.receivedRiel).toLocaleString()} ៛`);
+        receiptHTML += `<tr><td style="padding-top:4px;">ប្រាក់ទទួល:</td><td style="text-align:right; padding-top:4px;">${rParts.join(' | ')}</td></tr>`;
+        if (parseFloat(inv.changeUsd || 0) > 0 || parseFloat(inv.changeRiel || 0) > 0) {
+            receiptHTML += `<tr><td>ប្រាក់អាប់:</td><td style="text-align:right;">$${parseFloat(inv.changeUsd || 0).toFixed(2)} | ${Math.round(inv.changeRiel || 0).toLocaleString()} ៛</td></tr>`;
+        }
+    } else if (repStatus !== 'paid' && repPaid > 0) {
+        const repRem = Math.max(0, repTotalUsd - repPaid);
+        receiptHTML += `<tr><td style="padding-top:4px;">បានទូទាត់/កក់មុន:</td><td style="text-align:right; padding-top:4px;">$${repPaid.toFixed(2)}</td></tr>`;
+        receiptHTML += `<tr><td style="font-weight:bold;">ប្រាក់នៅខ្វះ:</td><td style="text-align:right; font-weight:bold;">$${repRem.toFixed(2)}</td></tr>`;
+    }
     receiptHTML += `</table>`;
-    
+
+    const rCfg = typeof window.getActiveReceiptConfig === 'function' ? window.getActiveReceiptConfig() : { qrPx: 150 };
+    const repBakongId = (window.sysSettings && window.sysSettings.bakongId) ? String(window.sysSettings.bakongId).trim() : '';
+    const repBakongName = (window.sysSettings && window.sysSettings.bakongName) ? window.sysSettings.bakongName : (window.shopName || 'SKM SHOP');
+    const repQrSrc = (repBakongId && navigator.onLine && repTotalUsd > 0 && typeof window.getBakongQrImageUrl === 'function')
+        ? window.getBakongQrImageUrl(repBakongId, repBakongName, repTotalUsd, 'USD')
+        : (window.shopQR || localStorage.getItem(window.getBranchKey('shop_qr')) || '');
+    if (repQrSrc) {
+        receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">${repBakongId && navigator.onLine && repTotalUsd > 0 ? 'ស្កេន Bakong KHQR (លោតលុយអូតូ)' : 'ស្កេនទូទាត់ប្រាក់ (Scan to Pay)'}</p><img class="receipt-qr" src="${repQrSrc}" style="width: ${rCfg.qrPx}px; height: ${rCfg.qrPx}px; object-fit: contain;"></div>`;
+    }
+
     let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
     if (window.escapeHTML) footerText = window.escapeHTML(footerText).replace(/\n/g, '<br>');
-    receiptHTML += `<p style="text-align:center; font-size:12px; margin-top: 15px; font-weight:bold;">${footerText}</p>`;
+    receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${rate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">${footerText}</p>`;
 
     if (typeof window.executePrint === 'function') {
         window.executePrint(receiptHTML);

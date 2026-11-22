@@ -28,7 +28,7 @@ function loadLocalUsers() {
 }
 
 window.userAccounts = loadLocalUsers();
-window.activeUser = JSON.parse(localStorage.getItem(getSafeBranchKey('active_user_obj'))) || null; 
+window.activeUser = JSON.parse(localStorage.getItem(getSafeBranchKey('active_user_obj')) || sessionStorage.getItem(getSafeBranchKey('active_user_obj')) || 'null'); 
 window.currentRole = window.activeUser ? window.activeUser.role : 'guest';
 
 // 🌟 មុខងាររុញគណនីទាំងអស់ទៅកាន់ Supabase Cloud ដោយមិនឱ្យបាត់ទិន្នន័យផ្សេង
@@ -118,6 +118,11 @@ window.checkAuthentication = function(applyPermissionsCallback) {
         if (authScreen) authScreen.style.display = 'flex'; 
         if (loginForm) loginForm.style.display = 'block'; 
         if (forgotPassForm) forgotPassForm.style.display = 'none'; 
+        const remUser = localStorage.getItem(getSafeBranchKey('remembered_username'));
+        const uInp = document.getElementById('loginUsername');
+        const remChk = document.getElementById('rememberMe');
+        if (remUser && uInp && !uInp.value) uInp.value = remUser;
+        if (remChk) remChk.checked = Boolean(remUser);
         window.currentRole = 'guest';
     } else { 
         if (authScreen) authScreen.style.display = 'none'; 
@@ -171,7 +176,17 @@ window.handleLogin = async function() {
     if (foundUser) { 
         window.activeUser = foundUser; 
         window.currentRole = foundUser.role; 
-        localStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(window.activeUser)); 
+        const rememberChecked = document.getElementById('rememberMe')?.checked;
+        if (rememberChecked) {
+            localStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(window.activeUser));
+            localStorage.setItem(getSafeBranchKey('remembered_username'), foundUser.username);
+            sessionStorage.removeItem(getSafeBranchKey('active_user_obj'));
+        } else {
+            sessionStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(window.activeUser));
+            localStorage.removeItem(getSafeBranchKey('active_user_obj'));
+        sessionStorage.removeItem(getSafeBranchKey('active_user_obj'));
+            localStorage.removeItem(getSafeBranchKey('remembered_username'));
+        } 
         
         uInput.value = ''; 
         pInput.value = ''; 

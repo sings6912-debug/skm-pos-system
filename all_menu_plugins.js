@@ -20,8 +20,8 @@
     window.__SKM_PLUGIN_CONTROLLER_READY__ = true;
 
     const DEFAULT_ENABLED = {
-        menu: ["ai_gemini_ai_concierge.js", "budget_finder.js", "camera_barcode_scanner.js", "care_recipe_guide.js", "code_artifact (4).js", "delivery_notes.js", "digital_member_id.js", "quick_price_check.js", "quick_reorder.js", "scheduled_pickup.js", "store_status.js", "substitute_finder.js", "voice_search.js"],
-        pos: ["គោលដៅលក់ប្រចាំថ្ងៃ (Sales Goal).js", "ចង្កូត (Shortcut Navigator).js", "ចាក់សោរអេក្រង់ (Privacy Lock).js", "បូកសរុបវិក្កយបត្រតាមឈ្មោះអតិថិជន ឬ លេខទូរស័ព្ទ (Customer Bill Summary).js", "ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ប៊ូតុងអណ្តែតសម្រាប់ទំនាក់ទំនង (Floating Contact Bar).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "⏰ កត់ត្រាម៉ោងការងារ (Time Clock).js", "☑️ កិច្ចការត្រូវធ្វើប្រចាំវេន daily_checklist.js", "⚖️ ផ្ទៀងផ្ទាត់លុយក្នុងទូរ (Cash Drawer Audit).js", "⚠️ កត់ត្រាទំនិញខូចខាត (Wastage Log).js", "⚡ ទំនិញរហ័ស.js", "⭐ ពិនិត្យពិន្ទុសមាជិក loyalty_points_checker.js", "🎂 អតិថិជន VIP & ថ្ងៃកំណើត (vip_birthday_reminder.js).js", "🏆 គណនាកម្រៃជើងសារបុគ្គលិក staff_commission.js", "🏷️ គណនាលក់បញ្ចុះតម្លៃរហ័ស (discount_helper.js).js", "🏷️ បង្កើតស្លាកតម្លៃទំនិញ price_tag.js", "💬 សាររំលឹកទារប្រាក់ (Debt Reminder & SMS).js", "💰 គណនាតម្លៃលក់ & ចំណេញ (Margin Calculator).js", "💳 សង្ខេបចំណូលតាមប្រភេទបង់ប្រាក់ payment_breakdown.js", "💵 ប្រអប់រាប់សាច់ប្រាក់បិទវេន (Cash Count).js", "💼 ចរន្តសាច់ប្រាក់ (Cash InOut).js", "📈 សង្ខេបការចំណាយតាមប្រភេទ expense_summary.js", "📉 កត់ត្រាចំណាយរហ័ស.js", "📊 របាយការណ៍ម៉ោងការងារប្រចាំខែ monthly_staff_report.js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js", "📌 ក្ដារខៀនប្រកាសព័ត៌មានហាង noticeboard.js", "📑 របាយការណ៍បិទវេនលក់ (Z-Report).js", "📝 កំណត់ចំណាំរហ័ស (Cashier Notes).js", "🔄 បង្វិលសងប្រាក់ (Quick Refund).js", "🔤 បង្កើត BarcodeSKU (Barcode Generator).js", "🕒 នាឡិកាមានជីវិត (Blinking Colon).js", "🚚 គ្រប់គ្រងការដឹកជញ្ជូនអនឡាញ (Delivery).js", "🛒 បញ្ជីទំនិញត្រូវបញ្ជាទិញបន្ថែម reorder_list.js", "🤝 កំណត់ហេតុផ្ទេរវេន (Shift Handover Log).js", "🪙 គណនាប្រាក់អាប់ (Change Denomination Helper).js", "🪙 ប្រាក់ដើមក្នុងទូរពេលបើកវេន opening_float.js"]
+        menu: ["store_status.js", "quick_reorder.js", "delivery_notes.js", "quick_price_check.js"],
+        pos: ["ប៊ូតុងគិតលុយរហ័ស (Quick Cash).js", "ផ្អាកកន្ត្រក (Hold Order).js", "ម៉ាស៊ីនគិតលេខខ្នាតតូច (Mini Calculator).js", "📊 សង្ខេបការលក់ថ្ងៃនេះ.js", "📋 វិក្កយបត្រលក់ចុងក្រោយ (10 ចុងក្រោយ).js"]
     };
 
     const registry = { menu: {}, pos: {} };
@@ -1856,7 +1856,7 @@ window.skmRegisterBundledPlugin('menu', "digital_member_id.js", function() {
             nameEl.innerText = 'អតិថិជនទូទៅ (Guest)';
         }
 
-        let pts = localStorage.getItem('skm_pts') || '0';
+        let pts = (localStorage.getItem(`ks2_${new URLSearchParams(window.location.search).get('branch') || 'branch_1'}_pts`) || localStorage.getItem('skm_pts') || '0');
         if (ptsEl) ptsEl.innerText = `${pts} pts`;
     }
 
@@ -2528,7 +2528,7 @@ window.skmRegisterBundledPlugin('menu', "live_kitchen_tracker.js", function() {
         const container = document.getElementById('kitchenOrdersContainer');
         if (!container) return;
 
-        let orders = JSON.parse(localStorage.getItem('skm_my_orders_history') || '[]');
+        let orders = JSON.parse(localStorage.getItem(`ks2_${new URLSearchParams(window.location.search).get('branch') || 'branch_1'}_my_orders_history`) || localStorage.getItem('skm_my_orders_history') || '[]');
         if (orders.length === 0) {
             container.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:12px;">មិនទាន់មានការកុម្មង់សកម្មក្នុងប្រព័ន្ធទេ</div>';
             return;
@@ -2623,19 +2623,19 @@ window.skmRegisterBundledPlugin('menu', "loyalty_wallet.js", function() {
     function updateLoyaltyDisplay() {
         const disp = document.getElementById('walletPointsDisplay');
         if (!disp) return;
-        let pts = localStorage.getItem('skm_pts') || '0';
+        let pts = (localStorage.getItem(`ks2_${new URLSearchParams(window.location.search).get('branch') || 'branch_1'}_pts`) || localStorage.getItem('skm_pts') || '0');
         disp.innerText = `${pts} pts`;
     }
 
     window.redeemLoyaltyReward = function(cost, promoCode) {
-        let pts = parseInt(localStorage.getItem('skm_pts') || '0');
+        let pts = parseInt((localStorage.getItem(`ks2_${new URLSearchParams(window.location.search).get('branch') || 'branch_1'}_pts`) || localStorage.getItem('skm_pts') || '0'));
         if (pts < cost) {
             alert('ពិន្ទុរបស់អ្នកមិនទាន់គ្រប់គ្រាន់សម្រាប់ប្តូររង្វាន់នេះទេ!');
             return;
         }
 
         pts -= cost;
-        localStorage.setItem('skm_pts', pts);
+        localStorage.setItem(`ks2_${new URLSearchParams(window.location.search).get('branch') || 'branch_1'}_pts`, pts); localStorage.setItem('skm_pts', pts); const _pd = document.getElementById('ptsDisplay'); if(_pd) _pd.innerText = `⭐ Points: ${pts}`;
         updateLoyaltyDisplay();
 
         const promoInput = document.getElementById('cPromo');
@@ -3033,7 +3033,7 @@ window.skmRegisterBundledPlugin('menu', "quick_reorder.js", function() {
         const list = document.getElementById('skmPastOrdersList');
         if (!list) return;
 
-        let orders = JSON.parse(localStorage.getItem('skm_my_orders_history') || '[]');
+        let orders = JSON.parse(localStorage.getItem(`ks2_${new URLSearchParams(window.location.search).get('branch') || 'branch_1'}_my_orders_history`) || localStorage.getItem('skm_my_orders_history') || '[]');
         if (orders.length === 0) {
             list.innerHTML = '<div style="text-align:center; padding:20px; color:var(--text-muted); font-size:12px;">មិនទាន់មានប្រវត្តិការកុម្មង់ទេ</div>';
             return;
