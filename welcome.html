@@ -543,7 +543,10 @@
                 galleryTitle: '🖼️ វិចិត្រសាលផ្ទាំងរូបភាព (១០០ រូបភាព Fast Load)',
                 galleryClose: '✕ បិទ',
                 offline: '⚠️ គ្មានអ៊ីនធឺណិត (Offline Mode)',
-                customBg: 'ផ្ទាល់ខ្លួន'
+                customBg: 'ផ្ទាល់ខ្លួន',
+                uploadingBg: 'កំពុង Upload រូបភាព...',
+                uploadSuccess: '✅ Upload រូបភាពចូល Cloud ជោគជ័យ!',
+                uploadFallback: '⚠️ អ៊ីនធឺណិតខ្សោយ! បានរក្សាទុកជា Base64 ជាបណ្តោះអាសន្ន។'
             },
             en: {
                 branch: 'Branch: ',
@@ -560,7 +563,10 @@
                 galleryTitle: '🖼️ Wallpaper Gallery (100 Fast Load Images)',
                 galleryClose: '✕ Close',
                 offline: '⚠️ Offline Mode',
-                customBg: 'Custom'
+                customBg: 'Custom',
+                uploadingBg: 'Uploading wallpaper...',
+                uploadSuccess: '✅ Wallpaper uploaded to Cloud!',
+                uploadFallback: '⚠️ Weak connection! Saved locally as Base64.'
             },
             zh: {
                 branch: '分店：',
@@ -577,7 +583,10 @@
                 galleryTitle: '🖼️ 精选壁纸图库 (100张极速加载)',
                 galleryClose: '✕ 关闭',
                 offline: '⚠️ 无网络连接 (离线模式)',
-                customBg: '自定义'
+                customBg: '自定义',
+                uploadingBg: '正在上传壁纸...',
+                uploadSuccess: '✅ 壁纸已成功上传至云端！',
+                uploadFallback: '⚠️ 网络较弱，已临时保存至本地！'
             }
         };
 
@@ -851,12 +860,14 @@
 
             try {
                 if(supabaseClient && navigator.onLine) {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).maybeSingle();
-                    let d = (data && data.data_json) ? data.data_json : {};
-                    d.customBg = bgStyle;
+                    let { data } = await supabaseClient.from('branch_store').select('sys_settings').eq('branch_id', SHOP_BRANCH_ID).maybeSingle();
+                    let sysObj = Object.assign({}, branchSysSettings || {}, (data && data.sys_settings) ? data.sys_settings : {});
+                    sysObj.customBg = bgStyle;
+                    branchSysSettings = sysObj;
+                    localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_sys_settings`, JSON.stringify(sysObj));
                     await supabaseClient.from('branch_store').upsert({
                         branch_id: SHOP_BRANCH_ID,
-                        data_json: d,
+                        sys_settings: sysObj,
                         updated_at: new Date().toISOString()
                     }, { onConflict: 'branch_id' });
                 }
@@ -887,7 +898,7 @@
             if (!file) return;
             playClickSound();
             
-            showWelcomeToast("កំពុង Upload រូបភាព... (Uploading...)");
+            showWelcomeToast((i18n[currentLang] || i18n.km).uploadingBg);
 
             const reader = new FileReader();
             reader.onload = function(evt) {
@@ -907,12 +918,12 @@
                         const cloudUrl = await uploadToSupabaseStorage(blob, 'wallpapers');
                         const bgStyle = `url("${cloudUrl}")`;
                         applyAndSaveWallpaper(bgStyle, null);
-                        showWelcomeToast("✅ Upload រូបភាពចូល Cloud ជោគជ័យ!");
+                        showWelcomeToast((i18n[currentLang] || i18n.km).uploadSuccess);
                     } catch (err) {
                         console.warn("Cloud upload failed, using Base64 fallback:", err);
                         const compressedBg = `url("${canvas.toDataURL('image/jpeg', 0.75)}")`;
                         applyAndSaveWallpaper(compressedBg, null);
-                        showWelcomeToast("⚠️ អ៊ីនធឺណិតខ្សោយ! បានរក្សាទុកជា Base64 ជាបណ្តោះអាសន្ន។");
+                        showWelcomeToast((i18n[currentLang] || i18n.km).uploadFallback);
                     }
                 };
                 img.src = evt.target.result;
@@ -954,9 +965,9 @@
 
             if(navigator.onLine && supabaseClient) {
                 try {
-                    // 🌟 ទាញយកពី Column shop_info, sys_settings និង data_json
+                    // ⚡ Low-Egress: ទាញតែ Column ស្អាតៗ (មិនទាញ data_json ធំៗបើមាន shop_info/sys_settings រួច)
                     const fetchPromise = supabaseClient.from('branch_store')
-                        .select('shop_info, sys_settings, data_json')
+                        .select('shop_info, sys_settings')
                         .eq('branch_id', SHOP_BRANCH_ID)
                         .maybeSingle();
 
@@ -964,17 +975,23 @@
                     let { data } = await Promise.race([fetchPromise, timeoutPromise]);
                     
                     if (data) {
-                        let shop = data.shop_info || data.data_json?.shop_info || {};
-                        let d = data.data_json || {};
+                        let d = {};
+                        if (!data.shop_info && !data.sys_settings) {
+                            try {
+                                let { data: leg } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', SHOP_BRANCH_ID).maybeSingle();
+                                if (leg && leg.data_json) d = leg.data_json;
+                            } catch(legErr) {}
+                        }
+                        let shop = data.shop_info || d.shop_info || {};
+                        let sys = Object.assign({}, d.sysSettings || {}, data.sys_settings || {});
 
                         shopName = shop.shopName || d.shopName || shopName;
                         shopLogo = shop.shopLogo || d.shopLogo || shopLogo;
-                        if (d.customBg) {
-                            document.documentElement.style.setProperty('--current-bg', d.customBg);
-                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, d.customBg);
+                        const cloudBg = sys.customBg || d.customBg || '';
+                        if (cloudBg) {
+                            document.documentElement.style.setProperty('--current-bg', cloudBg);
+                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, cloudBg);
                         }
-                        
-                        let sys = data.sys_settings || d.sysSettings || {};
                         if (sys) {
                             branchSysSettings = sys;
                             const cloudTicker = branchSysSettings.tickerNews || branchSysSettings.tickerText || '';

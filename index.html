@@ -448,7 +448,7 @@
 
                             <div class="summary-row" style="align-items: center; border-bottom: 1px solid var(--border); padding-bottom: 10px;">
                                 <span id="lblRateText" style="font-size: var(--fs-13); color: var(--text-muted);">អត្រាប្តូរប្រាក់ (Rate):</span>
-                                <span style="display:flex; align-items:center; gap:5px;"><input type="number" id="globalExchangeRate" class="form-control" style="width: 80px; padding: 2px 5px; height: 28px; text-align: center;" value="4000" oninput="window.renderCart()"> ៛</span>
+                                <span style="display:flex; align-items:center; gap:5px;"><input type="number" id="globalExchangeRate" class="form-control" style="width: 80px; padding: 2px 5px; height: 28px; text-align: center;" value="4000" oninput="window.renderCart()" onchange="if(typeof window.saveExchangeRate==='function') window.saveExchangeRate(this.value)"> ៛</span>
                             </div>
                             <div class="summary-row" style="margin-top: 10px;"><span id="lblQtyText">សរុបចំនួន (Qty):</span><span id="cartTotalQty" style="font-weight:bold;">0</span></div>
                             
@@ -760,26 +760,26 @@
                         </div>
 
                         <div style="display:flex; align-items:center; gap:12px; margin-top: 15px; font-size: var(--fs-16);">
-                            <span><strong style="color:var(--text-main);">🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖</strong></span>
+                            <span id="lblSetStorePin"><strong style="color:var(--text-main);">🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖</strong></span>
                             <input type="text" id="setStorePin" class="form-control" maxlength="4" placeholder="1234" style="width: 100px; padding: 5px; height: 35px; text-align: center; -webkit-text-security: disc;" onchange="window.saveSysSettings()" autocomplete="off">
                         </div>
 
                         <div style="margin-top: 15px;">
-                            <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖</strong></label>
+                            <label id="lblSetTickerNews" style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖</strong></label>
                             <textarea id="setTickerText" class="form-control" rows="2" placeholder="សរសេរសេចក្តីជូនដំណឹងអក្សររត់នៅទីនេះ..." onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
                         </div>
                         
                         <label style="display:flex; align-items:center; gap:12px; margin-top:20px; margin-bottom:15px; cursor:pointer; font-size: var(--fs-16);">
                             <input type="checkbox" id="setEnableSound" onchange="window.saveSysSettings()" style="width:22px; height:22px; cursor:pointer;" checked>
-                            <span><strong style="color:var(--text-main);">🔊 បន្លឺសំឡេង (Enable Sound):</strong> បើកសំឡេង "ទីត!" ពេលស្កេន ឬចុចទំនិញចូលកន្ត្រក។</span>
+                            <span id="lblSetEnableSound"><strong style="color:var(--text-main);">🔊 បន្លឺសំឡេង (Enable Sound):</strong> បើកសំឡេង "ទីត!" ពេលស្កេន ឬចុចទំនិញចូលកន្ត្រក។</span>
                         </label>
                         <div style="margin-top: 15px;">
-                            <label style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📝 សារខាងក្រោមវិក្កយបត្រ (Receipt Footer Text)៖</strong></label>
+                            <label id="lblSetReceiptFooter" style="display:block; margin-bottom: 5px; font-size: var(--fs-14);"><strong style="color:var(--text-main);">📝 សារខាងក្រោមវិក្កយបត្រ (Receipt Footer Text)៖</strong></label>
                             <textarea id="setReceiptFooter" class="form-control" rows="2" placeholder="សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។" onchange="window.saveSysSettings()" style="width: 100%;"></textarea>
                         </div>
 
                         <div style="margin-top: 18px; padding-top: 15px; border-top: 1px dashed var(--border); display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap;">
-                            <label for="setReceiptSize" style="font-size: var(--fs-15);"><strong style="color:var(--text-main);">🖨️ ទំហំក្រដាសវិក្កយបត្រ (ព្រីន & ទាញយករូប)៖</strong></label>
+                            <label id="lblSetReceiptSize" for="setReceiptSize" style="font-size: var(--fs-15);"><strong style="color:var(--text-main);">🖨️ ទំហំក្រដាសវិក្កយបត្រ (ព្រីន & ទាញយករូប)៖</strong></label>
                             <select id="setReceiptSize" class="form-control" style="width: 260px; font-weight: bold; border-color: var(--primary);" onchange="window.saveSysSettings()">
                                 <option value="80mm">📄 ខ្នាត 80mm (ម៉ាស៊ីនព្រីនធំស្តង់ដារ)</option>
                                 <option value="58mm">🧾 ខ្នាត 57x40mm / 58mm (ម៉ាស៊ីនព្រីនតូច)</option>
@@ -810,7 +810,7 @@
                                     <tr class="filter-row">
                                         <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
                                         <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
-                                        <th><select class="col-filter" onchange="window.filterTable('mainUserTable')"><option value="">ទាំងអស់</option><option value="admin">Admin</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select></th>
+                                        <th><select class="col-filter" onchange="window.filterTable('mainUserTable')"><option value="">ទាំងអស់</option><option value="admin">Admin</option><option value="manager">Manager</option><option value="sales">Sales</option><option value="warehouse">Warehouse</option></select></th>
                                         <th><input type="text" class="col-filter" onkeyup="window.filterTable('mainUserTable')" placeholder="ស្វែងរក..."></th>
                                         <th></th>
                                     </tr>
@@ -1165,6 +1165,11 @@
                     <input type="text" id="newShopTelegramInput" class="form-control" placeholder="Telegram Username (ឧ. Jheng6912)" style="font-size: var(--fs-14); width: 100%; margin-bottom: 10px;">
                     <input type="text" id="newBotTokenInput" class="form-control" placeholder="Bot Token សម្រាប់ការលោតសារ" style="font-size: var(--fs-14); width: 100%; margin-bottom: 10px;">
                     <input type="text" id="newChatIdInput" class="form-control" placeholder="Chat ID សម្រាប់ទទួលសារ" style="font-size: var(--fs-14); width: 100%;">
+                </div>
+                <div style="margin-top: 15px; border-top: 1px dashed var(--border); padding-top: 15px;">
+                    <label id="lblBakongTitle" style="font-size: var(--fs-14); display:block; margin-bottom: 8px; color: var(--success); font-weight: bold;">🏦 ការកំណត់ Bakong Dynamic KHQR:</label>
+                    <input type="text" id="newBakongIdInput" class="form-control" placeholder="Bakong ID (ឧ. 123456789@aba)" style="font-size: var(--fs-14); width: 100%; margin-bottom: 10px;">
+                    <input type="text" id="newBakongNameInput" class="form-control" placeholder="ឈ្មោះគណនី Bakong (ឧ. SOK DARA)" style="font-size: var(--fs-14); width: 100%; text-transform: uppercase;">
                 </div>
             </div>
             <div class="modal-footer" style="justify-content: center;"><button class="btn btn-outline" onclick="window.closeShopNameModal()">បោះបង់</button><button class="btn btn-primary" onclick="window.saveShopName()">រក្សាទុក</button></div>
@@ -1659,7 +1664,9 @@
                     if (filterValue && cells[index]) {
                         let cellText = cells[index].textContent || cells[index].innerText;
                         if (input.tagName === 'SELECT') {
-                            if (input.value && cellText.trim() !== input.value) {
+                            const sortVal = (cells[index].getAttribute('data-sort') || '').toLowerCase().trim();
+                            const targetVal = input.value.toLowerCase().trim();
+                            if (targetVal && sortVal !== targetVal && cellText.toLowerCase().indexOf(targetVal) === -1) {
                                 showRow = false;
                             }
                         } else {

@@ -2,6 +2,11 @@
  * finance.js - គ្រប់គ្រងវិក្កយបត្រ ការចំណាយ និងការទូទាត់ប្រាក់ (Invoices, Expenses & Settle Debt)
  */
 
+function getFinI18n() {
+    const lang = localStorage.getItem('app_lang') || 'km';
+    return (window.sysI18n && (window.sysI18n[lang] || window.sysI18n.km)) || {};
+}
+
 // ជំនួយការសម្រាប់បង្ហាញសារជូនដំណឹងដោយសុវត្ថិភាព
 function notifyFinanceUser(msg, title = 'ជូនដំណឹង', isError = false) {
     if (typeof window.ksMsg === 'function') {
@@ -112,6 +117,7 @@ window.changeInvoicePage = function(page) {
 };
 
 window.renderUnpaid = function() {
+    const d = getFinI18n();
     const tableBody = document.getElementById('unpaidTable') || document.querySelector('#mainUnpaidTable tbody');
     const pageContainer = document.getElementById('invoicePagination');
     if (!tableBody) return;
@@ -197,7 +203,7 @@ window.renderUnpaid = function() {
     });
 
     if (filtered.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">មិនមានទិន្នន័យវិក្កយបត្រទេ</td></tr>`;
+        tableBody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:var(--text-muted); padding:20px;">${d.noInvRecords || 'មិនមានទិន្នន័យវិក្កយបត្រទេ'}</td></tr>`;
         if(pageContainer) pageContainer.innerHTML = '';
         const paidEl = document.getElementById('summaryInvoicePaid');
         const unpaidEl = document.getElementById('summaryInvoiceUnpaid');
@@ -248,38 +254,38 @@ window.renderUnpaid = function() {
 
         let statusBadge = '';
         if (status === 'paid') {
-            statusBadge = '<span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981; padding:4px 8px; border-radius:12px; font-weight:bold;">ទូទាត់រួច</span>';
+            statusBadge = `<span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981; padding:4px 8px; border-radius:12px; font-weight:bold;">${d.stPaid || 'ទូទាត់រួច'}</span>`;
         } else if (status === 'ready') {
-            statusBadge = '<span class="badge" style="background:rgba(56,189,248,0.15); color:#0284c7; padding:4px 8px; border-radius:12px; font-weight:bold;">រួចរាល់</span>';
+            statusBadge = `<span class="badge" style="background:rgba(56,189,248,0.15); color:#0284c7; padding:4px 8px; border-radius:12px; font-weight:bold;">${d.stReady || 'រួចរាល់'}</span>`;
         } else if (status === 'preorder') {
-            statusBadge = '<span class="badge" style="background:rgba(139,92,246,0.15); color:#8b5cf6; padding:4px 8px; border-radius:12px; font-weight:bold;">កក់មុន</span>';
+            statusBadge = `<span class="badge" style="background:rgba(139,92,246,0.15); color:#8b5cf6; padding:4px 8px; border-radius:12px; font-weight:bold;">${d.stPreorder || 'កក់មុន'}</span>`;
         } else {
-            statusBadge = '<span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; padding:4px 8px; border-radius:12px; font-weight:bold;">រង់ចាំទូទាត់</span>';
+            statusBadge = `<span class="badge" style="background:rgba(245,158,11,0.15); color:#f59e0b; padding:4px 8px; border-radius:12px; font-weight:bold;">${d.stUnpaid || 'រង់ចាំទូទាត់'}</span>`;
         }
 
         let actionButtons = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
-        actionButtons += `<button class="btn btn-outline" style="padding: 4px 7px; font-size: 11px;" onclick="window.viewInvoiceDetails('${invId}')" title="មើលលម្អិត">👁️ មើល</button>`;
+        actionButtons += `<button class="btn btn-outline" style="padding: 4px 7px; font-size: 11px;" onclick="window.viewInvoiceDetails('${invId}')" title="មើលលម្អិត">${d.btnViewShort || '👁️ មើល'}</button>`;
         
         if (window.currentRole === 'admin' || window.currentRole === 'manager' || status !== 'paid') {
-            actionButtons += `<button class="btn btn-warning" style="padding: 4px 7px; font-size: 11px;" onclick="window.openInvoiceEditModal('${invId}')" title="កែប្រែវិក្កយបត្រ ឬការកុម្ម៉ង់">✏️ កែប្រែ</button>`;
+            actionButtons += `<button class="btn btn-warning" style="padding: 4px 7px; font-size: 11px;" onclick="window.openInvoiceEditModal('${invId}')" title="កែប្រែវិក្កយបត្រ ឬការកុម្ម៉ង់">${d.btnEdit || '✏️ កែប្រែ'}</button>`;
         }
 
         if (status !== 'paid') {
-            actionButtons += `<button class="btn btn-success" style="padding: 4px 7px; font-size: 11px;" onclick="window.openDebtPaymentModal('${invId}')" title="ទូទាត់ប្រាក់">💸 ទូទាត់</button>`;
+            actionButtons += `<button class="btn btn-success" style="padding: 4px 7px; font-size: 11px;" onclick="window.openDebtPaymentModal('${invId}')" title="ទូទាត់ប្រាក់">${d.btnPayShort || '💸 ទូទាត់'}</button>`;
             if (status !== 'ready') {
-                actionButtons += `<button class="btn btn-primary" style="padding: 4px 7px; font-size: 11px; background:#0284c7; color: #fff; border: none;" onclick="window.notifyCustomerOrderDone('${invId}')" title="ប្រាប់ភ្ញៀវថារួចរាល់">📢 រួចរាល់</button>`;
+                actionButtons += `<button class="btn btn-primary" style="padding: 4px 7px; font-size: 11px; background:#0284c7; color: #fff; border: none;" onclick="window.notifyCustomerOrderDone('${invId}')" title="ប្រាប់ភ្ញៀវថារួចរាល់">${d.btnReadyShort || '📢 រួចរាល់'}</button>`;
             }
         }
 
         const isNoteDone = (inv.note || '').includes('[✅ រួចរាល់]');
         if (isNoteDone) {
-            actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#64748b; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="ដកចំណាំចេញវិញ">❌ ដកចេញ</button>`;
+            actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#64748b; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="ដកចំណាំចេញវិញ">${d.btnUndoDone || '❌ ដកចេញ'}</button>`;
         } else {
-            actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#10b981; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="កត់ចំណាំថាធ្វើរួច">✅ ធ្វើរួច</button>`;
+            actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#10b981; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="កត់ចំណាំថាធ្វើរួច">${d.btnMarkDone || '✅ ធ្វើរួច'}</button>`;
         }
 
         if (window.currentRole === 'admin' || window.currentRole === 'manager') {
-            actionButtons += `<button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបចោល">🗑️ លុប</button>`;
+            actionButtons += `<button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបចោល">${d.btnDelete || '🗑️ លុប'}</button>`;
         }
         actionButtons += `</div>`;
 
@@ -309,9 +315,9 @@ window.renderUnpaid = function() {
         if (window.invListItemsPerPage === 'all' || totalItems <= window.invListItemsPerPage) {
             pageContainer.innerHTML = '';
         } else {
-            let pageHtml = `<button class="btn btn-outline" ${window.invListCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvoicePage(${window.invListCurrentPage - 1})"`}>◀ មុន</button>`;
+            let pageHtml = `<button class="btn btn-outline" ${window.invListCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvoicePage(${window.invListCurrentPage - 1})"`}>${d.btnPrevPage || '◀ មុន'}</button>`;
             pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.invListCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} វិក្កយបត្រ)</small></span>`;
-            pageHtml += `<button class="btn btn-outline" ${window.invListCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvoicePage(${window.invListCurrentPage + 1})"`}>បន្ទាប់ ▶</button>`;
+            pageHtml += `<button class="btn btn-outline" ${window.invListCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvoicePage(${window.invListCurrentPage + 1})"`}>${d.btnNextPage || 'បន្ទាប់ ▶'}</button>`;
             pageContainer.innerHTML = pageHtml;
         }
     }
@@ -1321,6 +1327,7 @@ window.saveExpense = async function() {
 };
 
 window.renderExpenses = function() {
+    const d = getFinI18n();
     const searchVal = document.getElementById('searchExpense') ? document.getElementById('searchExpense').value.toLowerCase() : '';
     const dateFrom = document.getElementById('expenseDateFrom')?.value;
     const dateTo = document.getElementById('expenseDateTo')?.value;
@@ -1368,7 +1375,7 @@ window.renderExpenses = function() {
     });
 
     if (filtered.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">មិនមានទិន្នន័យចំណាយទេ</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" style="text-align:center; color:var(--text-muted); padding:20px;">${d.noExpRecords || 'មិនមានទិន្នន័យចំណាយទេ'}</td></tr>`;
         const sumDisplay = document.querySelector('td[style*="color: var(--danger)"] b') || document.getElementById('sumExpenseDisplay') || document.getElementById('summaryTotalExpense');
         if (sumDisplay) sumDisplay.innerText = '$0.00';
         if (pageContainer) pageContainer.innerHTML = '';
@@ -1421,9 +1428,9 @@ window.renderExpenses = function() {
         if (window.expItemsPerPage === 'all' || totalItems <= window.expItemsPerPage) {
             pageContainer.innerHTML = '';
         } else {
-            let pageHtml = `<button class="btn btn-outline" ${window.expCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeExpensePage(${window.expCurrentPage - 1})"`}>◀ មុន</button>`;
+            let pageHtml = `<button class="btn btn-outline" ${window.expCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeExpensePage(${window.expCurrentPage - 1})"`}>${d.btnPrevPage || '◀ មុន'}</button>`;
             pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.expCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} កំណត់ត្រា)</small></span>`;
-            pageHtml += `<button class="btn btn-outline" ${window.expCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeExpensePage(${window.expCurrentPage + 1})"`}>បន្ទាប់ ▶</button>`;
+            pageHtml += `<button class="btn btn-outline" ${window.expCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeExpensePage(${window.expCurrentPage + 1})"`}>${d.btnNextPage || 'បន្ទាប់ ▶'}</button>`;
             pageContainer.innerHTML = pageHtml;
         }
     }

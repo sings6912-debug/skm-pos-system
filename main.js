@@ -514,7 +514,7 @@ window.sysI18n = {
         btnUnpaid: '📝 រង់ចាំទូទាត់',
         btnPaid: '💰 ទូទាត់រួច',
         cartToggleTxt: 'ផ្ទាំងគិតលុយ (Checkout)',
-        cartTogglePrefix: 'Toggle Checkout Panel',
+        cartTogglePrefix: 'បង្រួម/ពង្រីក ផ្ទាំងគិតលុយ',
         itemsCountSuffix: 'មុខ',
 
         searchUnpaidPlh: '🔍 ស្វែងរកទូទៅ...',
@@ -573,7 +573,7 @@ window.sysI18n = {
         setPreorderLabel: 'ប្រព័ន្ធកក់ប្រាក់ (Pre-order): អនុញ្ញាតឲ្យកត់ត្រាការកក់ប្រាក់សម្រាប់ទំនិញមិនទាន់ចូលស្តុក។',
         setDeliveryFeeLabel: 'ថ្លៃសេវាដឹកជញ្ជូនទូទៅ (Default Delivery Fee):',
         setUserMgmtTitle: '👥 គ្រប់គ្រងគណនីបុគ្គលិក (User Management)',
-        setUserMgmtSub: 'បង្កើត លុប ឬកែប្រែគណនី និងកំណត់សិទ្ធិ (Role) អោយបុគ្គលិកប្រើប្រាស់។',
+        setUserMgmtSub: 'បង្កើត លុប ឬកែប្រែគណនី និងកំណត់សិទ្ធិ (Role) ឱ្យបុគ្គលិកប្រើប្រាស់។',
         btnAddNewUser: '➕ បង្កើតគណនីថ្មី',
         thUserFullName: 'ឈ្មោះពេញ',
         thUserLogin: 'ឈ្មោះ Login',
@@ -639,7 +639,7 @@ window.sysI18n = {
         lblGrandTotalCheckout: 'សរុបប្រាក់ត្រូវបង់ (Grand Total):',
         lblReceivedUsd: 'ប្រាក់ទទួល ($):',
         lblReceivedRiel: 'ប្រាក់ទទួល (៛):',
-        lblChangeCheckout: 'Change:',
+        lblChangeCheckout: 'ប្រាក់អាប់ (Change):',
         btnConfirmCheckout: '✅ បញ្ជាក់ការទូទាត់',
 
         modalShopTitle: '✏️ ប្តូរឈ្មោះហាង និង Logo',
@@ -650,13 +650,13 @@ window.sysI18n = {
         lblShopAddress: 'អាសយដ្ឋានហាង:',
         lblShopAddressPlh: 'ឧ. ផ្ទះលេខ ១, ផ្លូវ ០០...',
         lblShopLogo: 'ឡូហ្គោហាង:',
-        lblShopQr: 'Payment QR Code:',
+        lblShopQr: 'QR ទូទាត់ប្រាក់:',
         btnUploadLogo: '📸 ឡូហ្គោ',
         btnUploadQr: '📷 QR Code',
         lblTelegramTitle: '🤖 ការកំណត់ Telegram អតិថិជន:',
         plhTelegramUser: 'Telegram Username (ឧ. Jheng6912)',
-        plhTelegramToken: 'Bot Token for notifications',
-        plhTelegramChatId: 'Chat ID to receive alerts',
+        plhTelegramToken: 'Bot Token សម្រាប់ការលោតសារ',
+        plhTelegramChatId: 'Chat ID សម្រាប់ទទួលសារ',
         btnCancel: 'បោះបង់',
         btnSave: 'រក្សាទុក',
         btnConfirmOk: 'យល់ព្រម',
@@ -664,7 +664,7 @@ window.sysI18n = {
         confirmNoticeTitle: 'ជូនដំណឹង',
         confirmClearCart: 'តើអ្នកពិតជាចង់លុបទំនិញទាំងអស់ចេញពីកន្ត្រកមែនទេ?',
         msgEmptyCart: 'គ្មានទំនិញក្នុងកន្ត្រកទេ!',
-        msgRequireCust: 'Please enter customer name first!',
+        msgRequireCust: 'សូមបញ្ចូលឈ្មោះអតិថិជនសិន!',
         custHistTitle: '🛍️ ប្រវត្តិទិញរបស់: ',
         custHistEmpty: 'អតិថិជននេះមិនទាន់មានប្រវត្តិទិញទេ',
         btnClose: 'បិទ',
@@ -672,7 +672,7 @@ window.sysI18n = {
         logoutConfirm: 'តើអ្នកពិតជាចង់ចាកចេញពីប្រព័ន្ធមែនទេ?',
         errInvalidPin: 'ឈ្មោះ ឬ លេខ PIN សម្ងាត់មិនត្រឹមត្រូវទេ!',
         errNoPermission: 'គ្មានសិទ្ធិ',
-        errAdminOnlyLogo: 'មានតែគណនី Admin ប៉ុណ្ណោះដែលអាចប្តូរឈ្មោះ និង Logo បានកំរិតខ្ពស់!',
+        errAdminOnlyLogo: 'មានតែគណនី Admin ប៉ុណ្ណោះដែលអាចប្តូរឈ្មោះ និង Logo បាន!',
         successTitle: 'ជោគជ័យ',
         msgShopSaved: 'ព័ត៌មានហាងត្រូវបានរក្សាទុកដោយជោគជ័យ! សូម Refresh ទំព័រ (F5) ដើម្បីឱ្យវាដំណើរការពេញលេញ។',
         msgSaveProductRequired: 'សូមបញ្ចូលឈ្មោះ និងតម្លៃលក់ (យ៉ាងហោចណាស់ ដុល្លារ ឬ រៀល)!',
@@ -684,6 +684,41 @@ window.sysI18n = {
         lblSumPaidTable: 'សរុបទូទាត់រួចក្នុងតារាង: ',
         lblSumUnpaidTable: 'សរុបរង់ចាំទូទាត់ក្នុងតារាង: ',
         lblSumExpenseTable: 'សរុបប្រាក់ចំណាយទាំងអស់ក្នុងតារាង: ',
+        dashBtnHist: '📜 ប្រតិបត្តិការ',
+        setEnableSoundLabel: '<strong style="color:var(--text-main);">🔊 បន្លឺសំឡេង (Enable Sound):</strong> បើកសំឡេង "ទីត!" ពេលស្កេន ឬចុចទំនិញចូលកន្ត្រក។',
+        setReceiptFooterLabel: '📝 សារខាងក្រោមវិក្កយបត្រ (Receipt Footer Text)៖',
+        setReceiptSizeLabel: '🖨️ ទំហំក្រដាសវិក្កយបត្រ (ព្រីន & ទាញយករូប)៖',
+        setQuickToolsTitle: '🛠️ ឧបករណ៍ជំនួយពិសេស & ម៉ឺនុយឌីជីថល (Quick Tools) 🔒',
+        btnUnlock: '🔓 ដោះសោ',
+        lblCostShort: 'ដើម:',
+        lblSellShort: 'លក់:',
+        noDesc: 'មិនមានការពណ៌នា',
+        thExpiry: 'កាលបរិច្ឆេទផុតកំណត់',
+        noPosItems: 'មិនមានទំនិញទេ',
+        lblOutStock: '❌ អស់ស្តុក',
+        lblStockLeft: '📦 សល់:',
+        btnAddShort: '➕ បន្ថែម',
+        noInvRecords: 'មិនមានទិន្នន័យវិក្កយបត្រទេ',
+        noExpRecords: 'មិនមានទិន្នន័យចំណាយទេ',
+        stPaid: 'ទូទាត់រួច',
+        stReady: 'រួចរាល់',
+        stPreorder: 'កក់មុន',
+        stUnpaid: 'រង់ចាំទូទាត់',
+        btnViewShort: '👁️ មើល',
+        btnPayShort: '💸 ទូទាត់',
+        btnReadyShort: '📢 រួចរាល់',
+        btnMarkDone: '✅ ធ្វើរួច',
+        btnUndoDone: '❌ ដកចេញ',
+        btnPrevPage: '◀ មុន',
+        btnNextPage: 'បន្ទាប់ ▶',
+        lblPage: 'ទំព័រ',
+        lblOf: 'នៃ',
+        lblTotalCount: 'សរុប',
+        btnZReport: '🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)',
+        lblAboutLicense: '🔑 ព័ត៌មានសិទ្ធិប្រើប្រាស់ (License Status)',
+        lblAboutBackup: '💾 គ្រប់គ្រងទិន្នន័យ (Backup & Restore All)',
+        btnBackupAll: '💾 Backup ទិន្នន័យទាំងអស់',
+        btnRestoreAll: '📂 Restore បញ្ចូលទិន្នន័យវិញ',
         confirmClearHistory: 'តើអ្នកពិតជាចង់លុបប្រវត្តិប្រតិបត្តិការទាំងអស់មែនទេ?'
     },
     en: {
@@ -957,6 +992,41 @@ window.sysI18n = {
         lblSumPaidTable: 'Total Paid in Table: ',
         lblSumUnpaidTable: 'Total Unpaid in Table: ',
         lblSumExpenseTable: 'Total Expenses in Table: ',
+        dashBtnHist: '📜 Logs',
+        setEnableSoundLabel: '<strong style="color:var(--text-main);">🔊 Enable Sound:</strong> Play beep sound on scan or adding items.',
+        setReceiptFooterLabel: '📝 Receipt Footer Text:',
+        setReceiptSizeLabel: '🖨️ Receipt Paper Size (Print & PNG):',
+        setQuickToolsTitle: '🛠️ Quick Tools & Digital Menu 🔒',
+        btnUnlock: '🔓 Unlock',
+        lblCostShort: 'Cost:',
+        lblSellShort: 'Price:',
+        noDesc: 'No description',
+        thExpiry: 'Expiry Date',
+        noPosItems: 'No products found',
+        lblOutStock: '❌ Out of Stock',
+        lblStockLeft: '📦 Left:',
+        btnAddShort: '➕ Add',
+        noInvRecords: 'No invoices found',
+        noExpRecords: 'No expense records found',
+        stPaid: 'Paid',
+        stReady: 'Ready',
+        stPreorder: 'Pre-order',
+        stUnpaid: 'Unpaid',
+        btnViewShort: '👁️ View',
+        btnPayShort: '💸 Pay',
+        btnReadyShort: '📢 Ready',
+        btnMarkDone: '✅ Done',
+        btnUndoDone: '❌ Undo',
+        btnPrevPage: '◀ Prev',
+        btnNextPage: 'Next ▶',
+        lblPage: 'Page',
+        lblOf: 'of',
+        lblTotalCount: 'Total',
+        btnZReport: '🖨️ Print Z-Report',
+        lblAboutLicense: '🔑 License Status',
+        lblAboutBackup: '💾 Data Management (Backup & Restore All)',
+        btnBackupAll: '💾 Backup All Data',
+        btnRestoreAll: '📂 Restore Backup',
         confirmClearHistory: 'Are you sure you want to clear all activity logs?'
     },
     zh: {
@@ -1198,7 +1268,7 @@ window.sysI18n = {
         lblShopLogo: '店铺Logo:',
         lblShopQr: '收款二维码 (QR):',
         btnUploadLogo: '📸 上传Logo',
-        btnUploadQr: '📞 上传收款码',
+        btnUploadQr: '📷 上传收款码',
         lblTelegramTitle: '🤖 客户 Telegram 通知设置:',
         plhTelegramUser: 'Telegram 用户名 (例如: Jheng6912)',
         plhTelegramToken: '用于发送通知的 Bot Token',
@@ -1210,7 +1280,7 @@ window.sysI18n = {
         confirmNoticeTitle: '系统提示',
         confirmClearCart: '您确定要清空购物车中的所有商品吗？',
         msgEmptyCart: '购物车为空，请先添加商品！',
-        msgRequireCust: 'Please enter customer name first!',
+        msgRequireCust: '请先输入客户姓名！',
         custHistTitle: '🛍️ 购买历史: ',
         custHistEmpty: '该客户暂无购买历史记录',
         btnClose: '关闭',
@@ -1230,6 +1300,41 @@ window.sysI18n = {
         lblSumPaidTable: '表格已结款总计: ',
         lblSumUnpaidTable: '表格待收账款总计: ',
         lblSumExpenseTable: '表格支出金额总计: ',
+        dashBtnHist: '📜 操作记录',
+        setEnableSoundLabel: '<strong style="color:var(--text-main);">🔊 启用提示音 (Enable Sound):</strong> 扫码或添加商品时播放提示音。',
+        setReceiptFooterLabel: '📝 小票底部致谢语 (Receipt Footer):',
+        setReceiptSizeLabel: '🖨️ 小票纸张尺寸 (打印与导出图片):',
+        setQuickToolsTitle: '🛠️ 快捷工具与电子菜单 (Quick Tools) 🔒',
+        btnUnlock: '🔓 解锁',
+        lblCostShort: '成本:',
+        lblSellShort: '售价:',
+        noDesc: '暂无描述',
+        thExpiry: '过期日期',
+        noPosItems: '暂无商品',
+        lblOutStock: '❌ 缺货',
+        lblStockLeft: '📦 余:',
+        btnAddShort: '➕ 添加',
+        noInvRecords: '暂无账单记录',
+        noExpRecords: '暂无支出记录',
+        stPaid: '已结款',
+        stReady: '已备好',
+        stPreorder: '预定',
+        stUnpaid: '待付款',
+        btnViewShort: '👁️ 查看',
+        btnPayShort: '💸 收款',
+        btnReadyShort: '📢 备好',
+        btnMarkDone: '✅ 完成',
+        btnUndoDone: '❌ 撤销',
+        btnPrevPage: '◀ 上一页',
+        btnNextPage: '下一页 ▶',
+        lblPage: '第',
+        lblOf: '/',
+        lblTotalCount: '共',
+        btnZReport: '🖨️ 打印日结报表 (Z-Report)',
+        lblAboutLicense: '🔑 授权状态信息 (License Status)',
+        lblAboutBackup: '💾 数据备份与恢复 (Backup & Restore)',
+        btnBackupAll: '💾 备份全部数据',
+        btnRestoreAll: '📂 恢复备份数据',
         confirmClearHistory: '您确定要清空所有操作记录吗？'
     }
 };
@@ -1283,6 +1388,7 @@ window.changeAppLanguage = function(lang) {
     setHtml('grid-btn-unpaid', `<i style="font-size: 30px; margin-bottom: 5px;">📝</i>${d.dashBtnUnpaid ? d.dashBtnUnpaid.replace('📝 ', '') : 'វិក្កយបត្រ'}`);
     setHtml('grid-btn-exp', `<i style="font-size: 30px; margin-bottom: 5px;">📉</i>${d.dashBtnExp ? d.dashBtnExp.replace('📉 ', '') : 'ចំណាយ'}`);
     setHtml('grid-btn-cust', `<i style="font-size: 30px; margin-bottom: 5px;">👥</i>${d.dashBtnCust ? d.dashBtnCust.replace('👥 ', '') : 'អតិថិជន'}`);
+    setHtml('grid-btn-hist', `<i style="font-size: 30px; margin-bottom: 5px;">📜</i>${d.dashBtnHist ? d.dashBtnHist.replace('📜 ', '') : 'ប្រតិបត្តិការ'}`);
 
     setText('lblDashItems', d.lblDashItems || 'មុខទំនិញសរុប (Items)');
     setText('lblDashQty', d.lblDashQty || 'ស្តុកសរុប (Total Qty)');
@@ -1358,7 +1464,7 @@ window.changeAppLanguage = function(lang) {
     setText('btnClearCartBtn', d.cartClear || '🗑️ បោះបង់');
     setText('lblSellerText', d.lblSeller || 'អ្នកលក់ (Seller):');
     setText('lblRateText', d.lblRate || 'អត្រាប្តូរប្រាក់ (Rate):');
-    setText('lblTotalQty', d.lblTotalQty || 'សរុបចំនួន (Qty):');
+    setText('lblQtyText', d.lblTotalQty || 'សរុបចំនួន (Qty):');
     setText('lblDiscountText', d.lblDiscount || 'បញ្ចុះតម្លៃ:');
     setText('lblTaxText', d.lblTax || 'ពន្ធអាករ:');
     setText('lblTotalText', d.lblGrandTotal || 'សរុបទឹកប្រាក់:');
@@ -1429,10 +1535,21 @@ window.changeAppLanguage = function(lang) {
         if (h2Sys) h2Sys.innerText = d.setSysTitle || '⚙️ ការកំណត់ប្រព័ន្ធ (System Settings)';
         const pSys = settingsCards[3].querySelector('p');
         if (pSys) pSys.innerText = d.setSysSub || 'កំណត់មុខងារ (Modules) ណាខ្លះដែលអ្នកចង់បង្ហាញ ឬលាក់។';
-        const formGroups = settingsCards[3].querySelectorAll('.form-group label');
-        if (formGroups.length >= 2) {
-            formGroups[0].innerText = d.setStorePinLabel || '🔐 លេខសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖';
-            formGroups[1].innerText = d.setTickerNewsLabel || '📢 សេចក្តីជូនដំណឹងរត់ខាងក្រោម (News Ticker)៖';
+        const pinLblEl = document.getElementById('lblSetStorePin');
+        if (pinLblEl) pinLblEl.innerHTML = `<strong style="color:var(--text-main);">${d.setStorePinLabel || '🔐 លេខកូដសម្ងាត់ហាង (Store PIN - ៤ ខ្ទង់)៖'}</strong>`;
+        const tickLblEl = document.getElementById('lblSetTickerNews');
+        if (tickLblEl) tickLblEl.innerHTML = `<strong style="color:var(--text-main);">${d.setTickerNewsLabel || '📢 អក្សររត់ជូនដំណឹងលើ Welcome Screen (News Ticker)៖'}</strong>`;
+        const sndLblEl = document.getElementById('lblSetEnableSound');
+        if (sndLblEl) sndLblEl.innerHTML = d.setEnableSoundLabel || '<strong style="color:var(--text-main);">🔊 បន្លឺសំឡេង (Enable Sound):</strong>';
+        const ftrLblEl = document.getElementById('lblSetReceiptFooter');
+        if (ftrLblEl) ftrLblEl.innerHTML = `<strong style="color:var(--text-main);">${d.setReceiptFooterLabel || '📝 សារខាងក្រោមវិក្កយបត្រ (Receipt Footer Text)៖'}</strong>`;
+        const szLblEl = document.getElementById('lblSetReceiptSize');
+        if (szLblEl) szLblEl.innerHTML = `<strong style="color:var(--text-main);">${d.setReceiptSizeLabel || '🖨️ ទំហំក្រដាសវិក្កយបត្រ (ព្រីន & ទាញយករូប)៖'}</strong>`;
+        if (settingsCards.length >= 6) {
+            const h2Qt = settingsCards[5].querySelector('h2');
+            if (h2Qt) h2Qt.innerText = d.setQuickToolsTitle || '🛠️ ឧបករណ៍ជំនួយពិសេស (Quick Tools) 🔒';
+            const btnQt = settingsCards[5].querySelector('button');
+            if (btnQt) btnQt.innerText = d.btnUnlock || '🔓 ដោះសោ';
         }
         const sysLabels = settingsCards[3].querySelectorAll('label span');
         if (sysLabels.length >= 6) {
@@ -1480,6 +1597,48 @@ window.changeAppLanguage = function(lang) {
     if (userRoleFilter && userRoleFilter.options.length > 0) {
         userRoleFilter.options[0].text = d.allRolesFilter || 'ទាំងអស់';
     }
+
+    const zRepBtn = document.querySelector('#tab-dashboard button[onclick*="printZReport"]');
+    if (zRepBtn) zRepBtn.innerText = d.btnZReport || '🖨️ បោះពុម្ពរបាយការណ៍បិទបញ្ជី (Z-Report)';
+
+    const expThead = document.querySelectorAll('#expiryAlertSection thead th');
+    if (expThead.length >= 5) {
+        expThead[0].innerText = d.thProdName || 'ឈ្មោះទំនិញ';
+        expThead[1].innerText = d.thCategory || 'ប្រភេទ';
+        expThead[2].innerText = d.thExpiry || 'ថ្ងៃផុតកំណត់';
+        expThead[3].innerText = d.thInvStatus || 'ស្ថានភាព';
+        expThead[4].innerText = d.thAction || 'សកម្មភាព';
+    }
+
+    const aboutH2s = document.querySelectorAll('#tab-about h2');
+    if (aboutH2s.length >= 2) {
+        aboutH2s[0].innerText = d.lblAboutLicense || '🔑 ព័ត៌មានសិទ្ធិប្រើប្រាស់ (License Status)';
+        aboutH2s[1].innerText = d.lblAboutBackup || '💾 គ្រប់គ្រងទិន្នន័យ (Backup & Restore All)';
+    }
+    const bkpBtn = document.querySelector('#tab-about button[onclick*="triggerAppBackup"]');
+    if (bkpBtn) bkpBtn.innerText = d.btnBackupAll || '💾 Backup ទិន្នន័យទាំងអស់';
+    const rstBtn = document.querySelector('#tab-about button[onclick*="triggerAppRestore"]');
+    if (rstBtn) rstBtn.innerText = d.btnRestoreAll || '📂 Restore បញ្ចូលទិន្នន័យវិញ';
+
+    // Translate key modal headings & buttons
+    const chkH2 = document.querySelector('#checkoutModal h2');
+    if (chkH2) chkH2.innerHTML = d.checkoutModalTitle || '💵 ទូទាត់ប្រាក់ (Checkout)';
+    const chkBtn = document.querySelector('#checkoutModal button[onclick*="processCheckoutPaid"]');
+    if (chkBtn) chkBtn.innerText = d.btnConfirmCheckout || '✅ បញ្ជាក់ការទូទាត់';
+    const shopH2 = document.querySelector('#shopNameModal h2');
+    if (shopH2) shopH2.innerText = d.modalShopTitle || '✏️ ប្តូរឈ្មោះហាង និង Logo';
+    const prodSaveBtn = document.querySelector('#productModal .modal-footer .btn-primary');
+    if (prodSaveBtn) prodSaveBtn.innerText = d.btnSave || 'រក្សាទុក';
+    const prodCancelBtn = document.querySelector('#productModal .modal-footer .btn-outline');
+    if (prodCancelBtn) prodCancelBtn.innerText = d.btnCancel || 'បោះបង់';
+    const custSaveBtn = document.querySelector('#customerModal .modal-footer .btn-primary');
+    if (custSaveBtn) custSaveBtn.innerText = d.btnSave || 'រក្សាទុក';
+    const custCancelBtn = document.querySelector('#customerModal .modal-footer .btn-outline');
+    if (custCancelBtn) custCancelBtn.innerText = d.btnCancel || 'បោះបង់';
+    const shopSaveBtn = document.querySelector('#shopNameModal .modal-footer .btn-primary');
+    if (shopSaveBtn) shopSaveBtn.innerText = d.btnSave || 'រក្សាទុក';
+    const shopCancelBtn = document.querySelector('#shopNameModal .modal-footer .btn-outline');
+    if (shopCancelBtn) shopCancelBtn.innerText = d.btnCancel || 'បោះបង់';
 
     if (document.getElementById('globalLangSelect')) {
         document.getElementById('globalLangSelect').value = lang;
@@ -2260,7 +2419,7 @@ window.applyPermissions = function() {
 };
 
 window.renderUsersList = function() {
-    if (!window.activeUser || window.activeUser.role !== 'admin') return; 
+    if (!window.activeUser || (window.activeUser.role !== 'admin' && window.activeUser.role !== 'manager')) return; 
     const tbody = document.getElementById('userListTableBody');
     if (!tbody) return;
     const lang = localStorage.getItem('app_lang') || 'km';
@@ -2282,6 +2441,10 @@ window.renderUsersList = function() {
 
 window.loadSettingsToUI = function() { 
     if(!window.sysSettings) return;
+    const savedRate = parseFloat(window.sysSettings.exchangeRate || localStorage.getItem(window.getBranchKey('exchange_rate')) || 4000) || 4000;
+    const rateEl = document.getElementById('globalExchangeRate');
+    if (rateEl) rateEl.value = savedRate;
+    window.cartRate = savedRate;
     if(document.getElementById('setCust')) document.getElementById('setCust').checked = window.sysSettings.cust; 
     if(document.getElementById('setUnpaid')) document.getElementById('setUnpaid').checked = window.sysSettings.unpaid; 
     if(document.getElementById('setLogs')) document.getElementById('setLogs').checked = window.sysSettings.logs; 

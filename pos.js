@@ -50,6 +50,25 @@ window.cartFinalUsd = 0;
 window.cartFinalRiel = 0;
 window.cartRate = 4000;
 
+function getPosI18n() {
+    const lang = localStorage.getItem('app_lang') || 'km';
+    return (window.sysI18n && (window.sysI18n[lang] || window.sysI18n.km)) || {};
+}
+
+window.saveExchangeRate = function(val) {
+    const num = parseFloat(val);
+    if (isNaN(num) || num <= 0) return;
+    window.cartRate = num;
+    if (!window.sysSettings) window.sysSettings = {};
+    window.sysSettings.exchangeRate = num;
+    if (typeof window.getBranchKey === 'function') {
+        localStorage.setItem(window.getBranchKey('exchange_rate'), String(num));
+        localStorage.setItem(window.getBranchKey('sys_settings'), JSON.stringify(window.sysSettings));
+    }
+    if (typeof window.renderCart === 'function') window.renderCart();
+    if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+};
+
 // 🛡️ សុវត្ថិភាព XSS: ការពារការបន្លំកូដអាក្រក់តាមរយៈឈ្មោះទំនិញ ឬឈ្មោះអតិថិជន
 window.escapeHTML = function(str) {
     if (typeof str !== 'string') return str;
@@ -128,6 +147,7 @@ window.setPOSView = function(mode, skipRender = false) {
 window.renderPOSProducts = function() {
     const container = document.getElementById('posProductGridContainer'); 
     if(!container) return;
+    const d = getPosI18n();
     try {
         const searchInputEl = document.getElementById('posSearch'); 
         const search = searchInputEl ? searchInputEl.value.toLowerCase().trim() : ''; 
@@ -148,7 +168,7 @@ window.renderPOSProducts = function() {
         });
 
         if (availableItems.length === 0) { 
-            container.innerHTML = '<div style="text-align: center; color: var(--text-muted); padding: 40px; background: rgba(0,0,0,0.05); border-radius: 8px;">មិនមានទំនិញទេ</div>'; 
+            container.innerHTML = `<div style="text-align: center; color: var(--text-muted); padding: 40px; background: rgba(0,0,0,0.05); border-radius: 8px;">${d.noPosItems || 'មិនមានទំនិញទេ'}</div>`; 
             return; 
         }
         
@@ -158,8 +178,8 @@ window.renderPOSProducts = function() {
                 if(!p) return;
                 let pQty = parseFloat(p.qty) || 0; 
                 let stockBadge = '';
-                if (pQty <= 0) stockBadge = `<div class="badge-cat" style="background: var(--danger); color: #fff; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">❌ អស់ស្តុក</div>`;
-                else stockBadge = `<div class="badge-cat" style="background: ${pQty<=5?'var(--warning)':'var(--primary)'}; color: ${pQty<=5?'#000':'#fff'}; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">📦 សល់: ${pQty}</div>`;
+                if (pQty <= 0) stockBadge = `<div class="badge-cat" style="background: var(--danger); color: #fff; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">${d.lblOutStock || '❌ អស់ស្តុក'}</div>`;
+                else stockBadge = `<div class="badge-cat" style="background: ${pQty<=5?'var(--warning)':'var(--primary)'}; color: ${pQty<=5?'#000':'#fff'}; top: 8px; right: auto; left: 8px; padding: 3px 6px; font-size: 11px; border-radius: 4px;">${d.lblStockLeft || '📦 សល់:'} ${pQty}</div>`;
 
                 let safeCondition = window.escapeHTML(p.condition);
                 let conditionBadge = (window.sysSettings && window.sysSettings.condition && p.condition) ? `<div class="badge-cat" style="background: #38bdf8; color: #fff; top: 8px; right: 8px; padding: 3px 6px; font-size: 10px; border-radius: 4px;">${safeCondition}</div>` : '';
@@ -176,7 +196,7 @@ window.renderPOSProducts = function() {
             });
             container.innerHTML = finalHtml + `</div>`;
         } else {
-            let tableHTML = `<div class="table-responsive" style="height: 100%;"><table id="mainPOSTable" style="font-size: var(--fs-13); width: 100%;"><thead><tr class="header-row"><th style="width: 60px; text-align:center;">រូបភាព</th><th onclick="if(window.sortTable) window.sortTable('mainPOSTable', 1)">ឈ្មោះទំនិញ <span>⬍</span></th><th style="width: 120px; text-align:right;" onclick="if(window.sortTable) window.sortTable('mainPOSTable', 2, 'number')">តម្លៃលក់ <span>⬍</span></th><th style="width: 90px; text-align:center;">សកម្មភាព</th></tr><tr class="filter-row"><th></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainPOSTable')" placeholder="ស្វែងរកឈ្មោះ..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainPOSTable')" placeholder="ស្វែងរកតម្លៃ..."></th><th></th></tr></thead><tbody>`;
+            let tableHTML = `<div class="table-responsive" style="height: 100%;"><table id="mainPOSTable" style="font-size: var(--fs-13); width: 100%;"><thead><tr class="header-row"><th style="width: 60px; text-align:center;">${d.thImg || 'រូបភាព'}</th><th onclick="if(window.sortTable) window.sortTable('mainPOSTable', 1)">${d.thProdName || 'ឈ្មោះទំនិញ'} <span>⬍</span></th><th style="width: 120px; text-align:right;" onclick="if(window.sortTable) window.sortTable('mainPOSTable', 2, 'number')">${d.thPrice || 'តម្លៃលក់'} <span>⬍</span></th><th style="width: 90px; text-align:center;">${d.thAction || 'សកម្មភាព'}</th></tr><tr class="filter-row"><th></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainPOSTable')" placeholder="ស្វែងរកឈ្មោះ..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainPOSTable')" placeholder="ស្វែងរកតម្លៃ..."></th><th></th></tr></thead><tbody>`;
             
             availableItems.forEach(p => {
                 if(!p) return;
@@ -189,7 +209,7 @@ window.renderPOSProducts = function() {
                 let expiryDisplay = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<br><span style="color:var(--warning); font-size:10px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</span>` : '';
                 let safeName = window.escapeHTML(p.name);
 
-                tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeName} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${p.price}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">➕ បន្ថែម</button></td></tr>`;
+                tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeName} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${p.price}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">${d.btnAddShort || '➕ បន្ថែម'}</button></td></tr>`;
             });
             container.innerHTML = tableHTML + `</tbody></table></div>`;
         }
@@ -295,12 +315,13 @@ window.setCartQtyManually = function(id, val) {
 window.renderCart = function() {
     const cHTML = document.getElementById('cartItems'); 
     if(!cHTML) return;
+    const d = getPosI18n();
     let tQty = 0, tUsdOnly = 0, tRielOnly = 0; 
     let globalRateEl = document.getElementById('globalExchangeRate'); 
     window.cartRate = parseFloat(globalRateEl ? globalRateEl.value : 4000) || 4000;
     
     if(!window.cart || window.cart.length === 0) {
-        cHTML.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 50px; font-size: var(--fs-14);">កន្ត្រកទទេ</div>`; 
+        cHTML.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 50px; font-size: var(--fs-14);">${d.cartEmpty || 'កន្ត្រកទទេ'}</div>`; 
     } else {
         let finalCartHtml = '';
         window.cart.forEach(c => {
@@ -380,9 +401,9 @@ window.renderCart = function() {
     if(!body) return;
     const isCollapsed = body.classList.contains('collapsed'); 
     const arrow = isCollapsed ? '▲' : '▼'; 
-    const actionText = isCollapsed ? 'បើកផ្ទាំងគិតលុយ (Checkout)' : 'បង្រួម/ពង្រីក ផ្ទាំងគិតលុយ';
+    const actionText = isCollapsed ? (d.cartToggleTxt || 'បើកផ្ទាំងគិតលុយ (Checkout)') : (d.cartTogglePrefix || 'បង្រួម/ពង្រីក ផ្ទាំងគិតលុយ');
     const mobileInfo = document.getElementById('mobileCartTotalInfo');
-    if(mobileInfo) mobileInfo.innerText = `${arrow} ${actionText} - ${tQty} មុខ (${window.fMoney(window.cartFinalUsd)}) ${arrow}`;
+    if(mobileInfo) mobileInfo.innerText = `${arrow} ${actionText} - ${tQty} ${d.itemsCountSuffix || 'មុខ'} (${window.fMoney(window.cartFinalUsd)}) ${arrow}`;
 };
 
 window.clearCart = function() { 
@@ -404,16 +425,17 @@ window.toggleCartSummary = function() {
     const body = document.getElementById('cartSummaryBody'); 
     const btn = document.getElementById('toggleCartBtn'); 
     if(!body || !btn) return;
+    const d = getPosI18n();
     const tQty = (window.cart || []).reduce((acc, item) => acc + item.cartQty, 0);
     if (window.innerWidth <= 768) { 
         document.getElementById('mobileCartContainer').classList.toggle('open'); 
     } else {
         if (body.classList.contains('collapsed')) { 
             body.classList.remove('collapsed'); 
-            btn.innerHTML = `<span id="mobileCartTotalInfo">▼ បង្រួម/ពង្រីក ផ្ទាំងគិតលុយ - ${tQty} មុខ (${window.fMoney(window.cartFinalUsd)}) ▼</span>`; 
+            btn.innerHTML = `<span id="mobileCartTotalInfo">▼ ${d.cartTogglePrefix || 'បង្រួម/ពង្រីក ផ្ទាំងគិតលុយ'} - ${tQty} ${d.itemsCountSuffix || 'មុខ'} (${window.fMoney(window.cartFinalUsd)}) ▼</span>`; 
         } else { 
             body.classList.add('collapsed'); 
-            btn.innerHTML = `<span id="mobileCartTotalInfo">▲ បើកផ្ទាំងគិតលុយ (Checkout) - ${tQty} មុខ (${window.fMoney(window.cartFinalUsd)}) ▲</span>`; 
+            btn.innerHTML = `<span id="mobileCartTotalInfo">▲ ${d.cartToggleTxt || 'បើកផ្ទាំងគិតលុយ (Checkout)'} - ${tQty} ${d.itemsCountSuffix || 'មុខ'} (${window.fMoney(window.cartFinalUsd)}) ▲</span>`; 
         }
     }
 };
@@ -486,7 +508,7 @@ window.openPreorderModal = function() {
     if(!window.cart || window.cart.length === 0) return notifyPosUser('គ្មានទំនិញក្នុងកន្ត្រកទេ!'); 
     
     const custNameInput = document.getElementById('posCustomerName').value.trim();
-    if(!custNameInput) return notifyPosUser('សុំបញ្ចូលឈ្មោះអតិថិជនសិន មុននឹងចុចកក់ប្រាក់!');
+    if(!custNameInput) return notifyPosUser('សូមបញ្ចូលឈ្មោះអតិថិជនសិន មុននឹងចុចកក់ប្រាក់!');
 
     let displayHtml = `${window.fMoney(window.cartFinalUsd)}`; 
     if(window.cartFinalRiel > 0) displayHtml += ` <br><span style="font-size: 18px; color: var(--text-muted);">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</span>`; 
@@ -640,7 +662,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     const tableSelectEl = document.getElementById('posTableSelect');
     const selectedTable = (tableSelectEl && tableSelectEl.value) ? window.escapeHTML(tableSelectEl.value.trim()) : '';
 
-    if((status === 'unpaid' || status === 'preorder') && !custNameInput) return notifyPosUser('សុំបញ្ចូលឈ្មោះអតិថិជនសិន!');
+    if((status === 'unpaid' || status === 'preorder') && !custNameInput) return notifyPosUser('សូមបញ្ចូលឈ្មោះអតិថិជនសិន!');
     
     let discountValue = parseFloat(document.getElementById('posDiscount') ? document.getElementById('posDiscount').value : 0) || 0; 
     let discountType = document.getElementById('posDiscountType') ? document.getElementById('posDiscountType').value : '%'; 

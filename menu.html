@@ -1075,8 +1075,9 @@
             <div class="sb-item">
                 <i class="fa-solid fa-globe"></i> 
                 <select id="langSelect" onchange="changeSystem('lang', this.value)" style="border:none; background:transparent; font-weight:800; outline:none; color:var(--text-dark);">
-                    <option value="en">Lang: English</option>
                     <option value="km">Lang: ខ្មែរ</option>
+                    <option value="en">Lang: English</option>
+                    <option value="zh">Lang: 中文</option>
                 </select>
             </div>
             <div class="sb-item" onclick="closeSidebar(); openModal('trackerModal')">
@@ -1497,7 +1498,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             points = parseInt(localStorage.getItem(`ks2_${BRANCH}_pts`)) || 0;
         } catch(e) { console.warn("Points parse error:", e); }
 
-        let sys = {}, curr = 'USD', lang = 'en', exRate = 4000, discount = 0, appliedPromo = null, rateStar = 5;
+        let sys = {}, curr = localStorage.getItem('skm_menu_curr') || 'USD', lang = localStorage.getItem('app_lang') || 'km', exRate = 4000, discount = 0, appliedPromo = null, rateStar = 5;
         let orderBotToken = '', orderChatId = '';
         let serviceBotToken = '', serviceChatId = '';
         let selCat = 'all', selVar = '', curProd = null;
@@ -1508,10 +1509,218 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
         let bannerTimerInterval;
 
         const trans = {
-            en: { search: "Search...", all: "All" },
-            km: { search: "ស្វែងរក...", all: "ទាំងអស់" },
-            zh: { search: "搜索...", all: "全部" }
+            km: {
+                search: "ស្វែងរកមុខទំនិញ...",
+                all: "ទាំងអស់",
+                other: "ទំនិញផ្សេងៗ",
+                viewSection: "មើលតែផ្នែកនេះ ➔",
+                showAll: "← បង្ហាញគ្រប់ផ្នែក",
+                add: "បន្ថែម",
+                featured: "✦ ពេញនិយម",
+                preorder: "កុម្ម៉ង់ទុកមុន",
+                outOfStock: "អស់ស្តុក",
+                onlyLeft: "សល់តែ",
+                leftSuffix: "!",
+                empty: "មិនមានទំនិញទេ",
+                navHome: "ទំព័រដើម",
+                navWishlist: "ពេញចិត្ត",
+                navTrack: "តាមដាន",
+                navProfile: "គណនី",
+                sbTitle: "ការកំណត់ & ប្រព័ន្ធ",
+                sbTheme: "ប្តូរពណ៌ ងងឹត / ភ្លឺ",
+                sbTrack: "តាមដានការកុម្ម៉ង់",
+                sbWishlist: "បញ្ជីពេញចិត្ត",
+                sbRate: "វាយតម្លៃហាង",
+                ptsLabel: "⭐ ពិន្ទុ:",
+                cartTitle: "កន្ត្រកត្រៀមកុម្ម៉ង់",
+                cartEmpty: "កន្ត្រកទទេ",
+                yourName: "ឈ្មោះរបស់អ្នក *",
+                yourPhone: "លេខទូរស័ព្ទ...",
+                qrScan: "ស្កេន QR កូដម្ចាស់ហាងដើម្បីបង់ប្រាក់",
+                extraToggle: "+ បន្ថែមកាដូ / ចំណាំ / កូដបញ្ចុះតម្លៃ",
+                orderNote: "កំណត់ចំណាំ...",
+                giftOrder: "🎁 ខ្ចប់ជាកាដូ (+$2.00)",
+                promoPlh: "កូដបញ្ចុះតម្លៃ",
+                apply: "ប្រើកូដ",
+                totalOrder: "សរុបទឹកប្រាក់:",
+                close: "បិទ",
+                checkout: "បញ្ជាក់ការកុម្ម៉ង់",
+                trackTitle: "📦 តាមដានការកុម្ម៉ង់",
+                trackPlh: "បញ្ចូលលេខទូរស័ព្ទ...",
+                trackBtn: "ស្វែងរកឥឡូវនេះ",
+                wishTitle: "❤️ បញ្ជីទំនិញពេញចិត្ត",
+                wishEmpty: "មិនទាន់មានទំនិញពេញចិត្តទេ",
+                rateTitle: "⭐ វាយតម្លៃហាង",
+                rateName: "ឈ្មោះ...",
+                rateCom: "មតិយោបល់...",
+                submit: "ផ្ញើ",
+                lpMenuBtn: "ម៉ឺនុយឌីជីថល (Digital Menu)",
+                lpTrackBtn: "តាមដានការកុម្ម៉ង់ (Track)",
+                addToOrder: "បន្ថែមចូលកន្ត្រក"
+            },
+            en: {
+                search: "Search items...",
+                all: "All",
+                other: "Other",
+                viewSection: "View Section ➔",
+                showAll: "← Show All",
+                add: "Add",
+                featured: "✦ Featured",
+                preorder: "Pre-Order",
+                outOfStock: "Out of Stock",
+                onlyLeft: "Only",
+                leftSuffix: "left!",
+                empty: "No items found",
+                navHome: "Home",
+                navWishlist: "Wishlist",
+                navTrack: "Track",
+                navProfile: "Profile",
+                sbTitle: "Settings & Systems",
+                sbTheme: "Toggle Dark / Light",
+                sbTrack: "Track Order",
+                sbWishlist: "Wishlist",
+                sbRate: "Rate Shop",
+                ptsLabel: "⭐ Points:",
+                cartTitle: "Ready for Order",
+                cartEmpty: "Cart is empty",
+                yourName: "Your Name *",
+                yourPhone: "Phone Number...",
+                qrScan: "Scan Shop QR Code to Pay",
+                extraToggle: "+ Add Gift Options / Note / Promo Code",
+                orderNote: "Order Note...",
+                giftOrder: "🎁 Gift Order (+$2.00)",
+                promoPlh: "Promo Code",
+                apply: "Apply",
+                totalOrder: "Total Order:",
+                close: "Close",
+                checkout: "Checkout",
+                trackTitle: "📦 Track Order",
+                trackPlh: "Enter Phone Number...",
+                trackBtn: "Track Now",
+                wishTitle: "❤️ Wishlist",
+                wishEmpty: "Empty Wishlist",
+                rateTitle: "⭐ Rate Shop",
+                rateName: "Name...",
+                rateCom: "Comment...",
+                submit: "Submit",
+                lpMenuBtn: "Digital Menu",
+                lpTrackBtn: "Track Order",
+                addToOrder: "Add to Order"
+            },
+            zh: {
+                search: "搜索商品...",
+                all: "全部",
+                other: "其他商品",
+                viewSection: "查看此分类 ➔",
+                showAll: "← 显示全部",
+                add: "添加",
+                featured: "✦ 精选",
+                preorder: "预定",
+                outOfStock: "售罄",
+                onlyLeft: "仅剩",
+                leftSuffix: "件!",
+                empty: "暂无商品",
+                navHome: "首页",
+                navWishlist: "收藏",
+                navTrack: "查单",
+                navProfile: "我的",
+                sbTitle: "系统与设置",
+                sbTheme: "切换 深色 / 浅色",
+                sbTrack: "订单追踪",
+                sbWishlist: "收藏夹",
+                sbRate: "评价店铺",
+                ptsLabel: "⭐ 积分:",
+                cartTitle: "确认订单",
+                cartEmpty: "购物车为空",
+                yourName: "您的姓名 *",
+                yourPhone: "联系电话...",
+                qrScan: "扫描商家二维码付款",
+                extraToggle: "+ 添加礼品包装 / 备注 / 优惠码",
+                orderNote: "订单备注...",
+                giftOrder: "🎁 礼品包装 (+$2.00)",
+                promoPlh: "优惠码",
+                apply: "使用",
+                totalOrder: "订单总计:",
+                close: "关闭",
+                checkout: "立即下单",
+                trackTitle: "📦 订单追踪",
+                trackPlh: "输入手机号查询...",
+                trackBtn: "立即查询",
+                wishTitle: "❤️ 我的收藏",
+                wishEmpty: "暂无收藏商品",
+                rateTitle: "⭐ 评价店铺",
+                rateName: "姓名...",
+                rateCom: "评价内容...",
+                submit: "提交",
+                lpMenuBtn: "进入电子菜单 (Digital Menu)",
+                lpTrackBtn: "订单查询 (Track)",
+                addToOrder: "加入购物车"
+            }
         };
+
+        function applyMenuLanguage() {
+            const t = trans[lang] || trans.km;
+            const setTxt = (sel, txt) => { const el = document.querySelector(sel); if (el) el.innerText = txt; };
+            const setPlh = (id, txt) => { const el = document.getElementById(id); if (el) el.placeholder = txt; };
+
+            const lSel = document.getElementById('langSelect');
+            if (lSel) lSel.value = lang;
+            const cSel = document.getElementById('currSelect');
+            if (cSel) cSel.value = curr;
+
+            setPlh('searchInput', t.search);
+            setTxt('#ptsDisplay', `${t.ptsLabel} ${points}`);
+            setTxt('#landingPage .lp-btn-cyan', t.lpMenuBtn);
+            const lpTrk = document.querySelector('#landingPage .lp-btn-dark');
+            if (lpTrk) lpTrk.innerHTML = `<i class="fa-solid fa-play" style="font-size:11px;"></i> ${t.lpTrackBtn}`;
+
+            const navSpans = document.querySelectorAll('.bottom-nav .nav-item span');
+            if (navSpans.length >= 4) {
+                navSpans[0].innerText = t.navHome;
+                navSpans[1].innerText = t.navWishlist;
+                navSpans[2].innerText = t.navTrack;
+                navSpans[3].innerText = t.navProfile;
+            }
+
+            setTxt('#sidebar h2', t.sbTitle);
+            const sbItems = document.querySelectorAll('#sidebar .sb-item');
+            if (sbItems.length >= 6) {
+                sbItems[0].innerHTML = `<i class="fa-solid fa-moon"></i> ${t.sbTheme}`;
+                sbItems[3].innerHTML = `<i class="fa-solid fa-box"></i> ${t.sbTrack}`;
+                sbItems[4].innerHTML = `<i class="fa-solid fa-heart"></i> ${t.sbWishlist}`;
+                sbItems[5].innerHTML = `<i class="fa-solid fa-star"></i> ${t.sbRate}`;
+            }
+
+            setTxt('#cartModal .modal-header h3', t.cartTitle);
+            setPlh('cName', t.yourName);
+            setPlh('cPhone', t.yourPhone);
+            setPlh('cNote', t.orderNote);
+            setPlh('cPromo', t.promoPlh);
+            const qrTitle = document.querySelector('#qrBoxContainer > div');
+            if (qrTitle && !((sys && sys.bakongId) && navigator.onLine)) {
+                qrTitle.innerHTML = `<i class="fa-solid fa-qrcode"></i> ${t.qrScan}`;
+            }
+            const extraTgl = document.querySelector('#cartModal div[onclick*="extraSys"]');
+            if (extraTgl) extraTgl.innerText = t.extraToggle;
+            const applyBtn = document.querySelector('#extraSys button[onclick*="applyPromo"]');
+            if (applyBtn) applyBtn.innerText = t.apply;
+            const totLbl = document.querySelector('#cartModal span[style*="color: var(--text-muted)"]');
+            if (totLbl) totLbl.innerText = t.totalOrder;
+            const cartCloseBtn = document.querySelector('#cartModal button[onclick*="closeModal"]');
+            if (cartCloseBtn) cartCloseBtn.innerText = t.close;
+            const chkBtn = document.getElementById('checkoutBtn');
+            if (chkBtn && !chkBtn.disabled) chkBtn.innerText = t.checkout;
+
+            setTxt('#trackerModal .modal-header h3', t.trackTitle);
+            setPlh('tPhone', t.trackPlh);
+            setTxt('#trackerModal button[onclick*="trackOrder"]', t.trackBtn);
+
+            setTxt('#wishlistModal .modal-header h3', t.wishTitle);
+            setTxt('#reviewModal .modal-header h3', t.rateTitle);
+            setPlh('rName', t.rateName);
+            setPlh('rCom', t.rateCom);
+            setTxt('#reviewModal button[onclick*="submitReview"]', t.submit);
+        }
 
         function showToast(msg, isError = false) {
             const t = document.getElementById('toast'); 
@@ -1673,19 +1882,19 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 if (cachedSys && typeof cachedSys === 'object') {
                     sys = Object.assign({}, cachedSys, sys);
                     window.sysSettings = sys;
+                    if (sys && parseFloat(sys.exchangeRate) > 0) exRate = parseFloat(sys.exchangeRate);
                 }
             } catch(e) {}
             const savedPal = localStorage.getItem(`ks2_${BRANCH}_menu_lux_palette`) || (sys && sys.menuLuxuryTheme) || 'obsidian';
             setLuxuryPalette(savedPal, false);
         })();
         function changeSystem(type, val) {
-            if(type==='curr') curr = val;
+            if(type==='curr') { curr = val; localStorage.setItem('skm_menu_curr', val); }
             if(type==='lang') { 
                 lang = val; 
-                if(trans[lang]) {
-                    document.getElementById('searchInput').placeholder = trans[lang].search; 
-                    buildCats(); 
-                }
+                localStorage.setItem('app_lang', val);
+                applyMenuLanguage();
+                buildCats();
             }
             renderMenu(); if(cart.length>0) { renderCart(); updateTotal(); }
             closeSidebar();
@@ -1694,7 +1903,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
         function getPrc(p) { let u = parseFloat(p.price)||0, r = parseFloat(p.riel)||0; return u > 0 ? u : (r / exRate); }
 
         async function init() {
-            document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
+            applyMenuLanguage();
             
             try {
                 if (supabaseClient && navigator.onLine) {
@@ -1730,6 +1939,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                         sys.activePlugins = storeRow.active_plugins;
                     }
                     window.sysSettings = sys;
+                    if (sys && parseFloat(sys.exchangeRate) > 0) exRate = parseFloat(sys.exchangeRate);
                     if (sys.activePlugins && typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(sys.activePlugins);
 
                     // --- កំណត់រៀបចំ Settings លើ Menu ---
@@ -1886,6 +2096,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     if (localSys && typeof localSys === 'object') {
                         sys = localSys;
                         window.sysSettings = sys;
+                    if (sys && parseFloat(sys.exchangeRate) > 0) exRate = parseFloat(sys.exchangeRate);
                         if (sys.menuLuxuryTheme) setLuxuryPalette(sys.menuLuxuryTheme, false);
                         if (sys.menuLayout && typeof window.applyMenuLayoutStyle === 'function') window.applyMenuLayoutStyle(sys.menuLayout);
                         if (sys.seasonalEffect && sys.seasonalEffect !== 'none' && typeof window.applySeasonalOverlay === 'function') {
@@ -2023,9 +2234,11 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             
             // 🌟 កែសម្រួល Badge បង្ហាញស្តុក
             if (pQty <= 3 && pQty > 0) {
-                urgencyHtml = `<div class="p-urgency">Only ${pQty} left!</div>`;
+                const mt = trans[lang] || trans.km;
+                urgencyHtml = `<div class="p-urgency">${mt.onlyLeft} ${pQty} ${mt.leftSuffix}</div>`;
             } else if (pQty <= 0) {
-                let oosTxt = (sys && sys.preorder) ? 'Out of Stock (Pre-order)' : 'Out of Stock';
+                const mt = trans[lang] || trans.km;
+                let oosTxt = (sys && sys.preorder) ? `${mt.outOfStock} (${mt.preorder})` : mt.outOfStock;
                 urgencyHtml = `<div class="p-urgency" style="background:var(--danger)">${oosTxt}</div>`;
             }
             
@@ -2040,7 +2253,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             return `
             <div class="p-card" onclick="openDet('${safeId}')">
                 <div class="p-img-box">
-                    <div class="p-badge">${pQty > 0 ? '✦ Featured' : 'Pre-Order'}</div>
+                    <div class="p-badge">${pQty > 0 ? (trans[lang]?.featured || '✦ Featured') : (trans[lang]?.preorder || 'Pre-Order')}</div>
                     ${urgencyHtml}
                     ${conditionBadge}
                     <button class="p-fav-btn" style="color:${isFav?'var(--danger)':'#ffffff'};" onclick="toggleWl('${safeId}', this, event)"><i class="fa-solid fa-heart"></i></button>
@@ -2050,7 +2263,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     <div class="p-title">${p.name}</div>
                     <div class="p-price-row">
                         <span class="p-price">${fmt(getPrc(p))}</span>
-                        <button class="p-add-btn" style="${btnStyle}" ${btnClick}><i class="fa-solid fa-plus" style="font-size:10px;"></i> Add</button>
+                        <button class="p-add-btn" style="${btnStyle}" ${btnClick}><i class="fa-solid fa-plus" style="font-size:10px;"></i> ${(trans[lang] || trans.km).add}</button>
                     </div>
                 </div>
             </div>`;
@@ -2069,7 +2282,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             }
 
             if (selCat === 'all') {
-                const otherLabel = lang === 'km' ? 'ទំនិញផ្សេងៗ' : 'Other';
+                const otherLabel = (trans[lang] || trans.km).other;
                 const groupsMap = new Map();
                 arr.forEach(p => {
                     const catName = (p.category && String(p.category).trim()) ? String(p.category).trim() : otherLabel;
@@ -2082,7 +2295,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     const isRealCat = items.some(it => it.category && String(it.category).trim() === catName);
                     const safeCat = String(catName).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
                     const moreBtnHtml = (isRealCat && groupsMap.size > 1)
-                        ? `<button class="cat-section-btn" onclick="filterCat('${safeCat}')">មើលតែផ្នែកនេះ ➔</button>`
+                        ? `<button class="cat-section-btn" onclick="filterCat('${safeCat}')">${(trans[lang] || trans.km).viewSection}</button>`
                         : '';
 
                     sectionsHtml += `
@@ -2102,7 +2315,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 });
                 container.innerHTML = sectionsHtml;
             } else {
-                const allBtnText = lang === 'km' ? '← បង្ហាញគ្រប់ផ្នែក' : '← Show All';
+                const allBtnText = (trans[lang] || trans.km).showAll;
                 container.innerHTML = `
                 <div class="cat-section-block">
                     <div class="cat-section-header">
@@ -2197,7 +2410,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     </div>
                 </div>
                 ` : ''}
-                <button class="btn-act btn-green" style="width:100%; ${btnStyle}" ${btnClick}>Add to Order</button>
+                <button class="btn-act btn-green" style="width:100%; ${btnStyle}" ${btnClick}>${(trans[lang] || trans.km).addToOrder}</button>
             `;
             renderQA(); openModal('detailModal');
         }
@@ -2259,7 +2472,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
         function renderCart() {
             const list = document.getElementById('cartList');
-            if(cart.length===0) return list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-weight:800;">Cart is empty</div>`;
+            if(cart.length===0) return list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-weight:800;">${(trans[lang] || trans.km).cartEmpty}</div>`;
             
             list.innerHTML = cart.map(c => {
                 let safeCid = String(c.cartId).replace(/'/g, "\\'");
@@ -2310,7 +2523,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
         }
         function renderWl() {
             const list = document.getElementById('wList');
-            if(wishlist.length===0) return list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-weight:800;">Empty Wishlist</div>`;
+            if(wishlist.length===0) return list.innerHTML = `<div style="text-align:center; padding:20px; color:var(--text-muted); font-weight:800;">${(trans[lang] || trans.km).wishEmpty}</div>`;
             list.innerHTML = wishlist.map(w => {
                 let safeId = String(w.id).replace(/'/g, "\\'");
                 return `

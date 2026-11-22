@@ -1,6 +1,42 @@
 // inventory.js
 window.currentInventoryView = 'grid';
 
+function getInvI18n() {
+    const lang = localStorage.getItem('app_lang') || 'km';
+    return (window.sysI18n && (window.sysI18n[lang] || window.sysI18n.km)) || {};
+}
+
+function parseCSVLineSafe(line) {
+    const res = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (inQuotes) {
+            if (ch === '"' && line[i + 1] === '"') {
+                cur += '"';
+                i++;
+            } else if (ch === '"') {
+                inQuotes = false;
+            } else {
+                cur += ch;
+            }
+        } else {
+            if (ch === '"') {
+                inQuotes = true;
+            } else if (ch === ',') {
+                res.push(cur.trim());
+                cur = '';
+            } else {
+                cur += ch;
+            }
+        }
+    }
+    res.push(cur.trim());
+    return res;
+}
+
+
 // អថេរសម្រាប់កំណត់ការបែងចែកទំព័រ (Pagination)
 window.invCurrentPage = 1;
 window.invItemsPerPage = 20; // លំនាំដើមបង្ហាញ ២០ ក្នុងមួយទំព័រ
@@ -36,7 +72,8 @@ window.setInventoryView = function(mode, skipRender = false) {
 };
 
 window.renderInventory = function() {
-    const container = document.getElementById('productGridContainer'); 
+    const container = document.getElementById('productGridContainer');
+    const d = getInvI18n(); 
     const pageContainer = document.getElementById('inventoryPagination');
     if(!container) return;
     try {
@@ -71,7 +108,7 @@ window.renderInventory = function() {
         else filtered.sort((a,b) => { if(!a) return 1; if(!b) return -1; return String(b.id || '').localeCompare(String(a.id || '')); });
         
         if (filtered.length === 0) { 
-            container.innerHTML = '<div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-card); border-radius:12px; border:1px solid var(--border);">មិនមានទិន្នន័យ</div>'; 
+            container.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted); background:var(--bg-card); border-radius:12px; border:1px solid var(--border);">${d.noInvData || 'មិនមានទិន្នន័យ'}</div>`; 
             if(pageContainer) pageContainer.innerHTML = '';
             return; 
         }
@@ -99,18 +136,18 @@ window.renderInventory = function() {
                 let pQty = parseFloat(p.qty) || 0; 
                 let sCol = pQty <= 0 ? 'var(--danger)' : (pQty <= 5 ? 'var(--warning)' : 'var(--success)'); 
                 let img = p.image ? p.image : 'https://placehold.co/400x300/1e293b/475569?text=No+Image'; 
-                let actionBtns = enableEdit ? `<div class="card-actions"><button class="btn btn-outline" onclick="window.editProduct('${p.id}')">✏️ កែប្រែ</button><button class="btn btn-danger" onclick="window.deleteProduct('${p.id}')">🗑️</button></div>` : ''; 
+                let actionBtns = enableEdit ? `<div class="card-actions"><button class="btn btn-outline" onclick="window.editProduct('${p.id}')">${d.btnEdit || '✏️ កែប្រែ'}</button><button class="btn btn-danger" onclick="window.deleteProduct('${p.id}')">🗑️</button></div>` : ''; 
                 let pRiel = parseFloat(p.riel) || 0; 
                 let rielStr = pRiel > 0 ? `<span style="font-size:var(--fs-11); color:var(--text-muted);">| ${pRiel.toLocaleString()} ៛</span>` : '';
                 let conditionBadge = (window.sysSettings.condition && p.condition) ? `<span style="font-size:11px; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; margin-left:5px;">${p.condition}</span>` : '';
                 let expiryBadge = (window.sysSettings.expiry && p.expiry) ? `<div style="font-size:11px; color:var(--warning); margin-top:2px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</div>` : '';
 
-                finalHtml += `<div class="product-card"><div class="media-container">${p.category?`<div class="badge-cat">${p.category}</div>`:''}<img src="${img}" alt="Product"></div><div class="product-info"><div class="p-title">${p.name} ${conditionBadge}</div><div style="font-size: var(--fs-11); color: var(--primary); margin-bottom: 4px; font-family: monospace;">Barcode: ${p.customId||p.id}</div><div style="font-size: var(--fs-12); color: var(--text-muted); margin-bottom: 8px; line-height: 1.3; flex-grow: 1;">${p.description || p.desc || 'មិនមានការពណ៌នា'}</div><div class="p-finances"><div style="display:${showCost ? 'block':'none'}">ដើម: <span class="p-cost">${window.fMoney(p.cost)}</span></div><div>លក់: <span class="p-price">${window.fMoney(p.price)} ${rielStr} <small style="color:var(--text-muted); font-size:var(--fs-11);">/ ${p.unit||'ឯកតា'}</small></span></div></div>${expiryBadge}<div class="qty-control" style="border-color:${sCol}"><button class="qty-btn" onclick="window.updateQty('${p.id}', -1)">-</button><span class="qty-val" style="color:${sCol}">${pQty} <small style="font-size:var(--fs-11);">${p.unit||'ឯកតា'}</small></span><button class="qty-btn" onclick="window.updateQty('${p.id}', 1)">+</button></div>${actionBtns}</div></div>`;
+                finalHtml += `<div class="product-card"><div class="media-container">${p.category?`<div class="badge-cat">${p.category}</div>`:''}<img src="${img}" alt="Product"></div><div class="product-info"><div class="p-title">${p.name} ${conditionBadge}</div><div style="font-size: var(--fs-11); color: var(--primary); margin-bottom: 4px; font-family: monospace;">Barcode: ${p.customId||p.id}</div><div style="font-size: var(--fs-12); color: var(--text-muted); margin-bottom: 8px; line-height: 1.3; flex-grow: 1;">${p.description || p.desc || d.noDesc || 'មិនមានការពណ៌នា'}</div><div class="p-finances"><div style="display:${showCost ? 'block':'none'}">ដើម: <span class="p-cost">${window.fMoney(p.cost)}</span></div><div>${d.lblSellShort || 'លក់:'} <span class="p-price">${window.fMoney(p.price)} ${rielStr} <small style="color:var(--text-muted); font-size:var(--fs-11);">/ ${p.unit||'ឯកតា'}</small></span></div></div>${expiryBadge}<div class="qty-control" style="border-color:${sCol}"><button class="qty-btn" onclick="window.updateQty('${p.id}', -1)">-</button><span class="qty-val" style="color:${sCol}">${pQty} <small style="font-size:var(--fs-11);">${p.unit||'ឯកតា'}</small></span><button class="qty-btn" onclick="window.updateQty('${p.id}', 1)">+</button></div>${actionBtns}</div></div>`;
             });
             finalHtml += `</div>`; 
             container.innerHTML = finalHtml;
         } else {
-            let tableHTML = `<div class="table-responsive"><table id="mainInventoryTable"><thead><tr class="header-row"><th style="width: 60px;">រូបភាព</th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 1)">ឈ្មោះទំនិញ / Barcode <span>⬍</span></th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 2)">ប្រភេទ <span>⬍</span></th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 3, 'number')">តម្លៃលក់ <span>⬍</span></th><th style="text-align:center;" onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 4, 'number')">ស្តុកនៅសល់ <span>⬍</span></th>${window.sysSettings.expiry?'<th>កាលបរិច្ឆេទផុតកំណត់</th>':''}${enableEdit ? '<th style="text-align:center;">សកម្មភាព</th>' : ''}</tr><tr class="filter-row"><th></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="ស្វែងរក..."></th>${window.sysSettings.expiry?'<th></th>':''}${enableEdit ? '<th></th>' : ''}</tr></thead><tbody>`;
+            let tableHTML = `<div class="table-responsive"><table id="mainInventoryTable"><thead><tr class="header-row"><th style="width: 60px;">${d.thImg || 'រូបភាព'}</th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 1)">${d.thNameCode || 'ឈ្មោះទំនិញ / Barcode'} <span>⬍</span></th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 2)">${d.thCategory || 'ប្រភេទ'} <span>⬍</span></th><th onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 3, 'number')">${d.thPrice || 'តម្លៃលក់'} <span>⬍</span></th><th style="text-align:center;" onclick="if(window.sortTable) window.sortTable('mainInventoryTable', 4, 'number')">${d.thStock || 'ស្តុកនៅសល់'} <span>⬍</span></th>${window.sysSettings.expiry?`<th>${d.thExpiry || 'កាលបរិច្ឆេទផុតកំណត់'}</th>`:''}${enableEdit ? `<th style="text-align:center;">${d.thAction || 'សកម្មភាព'}</th>` : ''}</tr><tr class="filter-row"><th></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="${d.tblSearchPlh || 'ស្វែងរក...'}"></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="${d.tblSearchPlh || 'ស្វែងរក...'}"></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="${d.tblSearchPlh || 'ស្វែងរក...'}"></th><th><input type="text" class="col-filter" onkeyup="if(window.filterTable) window.filterTable('mainInventoryTable')" placeholder="${d.tblSearchPlh || 'ស្វែងរក...'}"></th>${window.sysSettings.expiry?'<th></th>':''}${enableEdit ? '<th></th>' : ''}</tr></thead><tbody>`;
             displayItems.forEach(p => { 
                 if(!p) return;
                 let pQty = parseFloat(p.qty) || 0; 
@@ -126,7 +163,7 @@ window.renderInventory = function() {
                     expiryTD = `<td>${p.expiry ? new Date(p.expiry).toLocaleDateString('km-KH') : '<span style="color:var(--text-muted); font-size:11px;">មិនមាន</span>'}</td>`;
                 }
                 
-                tableHTML += `<tr data-id="${p.id}"><td><img src="${img}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border:1px solid var(--border);"></td><td data-sort="${safeName}"><div style="font-weight: bold; font-size:var(--fs-15); color:var(--text-main); margin-bottom: 2px;">${p.name} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--primary); font-family:monospace;">Barcode: ${p.customId||p.id}</div></td><td data-sort="${p.category||'-'}"><span class="badge-cat" style="position:static; display:inline-block; font-size:var(--fs-11); padding:4px 8px;">${p.category||'-'}</span></td><td data-sort="${p.price}"><div class="p-price" style="font-size:var(--fs-15);">${window.fMoney(p.price)} ${rielHtml}</div><div class="p-cost" style="font-size:var(--fs-11); margin-top:2px; display:${showCost ? 'block':'none'}">ដើម: ${window.fMoney(p.cost)}</div></td><td data-sort="${pQty}" style="text-align:center;"><div class="qty-control" style="border-color:${sCol}; margin: 0 auto; padding: 2px 5px;"><button class="qty-btn" onclick="window.updateQty('${p.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-16);">-</button><span class="qty-val" style="color:${sCol}; min-width:25px;">${pQty}</span><button class="qty-btn" onclick="window.updateQty('${p.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-16);">+</button></div><div style="font-size:var(--fs-11); color:var(--text-muted); margin-top:3px;">${p.unit||'ឯកតា'}</div></td>${expiryTD}${actCol}</tr>`; 
+                tableHTML += `<tr data-id="${p.id}"><td><img src="${img}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border:1px solid var(--border);"></td><td data-sort="${safeName}"><div style="font-weight: bold; font-size:var(--fs-15); color:var(--text-main); margin-bottom: 2px;">${p.name} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--primary); font-family:monospace;">Barcode: ${p.customId||p.id}</div></td><td data-sort="${p.category||'-'}"><span class="badge-cat" style="position:static; display:inline-block; font-size:var(--fs-11); padding:4px 8px;">${p.category||'-'}</span></td><td data-sort="${p.price}"><div class="p-price" style="font-size:var(--fs-15);">${window.fMoney(p.price)} ${rielHtml}</div><div class="p-cost" style="font-size:var(--fs-11); margin-top:2px; display:${showCost ? 'block':'none'}">${d.lblCostShort || 'ដើម:'} ${window.fMoney(p.cost)}</div></td><td data-sort="${pQty}" style="text-align:center;"><div class="qty-control" style="border-color:${sCol}; margin: 0 auto; padding: 2px 5px;"><button class="qty-btn" onclick="window.updateQty('${p.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-16);">-</button><span class="qty-val" style="color:${sCol}; min-width:25px;">${pQty}</span><button class="qty-btn" onclick="window.updateQty('${p.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-16);">+</button></div><div style="font-size:var(--fs-11); color:var(--text-muted); margin-top:3px;">${p.unit||'ឯកតា'}</div></td>${expiryTD}${actCol}</tr>`; 
             });
             tableHTML += `</tbody></table></div>`; 
             container.innerHTML = tableHTML;
@@ -142,9 +179,9 @@ window.renderInventory = function() {
             if (window.invItemsPerPage === 'all' || totalItems <= window.invItemsPerPage) {
                 pageContainer.innerHTML = ''; 
             } else {
-                let pageHtml = `<button class="btn btn-outline" ${window.invCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvPage(${window.invCurrentPage - 1})"`}>◀ មុន</button>`;
-                pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">ទំព័រ ${window.invCurrentPage} នៃ ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(សរុប ${totalItems} មុខ)</small></span>`;
-                pageHtml += `<button class="btn btn-outline" ${window.invCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvPage(${window.invCurrentPage + 1})"`}>បន្ទាប់ ▶</button>`;
+                let pageHtml = `<button class="btn btn-outline" ${window.invCurrentPage === 1 ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvPage(${window.invCurrentPage - 1})"`}>${d.btnPrevPage || '◀ មុន'}</button>`;
+                pageHtml += `<span style="font-weight:bold; font-size:var(--fs-14);">${d.lblPage || 'ទំព័រ'} ${window.invCurrentPage} ${d.lblOf || 'នៃ'} ${totalPages} <small style="color:var(--text-muted); font-weight:normal;">(${d.lblTotalCount || 'សរុប'} ${totalItems})</small></span>`;
+                pageHtml += `<button class="btn btn-outline" ${window.invCurrentPage === totalPages ? 'disabled style="opacity:0.5; cursor:not-allowed;"' : `onclick="window.changeInvPage(${window.invCurrentPage + 1})"`}>${d.btnNextPage || 'បន្ទាប់ ▶'}</button>`;
                 pageContainer.innerHTML = pageHtml;
             }
         }
@@ -500,10 +537,10 @@ window.importCSV = function(directEvent) {
             const syncedItems = [];
 
             for(let i = 1; i < lines.length; i++) {
-                const cols = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g);
+                const cols = parseCSVLineSafe(lines[i].replace(/\r$/, ''));
                 if(!cols || cols.length < 5) continue;
 
-                const clean = (str) => str ? str.replace(/^"|"$/g, '').replace(/""/g, '"').trim() : '';
+                const clean = (str) => str ? String(str).trim() : '';
                 
                 const customId = clean(cols[0]);
                 const name = clean(cols[1]);
