@@ -16,6 +16,7 @@
     
     <link rel="stylesheet" href="style.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script id="skm-all-luxury-themes-script" src="all_luxury_themes.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
     <!-- 🌟 CSS សម្រាប់ផ្ទាំង Login បែប Glassmorphism និងតម្រង់ជួរប្រអប់ Toolbar ឱ្យស្មើគ្នា 🌟 -->
@@ -229,7 +230,7 @@
         <p style="color: var(--text-muted); margin-bottom: 25px; font-size: 16px;">សិទ្ធិប្រើប្រាស់របស់អ្នកបានផុតកំណត់ ឬមិនទាន់បានបញ្ចូលកូដ។ សូមទាក់ទងអ្នកអភិវឌ្ឍន៍។</p>
         <div style="background: var(--bg-card); padding: 25px; border-radius: 12px; border: 1px solid var(--border); width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5);">
             <input type="text" id="licenseInputBox" class="form-control" placeholder="បញ្ចូលលេខកូដ (License Key)..." style="margin-bottom: 15px; font-size: 16px; text-align: center; width: 100%;" onkeydown="if(event.key==='Enter') window.verifyAndSaveLicense()">
-            <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px;" onclick="window.verifyAndSaveLicense()">🔓 បើកដំណើរការ</button>
+            <button class="btn btn-primary" style="width: 100%; padding: 12px; font-size: 16px;" onclick="window.verifyNewLicense('lock')">🔓 បើកដំណើរការ</button>
         </div>
     </div>
 
@@ -899,7 +900,7 @@
                             <label style="display: block; margin-bottom: 8px; font-size: var(--fs-14); color: var(--text-main);">បញ្ចូល ឬប្តូរលេខកូដថ្មី (License Key):</label>
                             <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                                 <input type="text" id="aboutLicenseInput" class="form-control" placeholder="ដាក់លេខកូដ License Key..." style="flex: 1; min-width: 220px; width: 100%;" onkeydown="if(event.key==='Enter') window.verifyNewLicense()">
-                                <button type="button" class="btn btn-primary" onclick="window.verifyNewLicense()">🔄 បញ្ចូលកូដថ្មី</button>
+                                <button type="button" class="btn btn-primary" onclick="window.verifyNewLicense('about')">🔄 បញ្ចូលកូដថ្មី</button>
                             </div>
                         </div>
                     </div>
@@ -1460,7 +1461,18 @@
         };
 
         if ('serviceWorker' in navigator && (window.location.protocol === 'https:' || window.location.protocol === 'http:')) {
-            navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' }).catch(function(err) {
+            navigator.serviceWorker.register('pwabuilder-sw.js', { scope: './' }).then(function(reg) {
+                if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+                reg.addEventListener('updatefound', function() {
+                    const nw = reg.installing;
+                    if (!nw) return;
+                    nw.addEventListener('statechange', function() {
+                        if (nw.state === 'installed' && navigator.serviceWorker.controller) {
+                            nw.postMessage({ type: 'SKIP_WAITING' });
+                        }
+                    });
+                });
+            }).catch(function(err) {
                 console.log('Service Worker registration skipped or failed in preview: ', err);
             });
         }
@@ -1978,10 +1990,20 @@
         });
 
         // 🔑 មុខងារផ្ទៀងផ្ទាត់ License (ដំណើរការទាំងលើ About និង Lock Screen)
-        window.verifyNewLicense = async function() {
-            const inputEl = document.getElementById('aboutLicenseInput') || document.getElementById('licenseInputBox');
+        window.verifyNewLicense = async function(sourceHint) {
+            const lockScreen = document.getElementById('licenseLockScreen');
+            const isLockVisible = lockScreen && window.getComputedStyle(lockScreen).display !== 'none';
+            const lockInp = document.getElementById('licenseInputBox');
+            const aboutInp = document.getElementById('aboutLicenseInput');
+
+            let inputEl = null;
+            if (sourceHint === 'lock' || isLockVisible) {
+                inputEl = (lockInp && String(lockInp.value).trim()) ? lockInp : (aboutInp && String(aboutInp.value).trim() ? aboutInp : lockInp);
+            } else {
+                inputEl = (aboutInp && String(aboutInp.value).trim()) ? aboutInp : (lockInp && String(lockInp.value).trim() ? lockInp : aboutInp);
+            }
             const key = inputEl ? String(inputEl.value).trim() : '';
-            const branchId = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+            const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
             if (!key) {
                 if (typeof window.ksMsg === 'function') window.ksMsg("សូមបញ្ចូលលេខកូដ License ជាមុនសិន!", "បរាជ័យ");
@@ -1999,6 +2021,7 @@
                 const { data, error } = await window.supabaseClient
                     .from('branch_licenses')
                     .select('*')
+                    .eq('branch_id', branchId)
                     .eq('license_key', key)
                     .maybeSingle();
 
@@ -2045,6 +2068,6 @@
         window.verifyAndSaveLicense = window.verifyNewLicense;
     </script>
     <!-- All-In-One POS Plugins (Loaded from GitHub Pages - 0 Supabase Egress) -->
-    <script src="plugins/pos/all_pos_plugins.js" defer></script>
+    <script id="skm-root-pos-plugins" src="all_pos_plugins.js" defer></script>
 </body>
 </html>
