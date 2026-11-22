@@ -7,6 +7,7 @@
     
     <!-- Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="all_luxury_themes.js"></script>
     
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -187,6 +188,117 @@
                 width: calc(100% - 30px); z-index: 50; margin: 0;
             }
         }
+
+        /* Luxury Theme Store Cards in Tab 1 */
+        .lux-store-status {
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+            background: rgba(197, 155, 56, 0.08); border: 1px solid rgba(197, 155, 56, 0.35);
+            padding: 12px 16px; border-radius: 14px; margin-bottom: 18px; font-size: 12.5px; font-weight: 800;
+        }
+        .lux-theme-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 16px; margin-bottom: 22px;
+        }
+        .lux-theme-card {
+            background: var(--card-bg); border: 1.5px solid var(--border-color); border-radius: 18px;
+            overflow: hidden; display: flex; flex-direction: column;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.06); transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+        }
+        .lux-theme-card:hover { transform: translateY(-3px); border-color: var(--brand-cyan); box-shadow: 0 14px 32px rgba(0,0,0,0.12); }
+        .lux-theme-preview {
+            height: 112px; padding: 12px; display: flex; flex-direction: column; justify-content: space-between;
+            position: relative; overflow: hidden;
+        }
+        .lux-prev-top { display: flex; justify-content: space-between; align-items: center; z-index: 2; }
+        .lux-prev-dots { display: flex; gap: 5px; }
+        .lux-prev-dots span { width: 8px; height: 8px; border-radius: 50%; opacity: 0.75; }
+        .lux-prev-badges { display: flex; gap: 5px; flex-wrap: wrap; }
+        .lux-active-chip {
+            font-size: 10px; font-weight: 900; padding: 3px 8px; border-radius: 999px;
+            backdrop-filter: blur(8px); letter-spacing: 0.3px;
+        }
+        .lux-prev-mock {
+            display: grid; grid-template-columns: 1fr 1.6fr; gap: 8px; z-index: 2;
+        }
+        .lux-prev-box {
+            border-radius: 10px; padding: 8px; font-size: 10px; font-weight: 800;
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .lux-theme-body { padding: 14px; display: flex; flex-direction: column; gap: 10px; flex: 1; }
+        .lux-theme-title { font-size: 15px; font-weight: 900; color: var(--brand-dark); display: flex; justify-content: space-between; align-items: center; }
+        .lux-theme-sub { font-size: 11.5px; color: var(--text-muted); font-weight: 700; }
+        .lux-btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; margin-top: auto; }
+        .lux-card-btn {
+            padding: 8px 10px; border-radius: 10px; font-size: 11.5px; font-weight: 800;
+            cursor: pointer; border: 1px solid var(--border-color); background: var(--store-bg);
+            color: var(--text-dark); display: inline-flex; align-items: center; justify-content: center; gap: 5px;
+            transition: all 0.2s ease;
+        }
+        .lux-card-btn:hover { transform: translateY(-1px); }
+        .lux-card-btn.apply-pos { background: rgba(15, 23, 42, 0.9); color: #F3D98B; border-color: rgba(217,177,80,0.45); }
+        .lux-card-btn.apply-menu { background: linear-gradient(135deg, #C29634, #E8C973); color: #14110B; border: none; }
+        .lux-card-btn.dl-btn { background: transparent; border-style: dashed; color: var(--text-muted); font-size: 11px; }
+        .lux-card-btn.dl-btn:hover { border-color: var(--brand-cyan); color: var(--brand-cyan); background: rgba(6,182,212,0.06); }
+
+        .lux-filter-bar {
+            display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px;
+            background: rgba(0,0,0,0.02); padding: 14px; border-radius: 16px; border: 1px solid var(--border-color);
+        }
+        .lux-cat-pills { display: flex; gap: 6px; flex-wrap: wrap; }
+        .lux-cat-pill {
+            padding: 6px 12px; border-radius: 999px; border: 1px solid var(--border-color);
+            background: var(--card-bg); color: var(--text-muted); font-size: 11.5px; font-weight: 800;
+            cursor: pointer; transition: all 0.2s ease;
+        }
+        .lux-cat-pill:hover { border-color: #C59B38; color: var(--text-dark); }
+        .lux-cat-pill.active {
+            background: linear-gradient(135deg, #B68A28, #E4C36E); color: #14110B;
+            border-color: transparent; box-shadow: 0 4px 12px rgba(197,155,56,0.3);
+        }
+        .lux-preview-modal-bg {
+            position: fixed; inset: 0; background: rgba(6,7,12,0.78); backdrop-filter: blur(10px);
+            z-index: 12000; display: none; justify-content: center; align-items: center; padding: 18px;
+        }
+        .lux-preview-modal-box {
+            background: var(--card-bg); border-radius: 24px; max-width: 820px; width: 100%;
+            max-height: 90vh; overflow-y: auto; padding: 22px; border: 1px solid var(--border-color);
+            box-shadow: 0 30px 70px rgba(0,0,0,0.5);
+        }
+        .lux-preview-split {
+            display: grid; grid-template-columns: 1.35fr 1fr; gap: 16px; margin: 16px 0;
+        }
+        @media (max-width: 720px) { .lux-preview-split { grid-template-columns: 1fr; } }
+
+        .lux-pro-tools-grid {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 14px; margin-bottom: 18px;
+        }
+        .lux-tool-card {
+            background: var(--store-bg); border: 1px solid var(--border-color); border-radius: 16px;
+            padding: 15px; display: flex; flex-direction: column; gap: 10px;
+        }
+        .lux-tool-head {
+            font-size: 13.5px; font-weight: 900; color: var(--brand-dark);
+            display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        }
+        .lux-wizard-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(128px, 1fr)); gap: 8px;
+        }
+        .lux-wiz-btn {
+            padding: 9px 8px; border-radius: 12px; border: 1px solid var(--border-color);
+            background: var(--card-bg); color: var(--text-dark); cursor: pointer;
+            font-size: 11.5px; font-weight: 800; display: flex; flex-direction: column;
+            align-items: center; gap: 4px; text-align: center; transition: all 0.2s ease;
+        }
+        .lux-wiz-btn:hover { border-color: #C59B38; transform: translateY(-2px); box-shadow: 0 6px 16px rgba(197,155,56,0.18); }
+        .lux-wiz-btn small { font-size: 9.5px; color: var(--text-muted); font-weight: 700; }
+        .lux-seg-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .lux-seg-btn {
+            padding: 8px 6px; border-radius: 10px; border: 1.5px solid var(--border-color);
+            background: var(--card-bg); color: var(--text-muted); font-size: 11.5px; font-weight: 800;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .lux-seg-btn.active {
+            border-color: #C59B38; background: rgba(197,155,56,0.14); color: var(--brand-dark);
+        }
     </style>
 </head>
 <body>
@@ -256,11 +368,134 @@
             </div>
         </div>
 
-        <!-- TAB 1: Theme Color -->
+        <!-- TAB 1: 52-Model Luxury Theme Store & On-Demand Downloader -->
         <div id="tab-theme" class="tab-pane">
-            <div class="section-title"><i class="fa-solid fa-palette"></i> 1. ពណ៌ស្បែកគោល Menu (Theme Color)</div>
-            <div class="form-group">
-                <label>ពណ៌ស្បែក (Theme Accent Color) - ប្តូរពណ៌ប៊ូតុង និង Icon ទូទាំង Menu អតិថិជន</label>
+            <div class="section-title" style="color: #B68A28; border-bottom: 2px dashed rgba(197,155,56,0.4); padding-bottom: 10px; justify-content: space-between; flex-wrap: wrap;">
+                <span><i class="fa-solid fa-crown"></i> 1. ឃ្លាំងស្បែកប្រណីត ៥២ ម៉ូដែលតាមមុខរបរ (52 Luxury Themes — On-Demand)</span>
+                <span id="luxThemeCountBadge" style="font-size: 11.5px; background: rgba(197,155,56,0.14); color: #B68A28; padding: 4px 12px; border-radius: 999px;">52 ម៉ូដែល</span>
+            </div>
+            <p class="help-text">
+                ប្រព័ន្ធផ្ទុក <b>On-Demand (ហាង ១ ទាញតែស្បែក ១ ~7KB)</b> មិនធ្វើឱ្យធ្ងន់វិបសាយឡើយ។ ចុច <b>👁️ មើលគំរូ</b> ដើម្បីមើលរូបរាង POS & Menu, ចុច <b>បំពាក់ POS / Menu</b> ដើម្បីប្រើភ្លាមៗ ឬចុច <b>ទាញយក .js</b> ទុកប្រើតាមសាខាផ្សេងៗ!
+            </p>
+
+            <!-- Active Status & Reset Bar -->
+            <div class="lux-store-status">
+                <div style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+                    <span>🖥️ ស្បែក POS៖ <b id="activePosLuxLabel" style="color: #B68A28;">ស្តង់ដារដើម (Classic)</b></span>
+                    <span>📱 ស្បែក Menu៖ <b id="activeMenuLuxLabel" style="color: #B68A28;">Obsidian Michelin</b></span>
+                </div>
+                <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                    <button type="button" class="lux-card-btn" style="padding: 5px 10px; font-size: 11px;" onclick="applyLuxuryThemeToTarget('pos', 'default')"><i class="fa-solid fa-rotate-left"></i> POS ដើមវិញ</button>
+                    <button type="button" class="lux-card-btn" style="padding: 5px 10px; font-size: 11px;" onclick="applyLuxuryThemeToTarget('menu', 'default')"><i class="fa-solid fa-rotate-left"></i> Menu ដើមវិញ</button>
+                </div>
+            </div>
+
+            <!-- 🚀 1-CLICK BUSINESS SETUP WIZARD (Idea #3) -->
+            <div class="lux-tool-card" style="margin-bottom: 16px; background: linear-gradient(135deg, rgba(197,155,56,0.08), rgba(6,182,212,0.05)); border-color: rgba(197,155,56,0.38);">
+                <div class="lux-tool-head">
+                    <span><i class="fa-solid fa-wand-magic-sparkles" style="color:#B68A28;"></i> រៀបចំហាងថ្មីក្នុង ១ ចុច (1-Click Business Setup Wizard)</span>
+                    <span style="font-size:10.5px; color:#B68A28; font-weight:800;">បំពាក់ស្បែក + ប្លង់ + Plugin + លេខតុ ស្វ័យប្រវត្តិ</span>
+                </div>
+                <div class="lux-wizard-grid">
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('cafe')">☕ <span>ហាងកាហ្វេ</span><small>#01 + Magazine + តុ</small></button>
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('restaurant')">🍽️ <span>ភោជនីយដ្ឋាន</span><small>#08 + List + តុ VIP</small></button>
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('bakery')">🧁 <span>នំខេក & បង្អែម</span><small>#15 + Magazine</small></button>
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('pharmacy')">💊 <span>ឱសថស្ថាន</span><small>#21 + List + Med</small></button>
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('beauty')">💄 <span>សាឡន & សម្រស់</span><small>#16 + Grid</small></button>
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('jewelry')">💎 <span>អលង្ការ VIP</span><small>#34 + Magazine</small></button>
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('tech')">📱 <span>Tech / Anime</span><small>#41 + Grid</small></button>
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('mart')">🛒 <span>ម៉ាត / ផ្កា</span><small>#46 + Grid</small></button>
+                </div>
+            </div>
+
+            <!-- ✨ PRO SUITE GRID: Showroom (#1), Brand-from-Logo (#2), Layout (#6), Seasonal (#5), QR Studio (#4) -->
+            <div class="lux-pro-tools-grid">
+                <!-- Card A: Live Showroom & Synced QR Studio (#1 & #4) -->
+                <div class="lux-tool-card">
+                    <div class="lux-tool-head">
+                        <span><i class="fa-solid fa-clapperboard" style="color:var(--brand-cyan);"></i> ទំព័រ Demo ឱ្យភ្ញៀវរើស & កាត QR តាមស្បែក</span>
+                    </div>
+                    <p style="font-size:11.5px; color:var(--text-muted); line-height:1.45;">
+                        ផ្ញើតំណភ្ជាប់ <b>Live Showroom</b> ឱ្យភ្ញៀវចុចសាកមើលស្បែកទាំង ៥២ លើទំនិញពិតដោយមិនប៉ះពាល់ទិន្នន័យ ឬបើកស្ទូឌីយោកាត QR ដែលស៊ីពណ៌ស្បែកស្វ័យប្រវត្តិ។
+                    </p>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:auto;">
+                        <button type="button" class="lux-card-btn apply-menu" onclick="openLiveShowroom('menu')"><i class="fa-solid fa-eye"></i> មើល Menu Showroom</button>
+                        <button type="button" class="lux-card-btn" onclick="copyLiveShowroomLink('menu')"><i class="fa-solid fa-copy"></i> Copy Link ផ្ញើភ្ញៀវ</button>
+                        <button type="button" class="lux-card-btn apply-pos" onclick="openLiveShowroom('pos')"><i class="fa-solid fa-desktop"></i> POS Showroom</button>
+                        <button type="button" class="lux-card-btn" style="background:#8b5cf6; color:#fff; border:none;" onclick="window.open('skm_ultimate_qr_generator.html?branch=' + encodeURIComponent(BRANCH), '_blank')"><i class="fa-solid fa-qrcode"></i> កាត QR តាមស្បែក</button>
+                    </div>
+                </div>
+
+                <!-- Card B: Auto Brand-from-Logo Theme Generator (#2) -->
+                <div class="lux-tool-card">
+                    <div class="lux-tool-head">
+                        <span><i class="fa-solid fa-eye-dropper" style="color:#B68A28;"></i> បង្កើតស្បែកអូតូតាម Logo ហាង</span>
+                        <span id="brandLogoPreviewDot" style="width:18px; height:18px; border-radius:50%; background:#C59B38; border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,0.2);"></span>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+                        <input type="color" id="brandGenPrimaryColor" value="#C59B38" style="width:42px; height:36px; border:none; border-radius:8px; cursor:pointer; background:transparent;" onchange="updateBrandPreviewDot()">
+                        <select id="brandGenMode" class="input-st" style="flex:1; margin-bottom:0; padding:7px 10px; font-size:12px;">
+                            <option value="dark">🌙 ផ្ទៃងងឹតប្រណីត (Dark)</option>
+                            <option value="light">☀️ ផ្ទៃភ្លឺប្រណីត (Light)</option>
+                        </select>
+                        <input type="file" id="brandLogoFileInp" accept="image/*" style="display:none;" onchange="extractBrandColorFromFile(event)">
+                        <button type="button" class="lux-card-btn" style="padding:7px 10px;" onclick="extractBrandColorFromShopLogo()"><i class="fa-solid fa-wand-sparkles"></i> ទាញពី Logo</button>
+                    </div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:auto;">
+                        <button type="button" class="lux-card-btn apply-menu" onclick="applyGeneratedBrandTheme('both')"><i class="fa-solid fa-crown"></i> បំពាក់ POS & Menu</button>
+                        <button type="button" class="lux-card-btn dl-btn" onclick="downloadGeneratedBrandTheme()"><i class="fa-solid fa-download"></i> ទាញយក .js ផ្ទាល់ខ្លួន</button>
+                    </div>
+                </div>
+
+                <!-- Card C: Menu Layout Switcher (#6) & Seasonal Overlay (#5) -->
+                <div class="lux-tool-card">
+                    <div class="lux-tool-head">
+                        <span><i class="fa-solid fa-layer-group" style="color:var(--success);"></i> ប្លង់ Menu & ស្បែកបុណ្យទាន (Auto-Expiry)</span>
+                    </div>
+                    <div>
+                        <label style="font-size:11px; font-weight:800; color:var(--text-muted); display:block; margin-bottom:5px;">📐 ម៉ូដប្លង់បង្ហាញទំនិញលើ Digital Menu:</label>
+                        <div class="lux-seg-row">
+                            <button type="button" class="lux-seg-btn" data-menu-layout="grid" onclick="setAdminMenuLayout('grid')">⊞ Grid (កាត)</button>
+                            <button type="button" class="lux-seg-btn" data-menu-layout="list" onclick="setAdminMenuLayout('list')">☰ List (បញ្ជី)</button>
+                            <button type="button" class="lux-seg-btn" data-menu-layout="magazine" onclick="setAdminMenuLayout('magazine')">📰 Magazine</button>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:4px;">
+                        <select id="setSeasonalEffect" class="input-st" style="flex:1.4; margin-bottom:0; padding:8px 10px; font-size:12px;" onchange="saveAdminSettings()">
+                            <option value="none">✨ គ្មាន Effect បុណ្យទាន</option>
+                            <option value="khmer_new_year">🌸 ចូលឆ្នាំខ្មែរ (ផ្ការំដួល)</option>
+                            <option value="water_festival">🏮 បុណ្យអុំទូក (គោមប្រទីប)</option>
+                            <option value="chinese_new_year">🧧 ចូលឆ្នាំចិន (គោមក្រហម)</option>
+                            <option value="christmas">❄️ Christmas (ព្រិលធ្លាក់)</option>
+                        </select>
+                        <input type="date" id="setSeasonalExpiry" class="input-st" style="flex:1; margin-bottom:0; padding:7px 10px; font-size:12px;" title="ថ្ងៃបិទ Effect ស្វ័យប្រវត្តិ (ទទេ = គ្មានកំណត់)" onchange="saveAdminSettings()">
+                    </div>
+                    <div style="font-size:10.5px; color:var(--text-muted);">📅 កំណត់ថ្ងៃផុតកំណត់ខាងស្តាំ ដើម្បីឱ្យ Effect បុណ្យទានបិទវិញស្វ័យប្រវត្តិក្រោយចប់ពិធី!</div>
+                </div>
+            </div>
+
+            <!-- Search + Mode + Industry Filter Bar -->
+            <div class="lux-filter-bar">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <input type="text" id="luxThemeSearchInp" class="input-st" placeholder="🔍 ស្វែងរកតាមមុខរបរ ឬឈ្មោះស្បែក (ឧ. កាហ្វេ, ឱសថស្ថាន, នំខេក, ពេជ្រ, Anime...)" style="flex: 2; min-width: 220px; margin-bottom: 0; padding: 10px 14px; font-size: 13px;" oninput="renderLuxuryThemeStore()">
+                    <select id="luxThemeModeFilter" class="input-st" style="flex: 0.7; min-width: 140px; margin-bottom: 0; padding: 10px 12px; font-size: 13px;" onchange="renderLuxuryThemeStore()">
+                        <option value="all">🌓 គ្រប់ពន្លឺ (All)</option>
+                        <option value="dark">🌙 ងងឹតប្រណីត (Dark)</option>
+                        <option value="light">☀️ ភ្លឺប្រណីត (Light)</option>
+                    </select>
+                </div>
+                <div id="luxCategoryPillsBar" class="lux-cat-pills"></div>
+            </div>
+
+            <!-- 52 Luxury Theme Cards Grid -->
+            <div id="luxuryThemeStoreGrid" class="lux-theme-grid"></div>
+
+            <div style="height: 1px; background: var(--border-color); margin: 20px 0;"></div>
+
+            <!-- Classic Accent Color Override -->
+            <div class="section-title" style="font-size: 14px;"><i class="fa-solid fa-palette"></i> ពណ៌គោលផ្ទាល់ខ្លួនបន្ថែម (Custom Menu Accent Color)</div>
+            <div class="form-group" style="margin-bottom: 0;">
+                <label>ពណ៌ស្បែក (Theme Accent Color) - ប្តូរពណ៌ប៊ូតុង និង Icon លើ Menu ពេលប្រើស្បែកស្តង់ដារ</label>
                 <div style="display: flex; gap: 10px; align-items: center;">
                     <input type="color" id="setMenuThemeColor" value="#06b6d4" style="width: 50px; height: 42px; border: none; border-radius: 8px; cursor: pointer; background: transparent;" onchange="saveAdminSettings()">
                     <span style="font-size: 13px; color: var(--text-muted); font-weight: 700;">ជ្រើសរើសពណ៌ដែលត្រូវនឹងប្រេនអាជីវកម្មរបស់អ្នក</span>
@@ -834,6 +1069,21 @@
     </div>
 </div>
 
+<!-- Live Luxury Theme Preview Modal -->
+<div id="luxThemePreviewModal" class="lux-preview-modal-bg" onclick="if(event.target===this) closeLuxuryThemePreview()">
+    <div class="lux-preview-modal-box">
+        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 12px;">
+            <div>
+                <h3 id="luxPrevModalTitle" style="font-size: 18px; font-weight: 900; color: var(--brand-dark);">👑 Theme Preview</h3>
+                <div id="luxPrevModalSub" style="font-size: 12px; color: var(--text-muted); font-weight: 700;">---</div>
+            </div>
+            <button type="button" onclick="closeLuxuryThemePreview()" style="width: 34px; height: 34px; border-radius: 50%; border: 1px solid var(--border-color); background: var(--store-bg); color: var(--text-dark); cursor: pointer; font-weight: 900;">✕</button>
+        </div>
+        <div id="luxPrevSplitContainer" class="lux-preview-split"></div>
+        <div id="luxPrevModalActions" style="display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; border-top: 1px solid var(--border-color); padding-top: 14px;"></div>
+    </div>
+</div>
+
 <div id="toast">Saved Successfully!</div>
 
 <script>
@@ -932,6 +1182,8 @@
     let adminBanners = []; let promoCodesList = []; let editPromoIndex = -1;
     let menuScripts = []; let posScripts = []; let showAllMenuScripts = false; let showAllPosScripts = false;
     let customPrinterPresets = []; let deptPrinters = []; let categoryRouting = {}; let posCategories = [];
+    let activePosLuxuryTheme = 'default'; let activeMenuLuxuryTheme = 'obsidian';
+    let activeMenuLayout = 'grid'; let customBrandThemeObj = null;
 
     // 🌟 មុខងារគ្រប់គ្រង Preview Logo 🌟
     function updateLogoPreview() {
@@ -1323,6 +1575,19 @@
         updateLogoPreview();
 
         if (sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
+        activePosLuxuryTheme = sys.posLuxuryTheme || 'default';
+        activeMenuLuxuryTheme = sys.menuLuxuryTheme || 'obsidian';
+        activeMenuLayout = sys.menuLayout || 'grid';
+        customBrandThemeObj = sys.customBrandTheme || null;
+        if (customBrandThemeObj && document.getElementById('brandGenPrimaryColor')) {
+            document.getElementById('brandGenPrimaryColor').value = customBrandThemeObj.accent || '#C59B38';
+            document.getElementById('brandGenMode').value = customBrandThemeObj.isDark ? 'dark' : 'light';
+            if (typeof updateBrandPreviewDot === 'function') updateBrandPreviewDot();
+        }
+        if (document.getElementById('setSeasonalEffect')) document.getElementById('setSeasonalEffect').value = sys.seasonalEffect || 'none';
+        if (document.getElementById('setSeasonalExpiry')) document.getElementById('setSeasonalExpiry').value = sys.seasonalExpiry || '';
+        if (typeof updateAdminMenuLayoutButtons === 'function') updateAdminMenuLayoutButtons();
+        if (typeof renderLuxuryThemeStore === 'function') renderLuxuryThemeStore();
         if (sys.menuBanners && sys.menuBanners.length > 0) adminBanners = sys.menuBanners;
         else if (sys.menuBanner) adminBanners = [sys.menuBanner];
         renderAdminBanners();
@@ -1478,6 +1743,12 @@
         posScripts = normalizeScriptsArray(posScripts);
 
         sys.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
+        sys.posLuxuryTheme = activePosLuxuryTheme || 'default';
+        sys.menuLuxuryTheme = activeMenuLuxuryTheme || 'obsidian';
+        sys.menuLayout = activeMenuLayout || 'grid';
+        sys.customBrandTheme = customBrandThemeObj || null;
+        sys.seasonalEffect = document.getElementById('setSeasonalEffect')?.value || 'none';
+        sys.seasonalExpiry = document.getElementById('setSeasonalExpiry')?.value || '';
         sys.menuBanners = adminBanners.filter(b => b.trim() !== '');
         sys.promoCodes = promoCodesList;
         sys.hideBannerPromoBadge = document.getElementById('toggleHideBannerPromoBadge')?.checked || false;
@@ -2027,6 +2298,595 @@
         posScripts.forEach(s => { s.active = anyOff; s.isActive = anyOff; });
         renderPosScripts();
         saveAdminSettings();
+    }
+
+
+    // ==========================================
+    // 👑 52-MODEL LUXURY THEME STORE & ON-DEMAND DOWNLOADER
+    // ==========================================
+    let selectedLuxCat = 'all';
+    const LEGACY_LUX_MAP = {
+        obsidian: '08_obsidian_michelin',
+        ivory: '15_pearl_patisserie',
+        emerald: '13_parisian_bistro',
+        sapphire: '40_sapphire_cyber',
+        rose_champagne: '16_rose_macaron',
+        royal_espresso: '01_royal_espresso'
+    };
+
+    function getLuxCatalog() {
+        return Array.isArray(window.SKM_52_LUXURY_THEMES) ? window.SKM_52_LUXURY_THEMES : [];
+    }
+    function getLuxCategories() {
+        return Array.isArray(window.SKM_LUXURY_CATEGORIES) ? window.SKM_LUXURY_CATEGORIES : [{ id: 'all', icon: '👑', label: 'ទាំងអស់' }];
+    }
+    function normalizeThemeId(id) {
+        if (!id || id === 'default') return 'default';
+        return LEGACY_LUX_MAP[id] || id;
+    }
+
+    function getPatternCssForTheme(t) {
+        const c = t.accentSoft || 'rgba(217,177,80,0.08)';
+        if (t.pattern === 'dot') return `background-image: radial-gradient(${c} 1px, transparent 1px); background-size: 22px 22px;`;
+        if (t.pattern === 'grid') return `background-image: linear-gradient(${c} 1px, transparent 1px), linear-gradient(90deg, ${c} 1px, transparent 1px); background-size: 28px 28px;`;
+        if (t.pattern === 'diagonal') return `background-image: repeating-linear-gradient(135deg, ${c} 0, ${c} 1px, transparent 1px, transparent 14px);`;
+        if (t.pattern === 'silk') return `background-image: radial-gradient(circle at 85% 12%, ${t.accentSoft} 0%, transparent 45%), radial-gradient(circle at 15% 88%, ${t.accentSoft} 0%, transparent 45%);`;
+        return `background-image: radial-gradient(circle at 50% 0%, ${t.accentSoft} 0%, transparent 55%);`;
+    }
+
+    function buildPosLuxuryCssString(t) {
+        const pat = getPatternCssForTheme(t);
+        return `
+:root, body, [data-theme="dark"], [data-theme="light"] {
+  --bg-main: ${t.bgMain} !important; --bg-body: ${t.bgMain} !important; --store-bg: ${t.bgMain} !important;
+  --bg-card: ${t.bgCard} !important; --card-bg: ${t.bgCard} !important; --bg-sidebar: ${t.bgSidebar} !important;
+  --bg-alt: ${t.bgInput} !important; --bg-input: ${t.bgInput} !important;
+  --text-main: ${t.textMain} !important; --text-dark: ${t.textMain} !important; --text-muted: ${t.textMuted} !important;
+  --border: ${t.border} !important; --border-color: ${t.border} !important;
+  --primary: ${t.accent} !important; --brand-cyan: ${t.accent} !important;
+}
+body, html { background-color: ${t.bgMain} !important; ${pat} color: ${t.textMain} !important; font-family: ${t.fontBody} !important; }
+#appSidebar, .sidebar { background: ${t.bgSidebar} !important; border-right: 1px solid ${t.border} !important; box-shadow: 8px 0 36px rgba(0,0,0,${t.isDark ? '0.48' : '0.08'}) !important; }
+#topHeaderBar, header.top-header, .top-header { background: ${t.glass} !important; backdrop-filter: blur(22px) saturate(160%) !important; -webkit-backdrop-filter: blur(22px) saturate(160%) !important; border-bottom: 1px solid ${t.border} !important; color: ${t.textMain} !important; }
+#pageTitle, #displayShopName, h1, h2 { font-family: ${t.fontHeading} !important; letter-spacing: 0.3px; }
+.nav-item { border-radius: ${t.btnRadius} !important; margin: 3px 8px !important; transition: all 0.25s ease !important; }
+.nav-item:hover { background: ${t.accentSoft} !important; color: ${t.accent} !important; }
+.nav-item.active { background: ${t.grad} !important; color: ${t.btnText} !important; font-weight: 800 !important; box-shadow: 0 8px 22px -4px ${t.accentGlow} !important; }
+.card, .stat-card, .dashboard-card, .product-card, .pos-cart, .cart-panel, .modal { background: ${t.bgCard} !important; border: 1px solid ${t.border} !important; border-radius: ${t.cardRadius} !important; box-shadow: 0 14px 34px -12px rgba(0,0,0,${t.isDark ? '0.58' : '0.10'}) !important; }
+.product-card:hover { transform: translateY(-3px) !important; border-color: ${t.accent} !important; box-shadow: 0 18px 36px -10px ${t.accentGlow} !important; }
+.btn-primary, .btn-success { background: ${t.grad} !important; color: ${t.btnText} !important; border: none !important; font-weight: 800 !important; border-radius: ${t.btnRadius} !important; box-shadow: 0 8px 20px -5px ${t.accentGlow} !important; }
+.btn-outline { background: ${t.bgInput} !important; border: 1px solid ${t.border} !important; color: ${t.textMain} !important; border-radius: ${t.btnRadius} !important; }
+.form-control, input[type="text"], input[type="number"], input[type="date"], input[type="datetime-local"], select, textarea { background: ${t.bgInput} !important; color: ${t.textMain} !important; border: 1px solid ${t.border} !important; border-radius: 12px !important; }
+table thead th { background: ${t.bgInput} !important; color: ${t.accent} !important; border-bottom: 1px solid ${t.border} !important; }
+table tbody tr:hover { background: ${t.accentSoft} !important; }
+.badge-cat, .p-price { color: ${t.accent} !important; }`;
+    }
+
+    function buildMenuLuxuryCssString(t) {
+        const pat = getPatternCssForTheme(t);
+        return `
+:root, body, [data-theme="dark"], [data-theme="light"], [data-lux-palette] {
+  --lux-accent: ${t.accent} !important; --lux-accent-2: ${t.accent2} !important;
+  --lux-accent-soft: ${t.accentSoft} !important; --lux-accent-glow: ${t.accentGlow} !important;
+  --lux-grad: ${t.grad} !important; --lux-surface-grad: ${t.surfaceGrad} !important;
+  --brand-dark: ${t.bgSidebar} !important; --brand-cyan: ${t.accent} !important;
+  --store-bg: ${t.bgMain} !important; --card-bg: ${t.bgCard} !important; --card-stage: ${t.cardStage} !important;
+  --glass-bg: ${t.glass} !important; --glass-border: ${t.border} !important;
+  --text-dark: ${t.textMain} !important; --text-muted: ${t.textMuted} !important; --border-color: ${t.border} !important;
+}
+body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.textMain} !important; font-family: ${t.fontBody} !important; }
+.lp-title, .top-bar .title, .cat-section-title, .modal-header h3, #splashScreen h2 { font-family: ${t.fontHeading} !important; }
+.p-card { background: ${t.bgCard} !important; border: 1px solid ${t.border} !important; border-radius: ${t.cardRadius} !important; }
+.p-img-box { background: ${t.cardStage} !important; }
+.p-price { color: ${t.accent} !important; }
+.p-add-btn, .lp-btn-cyan, .cat-pill.active, .nav-fab, .btn-green, .v-btn.active, .floating-chat { background: ${t.grad} !important; color: ${t.btnText} !important; border-radius: ${t.btnRadius} !important; }
+.bottom-nav, .top-bar { background: ${t.glass} !important; backdrop-filter: blur(22px) saturate(160%) !important; border-color: ${t.border} !important; }`;
+    }
+
+    function renderLuxCategoryPills() {
+        const bar = document.getElementById('luxCategoryPillsBar');
+        if (!bar) return;
+        bar.innerHTML = getLuxCategories().map(c => `
+            <button type="button" class="lux-cat-pill ${selectedLuxCat === c.id ? 'active' : ''}" onclick="selectedLuxCat='${c.id}'; renderLuxuryThemeStore();">
+                ${c.icon} ${c.label}
+            </button>
+        `).join('');
+    }
+
+    function renderLuxuryThemeStore() {
+        renderLuxCategoryPills();
+        const grid = document.getElementById('luxuryThemeStoreGrid');
+        if (!grid) return;
+
+        const catalog = getLuxCatalog();
+        const normPos = normalizeThemeId(activePosLuxuryTheme);
+        const normMenu = normalizeThemeId(activeMenuLuxuryTheme);
+
+        const findName = (id) => {
+            if (!id || id === 'default') return 'ស្តង់ដារដើម (Classic)';
+            if (id === 'custom_brand') return '✨ Custom Brand (ពី Logo ហាង)';
+            const f = catalog.find(x => x.id === id);
+            return f ? `#${String(f.num).padStart(2,'0')} ${f.nameEn} (${f.nameKm})` : id;
+        };
+        const posLbl = document.getElementById('activePosLuxLabel');
+        const menuLbl = document.getElementById('activeMenuLuxLabel');
+        if (posLbl) posLbl.innerText = findName(normPos);
+        if (menuLbl) menuLbl.innerText = findName(normMenu);
+
+        if (catalog.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:28px; border:1px dashed var(--danger); border-radius:14px; color:var(--danger); font-weight:800;">⚠️ សូម Upload ឯកសារ <b>all_luxury_themes.js</b> នៅថតដើម (Root) ទៅលើ GitHub ជាមុនសិន!</div>';
+            return;
+        }
+
+        const q = (document.getElementById('luxThemeSearchInp')?.value || '').toLowerCase().trim();
+        const mode = document.getElementById('luxThemeModeFilter')?.value || 'all';
+
+        const filtered = catalog.filter(t => {
+            if (selectedLuxCat !== 'all' && t.cat !== selectedLuxCat) return false;
+            if (mode === 'dark' && !t.isDark) return false;
+            if (mode === 'light' && t.isDark) return false;
+            if (q) {
+                const hay = `${t.num} ${t.id} ${t.nameKm} ${t.nameEn} ${t.tag} ${t.cat}`.toLowerCase();
+                if (!hay.includes(q)) return false;
+            }
+            return true;
+        });
+
+        const countBadge = document.getElementById('luxThemeCountBadge');
+        if (countBadge) countBadge.innerText = `បង្ហាញ ${filtered.length} / ${catalog.length} ម៉ូដែល`;
+
+        if (filtered.length === 0) {
+            grid.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px; color:var(--text-muted); font-weight:800;">រកមិនឃើញម៉ូដែលស្បែកដែលស្វែងរកទេ។</div>';
+            return;
+        }
+
+        grid.innerHTML = filtered.map(t => {
+            const isPosOn = normPos === t.id;
+            const isMenuOn = normMenu === t.id;
+            const numBadge = String(t.num).padStart(2, '0');
+            return `
+            <div class="lux-theme-card" style="${(isPosOn || isMenuOn) ? `border-color:${t.accent}; box-shadow: 0 10px 28px ${t.accentSoft};` : ''}">
+                <div class="lux-theme-preview" style="background: ${t.surfaceGrad}; cursor: pointer;" onclick="openLuxuryThemePreview('${t.id}')" title="ចុចដើម្បីមើលគំរូធំ">
+                    <div class="lux-prev-top">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <span style="font-size:10px; font-weight:900; background:rgba(0,0,0,0.45); color:${t.accent2}; padding:2px 7px; border-radius:999px; border:1px solid ${t.border};">#${numBadge}</span>
+                            <span style="font-size:10px; font-weight:800; color:rgba(255,255,255,0.85);">${t.isDark ? '🌙 Dark' : '☀️ Light'}</span>
+                        </div>
+                        <div class="lux-prev-badges">
+                            ${isPosOn ? `<span class="lux-active-chip" style="background:${t.grad}; color:${t.btnText};">✓ POS</span>` : ''}
+                            ${isMenuOn ? `<span class="lux-active-chip" style="background:rgba(255,255,255,0.18); color:#fff; border:1px solid ${t.accent};">✓ Menu</span>` : ''}
+                        </div>
+                    </div>
+                    <div class="lux-prev-mock">
+                        <div class="lux-prev-box" style="background:${t.bgCard}; border:1px solid ${t.border}; border-radius: ${t.cardRadius}; color:${t.textMain};">
+                            <div style="width:70%; height:6px; border-radius:4px; background:${t.grad};"></div>
+                            <div style="width:90%; height:4px; border-radius:4px; background:${t.textMuted}; opacity:0.5;"></div>
+                            <div style="width:55%; height:4px; border-radius:4px; background:${t.textMuted}; opacity:0.35;"></div>
+                        </div>
+                        <div class="lux-prev-box" style="background:${t.bgCard}; border:1px solid ${t.border}; border-radius: ${t.cardRadius}; color:${t.textMain};">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="color:${t.accent}; font-weight:900;">$18.50</span>
+                                <span style="background:${t.grad}; color:${t.btnText}; padding:2px 7px; border-radius:${t.btnRadius}; font-size:9px;">+ Add</span>
+                            </div>
+                            <div style="width:82%; height:4px; border-radius:4px; background:${t.textMain}; opacity:0.5; margin-top:4px;"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="lux-theme-body">
+                    <div>
+                        <div class="lux-theme-title">
+                            <span>${t.nameKm}</span>
+                            <span style="font-size:10.5px; color:${t.accent}; font-weight:900;">${t.nameEn}</span>
+                        </div>
+                        <div class="lux-theme-sub">${t.tag}</div>
+                    </div>
+                    <div class="lux-btn-grid">
+                        <button type="button" class="lux-card-btn apply-pos" onclick="applyLuxuryThemeToTarget('pos', '${t.id}')">
+                            <i class="fa-solid fa-desktop"></i> ${isPosOn ? 'កំពុងប្រើ POS' : 'បំពាក់ POS'}
+                        </button>
+                        <button type="button" class="lux-card-btn apply-menu" onclick="applyLuxuryThemeToTarget('menu', '${t.id}')">
+                            <i class="fa-solid fa-mobile-screen"></i> ${isMenuOn ? 'កំពុងប្រើ Menu' : 'បំពាក់ Menu'}
+                        </button>
+                        <button type="button" class="lux-card-btn dl-btn" onclick="openLuxuryThemePreview('${t.id}')">
+                            <i class="fa-solid fa-eye"></i> មើលគំរូធំ
+                        </button>
+                        <button type="button" class="lux-card-btn dl-btn" onclick="downloadLuxuryThemePack('${t.id}', 'dual')">
+                            <i class="fa-solid fa-download"></i> ទាញយក .js
+                        </button>
+                    </div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    function openLuxuryThemePreview(themeId) {
+        const t = getLuxCatalog().find(x => x.id === themeId);
+        if (!t) return;
+        const modal = document.getElementById('luxThemePreviewModal');
+        document.getElementById('luxPrevModalTitle').innerText = `👑 #${String(t.num).padStart(2,'0')} ${t.nameKm} — ${t.nameEn}`;
+        document.getElementById('luxPrevModalSub').innerText = `${t.tag} • ${t.isDark ? '🌙 Dark Luxury' : '☀️ Light Luxury'} • ទំហំឯកសារ ~7KB On-Demand`;
+
+        document.getElementById('luxPrevSplitContainer').innerHTML = `
+            <div style="background:${t.bgMain}; color:${t.textMain}; border:1px solid ${t.border}; border-radius:${t.cardRadius}; padding:14px; display:flex; flex-direction:column; gap:10px; box-shadow: 0 12px 30px rgba(0,0,0,0.2);">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid ${t.border}; padding-bottom:8px;">
+                    <b style="color:${t.accent}; font-size:13px;">🖥️ POS Dashboard Preview</b>
+                    <span style="background:${t.grad}; color:${t.btnText}; font-size:10px; font-weight:900; padding:3px 10px; border-radius:${t.btnRadius};">Sync Live</span>
+                </div>
+                <div style="display:grid; grid-template-columns:82px 1fr; gap:10px;">
+                    <div style="background:${t.bgSidebar}; border:1px solid ${t.border}; border-radius:12px; padding:8px; display:flex; flex-direction:column; gap:6px; font-size:10px;">
+                        <div style="background:${t.grad}; color:${t.btnText}; padding:5px 7px; border-radius:${t.btnRadius}; font-weight:900;">📊 ផ្ទាំងធំ</div>
+                        <div style="color:${t.textMuted}; padding:4px 6px;">🛒 លក់ POS</div>
+                        <div style="color:${t.textMuted}; padding:4px 6px;">📦 ស្តុក</div>
+                        <div style="color:${t.textMuted}; padding:4px 6px;">📝 វិក្កយបត្រ</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <div style="background:${t.bgCard}; border:1px solid ${t.border}; border-radius:12px; padding:10px;">
+                                <div style="font-size:10px; color:${t.textMuted};">ចំណូលថ្ងៃនេះ</div>
+                                <div style="font-size:16px; font-weight:900; color:${t.accent}; margin-top:2px;">$1,280.00</div>
+                            </div>
+                            <div style="background:${t.bgCard}; border:1px solid ${t.border}; border-radius:12px; padding:10px;">
+                                <div style="font-size:10px; color:${t.textMuted};">ការកុម្ម៉ង់</div>
+                                <div style="font-size:16px; font-weight:900; color:${t.textMain}; margin-top:2px;">48 វិក្កយបត្រ</div>
+                            </div>
+                        </div>
+                        <div style="background:${t.bgCard}; border:1px solid ${t.border}; border-radius:12px; padding:10px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <div style="font-size:11px; font-weight:800;">Signature Item #01</div>
+                                <div style="font-size:10px; color:${t.textMuted};">ស្តុកនៅសល់: 24</div>
+                            </div>
+                            <span style="background:${t.grad}; color:${t.btnText}; font-size:11px; font-weight:900; padding:6px 12px; border-radius:${t.btnRadius};">ទូទាត់ $24.50</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div style="background:${t.bgMain}; color:${t.textMain}; border:1px solid ${t.border}; border-radius:26px; padding:14px; display:flex; flex-direction:column; gap:10px; box-shadow: 0 12px 30px rgba(0,0,0,0.2);">
+                <div style="background:${t.surfaceGrad}; border-radius:16px; padding:14px; text-align:center; border:1px solid ${t.border};">
+                    <div style="font-size:9px; letter-spacing:2px; color:${t.accent2}; font-weight:800;">✦ DIGITAL MENU ✦</div>
+                    <div style="font-size:15px; font-weight:900; color:#fff; margin-top:4px;">${t.nameEn}</div>
+                </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                    <div style="background:${t.bgCard}; border:1px solid ${t.border}; border-radius:${t.cardRadius}; padding:10px;">
+                        <div style="height:46px; border-radius:10px; background:${t.cardStage}; margin-bottom:6px;"></div>
+                        <div style="font-size:11px; font-weight:800;">Premium Item</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                            <b style="color:${t.accent}; font-size:12px;">$12.00</b>
+                            <span style="background:${t.grad}; color:${t.btnText}; font-size:9px; font-weight:900; padding:3px 8px; border-radius:${t.btnRadius};">+ Add</span>
+                        </div>
+                    </div>
+                    <div style="background:${t.bgCard}; border:1px solid ${t.border}; border-radius:${t.cardRadius}; padding:10px;">
+                        <div style="height:46px; border-radius:10px; background:${t.cardStage}; margin-bottom:6px;"></div>
+                        <div style="font-size:11px; font-weight:800;">House Special</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:6px;">
+                            <b style="color:${t.accent}; font-size:12px;">$16.50</b>
+                            <span style="background:${t.grad}; color:${t.btnText}; font-size:9px; font-weight:900; padding:3px 8px; border-radius:${t.btnRadius};">+ Add</span>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+
+        document.getElementById('luxPrevModalActions').innerHTML = `
+            <button type="button" class="lux-card-btn dl-btn" onclick="downloadLuxuryThemePack('${t.id}', 'dual')"><i class="fa-solid fa-download"></i> ទាញយក ${t.file}</button>
+            <button type="button" class="lux-card-btn apply-pos" onclick="applyLuxuryThemeToTarget('pos', '${t.id}'); closeLuxuryThemePreview();"><i class="fa-solid fa-desktop"></i> បំពាក់លើ POS</button>
+            <button type="button" class="lux-card-btn apply-menu" onclick="applyLuxuryThemeToTarget('menu', '${t.id}'); closeLuxuryThemePreview();"><i class="fa-solid fa-mobile-screen"></i> បំពាក់លើ Menu</button>
+            <button type="button" class="lux-card-btn" style="background:var(--success); color:#fff; border:none;" onclick="applyLuxuryThemeToTarget('both', '${t.id}'); closeLuxuryThemePreview();"><i class="fa-solid fa-crown"></i> បំពាក់ទាំង POS & Menu</button>
+        `;
+        modal.style.display = 'flex';
+    }
+
+    function closeLuxuryThemePreview() {
+        const m = document.getElementById('luxThemePreviewModal');
+        if (m) m.style.display = 'none';
+    }
+
+    function applyLuxuryThemeToTarget(target, themeId) {
+        if (target === 'both') {
+            activePosLuxuryTheme = themeId;
+            activeMenuLuxuryTheme = themeId;
+        } else if (target === 'pos') {
+            activePosLuxuryTheme = themeId;
+        } else {
+            activeMenuLuxuryTheme = themeId;
+        }
+        renderLuxuryThemeStore();
+        saveAdminSettings();
+        const t = getLuxCatalog().find(x => x.id === themeId);
+        const label = t ? `#${String(t.num).padStart(2,'0')} ${t.nameEn} (${t.nameKm})` : 'ស្តង់ដារដើម (Classic)';
+        const targetTxt = target === 'both' ? 'POS & Menu' : (target === 'pos' ? 'POS' : 'Digital Menu');
+        showToast(`✅ បានបំពាក់ស្បែក "${label}" លើ ${targetTxt} រួចរាល់!`);
+    }
+
+    function downloadLuxuryThemePack(themeId, target) {
+        const t = getLuxCatalog().find(x => x.id === themeId);
+        if (!t) return;
+        const posCss = buildPosLuxuryCssString(t);
+        const menuCss = buildMenuLuxuryCssString(t);
+        const fileName = target === 'dual' ? t.file : `SKM_${t.id}_${target.toUpperCase()}.js`;
+
+        const jsCode = `/**
+ * SKM INTEGRATE — Luxury Theme #${String(t.num).padStart(2,'0')}: ${t.nameEn} (${t.nameKm})
+ * Niche: ${t.tag} | Mode: ${t.isDark ? 'Dark Luxury' : 'Light Luxury'}
+ * Dual-Ready: Automatically adapts to POS (index.html) & Digital Menu (menu.html)
+ */
+(function() {
+    const THEME_ID = ${JSON.stringify(t.id)};
+    const FONT_URL = ${JSON.stringify(t.fontUrl)};
+    const POS_CSS = ${JSON.stringify(posCss)};
+    const MENU_CSS = ${JSON.stringify(menuCss)};
+    function applyThemeNow(forceScope) {
+        const fontId = 'skm-lux-font-' + THEME_ID;
+        if (!document.getElementById(fontId)) {
+            const link = document.createElement('link');
+            link.id = fontId; link.rel = 'stylesheet'; link.href = FONT_URL;
+            document.head.appendChild(link);
+        }
+        const isMenu = forceScope ? (forceScope === 'menu') : (Boolean(document.getElementById('storePage')) || /menu\.html/i.test(location.pathname));
+        const styleId = isMenu ? 'skm-menu-luxury-theme-style' : 'skm-pos-luxury-theme-style';
+        let st = document.getElementById(styleId);
+        if (!st) { st = document.createElement('style'); st.id = styleId; document.head.appendChild(st); }
+        st.textContent = isMenu ? MENU_CSS : POS_CSS;
+        document.documentElement.setAttribute(isMenu ? 'data-menu-lux-theme' : 'data-pos-lux-theme', THEME_ID);
+    }
+    window.__SKM_LOADED_THEMES__ = window.__SKM_LOADED_THEMES__ || {};
+    window.__SKM_LOADED_THEMES__[THEME_ID] = applyThemeNow;
+    applyThemeNow(${target === 'dual' ? '' : JSON.stringify(target)});
+})();
+`;
+        const blob = new Blob([jsCode], { type: 'application/javascript;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); a.remove();
+        URL.revokeObjectURL(url);
+        showToast(`⬇️ បានទាញយកឯកសារ "${fileName}" ជោគជ័យ!`);
+    }
+
+
+    // ==========================================
+    // 🚀 PRO SUITE: WIZARD + SHOWROOM + BRAND-FROM-LOGO + LAYOUT
+    // ==========================================
+    function updateAdminMenuLayoutButtons() {
+        document.querySelectorAll('.lux-seg-btn[data-menu-layout]').forEach(btn => {
+            btn.classList.toggle('active', btn.getAttribute('data-menu-layout') === activeMenuLayout);
+        });
+    }
+
+    function setAdminMenuLayout(mode) {
+        activeMenuLayout = mode;
+        updateAdminMenuLayoutButtons();
+        saveAdminSettings();
+        showToast(`📐 បានប្តូរប្លង់ Digital Menu ទៅជា "${mode.toUpperCase()}"!`);
+    }
+
+    function getLiveShowroomUrl(target) {
+        const page = target === 'pos' ? 'index.html' : 'menu.html';
+        const curTheme = target === 'pos' ? normalizeThemeId(activePosLuxuryTheme) : normalizeThemeId(activeMenuLuxuryTheme);
+        const paramTheme = (curTheme && curTheme !== 'default' && curTheme !== 'custom_brand') ? `&preview_theme=${encodeURIComponent(curTheme)}` : '';
+        return `${getPageUrl(page)}&showroom=1${paramTheme}`;
+    }
+
+    function openLiveShowroom(target) {
+        window.open(getLiveShowroomUrl(target), '_blank');
+    }
+
+    function copyLiveShowroomLink(target) {
+        copyTextSafe(getLiveShowroomUrl(target));
+        showToast('📋 បាន Copy តំណភ្ជាប់ Live Showroom ៥២ ស្បែក! ផ្ញើឱ្យភ្ញៀវសាកមើលបានភ្លាម។');
+    }
+
+    // 1-Click Business Setup Wizard (#3)
+    const BUSINESS_WIZARD_PROFILES = {
+        cafe:       { name: 'ហាងកាហ្វេ & ភេសជ្ជៈ', theme: '01_royal_espresso',    layout: 'magazine', pluginPreset: 'cafe',     tables: true,  footer: 'សូមអរគុណ! រីករាយជាមួយកាហ្វេដ៏ឈ្ងុយឆ្ងាញ់ ☕' },
+        restaurant: { name: 'ភោជនីយដ្ឋាន Fine Dining', theme: '08_obsidian_michelin', layout: 'list',     pluginPreset: 'cafe',     tables: true,  footer: 'សូមអរគុណដែលបានអញ្ជើញមកពិសាអាហារ! 🍽️' },
+        bakery:     { name: 'នំខេក & បង្អែម',       theme: '15_pearl_patisserie',  layout: 'magazine', pluginPreset: 'cafe',     tables: false, footer: 'សូមអរគុណ! ផ្អែមល្ហែមគ្រប់ពេលវេលា 🧁' },
+        pharmacy:   { name: 'ឱសថស្ថាន & គ្លីនិក',   theme: '21_swiss_clinical',    layout: 'list',     pluginPreset: 'pharmacy', tables: false, footer: 'ជូនពរសុខភាពល្អជានិច្ច! សូមប្រើប្រាស់ថ្នាំតាមវេជ្ជបញ្ជា 💊' },
+        beauty:     { name: 'សាឡន & គ្រឿងសម្អាង',   theme: '16_rose_macaron',      layout: 'grid',     pluginPreset: 'retail',   tables: false, footer: 'សូមអរគុណ! សម្រស់ដ៏ប្រណីតជារបស់អ្នក ✨' },
+        jewelry:    { name: 'អលង្ការ & នាឡិកា VIP', theme: '34_black_diamond',     layout: 'magazine', pluginPreset: 'retail',   tables: false, footer: 'សូមអរគុណដែលបានជឿជាក់លើគុណភាពប្រណីតរបស់យើងខ្ញុំ 💎' },
+        tech:       { name: 'ហាង Tech / Anime Figure', theme: '41_akihabara_collector', layout: 'grid',   pluginPreset: 'retail',   tables: false, footer: 'សូមអរគុណ! ធានាគុណភាព និងសេវាកម្មល្អបំផុត ⚡' },
+        mart:       { name: 'ម៉ាតសរីរាង្គ & ហាងផ្កា', theme: '46_organic_harvest',   layout: 'grid',     pluginPreset: 'retail',   tables: false, footer: 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត 🛒' }
+    };
+
+    function runBusinessSetupWizard(profileKey) {
+        const p = BUSINESS_WIZARD_PROFILES[profileKey];
+        if (!p) return;
+        activePosLuxuryTheme = p.theme;
+        activeMenuLuxuryTheme = p.theme;
+        activeMenuLayout = p.layout;
+        if (document.getElementById('toggleTableFeature')) document.getElementById('toggleTableFeature').checked = p.tables;
+        if (document.getElementById('setAdminReceiptFooter')) document.getElementById('setAdminReceiptFooter').value = p.footer;
+
+        // Also apply matching Tab 6 Plugin Preset
+        const updatePlugList = (list) => list.forEach(s => {
+            const next = Array.isArray(s.tags) && s.tags.includes(p.pluginPreset);
+            s.active = next; s.isActive = next;
+        });
+        updatePlugList(menuScripts);
+        updatePlugList(posScripts);
+
+        renderMenuScripts();
+        renderPosScripts();
+        updateAdminMenuLayoutButtons();
+        renderLuxuryThemeStore();
+        updateLiveReceiptPreview();
+        saveAdminSettings();
+        showToast(`🚀 បានរៀបចំប្រព័ន្ធសម្រាប់ "${p.name}" ១០០% រួចរាល់!`);
+    }
+
+    // Auto Brand-from-Logo Theme Generator (#2)
+    function hexToRgbTuple(hex) {
+        const clean = hex.replace('#', '');
+        return [parseInt(clean.slice(0,2),16)||197, parseInt(clean.slice(2,4),16)||155, parseInt(clean.slice(4,6),16)||56];
+    }
+    function rgbToHexStr(r, g, b) {
+        const c = (n) => Math.max(0, Math.min(255, Math.round(n))).toString(16).padStart(2, '0');
+        return ('#' + c(r) + c(g) + c(b)).toUpperCase();
+    }
+    function mixHexJs(h1, h2, ratio) {
+        const [r1,g1,b1] = hexToRgbTuple(h1), [r2,g2,b2] = hexToRgbTuple(h2);
+        return rgbToHexStr(r1 + (r2-r1)*ratio, g1 + (g2-g1)*ratio, b1 + (b2-b1)*ratio);
+    }
+    function relLumHex(hex) {
+        const [r,g,b] = hexToRgbTuple(hex).map(v => { v/=255; return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); });
+        return 0.2126*r + 0.7152*g + 0.0722*b;
+    }
+    function updateBrandPreviewDot() {
+        const col = document.getElementById('brandGenPrimaryColor')?.value || '#C59B38';
+        const dot = document.getElementById('brandLogoPreviewDot');
+        if (dot) dot.style.background = col;
+    }
+
+    function buildCustomBrandThemeObject(accentHex, isDark) {
+        const [r, g, b] = hexToRgbTuple(accentHex);
+        const accent2 = isDark ? mixHexJs(accentHex, '#FFFFFF', 0.42) : mixHexJs(accentHex, '#FFFFFF', 0.28);
+        const bgMain = isDark ? mixHexJs('#0A0B0F', accentHex, 0.07) : mixHexJs('#F7F5F0', accentHex, 0.04);
+        const bgCard = isDark ? mixHexJs('#14161D', accentHex, 0.09) : '#FFFFFF';
+        const bgSidebar = isDark ? mixHexJs('#08090C', accentHex, 0.06) : mixHexJs('#FFFFFF', bgMain, 0.35);
+        const bgInput = isDark ? mixHexJs(bgCard, '#FFFFFF', 0.06) : mixHexJs(bgMain, '#FFFFFF', 0.45);
+        const textMain = isDark ? '#F8F6F0' : '#17151C';
+        const textMuted = isDark ? '#9E9A92' : '#6B655D';
+        const lumA = relLumHex(accentHex);
+        const cDark = (Math.max(lumA, 0.005) + 0.05) / (Math.min(lumA, 0.005) + 0.05);
+        const cLight = (Math.max(lumA, 1) + 0.05) / (Math.min(lumA, 1) + 0.05);
+        const btnText = cDark >= cLight ? '#12100C' : '#FFFFFF';
+
+        return {
+            id: 'custom_brand',
+            num: 0,
+            file: 'SKM_Custom_Brand_Theme.js',
+            nameKm: 'ស្បែកផ្ទាល់ខ្លួនតាម Logo',
+            nameEn: 'Custom Brand Luxury',
+            tag: 'Auto-Generated From Shop Logo',
+            isDark: isDark,
+            accent: accentHex,
+            accent2: accent2,
+            accentSoft: `rgba(${r},${g},${b},${isDark ? 0.15 : 0.12})`,
+            accentGlow: `rgba(${r},${g},${b},${isDark ? 0.42 : 0.32})`,
+            grad: `linear-gradient(135deg, ${mixHexJs(accentHex,'#000000',0.12)} 0%, ${accent2} 52%, ${accentHex} 100%)`,
+            surfaceGrad: isDark
+                ? `radial-gradient(circle at 50% 18%, ${mixHexJs(bgMain, accentHex, 0.28)} 0%, ${bgMain} 62%, #050608 100%)`
+                : `linear-gradient(155deg, ${mixHexJs('#141218', accentHex, 0.2)} 0%, #100E13 58%, ${mixHexJs('#1A1614', accentHex, 0.3)} 100%)`,
+            cardStage: isDark
+                ? `radial-gradient(circle at 50% 36%, ${mixHexJs(bgCard, accentHex, 0.16)} 0%, ${bgCard} 100%)`
+                : `radial-gradient(circle at 50% 35%, #FFFFFF 0%, ${bgMain} 100%)`,
+            bgMain, bgCard, bgSidebar, bgInput, textMain, textMuted, btnText,
+            border: `rgba(${r},${g},${b},0.26)`,
+            glass: isDark ? `rgba(${hexToRgbTuple(bgCard).join(',')},0.86)` : 'rgba(255,255,255,0.88)',
+            fontHeading: "'Playfair Display', 'Kantumruy Pro', serif",
+            fontBody: "'Plus Jakarta Sans', 'Kantumruy Pro', 'Battambang', sans-serif",
+            fontUrl: 'https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Playfair+Display:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap',
+            cardRadius: '20px',
+            btnRadius: '999px',
+            pattern: isDark ? 'radial' : 'silk'
+        };
+    }
+
+    function extractDominantColorFromImageElement(imgEl) {
+        const canvas = document.createElement('canvas');
+        const size = 48;
+        canvas.width = size; canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(imgEl, 0, 0, size, size);
+        const data = ctx.getImageData(0, 0, size, size).data;
+        let bestScore = -1, bestRgb = [197, 155, 56];
+        const buckets = {};
+        for (let i = 0; i < data.length; i += 4) {
+            const r = data[i], g = data[i+1], b = data[i+2], a = data[i+3];
+            if (a < 140) continue;
+            const max = Math.max(r,g,b), min = Math.min(r,g,b);
+            const sat = max === 0 ? 0 : (max - min) / max;
+            const bri = max / 255;
+            if (bri < 0.14 || (bri > 0.92 && sat < 0.15)) continue;
+            const key = `${Math.round(r/24)*24},${Math.round(g/24)*24},${Math.round(b/24)*24}`;
+            buckets[key] = (buckets[key] || 0) + (1 + sat * 3.5);
+            if (buckets[key] > bestScore) {
+                bestScore = buckets[key];
+                bestRgb = [r, g, b];
+            }
+        }
+        return rgbToHexStr(bestRgb[0], bestRgb[1], bestRgb[2]);
+    }
+
+    function extractBrandColorFromShopLogo() {
+        const logoSrc = window.shopLogo || document.getElementById('setShopLogoUrl')?.value?.trim() || '';
+        if (!logoSrc) {
+            document.getElementById('brandLogoFileInp').click();
+            return;
+        }
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => {
+            try {
+                const hex = extractDominantColorFromImageElement(img);
+                document.getElementById('brandGenPrimaryColor').value = hex;
+                updateBrandPreviewDot();
+                showToast(`✨ បានទាញពណ៌គោល ${hex} ពី Logo ហាងជោគជ័យ! ចុច "បំពាក់ POS & Menu" ដើម្បីប្រើ។`);
+            } catch(err) {
+                document.getElementById('brandLogoFileInp').click();
+            }
+        };
+        img.onerror = () => document.getElementById('brandLogoFileInp').click();
+        img.src = logoSrc;
+    }
+
+    function extractBrandColorFromFile(e) {
+        const file = e.target.files[0]; if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            const img = new Image();
+            img.onload = () => {
+                const hex = extractDominantColorFromImageElement(img);
+                document.getElementById('brandGenPrimaryColor').value = hex;
+                updateBrandPreviewDot();
+                showToast(`✨ បានទាញពណ៌គោល ${hex} ពីរូប Logo ជោគជ័យ!`);
+            };
+            img.src = ev.target.result;
+        };
+        reader.readAsDataURL(file);
+        e.target.value = '';
+    }
+
+    function applyGeneratedBrandTheme(target) {
+        const hex = document.getElementById('brandGenPrimaryColor')?.value || '#C59B38';
+        const isDark = (document.getElementById('brandGenMode')?.value || 'dark') === 'dark';
+        customBrandThemeObj = buildCustomBrandThemeObject(hex, isDark);
+        if (target === 'both' || target === 'pos') activePosLuxuryTheme = 'custom_brand';
+        if (target === 'both' || target === 'menu') activeMenuLuxuryTheme = 'custom_brand';
+        renderLuxuryThemeStore();
+        saveAdminSettings();
+        showToast(`👑 បានបង្កើត និងបំពាក់ស្បែកផ្ទាល់ខ្លួន (${hex}) ជោគជ័យ!`);
+    }
+
+    function downloadGeneratedBrandTheme() {
+        const hex = document.getElementById('brandGenPrimaryColor')?.value || '#C59B38';
+        const isDark = (document.getElementById('brandGenMode')?.value || 'dark') === 'dark';
+        const t = buildCustomBrandThemeObject(hex, isDark);
+        const posCss = buildPosLuxuryCssString(t);
+        const menuCss = buildMenuLuxuryCssString(t);
+        const fileName = `SKM_Custom_Brand_${hex.replace('#','')}_${isDark ? 'Dark' : 'Light'}.js`;
+        const jsCode = `/**
+ * SKM INTEGRATE — Custom Brand Luxury Theme (${hex} / ${isDark ? 'Dark' : 'Light'})
+ * Auto-Generated from Shop Logo — Works on POS & Digital Menu
+ */
+(function() {
+    const THEME_ID = 'custom_brand';
+    const FONT_URL = ${JSON.stringify(t.fontUrl)};
+    const POS_CSS = ${JSON.stringify(posCss)};
+    const MENU_CSS = ${JSON.stringify(menuCss)};
+    if (!document.getElementById('skm-custom-brand-font')) {
+        const l = document.createElement('link'); l.id = 'skm-custom-brand-font'; l.rel = 'stylesheet'; l.href = FONT_URL; document.head.appendChild(l);
+    }
+    const isMenu = Boolean(document.getElementById('storePage')) || /menu\\.html/i.test(location.pathname);
+    const styleId = isMenu ? 'skm-menu-luxury-theme-style' : 'skm-pos-luxury-theme-style';
+    let st = document.getElementById(styleId);
+    if (!st) { st = document.createElement('style'); st.id = styleId; document.head.appendChild(st); }
+    st.textContent = isMenu ? MENU_CSS : POS_CSS;
+})();
+`;
+        const blob = new Blob([jsCode], { type: 'application/javascript;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = fileName;
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        showToast(`⬇️ បានទាញយក "${fileName}" ជោគជ័យ!`);
     }
 
     window.onload = initAdmin;

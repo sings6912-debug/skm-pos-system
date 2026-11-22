@@ -12,6 +12,92 @@ try {
     console.warn("Early sysSettings load skipped.");
 }
 
+// ==========================================
+// 👑 ALL-IN-ONE LUXURY THEME LOADER FOR POS (Root File: all_luxury_themes.js)
+// ==========================================
+window.SKM_LEGACY_THEME_MAP = {
+    obsidian: '08_obsidian_michelin',
+    ivory: '15_pearl_patisserie',
+    emerald: '13_parisian_bistro',
+    sapphire: '40_sapphire_cyber',
+    rose_champagne: '16_rose_macaron',
+    royal_espresso: '01_royal_espresso'
+};
+
+window.ensureThemeBundleLoaded = function(cb) {
+    if (typeof window.applyLuxuryThemeById === 'function' && typeof window.applyCustomBrandTheme === 'function') {
+        if (typeof cb === 'function') cb();
+        return;
+    }
+    let sc = document.getElementById('skm-all-luxury-themes-script');
+    if (sc) {
+        if (typeof cb === 'function') sc.addEventListener('load', cb, { once: true });
+        return;
+    }
+    sc = document.createElement('script');
+    sc.id = 'skm-all-luxury-themes-script';
+    sc.src = './all_luxury_themes.js';
+    sc.async = true;
+    if (typeof cb === 'function') sc.onload = cb;
+    sc.onerror = () => console.warn('[SKM Theme] Missing ./all_luxury_themes.js in root folder.');
+    document.head.appendChild(sc);
+};
+window.ensureThemeExtrasLoaded = window.ensureThemeBundleLoaded;
+
+window.applyPosLuxuryTheme = function(themeId) {
+    const rawId = themeId !== undefined ? themeId : (window.sysSettings && window.sysSettings.posLuxuryTheme) || 'default';
+    const id = window.SKM_LEGACY_THEME_MAP[rawId] || rawId;
+    const existingStyle = document.getElementById('skm-pos-luxury-theme-style');
+
+    // Sync Seasonal Overlay if configured
+    if (window.sysSettings && window.sysSettings.seasonalEffect && window.sysSettings.seasonalEffect !== 'none') {
+        window.ensureThemeBundleLoaded(() => {
+            if (typeof window.applySeasonalOverlay === 'function') {
+                window.applySeasonalOverlay(window.sysSettings.seasonalEffect, window.sysSettings.seasonalExpiry || '');
+            }
+        });
+    } else if (typeof window.applySeasonalOverlay === 'function') {
+        window.applySeasonalOverlay('none', '');
+    }
+
+    window.__SKM_WANTED_POS_THEME__ = id || 'default';
+    if (!id || id === 'default') {
+        if (existingStyle) existingStyle.remove();
+        document.documentElement.removeAttribute('data-pos-lux-theme');
+        return;
+    }
+
+    // Custom Brand-from-Logo Theme
+    if (id === 'custom_brand' && window.sysSettings && window.sysSettings.customBrandTheme) {
+        window.ensureThemeBundleLoaded(() => {
+            if (window.__SKM_WANTED_POS_THEME__ === 'custom_brand' && typeof window.applyCustomBrandTheme === 'function') {
+                window.applyCustomBrandTheme(window.sysSettings.customBrandTheme, 'pos');
+            }
+        });
+        return;
+    }
+
+    // Instant apply from root bundle ./all_luxury_themes.js
+    window.ensureThemeBundleLoaded(() => {
+        if (window.__SKM_WANTED_POS_THEME__ === id && typeof window.applyLuxuryThemeById === 'function') {
+            window.applyLuxuryThemeById(id, 'pos');
+        }
+    });
+};
+
+// Auto-load Showroom engine if URL contains ?showroom=1 or ?preview_theme=...
+(function() {
+    try {
+        const qp = new URLSearchParams(window.location.search);
+        if (qp.get('showroom') || qp.get('preview_theme') || qp.get('preview_season')) {
+            window.ensureThemeBundleLoaded();
+        }
+    } catch(e) {}
+})();
+
+try { window.applyPosLuxuryTheme(); } catch(e) {}
+
+
 // ជំនួយការសម្រាប់ផ្ទៀងផ្ទាត់ថាតើកូដបន្ថែម (Custom JS) ត្រូវបានបើក (On) ឬបិទ (Off)
 window.isCustomScriptEnabled = function(scriptObj) {
     if (!scriptObj || typeof scriptObj !== 'object') return false;
@@ -109,14 +195,37 @@ window.injectPosScripts = function() {
 window.injectPosScripts();
 
 // ==========================================
-// 0.6 BUNDLED POS PLUGINS TOGGLE SYNC (GitHub Pages Hosted)
+// 0.6 BUNDLED POS PLUGINS TOGGLE SYNC (Root-Hosted all_pos_plugins.js)
 // ==========================================
+function ensureRootPosPluginsLoaded() {
+    if (typeof window.skmApplyActivePlugins === 'function') {
+        window.skmApplyActivePlugins(window.sysSettings?.activePlugins || null);
+        return;
+    }
+    if (document.getElementById('skm-root-pos-plugins')) return;
+    const sc = document.createElement('script');
+    sc.id = 'skm-root-pos-plugins';
+    sc.src = './all_pos_plugins.js';
+    sc.async = true;
+    sc.onload = function() {
+        if (typeof window.skmApplyActivePlugins === 'function') {
+            window.skmApplyActivePlugins(window.sysSettings?.activePlugins || null);
+        }
+    };
+    document.head.appendChild(sc);
+}
 function injectMenuScripts() {
     if (typeof window.skmApplyActivePlugins === 'function') {
         window.skmApplyActivePlugins(window.sysSettings?.activePlugins || null);
     }
 }
 injectMenuScripts();
+// Runs after all deferred scripts in index.html; auto-loads ./all_pos_plugins.js from root if missing
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(ensureRootPosPluginsLoaded, 120));
+} else {
+    setTimeout(ensureRootPosPluginsLoaded, 120);
+}
 
 // ==========================================
 // 1. BIND UTILS & CONFIGS TO WINDOW
@@ -1609,6 +1718,7 @@ window.manualCloudSync = async function(isAuto = false) {
                 if(dispName) dispName.innerHTML = `${window.shopName || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
                 if(typeof window.applySidebarLogoSettings === 'function') window.applySidebarLogoSettings();
                 if(typeof window.loadTableSettingsForPOS === 'function') window.loadTableSettingsForPOS();
+                if(typeof window.applyPosLuxuryTheme === 'function') window.applyPosLuxuryTheme(window.sysSettings.posLuxuryTheme);
                 if(typeof window.loadSettingsToUI === 'function') window.loadSettingsToUI();
                 if(typeof window.applyPermissions === 'function') window.applyPermissions();
                 if(typeof window.renderUsersList === 'function') window.renderUsersList();
@@ -1896,6 +2006,7 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken);
             localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId);
 
+            if (typeof window.applyPosLuxuryTheme === 'function') window.applyPosLuxuryTheme(window.sysSettings.posLuxuryTheme);
             if (typeof window.applySidebarLogoSettings === 'function') window.applySidebarLogoSettings();
             if (typeof window.loadTableSettingsForPOS === 'function') window.loadTableSettingsForPOS();
 
@@ -2986,7 +3097,8 @@ window.runSmartDatabaseMaintenance = function() {
 // 18. APP ENTRY POINT (Window.onload)
 // ==========================================
 window.onload = async () => {
-    if(typeof window.loadThemeSettings==='function') window.loadThemeSettings(); 
+    if(typeof window.loadThemeSettings==='function') window.loadThemeSettings();
+    if(typeof window.applyPosLuxuryTheme==='function') window.applyPosLuxuryTheme();
     
     window.inventory = JSON.parse(localStorage.getItem(window.getBranchKey('inv_pro'))) || [];
     window.invoices = JSON.parse(localStorage.getItem(window.getBranchKey('invoices_pro'))) || [];
