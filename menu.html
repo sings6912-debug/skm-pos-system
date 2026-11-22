@@ -1447,12 +1447,12 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             if (found && typeof openDet === 'function') openDet(found.id);
         };
         try {
-            wishlist = JSON.parse(localStorage.getItem('skm_wl')) || [];
+            wishlist = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_wl`)) || [];
         } catch(e) { console.warn("Wishlist parse error:", e); }
         
         let points = 0;
         try {
-            points = parseInt(localStorage.getItem('skm_pts')) || 0;
+            points = parseInt(localStorage.getItem(`ks2_${BRANCH}_pts`)) || 0;
         } catch(e) { console.warn("Points parse error:", e); }
 
         let sys = {}, curr = 'USD', lang = 'en', exRate = 4000, discount = 0, appliedPromo = null, rateStar = 5;
@@ -1593,13 +1593,13 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 const runBrand = () => { if (typeof window.applyCustomBrandTheme === 'function') window.applyCustomBrandTheme(sys.customBrandTheme, 'menu'); };
                 if (typeof window.applyCustomBrandTheme === 'function') runBrand();
                 else setTimeout(runBrand, 300);
-                if (saveUserChoice) localStorage.setItem('skm_menu_lux_palette', 'custom_brand');
+                if (saveUserChoice) localStorage.setItem(`ks2_${BRANCH}_menu_lux_palette`, 'custom_brand');
                 document.querySelectorAll('.lux-swatch[data-pal]').forEach(el => el.classList.remove('active'));
                 return;
             }
             if (pal && /^\d{2}_[a-z0-9_]+$/i.test(pal)) {
                 loadOnDemandMenuTheme(pal);
-                if (saveUserChoice) localStorage.setItem('skm_menu_lux_palette', pal);
+                if (saveUserChoice) localStorage.setItem(`ks2_${BRANCH}_menu_lux_palette`, pal);
                 document.querySelectorAll('.lux-swatch[data-pal]').forEach(el => el.classList.remove('active'));
                 return;
             }
@@ -1616,7 +1616,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 document.body.setAttribute('data-lux-palette', chosen);
                 document.body.setAttribute('data-theme', 'dark');
             }
-            if (saveUserChoice) localStorage.setItem('skm_menu_lux_palette', chosen);
+            if (saveUserChoice) localStorage.setItem(`ks2_${BRANCH}_menu_lux_palette`, chosen);
             document.querySelectorAll('.lux-swatch[data-pal]').forEach(el => {
                 el.classList.toggle('active', el.getAttribute('data-pal') === chosen);
             });
@@ -1633,7 +1633,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     window.sysSettings = sys;
                 }
             } catch(e) {}
-            const savedPal = localStorage.getItem('skm_menu_lux_palette') || (sys && sys.menuLuxuryTheme) || 'obsidian';
+            const savedPal = localStorage.getItem(`ks2_${BRANCH}_menu_lux_palette`) || (sys && sys.menuLuxuryTheme) || 'obsidian';
             setLuxuryPalette(savedPal, false);
         })();
         function changeSystem(type, val) {
@@ -1807,7 +1807,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                             condition: p.condition,
                             expiry: p.expiry,
                             image: p.image,
-                            desc: p.desc || '' 
+                            desc: p.description || p.desc || '' 
                         }));
                         inventory = dbProducts.filter(p => p && !deletedProd.includes(String(p.id))); window.inventory = inventory;
                     } else if (d.inventory && Array.isArray(d.inventory)) {
@@ -2181,7 +2181,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             const idx = wishlist.findIndex(w=>String(w.id)===String(id));
             if(idx>-1) { wishlist.splice(idx,1); btn.style.color='white'; showToast('Removed 🤍'); }
             else { wishlist.push(p); btn.style.color='var(--danger)'; showToast('Added ❤️'); }
-            localStorage.setItem('skm_wl', JSON.stringify(wishlist));
+            localStorage.setItem(`ks2_${BRANCH}_wl`, JSON.stringify(wishlist));
             renderMenu(); 
         }
         function renderWl() {
@@ -2520,9 +2520,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     await supabaseClient.from('branch_store').upsert(upsertPayload, { onConflict: 'branch_id' });
                 }
                 try {
-                    const myHist = JSON.parse(localStorage.getItem('skm_my_orders_history') || '[]');
+                    const myHist = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_my_orders_history`) || '[]');
                     myHist.unshift(ord);
-                    localStorage.setItem('skm_my_orders_history', JSON.stringify(myHist.slice(0, 30)));
+                    localStorage.setItem(`ks2_${BRANCH}_my_orders_history`, JSON.stringify(myHist.slice(0, 30)));
                 } catch(e) {}
 
                 localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(d.invoices));
@@ -2530,7 +2530,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 if (d.customers) localStorage.setItem(`ks2_${BRANCH}_customers_pro`, JSON.stringify(d.customers));
                 if (d.sysSettings) localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(d.sysSettings));
                 
-                points += Math.floor(tot); localStorage.setItem('skm_pts', points);
+                points += Math.floor(tot); localStorage.setItem(`ks2_${BRANCH}_pts`, points);
                 document.getElementById('ptsDisplay').innerText = `⭐ Points: ${points}`;
                 playDing();
 

@@ -937,6 +937,18 @@
 
             let shopName = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_shop_name`) || 'SKM INTEGRATE';
             let shopLogo = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_shop_logo`) || '';
+            let savedBg = localStorage.getItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`) || '';
+            if (savedBg) {
+                document.documentElement.style.setProperty('--current-bg', savedBg);
+                const foundIdx = wallpaperDatabase.findIndex(item => savedBg.includes(item.full));
+                if (foundIdx !== -1) {
+                    currentBgIndex = foundIdx;
+                    document.getElementById('bgCounterText').innerText = `${foundIdx + 1}/100`;
+                } else {
+                    const langDict = i18n[currentLang] || i18n.km;
+                    document.getElementById('bgCounterText').innerText = langDict.customBg;
+                }
+            }
 
             applyShopUI(shopName, shopLogo);
 
@@ -957,6 +969,10 @@
 
                         shopName = shop.shopName || d.shopName || shopName;
                         shopLogo = shop.shopLogo || d.shopLogo || shopLogo;
+                        if (d.customBg) {
+                            document.documentElement.style.setProperty('--current-bg', d.customBg);
+                            localStorage.setItem(`ks2_${SHOP_BRANCH_ID}_custom_bg`, d.customBg);
+                        }
                         
                         let sys = data.sys_settings || d.sysSettings || {};
                         if (sys) {

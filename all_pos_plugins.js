@@ -2249,16 +2249,17 @@ window.skmRegisterBundledPlugin('pos', "ប៊ូតុងអណ្តែតស�
     console.log("💬 POS Ultra-Premium Smart Floating Contact Bar (Text Visible) Initialized!");
 
     // ទាញយកលេខទូរស័ព្ទហាង
-    const branchId = window.SHOP_BRANCH_ID || 'branch_1';
-    let shopPhone = window.shopPhone || localStorage.getItem('skm_' + branchId + '_shop_phone') || '';
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    let shopPhone = window.shopPhone || localStorage.getItem('ks2_' + branchId + '_shop_phone') || '';
     
-    // ទាញយក Link ចេញពី Settings របស់មេ
-    let sysSettings = {};
+    // ទាញយក Link ចេញពី Settings របស់ហាង
+    let sysSettings = window.sysSettings || {};
     try {
-        sysSettings = JSON.parse(localStorage.getItem('skm_' + branchId + '_sys_settings')) || {};
+        sysSettings = Object.assign({}, sysSettings, JSON.parse(localStorage.getItem('ks2_' + branchId + '_sys_settings')) || {});
     } catch(e) {}
     
-    let tgLink = sysSettings.floatingChatLink || sysSettings.floatingChat || sysSettings.telegramContact || 'https://t.me/Jheng6912';
+    let rawTg = sysSettings.chatLink || sysSettings.floatingChatLink || sysSettings.floatingChat || sysSettings.telegramContact || window.shopTelegram || localStorage.getItem('ks2_' + branchId + '_shop_telegram') || '';
+    let tgLink = rawTg ? (rawTg.startsWith('http') ? rawTg : 'https://t.me/' + rawTg.replace(/^@/, '')) : '';
 
     const style = document.createElement('style');
     style.innerHTML = `
@@ -2314,17 +2315,22 @@ window.skmRegisterBundledPlugin('pos', "ប៊ូតុងអណ្តែតស�
     
     let htmlContent = '';
     
-    // បង្កើតប៊ូតុង Telegram 
-    htmlContent += `<a href="${tgLink}" target="_blank" class="skm-fc-btn-v3 skm-fc-tg-v3">
-                        <i class="fa-brands fa-telegram" style="font-size: 16px;"></i> Telegram
-                    </a>`;
+    // បង្កើតប៊ូតុង Telegram (បង្ហាញតែពេលហាងបានដាក់ Link ឬ Username)
+    if (tgLink) {
+        htmlContent += `<a href="${tgLink}" target="_blank" class="skm-fc-btn-v3 skm-fc-tg-v3">
+                            <i class="fa-brands fa-telegram" style="font-size: 16px;"></i> Telegram
+                        </a>`;
+    }
 
-    // បង្កើតប៊ូតុងទូរស័ព្ទ
-    let phoneHref = shopPhone ? shopPhone.replace(/\s+/g, '') : '012345678';
-    htmlContent += `<a href="tel:${phoneHref}" class="skm-fc-btn-v3 skm-fc-tel-v3">
-                        <i class="fa-solid fa-phone" style="font-size: 14px;"></i> ខលទូរស័ព្ទ
-                    </a>`;
+    // បង្កើតប៊ូតុងទូរស័ព្ទ (បង្ហាញតែពេលហាងបានដាក់លេខទូរស័ព្ទ)
+    if (shopPhone && shopPhone.trim()) {
+        let phoneHref = shopPhone.replace(/\s+/g, '');
+        htmlContent += `<a href="tel:${phoneHref}" class="skm-fc-btn-v3 skm-fc-tel-v3">
+                            <i class="fa-solid fa-phone" style="font-size: 14px;"></i> ខលទូរស័ព្ទ
+                        </a>`;
+    }
 
+    if (!htmlContent) return;
     barContainer.innerHTML = htmlContent;
     document.body.appendChild(barContainer);
 })();
@@ -2388,7 +2394,7 @@ window.skmRegisterBundledPlugin('pos', "ផ្អាកកន្ត្រក (Ho
             else alert('កន្ត្រកទទេ គ្មានអីត្រូវផ្អាកទេ!');
             return;
         }
-        let heldOrders = JSON.parse(localStorage.getItem('skm_held_orders') || '[]');
+        let heldOrders = JSON.parse(localStorage.getItem(`ks2_${window.SHOP_BRANCH_ID || 'branch_1'}_held_orders`) || '[]');
         const customerName = document.getElementById('posCustomerName') ? document.getElementById('posCustomerName').value : 'អតិថិជនទូទៅ';
         
         heldOrders.unshift({
@@ -2400,7 +2406,7 @@ window.skmRegisterBundledPlugin('pos', "ផ្អាកកន្ត្រក (Ho
             total: window.cartFinalUsd || 0
         });
 
-        localStorage.setItem('skm_held_orders', JSON.stringify(heldOrders));
+        localStorage.setItem(`ks2_${window.SHOP_BRANCH_ID || 'branch_1'}_held_orders`, JSON.stringify(heldOrders));
         window.cart = [];
         if(typeof window.renderCart === 'function') window.renderCart();
         if(typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
@@ -2531,7 +2537,7 @@ window.skmRegisterBundledPlugin('pos', "ផ្អាកកន្ត្រក (Ho
     window.loadHeldOrdersList = function() {
         const content = document.getElementById('skmHeldListContent');
         if(!content) return;
-        let heldOrders = JSON.parse(localStorage.getItem('skm_held_orders') || '[]');
+        let heldOrders = JSON.parse(localStorage.getItem(`ks2_${window.SHOP_BRANCH_ID || 'branch_1'}_held_orders`) || '[]');
         
         if (heldOrders.length === 0) {
             content.innerHTML = '<div style="text-align:center; padding:30px; color:var(--text-muted); font-size:12px;">មិនមានកន្ត្រកដែលបានផ្អាកទេ!</div>';
@@ -2568,14 +2574,14 @@ window.skmRegisterBundledPlugin('pos', "ផ្អាកកន្ត្រក (Ho
     };
 
     window.restoreHeldOrder = function(idx) {
-        let heldOrders = JSON.parse(localStorage.getItem('skm_held_orders') || '[]');
+        let heldOrders = JSON.parse(localStorage.getItem(`ks2_${window.SHOP_BRANCH_ID || 'branch_1'}_held_orders`) || '[]');
         if (heldOrders[idx]) {
             window.cart = heldOrders[idx].items;
             if (document.getElementById('posCustomerName')) {
                 document.getElementById('posCustomerName').value = heldOrders[idx].customer;
             }
             heldOrders.splice(idx, 1);
-            localStorage.setItem('skm_held_orders', JSON.stringify(heldOrders));
+            localStorage.setItem(`ks2_${window.SHOP_BRANCH_ID || 'branch_1'}_held_orders`, JSON.stringify(heldOrders));
             
             if(typeof window.renderCart === 'function') window.renderCart();
             if(typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
@@ -2587,9 +2593,9 @@ window.skmRegisterBundledPlugin('pos', "ផ្អាកកន្ត្រក (Ho
 
     window.deleteHeldOrder = function(idx) {
         if(confirm('តើអ្នកពិតជាចង់លុបកន្ត្រកផ្អាកនេះចោលមែនទេ?')) {
-            let heldOrders = JSON.parse(localStorage.getItem('skm_held_orders') || '[]');
+            let heldOrders = JSON.parse(localStorage.getItem(`ks2_${window.SHOP_BRANCH_ID || 'branch_1'}_held_orders`) || '[]');
             heldOrders.splice(idx, 1);
-            localStorage.setItem('skm_held_orders', JSON.stringify(heldOrders));
+            localStorage.setItem(`ks2_${window.SHOP_BRANCH_ID || 'branch_1'}_held_orders`, JSON.stringify(heldOrders));
             window.loadHeldOrdersList();
         }
     };
@@ -4781,7 +4787,7 @@ window.skmRegisterBundledPlugin('pos', "🏷️ បង្កើតស្លា�
                     <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                         <div style="flex: 1; min-width: 150px;">
                             <label style="font-size:12px; display:block; margin-bottom:5px; font-weight:800;">ចំណងជើងស្លាក:</label>
-                            <input type="text" id="skmTagHeaderInput" class="input-st" value="THE TIMES MALL" style="margin-bottom:0; padding:10px; font-size:13px; width:100%; border-radius: 8px; border: 1px solid #cbd5e1;">
+                            <input type="text" id="skmTagHeaderInput" class="input-st" value="${window.shopName || localStorage.getItem('ks2_' + (window.SHOP_BRANCH_ID || 'branch_1') + '_shop_name') || 'SKM INTEGRATE'}" style="margin-bottom:0; padding:10px; font-size:13px; width:100%; border-radius: 8px; border: 1px solid #cbd5e1;">
                         </div>
                         <div style="flex: 1; min-width: 120px;">
                             <label style="font-size:12px; display:block; margin-bottom:5px; font-weight:800;">ខ្នាតក្រដាស៖</label>
@@ -5033,7 +5039,7 @@ window.skmRegisterBundledPlugin('pos', "🏷️ បង្កើតស្លា�
         }
 
         const headerInp = document.getElementById('skmTagHeaderInput');
-        const header = headerInp ? headerInp.value : 'THE TIMES MALL';
+        const header = (headerInp && headerInp.value.trim()) ? headerInp.value.trim() : (window.shopName || 'SKM INTEGRATE');
         
         const sizeSelect = document.getElementById('skmTagSizeSelect');
         const tagSize = sizeSelect ? sizeSelect.value : '50x30';
@@ -6539,25 +6545,44 @@ window.skmRegisterBundledPlugin('pos', "📉 កត់ត្រាចំណា�
         const branchId = window.SHOP_BRANCH_ID || 'branch_1';
         let expenses = window.expenses || JSON.parse(localStorage.getItem(`ks2_${branchId}_expenses_pro`) || '[]');
         
+        const rate = parseFloat(document.getElementById('globalExchangeRate')?.value) || window.cartRate || 4000;
+        const usdAmt = currency === 'KHR' ? parseFloat((amt / rate).toFixed(4)) : amt;
+        const displayNote = currency === 'KHR' ? `${note || cat} (${Math.round(amt).toLocaleString()} ៛)` : (note || cat);
+
         const newExp = {
             id: 'EXP-' + Date.now(),
             date: new Date().toLocaleString('km-KH'),
             dateIso: new Date().toLocaleDateString(),
             timestamp: Date.now(),
             category: cat,
-            amount: amt,
+            amount: usdAmt,
+            originalAmount: amt,
             currency: currency,
-            note: note || cat // បើអត់សរសេរយកឈ្មោះប្រភេទមកដាក់
+            note: displayNote
         };
 
         expenses.unshift(newExp);
         window.expenses = expenses;
         localStorage.setItem(`ks2_${branchId}_expenses_pro`, JSON.stringify(expenses));
+
+        if (window.supabaseClient && navigator.onLine) {
+            window.supabaseClient.from('pos_expenses').upsert({
+                id: String(newExp.id),
+                branch_id: branchId,
+                category: newExp.category,
+                amount: newExp.amount,
+                note: newExp.note,
+                timestamp: newExp.timestamp,
+                date: newExp.date
+            }, { onConflict: 'id' }).then().catch(() => {});
+        }
         
         // ធានាការរក្សាទុកទិន្នន័យទៅ Cloud បើប្រព័ន្ធមានគាំទ្រ
         if (typeof window.saveData === 'function' && window.userAccounts) {
             window.saveData(window.userAccounts);
         }
+        if (typeof window.renderExpenses === 'function') window.renderExpenses();
+        if (typeof window.renderDashboard === 'function') window.renderDashboard();
         
         document.getElementById('skmQEAmount').value = '';
         document.getElementById('skmQENote').value = '';
