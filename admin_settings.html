@@ -147,7 +147,7 @@
             html, body { height: 100vh; overflow: hidden; }
         }
 
-        .layout-wrapper {
+        body > .layout-wrapper {
             display: flex; gap: 22px; max-width: 1320px; margin: 0 auto;
             align-items: stretch; height: calc(100vh - 40px); overflow: hidden;
         }
@@ -198,7 +198,7 @@
         
         @media (max-width: 900px) {
             html, body { height: auto; overflow-y: auto; }
-            .layout-wrapper { flex-direction: column; gap: 15px; padding-bottom: 120px; height: auto; overflow: visible; }
+            body > .layout-wrapper { flex-direction: column; gap: 15px; padding-bottom: 120px; height: auto; overflow: visible; }
             .sidebar { width: 100%; height: auto; overflow: visible; position: static; padding: 15px; }
             .content-area { height: auto; overflow: visible; padding-right: 0; }
             .sidebar-nav { display: flex; flex-direction: row; overflow-x: auto; padding-bottom: 10px; gap: 8px; scroll-snap-type: x mandatory; margin-top: 10px; }
@@ -800,7 +800,7 @@
             <div style="margin-bottom: 30px;">
                 <div class="section-title" style="color: var(--brand-cyan); border-bottom: 2px dashed var(--brand-cyan); padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <span><i class="fa-solid fa-code"></i> 6.1 មុខងារសម្រាប់អតិថិជន (Menu Features)</span>
-                    <span id="menuActiveCountBadge" style="font-size: 12px; background: rgba(6, 182, 212, 0.12); color: var(--brand-cyan); padding: 3px 10px; border-radius: 20px;">0 / 52 On</span>
+                    <span id="menuActiveCountBadge" style="font-size: 12px; background: rgba(6, 182, 212, 0.12); color: var(--brand-cyan); padding: 3px 10px; border-radius: 20px;">0 / 51 On</span>
                 </div>
                 <p class="help-text">បិទ ឬ បើកមុខងារនីមួយៗដែលត្រូវបង្ហាញលើទំព័រ <b>Menu អតិថិជន (menu.html)</b>។</p>
                 
@@ -819,7 +819,7 @@
             <div>
                 <div class="section-title" style="color: #ef4444; border-bottom: 2px dashed #ef4444; padding-bottom: 10px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
                     <span><i class="fa-solid fa-terminal"></i> 6.2 មុខងារសម្រាប់ប្រព័ន្ធលក់ (POS Features)</span>
-                    <span id="posActiveCountBadge" style="font-size: 12px; background: rgba(239, 68, 68, 0.12); color: #ef4444; padding: 3px 10px; border-radius: 20px;">0 / 48 On</span>
+                    <span id="posActiveCountBadge" style="font-size: 12px; background: rgba(239, 68, 68, 0.12); color: #ef4444; padding: 3px 10px; border-radius: 20px;">0 / 43 On</span>
                 </div>
                 <p class="help-text">បិទ ឬ បើកមុខងារនីមួយៗដែលត្រូវបង្ហាញលើទំព័រ <b>ប្រព័ន្ធគិតលុយកន្លែងលក់ (POS)</b>។</p>
                 
@@ -1019,7 +1019,7 @@
                 <input type="checkbox" id="toggleMultiPrinter" style="width: 20px; height: 20px; accent-color: #f59e0b; cursor: pointer;" onchange="saveAdminSettings()">
             </div>
 
-            <div class="layout-wrapper" style="gap: 20px; max-width: 100%; padding: 0; flex-wrap: wrap; margin-top: 15px;">
+            <div style="display: flex; gap: 20px; max-width: 100%; padding: 0; flex-wrap: wrap; margin-top: 15px; align-items: flex-start;">
                 
                 <!-- ផ្នែកទី១៖ បញ្ជីម៉ាស៊ីនព្រីន -->
                 <div class="section-box" style="flex: 1; min-width: 300px; margin-bottom: 0;">

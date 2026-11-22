@@ -438,7 +438,7 @@ table thead th { background: ${t.bgInput} !important; color: ${t.accent} !import
                     window.applyLuxuryThemeById(tid, 'menu');
                 }
             } else {
-                if (typeof window.applyPosLuxuryTheme === 'function') window.applyPosLuxuryTheme(tid);
+                window.__SKM_SHOWROOM_ACTIVE__ = true; if (typeof window.applyPosLuxuryTheme === 'function') window.applyPosLuxuryTheme(tid, true);
             }
         };
 

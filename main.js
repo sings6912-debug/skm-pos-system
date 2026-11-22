@@ -44,7 +44,13 @@ window.ensureThemeBundleLoaded = function(cb) {
 };
 window.ensureThemeExtrasLoaded = window.ensureThemeBundleLoaded;
 
-window.applyPosLuxuryTheme = function(themeId) {
+window.applyPosLuxuryTheme = function(themeId, isFromShowroom) {
+    try {
+        const qp = new URLSearchParams(window.location.search);
+        if (!isFromShowroom && (qp.get('showroom') || qp.get('preview_theme')) && themeId !== undefined && window.__SKM_SHOWROOM_ACTIVE__) {
+            return;
+        }
+    } catch(e) {}
     const rawId = themeId !== undefined ? themeId : (window.sysSettings && window.sysSettings.posLuxuryTheme) || 'default';
     const id = window.SKM_LEGACY_THEME_MAP[rawId] || rawId;
     const existingStyle = document.getElementById('skm-pos-luxury-theme-style');

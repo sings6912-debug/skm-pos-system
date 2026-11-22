@@ -7,6 +7,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;0,800;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Battambang:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script id="skm-all-luxury-themes-script" src="all_luxury_themes.js"></script>
     
     <style>
         /* ==========================================================================
@@ -1685,7 +1686,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
                     // --- កំណត់រៀបចំ Settings លើ Menu ---
                     const qpMenu = new URLSearchParams(window.location.search);
-                    if (!qpMenu.get('preview_theme') && sys.menuLuxuryTheme) {
+                    if (!qpMenu.get('preview_theme') && !qpMenu.get('showroom') && sys.menuLuxuryTheme) {
                         const prevAdminLux = localStorage.getItem('skm_menu_admin_lux_' + BRANCH);
                         if (prevAdminLux !== sys.menuLuxuryTheme || sys.menuLuxuryTheme === 'custom_brand') {
                             localStorage.setItem('skm_menu_admin_lux_' + BRANCH, sys.menuLuxuryTheme);
@@ -1697,10 +1698,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                         if (typeof window.applyMenuLayoutStyle === 'function') runLay();
                         else setTimeout(runLay, 300);
                     }
-                    if (!qpMenu.get('preview_season') && sys.seasonalEffect && sys.seasonalEffect !== 'none') {
-                        const runSea = () => { if (typeof window.applySeasonalOverlay === 'function') window.applySeasonalOverlay(sys.seasonalEffect, sys.seasonalExpiry || ''); };
-                        if (typeof window.applySeasonalOverlay === 'function') runSea();
-                        else setTimeout(runSea, 350);
+                    if (!qpMenu.get('preview_season') && !qpMenu.get('showroom')) {
+                        const eff = (sys.seasonalEffect && sys.seasonalEffect !== 'none') ? sys.seasonalEffect : 'none';
+                        if (typeof window.applySeasonalOverlay === 'function') window.applySeasonalOverlay(eff, sys.seasonalExpiry || '');
                     }
                     if (sys.menuThemeColor && sys.menuThemeColor.toLowerCase() !== '#06b6d4') { document.documentElement.style.setProperty('--brand-cyan', sys.menuThemeColor); }
                     
@@ -2675,7 +2675,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
     });
 </script>
     <!-- All-In-One Menu Plugins (Loaded from GitHub Pages - 0 Supabase Egress) -->
-    <script src="all_luxury_themes.js" defer></script>
     <script src="all_menu_plugins.js" defer></script>
 </body>
 </html>

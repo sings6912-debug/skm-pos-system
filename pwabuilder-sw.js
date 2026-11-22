@@ -1,6 +1,6 @@
 // pwabuilder-sw.js
-// ⚡ ធ្វើបច្ចុប្បន្នភាពទៅ v19 ដើម្បីបង្ខំឱ្យ Browser សម្អាត Cache ចាស់ៗចោល
-const CACHE_NAME = "skm-integrate-pos-offline-v19";
+// ⚡ ធ្វើបច្ចុប្បន្នភាពទៅ v20 ដើម្បីបង្ខំឱ្យ Browser សម្អាត Cache ចាស់ៗចោល
+const CACHE_NAME = "skm-integrate-pos-offline-v20";
 
 // បញ្ជីឯកសារទាំងអស់ក្នុងប្រព័ន្ធដែលត្រូវរក្សាទុកសម្រាប់ប្រើប្រាស់ពេលគ្មានអ៊ីនធឺណិត (Offline Mode)
 const FILES_TO_CACHE = [
@@ -10,7 +10,6 @@ const FILES_TO_CACHE = [
   "./menu.html",
   "./admin_settings.html",
   "./skm_ultimate_qr_generator.html",
-  "./skm_pos_52_advanced_themes.html",
   "./style.css",
   "./print.css",
   "./config.js",
