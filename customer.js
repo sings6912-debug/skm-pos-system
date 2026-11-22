@@ -237,7 +237,7 @@ window.saveCustomer = async function() {
         }
     }
 
-    if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
+    if (typeof window.touchCloudSync === 'function') await window.touchCloudSync(); else if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
     window.closeCustomerModal();
     window.renderCustomers();
     
@@ -271,7 +271,7 @@ window.deleteCustomer = function(id) {
             }
         }
         
-        if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
+        if (typeof window.touchCloudSync === 'function') await window.touchCloudSync(); else if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
         window.renderCustomers();
         if (typeof window.showToast === 'function') window.showToast('លុបអតិថិជនជោគជ័យ!');
     };
@@ -413,7 +413,7 @@ window.importCustomers = async function(e) {
                     }
                 }
 
-                if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
+                if (typeof window.touchCloudSync === 'function') await window.touchCloudSync(); else if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
                 window.renderCustomers();
                 notifyCustomerUser(`បាន Import អតិថិជនថ្មីចំនួន ${count} នាក់!`, 'ជោគជ័យ');
             } else {

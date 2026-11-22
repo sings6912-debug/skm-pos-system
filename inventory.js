@@ -193,7 +193,7 @@ window.updateQty = async function(id, change) {
                 }
             }
 
-            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+            if (typeof window.touchCloudSync === 'function') await window.touchCloudSync(); else if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
         } 
     } 
 };
@@ -359,7 +359,7 @@ window.saveProduct = async function() {
         }
     }
     
-    if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+    if (typeof window.touchCloudSync === 'function') await window.touchCloudSync(); else if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
 };
 
 window.editProduct = function(id) { 
@@ -439,7 +439,7 @@ window.deleteProduct = function(id) {
                 }
             }
 
-            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+            if (typeof window.touchCloudSync === 'function') await window.touchCloudSync(); else if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
             window.renderInventory();
             window.ksMsg('លុបជោគជ័យ!', 'ជោគជ័យ');
         });
@@ -574,7 +574,7 @@ window.importCSV = function(directEvent) {
                 }
             }
             
-            if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
+            if (typeof window.touchCloudSync === 'function') await window.touchCloudSync(); else if (typeof window.saveData === 'function') await window.saveData(window.userAccounts); 
             window.renderInventory();
             window.ksMsg(`Import រួចរាល់!<br>ទំនិញថ្មី: ${addedCount}<br>កែប្រែ: ${updatedCount}`, 'ជោគជ័យ');
         };

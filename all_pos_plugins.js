@@ -1459,15 +1459,21 @@ window.skmRegisterBundledPlugin('pos', "បូកសរុបវិក្កយ�
         let allOrders = [];
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
 
-        // 1. Fetch from Supabase Cloud Database
-        if (window.supabase) {
+        // 1. ⚡ Low-Egress: អានពី window.invoices ជាមុន (ទាញ pos_orders តែបើគ្មានក្នុងម៉ាស៊ីន មិនទាញ data_json ទេ)
+        if (Array.isArray(window.invoices) && window.invoices.length > 0) {
+            allOrders = [...allOrders, ...window.invoices];
+        } else if (window.supabaseClient && navigator.onLine) {
             try {
-                const supabaseClient = window.supabaseClient || window.supabase.createClient('https://qlzyyfqjwudbapgwsugu.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ');
-                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', branchId).maybeSingle();
-                if (data && data.data_json) {
-                    let d = data.data_json;
-                    if (d.invoices && Array.isArray(d.invoices)) allOrders = [...allOrders, ...d.invoices];
-                    if (d.orders && Array.isArray(d.orders)) allOrders = [...allOrders, ...d.orders];
+                let { data: ordRows } = await window.supabaseClient
+                    .from('pos_orders')
+                    .select('id, customer_name, total_amount, status, order_data, timestamp')
+                    .eq('branch_id', branchId)
+                    .order('timestamp', { ascending: false })
+                    .limit(150);
+                if (Array.isArray(ordRows)) {
+                    allOrders = [...allOrders, ...ordRows.map(o => ({
+                        id: o.id, customer: o.customer_name, totalAmount: o.total_amount, status: o.status, items: o.order_data
+                    }))];
                 }
             } catch(err) {
                 console.warn("Cloud fetch warning:", err);
@@ -4241,12 +4247,16 @@ window.skmRegisterBundledPlugin('pos', "🎂 អតិថិជន VIP & ថ្�
             
             if (token && cid) return { token, cid };
             
-            if (pluginSupabase) {
-                let { data } = await pluginSupabase.from('branch_store').select('data_json').eq('branch_id', currentBranch).maybeSingle();
-                if (data && data.data_json) {
-                    let s = data.data_json.sysSettings || {};
-                    token = s.telegramBotToken || data.data_json.telegramBotToken || '';
-                    cid = s.telegramChatId || data.data_json.telegramChatId || '';
+            if (window.telegramBotToken && window.telegramChatId) {
+                return { token: window.telegramBotToken, cid: window.telegramChatId };
+            }
+            if (pluginSupabase && navigator.onLine) {
+                let { data } = await pluginSupabase.from('branch_store').select('shop_info, sys_settings').eq('branch_id', currentBranch).maybeSingle();
+                if (data) {
+                    let s = data.sys_settings || {};
+                    let sh = data.shop_info || {};
+                    token = s.telegramBotToken || sh.telegramBotToken || '';
+                    cid = s.telegramChatId || sh.telegramChatId || '';
                 }
             }
         } catch(e) { console.warn("Error fetching Telegram Credentials:", e); }
@@ -6577,8 +6587,10 @@ window.skmRegisterBundledPlugin('pos', "📉 កត់ត្រាចំណា�
             }, { onConflict: 'id' }).then().catch(() => {});
         }
         
-        // ធានាការរក្សាទុកទិន្នន័យទៅ Cloud បើប្រព័ន្ធមានគាំទ្រ
-        if (typeof window.saveData === 'function' && window.userAccounts) {
+        // ⚡ Low-Egress: អាប់ដេតតែ updated_at ព្រោះ pos_expenses បានបាញ់ឡើង Cloud រួចហើយ
+        if (typeof window.touchCloudSync === 'function') {
+            window.touchCloudSync();
+        } else if (typeof window.saveData === 'function' && window.userAccounts) {
             window.saveData(window.userAccounts);
         }
         if (typeof window.renderExpenses === 'function') window.renderExpenses();

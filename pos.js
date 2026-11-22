@@ -858,14 +858,17 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
                     }
                 }
                 
-                if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+                if (typeof window.touchCloudSync === 'function') window.touchCloudSync();
+                else if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
 
             } catch (err) {
                 console.error("Supabase Save Error:", err);
-                if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+                if (typeof window.touchCloudSync === 'function') window.touchCloudSync();
+                else if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
             }
         } else {
-            if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
+            if (typeof window.touchCloudSync === 'function') window.touchCloudSync();
+            else if (typeof window.saveData === 'function') window.saveData(window.userAccounts); 
         }
     }, 100);
 };

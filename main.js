@@ -3,11 +3,43 @@
 // ==========================================
 // 0. EARLY SETTINGS LOAD
 // ==========================================
+const LOCAL_POS_THEME_KEYS = ['posLuxuryTheme', 'customBrandTheme', 'seasonalEffect', 'seasonalExpiry'];
+
+window.getLocalPosTheme = function() {
+    try {
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const raw = localStorage.getItem(`ks2_${branchId}_local_pos_theme`);
+        return raw ? (JSON.parse(raw) || {}) : {};
+    } catch(e) {
+        return {};
+    }
+};
+
+window.saveLocalPosTheme = function(themePatch) {
+    try {
+        const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const merged = Object.assign({}, window.getLocalPosTheme(), themePatch || {});
+        localStorage.setItem(`ks2_${branchId}_local_pos_theme`, JSON.stringify(merged));
+        if (!window.sysSettings) window.sysSettings = {};
+        LOCAL_POS_THEME_KEYS.forEach(k => {
+            if (merged[k] !== undefined) window.sysSettings[k] = merged[k];
+        });
+    } catch(e) {}
+};
+
+window.stripLocalThemeForCloud = function(settingsObj) {
+    const clean = Object.assign({}, settingsObj || {});
+    LOCAL_POS_THEME_KEYS.forEach(k => delete clean[k]);
+    return clean;
+};
+
 try {
     const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
     const sysKey = `ks2_${branchId}_sys_settings`;
     const loadedSys = JSON.parse(localStorage.getItem(sysKey));
-    if (loadedSys) window.sysSettings = Object.assign({}, window.sysSettings || {}, loadedSys); 
+    const localTheme = window.getLocalPosTheme();
+    if (loadedSys) window.sysSettings = Object.assign({}, window.sysSettings || {}, loadedSys, localTheme);
+    else if (Object.keys(localTheme).length > 0) window.sysSettings = Object.assign({}, window.sysSettings || {}, localTheme);
 } catch(e) {
     console.warn("Early sysSettings load skipped.");
 }
@@ -51,15 +83,17 @@ window.applyPosLuxuryTheme = function(themeId, isFromShowroom) {
             return;
         }
     } catch(e) {}
-    const rawId = themeId !== undefined ? themeId : (window.sysSettings && window.sysSettings.posLuxuryTheme) || 'default';
+    const localTheme = typeof window.getLocalPosTheme === 'function' ? window.getLocalPosTheme() : {};
+    const rawId = themeId !== undefined ? themeId : (localTheme.posLuxuryTheme || 'default');
     const id = window.SKM_LEGACY_THEME_MAP[rawId] || rawId;
     const existingStyle = document.getElementById('skm-pos-luxury-theme-style');
 
-    // Sync Seasonal Overlay if configured
-    if (window.sysSettings && window.sysSettings.seasonalEffect && window.sysSettings.seasonalEffect !== 'none') {
+    // Local Seasonal Overlay (only if set locally on this POS device)
+    const eff = localTheme.seasonalEffect || 'none';
+    if (eff && eff !== 'none') {
         window.ensureThemeBundleLoaded(() => {
             if (typeof window.applySeasonalOverlay === 'function') {
-                window.applySeasonalOverlay(window.sysSettings.seasonalEffect, window.sysSettings.seasonalExpiry || '');
+                window.applySeasonalOverlay(eff, localTheme.seasonalExpiry || '');
             }
         });
     } else if (typeof window.applySeasonalOverlay === 'function') {
@@ -73,11 +107,12 @@ window.applyPosLuxuryTheme = function(themeId, isFromShowroom) {
         return;
     }
 
-    // Custom Brand-from-Logo Theme
-    if (id === 'custom_brand' && window.sysSettings && window.sysSettings.customBrandTheme) {
+    // Custom Brand-from-Logo Theme (Local)
+    const brandObj = localTheme.customBrandTheme || (window.sysSettings && window.sysSettings.customBrandTheme);
+    if (id === 'custom_brand' && brandObj) {
         window.ensureThemeBundleLoaded(() => {
             if (window.__SKM_WANTED_POS_THEME__ === 'custom_brand' && typeof window.applyCustomBrandTheme === 'function') {
-                window.applyCustomBrandTheme(window.sysSettings.customBrandTheme, 'pos');
+                window.applyCustomBrandTheme(brandObj, 'pos');
             }
         });
         return;
@@ -1642,30 +1677,85 @@ window.setSyncStatus = function(status, text) {
 // ==========================================
 // 6. MASTER REAL-TIME DATA SAVE & SYNC (Unified Sync to DB)
 // ==========================================
+// ⚡ Ultra-Low-Egress Sync Trigger (~60 bytes): Updates branch_store.updated_at after table writes
+window.touchCloudSync = async function(renderAllCallback) {
+    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+    if (window.inventory) localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+    if (window.invoices) localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices));
+    if (window.expenses) localStorage.setItem(window.getBranchKey('expenses_pro'), JSON.stringify(window.expenses));
+    if (window.customers) localStorage.setItem(window.getBranchKey('customers_pro'), JSON.stringify(window.customers));
+
+    if (window.supabaseClient && navigator.onLine) {
+        try {
+            const nowIso = new Date().toISOString();
+            localStorage.setItem(`ks2_${branchId}_last_update`, new Date(nowIso).getTime().toString());
+            await window.supabaseClient
+                .from('branch_store')
+                .update({ updated_at: nowIso })
+                .eq('branch_id', branchId);
+        } catch(e) {
+            console.warn("touchCloudSync warning:", e);
+        }
+    }
+    if (typeof renderAllCallback === 'function') renderAllCallback();
+};
+
+window._isCloudSyncing = false;
+
 window.manualCloudSync = async function(isAuto = false) {
     if (!window.supabaseClient || !navigator.onLine) {
         if (!isAuto) window.setSyncStatus('error', 'គ្មានអ៊ីនធឺណិត (Offline)');
         return;
     }
+    // ផ្អាក Auto-Sync ពេលបិទ/លាក់ Tab ដើម្បីសន្សំ Supabase Egress
+    if (isAuto && document.hidden) return;
+    if (window._isCloudSyncing) return;
+    window._isCloudSyncing = true;
 
     if (!isAuto) window.setSyncStatus('syncing');
 
     try {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         let hasChanges = false;
+        let localLastUpdate = parseInt(localStorage.getItem(`ks2_${branchId}_last_update`)) || 0;
 
+        // ⚡ Step 1 (Low-Egress Pre-check ~50 bytes): ឆែកតែ updated_at មុនទាញទិន្នន័យធំ
+        if (isAuto && localLastUpdate > 0) {
+            let { data: metaRow, error: metaErr } = await window.supabaseClient
+                .from('branch_store')
+                .select('updated_at')
+                .eq('branch_id', branchId)
+                .maybeSingle();
+
+            if (!metaErr) {
+                let cloudMetaTs = metaRow && metaRow.updated_at ? new Date(metaRow.updated_at).getTime() : 0;
+                if (!cloudMetaTs || cloudMetaTs === localLastUpdate) {
+                    return; // គ្មានការកែប្រែថ្មីទេ -> មិនបាច់ទាញអ្វីទៀតឡើយ!
+                }
+            }
+        }
+
+        // ⚡ Step 2: ទាញតែ Column ថ្មីដែលស្អាត (មិនទាញ data_json ធំៗបើមាន shop_info/sys_settings រួច)
         let { data: storeData } = await window.supabaseClient
             .from('branch_store')
-            .select('shop_info, sys_settings, user_accounts, active_plugins, data_json, updated_at')
+            .select('shop_info, sys_settings, user_accounts, active_plugins, updated_at')
             .eq('branch_id', branchId)
             .maybeSingle();
 
-        let localLastUpdate = parseInt(localStorage.getItem(`ks2_${branchId}_last_update`)) || 0;
+        let dJson = {};
+        if (storeData && !storeData.shop_info && !storeData.sys_settings) {
+            let { data: legacyRow } = await window.supabaseClient
+                .from('branch_store')
+                .select('data_json')
+                .eq('branch_id', branchId)
+                .maybeSingle();
+            if (legacyRow && legacyRow.data_json) dJson = legacyRow.data_json;
+        }
+
         let cloudLastUpdate = storeData && storeData.updated_at ? new Date(storeData.updated_at).getTime() : 0;
 
         if (!isAuto || (cloudLastUpdate > 0 && cloudLastUpdate !== localLastUpdate) || localLastUpdate === 0) {
             if (storeData) {
-                const dJson = storeData.data_json || {};
                 const sInfo = Object.assign({}, {
                     shopName: dJson.shopName,
                     shopLogo: dJson.shopLogo,
@@ -1684,7 +1774,11 @@ window.manualCloudSync = async function(isAuto = false) {
                 window.shopAddress = sInfo.shopAddress || window.shopAddress || '';
                 window.shopTelegram = sInfo.shopTelegram || window.shopTelegram || '';
                 
-                window.sysSettings = Object.assign({}, dJson.sysSettings || {}, storeData.sys_settings || {});
+                const localPosTheme = typeof window.getLocalPosTheme === 'function' ? window.getLocalPosTheme() : {};
+                const cloudSysClean = typeof window.stripLocalThemeForCloud === 'function'
+                    ? window.stripLocalThemeForCloud(Object.assign({}, dJson.sysSettings || {}, storeData.sys_settings || {}))
+                    : Object.assign({}, dJson.sysSettings || {}, storeData.sys_settings || {});
+                window.sysSettings = Object.assign({}, cloudSysClean, localPosTheme);
                 if (storeData.active_plugins && (Array.isArray(storeData.active_plugins.pos) || Array.isArray(storeData.active_plugins.menu))) {
                     window.sysSettings.activePlugins = storeData.active_plugins;
                 }
@@ -1724,7 +1818,7 @@ window.manualCloudSync = async function(isAuto = false) {
                 if(dispName) dispName.innerHTML = `${window.shopName || 'SKM INTEGRATE'} <i id="editShopIcon" style="font-size:var(--fs-12); color:var(--text-muted); font-style: normal;">✏️</i>`; 
                 if(typeof window.applySidebarLogoSettings === 'function') window.applySidebarLogoSettings();
                 if(typeof window.loadTableSettingsForPOS === 'function') window.loadTableSettingsForPOS();
-                if(typeof window.applyPosLuxuryTheme === 'function') window.applyPosLuxuryTheme(window.sysSettings.posLuxuryTheme);
+                // POS Theme is strictly local per device (not overwritten by Cloud Sync)
                 if(typeof window.loadSettingsToUI === 'function') window.loadSettingsToUI();
                 if(typeof window.applyPermissions === 'function') window.applyPermissions();
                 if(typeof window.renderUsersList === 'function') window.renderUsersList();
@@ -1753,7 +1847,7 @@ window.manualCloudSync = async function(isAuto = false) {
             }
 
             // 3. Fetch Logs (គាំទ្រការសម្អាតសល់ ០ ជួរលើ Cloud)
-            let { data: logData, error: logErr } = await window.supabaseClient.from('pos_history_logs').select('*').eq('branch_id', branchId).order('id', { ascending: false }).limit(500);
+            let { data: logData, error: logErr } = await window.supabaseClient.from('pos_history_logs').select('*').eq('branch_id', branchId).order('id', { ascending: false }).limit(isAuto ? 100 : 500);
             if (!logErr && Array.isArray(logData)) {
                 window.historyLog = logData.map(l => ({ id: l.id, type: l.type, itemName: l.item_name, qty: l.qty, note: l.note, date: l.date }));
                 localStorage.setItem(`ks2_${branchId}_hist_pro`, JSON.stringify(window.historyLog));
@@ -1786,7 +1880,7 @@ window.manualCloudSync = async function(isAuto = false) {
             }
 
             // 5. Fetch Orders (គាំទ្រការលុបសល់ ០ ជួរលើ Cloud ដោយគ្មានទិន្នន័យខ្មោច)
-            let { data: ordersData, error: ordersErr } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(1000);
+            let { data: ordersData, error: ordersErr } = await window.supabaseClient.from('pos_orders').select('*').eq('branch_id', branchId).order('timestamp', { ascending: false }).limit(isAuto ? 250 : 1000);
             if (!ordersErr && Array.isArray(ordersData)) {
                 let deletedInv = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
                 let formattedOrders = ordersData.map(o => ({
@@ -1844,6 +1938,8 @@ window.manualCloudSync = async function(isAuto = false) {
     } catch(e) {
         console.error("Manual Sync Error:", e);
         if (!isAuto) window.setSyncStatus('error', 'Sync បរាជ័យ');
+    } finally {
+        window._isCloudSyncing = false;
     }
 };
 
@@ -1881,35 +1977,24 @@ window.saveData = async function(userAccountsRef, renderAllCallback) {
                 bakongId: window.sysSettings?.bakongId || ''
             };
 
-            const sysSettingsPayload = window.sysSettings || {};
+            // មិន Sync POS Theme (posLuxuryTheme/customBrandTheme/seasonal) ទៅ Cloud ឡើយ
+            const sysSettingsPayload = typeof window.stripLocalThemeForCloud === 'function'
+                ? window.stripLocalThemeForCloud(window.sysSettings || {})
+                : (window.sysSettings || {});
             const userAccountsPayload = userAccountsRef || window.userAccounts || [];
             
             const hasValidActivePlugins = window.sysSettings && window.sysSettings.activePlugins &&
                 (Array.isArray(window.sysSettings.activePlugins.pos) || Array.isArray(window.sysSettings.activePlugins.menu));
 
-            // រក្សាទុកក្នុង data_json ផងដែរ ដើម្បីឱ្យ menu.html, welcome.html និង admin_settings.html ស្គាល់គ្នា ១០០%
-            const dataJsonCompatPayload = {
-                sysSettings: sysSettingsPayload,
-                shopName: shopInfoPayload.shopName,
-                shopLogo: shopInfoPayload.shopLogo,
-                shopQR: shopInfoPayload.shopQR,
-                shopPhone: shopInfoPayload.shopPhone,
-                shopAddress: shopInfoPayload.shopAddress,
-                shopTelegram: shopInfoPayload.shopTelegram,
-                telegramBotToken: shopInfoPayload.telegramBotToken,
-                telegramChatId: shopInfoPayload.telegramChatId,
-                customPosScripts: window.customPosScripts || []
-            };
-
             const nowIso = new Date().toISOString();
             localStorage.setItem(`ks2_${branchId}_last_update`, new Date(nowIso).getTime().toString());
 
+            // ⚡ Low-Egress: រក្សាទុកតែ Column ស្អាតៗ (មិនចម្លង Base64 Logo/QR/sysSettings ស្ទួនចូល data_json ទេ)
             const branchStoreUpsert = { 
                 branch_id: branchId, 
                 shop_info: shopInfoPayload,
                 sys_settings: sysSettingsPayload,
                 user_accounts: userAccountsPayload,
-                data_json: dataJsonCompatPayload,
                 updated_at: nowIso
             };
             if (hasValidActivePlugins) {
@@ -1944,7 +2029,7 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
         
         let { data, error } = await window.supabaseClient
             .from('branch_store')
-            .select('shop_info, sys_settings, user_accounts, active_plugins, data_json')
+            .select('shop_info, sys_settings, user_accounts, active_plugins, updated_at')
             .eq('branch_id', branchId)
             .maybeSingle();
 
@@ -1954,7 +2039,11 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
         }
 
         if (data) {
-            const dJson = data.data_json || {};
+            let dJson = {};
+            if (!data.shop_info && !data.sys_settings) {
+                let { data: leg } = await window.supabaseClient.from('branch_store').select('data_json').eq('branch_id', branchId).maybeSingle();
+                if (leg && leg.data_json) dJson = leg.data_json;
+            }
             const sInfo = Object.assign({}, {
                 shopName: dJson.shopName,
                 shopLogo: dJson.shopLogo,
@@ -1973,7 +2062,11 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             window.shopAddress = sInfo.shopAddress || window.shopAddress || '';
             window.shopTelegram = sInfo.shopTelegram || window.shopTelegram || '';
 
-            window.sysSettings = Object.assign({}, dJson.sysSettings || {}, data.sys_settings || {});
+            const localPosTheme = typeof window.getLocalPosTheme === 'function' ? window.getLocalPosTheme() : {};
+            const cloudSysClean = typeof window.stripLocalThemeForCloud === 'function'
+                ? window.stripLocalThemeForCloud(Object.assign({}, dJson.sysSettings || {}, data.sys_settings || {}))
+                : Object.assign({}, dJson.sysSettings || {}, data.sys_settings || {});
+            window.sysSettings = Object.assign({}, cloudSysClean, localPosTheme);
             if (data.user_accounts && Array.isArray(data.user_accounts) && data.user_accounts.length > 0) {
                 window.userAccounts = data.user_accounts;
             } else if (dJson.userAccounts && Array.isArray(dJson.userAccounts)) {
@@ -2012,7 +2105,7 @@ window.loadDataFromSupabase = async function(userAccountsRef) {
             localStorage.setItem(window.getBranchKey('telegram_bot_token'), window.telegramBotToken);
             localStorage.setItem(window.getBranchKey('telegram_chat_id'), window.telegramChatId);
 
-            if (typeof window.applyPosLuxuryTheme === 'function') window.applyPosLuxuryTheme(window.sysSettings.posLuxuryTheme);
+            // POS Theme stays local per device
             if (typeof window.applySidebarLogoSettings === 'function') window.applySidebarLogoSettings();
             if (typeof window.loadTableSettingsForPOS === 'function') window.loadTableSettingsForPOS();
 
@@ -3173,14 +3266,9 @@ window.onload = async () => {
         if (!isLicenseValid) return; 
     }
 
-    if(typeof window.manualCloudSync === 'function') {
-        setTimeout(async () => {
-            await window.manualCloudSync(true);
-        }, 3000);
-    }
-
-    if(typeof window.loadDataFromSupabase==='function') {
-        await window.loadDataFromSupabase(window.userAccounts);
+    // ⚡ Low-Egress Startup: Sync តែ ១ ដងគត់ពេលបើក App (មិនទាញជាន់គ្នា ២ ដងទេ)
+    if (typeof window.manualCloudSync === 'function') {
+        await window.manualCloudSync(true);
     }
 
     setInterval(() => {
@@ -3229,9 +3317,20 @@ window.onload = async () => {
     if (header) { header.classList.remove('hidden-header'); } 
     window.lastInvoiceCount = window.invoices ? window.invoices.length : 0; 
     
+    // ⚡ Auto-Sync រៀងរាល់ ៦០ វិនាទី (ឆែកតែ updated_at ~50 bytes និងផ្អាកពេលបិទ Tab)
     setInterval(() => {
-        if(typeof window.manualCloudSync === 'function') window.manualCloudSync(true);
-    }, 30000); 
+        if (typeof window.manualCloudSync === 'function' && !document.hidden) {
+            window.manualCloudSync(true);
+        }
+    }, 60000);
+
+    let lastVisibilityCheck = Date.now();
+    document.addEventListener('visibilitychange', () => {
+        if (!document.hidden && (Date.now() - lastVisibilityCheck) > 15000) {
+            lastVisibilityCheck = Date.now();
+            if (typeof window.manualCloudSync === 'function') window.manualCloudSync(true);
+        }
+    }); 
 
     setTimeout(() => {
         if(typeof window.runSmartDatabaseMaintenance === 'function') {

@@ -1698,9 +1698,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             
             try {
                 if (supabaseClient && navigator.onLine) {
-                    // ១. ទាញយកទាំង Column ថ្មី (shop_info, sys_settings) និង Column ចាស់
+                    // ១. ⚡ Low-Egress: ទាញតែ Column ស្អាតៗ (មិនទាញ data_json ធំៗដោយមិនចាំបាច់)
                     const fetchSettings = supabaseClient.from('branch_store')
-                        .select('shop_info, sys_settings, active_plugins, data_json')
+                        .select('shop_info, sys_settings, active_plugins')
                         .eq('branch_id', BRANCH)
                         .maybeSingle();
 
@@ -1717,7 +1717,13 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     ]);
 
                     let storeRow = settingsRes?.data || {};
-                    let d = storeRow.data_json || {};
+                    let d = {};
+                    if (!storeRow.shop_info && !storeRow.sys_settings) {
+                        try {
+                            let { data: legRow } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                            if (legRow && legRow.data_json) d = legRow.data_json;
+                        } catch(e) {}
+                    }
                     let shop = storeRow.shop_info || d.shop_info || {};
                     sys = Object.assign({}, d.sysSettings || {}, storeRow.sys_settings || {});
                     if (storeRow.active_plugins && (Array.isArray(storeRow.active_plugins.menu) || Array.isArray(storeRow.active_plugins.pos))) {
@@ -2531,34 +2537,29 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             checkoutBtn.disabled = true;
 
             try {
-                let d = {
-                    invoices: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`) || '[]'),
-                    inventory: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`) || '[]'),
-                    customers: JSON.parse(localStorage.getItem(`ks2_${BRANCH}_customers_pro`) || '[]'),
-                    sysSettings: sys || {}
-                };
+                let localInvoices = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_invoices_pro`) || '[]');
+                let targetInv = Array.isArray(inventory) && inventory.length > 0
+                    ? inventory
+                    : JSON.parse(localStorage.getItem(`ks2_${BRANCH}_inv_pro`) || '[]');
+                let localCustomers = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_customers_pro`) || '[]');
 
-                let latestSysSettings = Object.assign({}, sys || {});
-                let latestShopInfo = null;
-                if (supabaseClient && navigator.onLine) {
-                    let { data } = await supabaseClient
-                        .from('branch_store')
-                        .select('data_json, sys_settings, shop_info')
-                        .eq('branch_id', BRANCH)
-                        .maybeSingle();
-                    if (data) {
-                        if (data.data_json) d = data.data_json;
-                        latestSysSettings = Object.assign({}, d.sysSettings || {}, data.sys_settings || {});
-                        latestShopInfo = data.shop_info || d.shop_info || null;
-                        d.sysSettings = latestSysSettings;
-                        if (latestShopInfo) d.shop_info = latestShopInfo;
-                    }
-                }
-
-                if(!d.invoices) d.invoices = [];
-
+                // ⚡ Low-Egress: ឆែក Promo ១ដង/ម្នាក់ តាម pos_orders (មិនទាញ branch_store.data_json ទាំងដុំទេ)
                 if (appliedPromo && appliedPromo.oneTimePerUser && ph) {
-                    const alreadyUsedByPhone = d.invoices.some(inv => inv && inv.phone === ph && String(inv.promoCode).toUpperCase() === String(appliedPromo.code).toUpperCase());
+                    let alreadyUsedByPhone = localInvoices.some(inv => inv && (inv.phone === ph || inv.customerPhone === ph) && String(inv.promoCode || '').toUpperCase() === String(appliedPromo.code).toUpperCase());
+                    if (!alreadyUsedByPhone && supabaseClient && navigator.onLine) {
+                        try {
+                            let { data: prevOrds } = await supabaseClient
+                                .from('pos_orders')
+                                .select('id, note')
+                                .eq('branch_id', BRANCH)
+                                .eq('customer_phone', ph)
+                                .limit(25);
+                            if (Array.isArray(prevOrds)) {
+                                const codeUpper = String(appliedPromo.code).toUpperCase();
+                                alreadyUsedByPhone = prevOrds.some(o => o && String(o.note || '').toUpperCase().includes(codeUpper));
+                            }
+                        } catch(e) {}
+                    }
                     if (alreadyUsedByPhone) {
                         showToast('⚠️ លេខទូរស័ព្ទនេះធ្លាប់បានប្រើប្រាស់កូដប្រូម៉ូសិននេះរួចហើយ!', true);
                         checkoutBtn.innerText = 'Checkout';
@@ -2567,36 +2568,31 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     }
                 }
 
-                d.invoices.unshift(ord);
-
-                let targetInv = d[`ks2_${BRANCH}_inv_pro`] || d.inventory || [];
-                if (typeof targetInv === 'string') {
-                    try { targetInv = JSON.parse(targetInv); } catch(e) { targetInv = []; }
-                }
+                localInvoices.unshift(ord);
 
                 cart.forEach(c => {
                     let i = targetInv.find(x => x && String(x.id) === String(c.id));
                     if(i) i.qty = Math.max(0, (parseFloat(i.qty) || 0) - c.qty);
                 });
 
-                d[`ks2_${BRANCH}_inv_pro`] = targetInv;
-                d.inventory = targetInv;
-
+                let newCustRecord = null;
                 if (!TABLE_NO && n && n !== 'អតិថិជនទូទៅ') {
-                    if (!d.customers) d.customers = [];
-                    const existingCust = d.customers.find(c => c && String(c.name).toLowerCase() === n.toLowerCase());
+                    const existingCust = localCustomers.find(c => c && String(c.name).toLowerCase() === n.toLowerCase());
                     if (!existingCust) {
-                        d.customers.push({ id: 'C_' + Date.now(), name: n, phone: ph || '' });
+                        newCustRecord = { id: 'C_' + Date.now(), name: n, phone: ph || '' };
+                        localCustomers.push(newCustRecord);
                     } else if (!existingCust.phone && ph) {
                         existingCust.phone = ph;
+                        newCustRecord = existingCust;
                     }
                 }
 
-                if (appliedPromo && d.sysSettings && Array.isArray(d.sysSettings.promoCodes)) {
-                    const pIdx = d.sysSettings.promoCodes.findIndex(p => p && String(p.code).toUpperCase() === String(appliedPromo.code).toUpperCase());
+                let promoUpdatedOnCloud = false;
+                if (appliedPromo && sys && Array.isArray(sys.promoCodes)) {
+                    const pIdx = sys.promoCodes.findIndex(p => p && String(p.code).toUpperCase() === String(appliedPromo.code).toUpperCase());
                     if (pIdx !== -1) {
-                        d.sysSettings.promoCodes[pIdx].usedCount = (d.sysSettings.promoCodes[pIdx].usedCount || 0) + 1;
-                        sys.promoCodes = d.sysSettings.promoCodes;
+                        sys.promoCodes[pIdx].usedCount = (sys.promoCodes[pIdx].usedCount || 0) + 1;
+                        promoUpdatedOnCloud = true;
                     }
                     if (appliedPromo.oneTimePerUser) {
                         const usedPromos = JSON.parse(localStorage.getItem(`skm_used_promos_${BRANCH}`) || '[]');
@@ -2625,29 +2621,46 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                         }, { onConflict: 'id' });
                     } catch(orderErr) { console.warn('pos_orders sync warning:', orderErr); }
 
-                    // 2) Deduct stock in pos_products
+                    // 2) Deduct stock in pos_products (Atomic RPC -> fallback update)
                     try {
                         for (const c of cart) {
-                            const updatedItem = targetInv.find(x => x && String(x.id) === String(c.id));
-                            if (updatedItem) {
-                                await supabaseClient.from('pos_products')
-                                    .update({ qty: updatedItem.qty })
-                                    .eq('branch_id', BRANCH)
-                                    .eq('id', updatedItem.id);
+                            const deductQty = parseInt(c.qty) || 1;
+                            const { error: rpcErr } = await supabaseClient.rpc('deduct_stock_safely', {
+                                p_product_id: c.id,
+                                p_branch_id: BRANCH,
+                                deduct_qty: deductQty
+                            });
+                            if (rpcErr) {
+                                const updatedItem = targetInv.find(x => x && String(x.id) === String(c.id));
+                                if (updatedItem) {
+                                    await supabaseClient.from('pos_products')
+                                        .update({ qty: updatedItem.qty, updated_at: new Date().toISOString() })
+                                        .eq('branch_id', BRANCH)
+                                        .eq('id', updatedItem.id);
+                                }
                             }
                         }
                     } catch(prodErr) { console.warn('pos_products deduct warning:', prodErr); }
 
-                    // 3) Update branch_store compat payload
-                    const upsertPayload = {
-                        branch_id: BRANCH,
-                        data_json: d,
-                        sys_settings: d.sysSettings || latestSysSettings || sys || {},
-                        updated_at: new Date().toISOString()
-                    };
-                    if (latestShopInfo) upsertPayload.shop_info = latestShopInfo;
-                    await supabaseClient.from('branch_store').upsert(upsertPayload, { onConflict: 'branch_id' });
+                    // 3) Sync new customer if any
+                    if (newCustRecord) {
+                        try {
+                            await supabaseClient.from('pos_customers').upsert({
+                                id: String(newCustRecord.id),
+                                branch_id: BRANCH,
+                                name: newCustRecord.name,
+                                phone: newCustRecord.phone || ''
+                            }, { onConflict: 'id' });
+                        } catch(cErr) {}
+                    }
+
+                    // 4) ⚡ Low-Egress: Update ONLY updated_at (plus sys_settings only if promo count changed — NO bloated data_json!)
+                    const branchPatch = { updated_at: new Date().toISOString() };
+                    if (promoUpdatedOnCloud) branchPatch.sys_settings = sys;
+                    await supabaseClient.from('branch_store').update(branchPatch).eq('branch_id', BRANCH);
                 }
+
+                const d = { invoices: localInvoices, customers: localCustomers, sysSettings: sys };
                 try {
                     const myHist = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_my_orders_history`) || '[]');
                     myHist.unshift(ord);

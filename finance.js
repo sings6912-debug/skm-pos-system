@@ -359,7 +359,7 @@ window.notifyCustomerOrderDone = async function(invId) {
         }
     } catch(e) { console.warn("Telegram error:", e); }
 
-    setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
+    setTimeout(() => { if (typeof window.touchCloudSync === 'function') window.touchCloudSync(); else if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
 
     if (typeof window.showToast === 'function') {
         window.showToast(`✅ ការកុម្ម៉ង់ ${invId} បានរៀបចំរួចរាល់!`);
@@ -481,7 +481,7 @@ window.processDebtPayment = async function() {
         window.logAction('update', inv.customer || inv.customerName, 0, `បានទូទាត់ប្រាក់ $${totalPaidNow.toFixed(2)} សម្រាប់វិក្កយបត្រ ${inv.id || inv.invoiceNo || 'ចាស់'}`, window.activeUser);
     }
 
-    setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
+    setTimeout(() => { if (typeof window.touchCloudSync === 'function') window.touchCloudSync(); else if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
 
     document.getElementById('debtPaymentModal').style.display = 'none';
     notifyFinanceUser("✅ បានកត់ត្រាការទូទាត់ប្រាក់ជោគជ័យ!", "ជោគជ័យ");
@@ -721,7 +721,7 @@ window.saveInvoiceChanges = async function() {
     await syncInvoiceToCloud(window.currentEditingInvoice);
 
     if (typeof window.setAutoRegisterCustomer === 'function') window.setAutoRegisterCustomer(newName, newPhone);
-    setTimeout(() => { if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
+    setTimeout(() => { if (typeof window.touchCloudSync === 'function') window.touchCloudSync(); else if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
 
     notifyFinanceUser("✅ វិក្កយបត្រ និងចំនួនស្តុកត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!", "ជោគជ័យ");
     
@@ -800,7 +800,9 @@ window.deleteInvoiceRecord = function(invId) {
                     }
                 }
 
-                if (typeof window.saveData === 'function') {
+                if (typeof window.touchCloudSync === 'function') {
+                    await window.touchCloudSync();
+                } else if (typeof window.saveData === 'function') {
                     await window.saveData(window.userAccounts);
                 }
             }
@@ -1305,7 +1307,9 @@ window.saveExpense = async function() {
     }
 
     // ៣. ធ្វើបច្ចុប្បន្នភាពម៉ោង Sync រួមនៅលើ branch_store
-    if (typeof window.saveData === 'function') {
+    if (typeof window.touchCloudSync === 'function') {
+        await window.touchCloudSync();
+    } else if (typeof window.saveData === 'function') {
         await window.saveData(window.userAccounts);
     }
     
@@ -1457,7 +1461,7 @@ window.deleteExpense = function(id) {
             }
         }
         
-        if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
+        if (typeof window.touchCloudSync === 'function') await window.touchCloudSync(); else if (typeof window.saveData === 'function') await window.saveData(window.userAccounts);
         window.renderExpenses();
         if(typeof window.renderDashboard === 'function') window.renderDashboard();
         
@@ -1501,7 +1505,7 @@ window.markAsDone = async function(invId) {
             console.error("Error updating note to cloud:", e);
         }
     }
-    if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
+    if (typeof window.touchCloudSync === 'function') window.touchCloudSync(); else if (typeof window.saveData === 'function') window.saveData(window.userAccounts);
 };
 
 // បានបិទ Auto-Push Local Expenses ពេលបើកទំព័រ ដើម្បីការពារកុំឱ្យទិន្នន័យដែលលុបលើឧបករណ៍ផ្សេងលោតត្រឡប់ឡើង Cloud វិញ

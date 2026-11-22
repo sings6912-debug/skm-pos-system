@@ -1218,6 +1218,20 @@
     let activePosLuxuryTheme = 'default'; let activeMenuLuxuryTheme = 'obsidian';
     let activeMenuLayout = 'grid'; let customBrandThemeObj = null;
 
+    function getLocalPosThemeAdmin() {
+        try { return JSON.parse(localStorage.getItem(`ks2_${BRANCH}_local_pos_theme`)) || {}; } catch(e) { return {}; }
+    }
+    function saveLocalPosThemeAdmin(patch) {
+        try {
+            const merged = Object.assign({}, getLocalPosThemeAdmin(), patch || {});
+            localStorage.setItem(`ks2_${BRANCH}_local_pos_theme`, JSON.stringify(merged));
+            const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`);
+            const localSys = rawSys ? JSON.parse(rawSys) : {};
+            Object.assign(localSys, merged);
+            localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(localSys));
+        } catch(e) {}
+    }
+
     // 🌟 មុខងារគ្រប់គ្រង Preview Logo 🌟
     function updateLogoPreview() {
         const preview = document.getElementById('shopLogoPreview');
@@ -1608,7 +1622,8 @@
         updateLogoPreview();
 
         if (sys.menuThemeColor) document.getElementById('setMenuThemeColor').value = sys.menuThemeColor;
-        activePosLuxuryTheme = sys.posLuxuryTheme || 'default';
+        const localPosTh = getLocalPosThemeAdmin();
+        activePosLuxuryTheme = localPosTh.posLuxuryTheme || 'default';
         activeMenuLuxuryTheme = sys.menuLuxuryTheme || 'obsidian';
         activeMenuLayout = sys.menuLayout || 'grid';
         customBrandThemeObj = sys.customBrandTheme || null;
@@ -1724,16 +1739,20 @@
 
             applyAdminDataToUI(localSys, localShopInfo);
 
-            // 🌟 ទាញទិន្នន័យពី Supabase Cloud (គាំទ្រទាំង Column ថ្មី sys_settings/shop_info និង data_json ចាស់)
+            // 🌟 ⚡ Low-Egress: ទាញតែ Column ស្អាតៗ (មិនទាញ data_json ធំៗបើមាន shop_info/sys_settings រួច)
             if (supabaseClient && navigator.onLine) {
                 let { data } = await supabaseClient
                     .from('branch_store')
-                    .select('shop_info, sys_settings, active_plugins, data_json')
+                    .select('shop_info, sys_settings, active_plugins')
                     .eq('branch_id', BRANCH)
                     .maybeSingle();
 
                 if (data) {
-                    let d = data.data_json || {};
+                    let d = {};
+                    if (!data.shop_info && !data.sys_settings) {
+                        let { data: leg } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
+                        if (leg && leg.data_json) d = leg.data_json;
+                    }
                     let cloudSys = Object.assign({}, d.sysSettings || {}, data.sys_settings || {});
                     let cloudShop = Object.assign({}, {
                         shopName: d.shopName,
@@ -1777,7 +1796,7 @@
         posScripts = normalizeScriptsArray(posScripts);
 
         sys.menuThemeColor = document.getElementById('setMenuThemeColor').value.trim();
-        sys.posLuxuryTheme = activePosLuxuryTheme || 'default';
+        delete sys.posLuxuryTheme; // ⚡ POS Theme រក្សាទុក Local លើម៉ាស៊ីននីមួយៗ មិន Sync ទៅ Supabase ទេ
         sys.menuLuxuryTheme = activeMenuLuxuryTheme || 'obsidian';
         sys.menuLayout = activeMenuLayout || 'grid';
         sys.customBrandTheme = customBrandThemeObj || null;
@@ -1847,26 +1866,10 @@
         try {
             document.querySelectorAll('.btn-save').forEach(b => { b.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> រក្សាទុក...'; b.disabled = true; });
             
-            let d = {};
             let existingSys = {};
             let existingShopInfo = {};
             try { existingSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_sys_settings`)) || {}; } catch(e) {}
 
-            if (supabaseClient && navigator.onLine) {
-                try {
-                    let { data } = await supabaseClient
-                        .from('branch_store')
-                        .select('shop_info, sys_settings, data_json')
-                        .eq('branch_id', BRANCH)
-                        .maybeSingle();
-                    if (data) {
-                        if (data.data_json) d = data.data_json;
-                        if (data.sys_settings) existingSys = Object.assign({}, existingSys, data.sys_settings);
-                        if (data.shop_info) existingShopInfo = data.shop_info;
-                    }
-                } catch(err) {}
-            }
-            
             const { sys, orderTok, orderChat } = buildSysSettingsPayload(existingSys);
             const shopNameVal = document.getElementById('setShopName').value.trim();
             const shopPhoneVal = document.getElementById('setShopPhone').value.trim();
@@ -1876,25 +1879,17 @@
                 shopName: shopNameVal,
                 shopPhone: shopPhoneVal,
                 shopAddress: shopAddressVal,
-                shopLogo: window.shopLogo || existingShopInfo.shopLogo || '',
-                shopQR: window.shopQR || sys.menuQR || existingShopInfo.shopQR || '',
+                shopLogo: window.shopLogo || localStorage.getItem(`ks2_${BRANCH}_shop_logo`) || '',
+                shopQR: window.shopQR || sys.menuQR || localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '',
                 telegramBotToken: orderTok,
                 telegramChatId: orderChat,
                 bakongId: sys.bakongId || '',
                 bakongName: sys.bakongName || ''
             });
 
-            d.sysSettings = sys;
-            d.telegramBotToken = orderTok;
-            d.telegramChatId = orderChat;
-            d.customPosScripts = sys.customPosScripts;
-            d.shopName = shopNameVal;
-            d.shopPhone = shopPhoneVal;
-            d.shopAddress = shopAddressVal;
-            if (window.shopLogo) d.shopLogo = window.shopLogo;
-            if (window.shopQR) d.shopQR = window.shopQR;
-
-            localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sys));
+            // រក្សា Local POS Theme ទុកក្នុងម៉ាស៊ីន (មិនបាត់ពេល Save Settings ផ្សេង)
+            const localPosTh = getLocalPosThemeAdmin();
+            localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(Object.assign({}, sys, localPosTh)));
             localStorage.setItem(`ks2_${BRANCH}_pos_scripts`, JSON.stringify(sys.customPosScripts));
             localStorage.setItem(`ks2_${BRANCH}_shop_name`, shopNameVal);
             localStorage.setItem(`ks2_${BRANCH}_shop_phone`, shopPhoneVal);
@@ -1908,14 +1903,13 @@
             const nowIso = new Date().toISOString();
             localStorage.setItem(`ks2_${BRANCH}_last_update`, new Date(nowIso).getTime().toString());
 
-            // 🌟 រក្សាទុកចូលទាំង Column ថ្មី (shop_info, sys_settings, active_plugins) និង data_json ដើម្បីឱ្យ POS និង Menu ស្គាល់គ្នា ១០០%
+            // ⚡ Low-Egress: រក្សាទុកតែ Column ស្អាតៗ (មិនចម្លង Base64/Settings ស្ទួនចូល data_json ទេ)
             if (supabaseClient && navigator.onLine) {
                 let { error } = await supabaseClient.from('branch_store').upsert({
                     branch_id: BRANCH,
                     shop_info: shopInfoPayload,
                     sys_settings: sys,
                     active_plugins: sys.activePlugins,
-                    data_json: d,
                     updated_at: nowIso
                 }, { onConflict: 'branch_id' });
                 if (error) throw error;
@@ -1974,8 +1968,11 @@
                 const downloadAnchor = document.createElement('a'); downloadAnchor.setAttribute("href", dataStr); downloadAnchor.setAttribute("download", `Archive_${BRANCH}_Invoices_${new Date().toISOString().slice(0, 10)}.json`); document.body.appendChild(downloadAnchor); downloadAnchor.click(); downloadAnchor.remove();
                 localStorage.setItem(`ks2_${BRANCH}_invoices_pro`, JSON.stringify(newInvoices));
                 if (supabaseClient && navigator.onLine) {
-                    let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                    if (data && data.data_json) { let d = data.data_json; d.invoices = newInvoices; await supabaseClient.from('branch_store').upsert({ branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString() }, { onConflict: 'branch_id' }); }
+                    const oldIds = oldInvoices.map(i => String(i.id || i.invoiceNo)).filter(Boolean);
+                    for (let k = 0; k < oldIds.length; k += 100) {
+                        await supabaseClient.from('pos_orders').delete().eq('branch_id', BRANCH).in('id', oldIds.slice(k, k + 100));
+                    }
+                    await supabaseClient.from('branch_store').update({ updated_at: new Date().toISOString() }).eq('branch_id', BRANCH);
                 }
                 showToast(`✅ បាន Archive និងសម្អាតវិក្កយបត្រចំនួន ${oldInvoices.length} ដោយជោគជ័យ!`);
             };
@@ -2615,19 +2612,25 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
     }
 
     function applyLuxuryThemeToTarget(target, themeId) {
+        const t = getLuxCatalog().find(x => x.id === themeId);
+        const label = t ? `#${String(t.num).padStart(2,'0')} ${t.nameEn} (${t.nameKm})` : 'ស្តង់ដារដើម (Classic)';
+        if (target === 'pos') {
+            activePosLuxuryTheme = themeId;
+            saveLocalPosThemeAdmin({ posLuxuryTheme: themeId });
+            renderLuxuryThemeStore();
+            showToast(`✅ បានបំពាក់ស្បែក POS "${label}" លើម៉ាស៊ីននេះ (Local - មិន Sync Cloud)!`);
+            return;
+        }
         if (target === 'both') {
             activePosLuxuryTheme = themeId;
             activeMenuLuxuryTheme = themeId;
-        } else if (target === 'pos') {
-            activePosLuxuryTheme = themeId;
+            saveLocalPosThemeAdmin({ posLuxuryTheme: themeId });
         } else {
             activeMenuLuxuryTheme = themeId;
         }
         renderLuxuryThemeStore();
         saveAdminSettings();
-        const t = getLuxCatalog().find(x => x.id === themeId);
-        const label = t ? `#${String(t.num).padStart(2,'0')} ${t.nameEn} (${t.nameKm})` : 'ស្តង់ដារដើម (Classic)';
-        const targetTxt = target === 'both' ? 'POS & Menu' : (target === 'pos' ? 'POS' : 'Digital Menu');
+        const targetTxt = target === 'both' ? 'POS (Local) & Menu (Cloud)' : 'Digital Menu';
         showToast(`✅ បានបំពាក់ស្បែក "${label}" លើ ${targetTxt} រួចរាល់!`);
     }
 
@@ -2726,6 +2729,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         if (!p) return;
         activePosLuxuryTheme = p.theme;
         activeMenuLuxuryTheme = p.theme;
+        saveLocalPosThemeAdmin({ posLuxuryTheme: p.theme });
         activeMenuLayout = p.layout;
         if (document.getElementById('toggleTableFeature')) document.getElementById('toggleTableFeature').checked = p.tables;
         if (document.getElementById('toggleCafeAddons')) document.getElementById('toggleCafeAddons').checked = (profileKey === 'cafe' || profileKey === 'bakery');
@@ -2885,7 +2889,10 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         const hex = document.getElementById('brandGenPrimaryColor')?.value || '#C59B38';
         const isDark = (document.getElementById('brandGenMode')?.value || 'dark') === 'dark';
         customBrandThemeObj = buildCustomBrandThemeObject(hex, isDark);
-        if (target === 'both' || target === 'pos') activePosLuxuryTheme = 'custom_brand';
+        if (target === 'both' || target === 'pos') {
+            activePosLuxuryTheme = 'custom_brand';
+            saveLocalPosThemeAdmin({ posLuxuryTheme: 'custom_brand', customBrandTheme: customBrandThemeObj });
+        }
         if (target === 'both' || target === 'menu') activeMenuLuxuryTheme = 'custom_brand';
         renderLuxuryThemeStore();
         saveAdminSettings();
