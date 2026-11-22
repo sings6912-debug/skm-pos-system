@@ -117,12 +117,49 @@
         
         .script-list-container { display: flex; flex-direction: column; gap: 10px; }
         .script-item { 
-            display: flex; align-items: center; justify-content: space-between; 
-            background: #ffffff; padding: 14px 18px; border-radius: 12px; 
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            background: var(--card-bg, #ffffff); padding: 14px 16px; border-radius: 12px; 
             border: 1px solid var(--border-color); box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.2s ease, background 0.2s ease;
         }
-        .script-name { font-weight: 800; font-size: 14px; color: var(--brand-dark); word-break: break-all; }
-        .script-actions { display: flex; gap: 8px; align-items: center; flex-shrink: 0; }
+        .script-item.is-pinned {
+            background: linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, var(--card-bg, #ffffff) 70%);
+            border-color: rgba(245, 158, 11, 0.55);
+            border-left: 4px solid #f59e0b;
+        }
+        .script-item.dragging { opacity: 0.45; transform: scale(0.99); }
+        .script-item.drag-over-top { box-shadow: 0 -3px 0 0 var(--brand-cyan), 0 4px 12px rgba(0,0,0,0.06); }
+        .script-item.drag-over-bottom { box-shadow: 0 3px 0 0 var(--brand-cyan), 0 4px 12px rgba(0,0,0,0.06); }
+
+        .script-left { display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1; }
+        .drag-handle {
+            color: var(--text-muted); cursor: grab; padding: 6px 4px; font-size: 14px;
+            opacity: 0.55; transition: opacity 0.2s, color 0.2s; flex-shrink: 0; user-select: none;
+        }
+        .script-item:hover .drag-handle { opacity: 1; color: var(--brand-cyan); }
+        .drag-handle:active { cursor: grabbing; }
+
+        .script-name { font-weight: 800; font-size: 14px; color: var(--brand-dark); word-break: break-word; line-height: 1.45; }
+        .script-actions { display: flex; gap: 6px; align-items: center; flex-shrink: 0; flex-wrap: wrap; }
+
+        .btn-script-icon {
+            width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border-color);
+            background: var(--store-bg); color: var(--text-muted); cursor: pointer;
+            display: inline-flex; align-items: center; justify-content: center; font-size: 12px;
+            transition: all 0.18s ease; padding: 0;
+        }
+        .btn-script-icon:hover:not(:disabled) {
+            color: var(--brand-dark); border-color: var(--brand-cyan); background: #ffffff; transform: translateY(-1px);
+        }
+        .btn-script-icon.pinned {
+            background: #fef3c7; color: #d97706; border-color: #f59e0b;
+        }
+        .btn-script-icon:disabled { opacity: 0.3; cursor: not-allowed; }
+
+        @media (max-width: 640px) {
+            .script-item { flex-direction: column; align-items: stretch; gap: 10px; }
+            .script-actions { justify-content: flex-end; }
+        }
         
         .btn-script { 
             padding: 8px 16px; font-size: 12px; cursor: pointer; border-radius: 20px; 
@@ -813,6 +850,8 @@
                     <input type="file" id="menuJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadMenuScripts(event)">
                     <button class="btn-action" style="background: var(--brand-cyan); color: white;" onclick="document.getElementById('menuJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS បន្ថែម</button>
                     <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="toggleAllMenuScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
+                    <button type="button" class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="sortActiveScriptsFirst('menu')" title="តម្រៀបមុខងារដែលកំពុងបើកឡើងលើ"><i class="fa-solid fa-bolt"></i> បើកឡើងលើ</button>
+                    <button type="button" class="btn-action" style="color: var(--text-muted); background: var(--store-bg);" onclick="resetScriptOrder('menu')" title="កំណត់លំដាប់ដើមវិញ"><i class="fa-solid fa-rotate-left"></i> លំដាប់ដើម</button>
                 </div>
                 <div id="menuScriptsToggleContainer" style="margin-bottom: 10px;"></div>
                 <div id="menuScriptsListContainer" class="script-list-container"></div>
@@ -832,6 +871,8 @@
                     <input type="file" id="posJsFileInput" accept=".js" multiple style="display: none;" onchange="uploadPosScripts(event)">
                     <button class="btn-action" style="background: var(--danger); color: white;" onclick="document.getElementById('posJsFileInput').click()"><i class="fa-solid fa-upload"></i> Upload JS បន្ថែម</button>
                     <button class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="toggleAllPosScripts()"><i class="fa-solid fa-toggle-on"></i> បិទ/បើកទាំងអស់</button>
+                    <button type="button" class="btn-action" style="color: var(--text-dark); background: var(--store-bg);" onclick="sortActiveScriptsFirst('pos')" title="តម្រៀបមុខងារដែលកំពុងបើកឡើងលើ"><i class="fa-solid fa-bolt"></i> បើកឡើងលើ</button>
+                    <button type="button" class="btn-action" style="color: var(--text-muted); background: var(--store-bg);" onclick="resetScriptOrder('pos')" title="កំណត់លំដាប់ដើមវិញ"><i class="fa-solid fa-rotate-left"></i> លំដាប់ដើម</button>
                 </div>
                 <div id="posScriptsToggleContainer" style="margin-bottom: 10px;"></div>
                 <div id="posScriptsListContainer" class="script-list-container"></div>
@@ -2167,18 +2208,229 @@
         e.target.value = '';
     }
 
-    function renderMenuScripts() {
-        const container = document.getElementById('menuScriptsListContainer');
-        const badge = document.getElementById('menuActiveCountBadge');
+    // ==========================================
+    // 📌 PIN + ⬆️⬇️ REORDER + DRAG & DROP FOR MENU (6.1) & POS (6.2)
+    // ==========================================
+    let dragScriptState = { scope: null, name: null };
+
+    function encodeScriptKey(str) {
+        return encodeURIComponent(String(str || '')).replace(/'/g, '%27');
+    }
+
+    function getScriptPrefKey(scope, kind) {
+        const br = (typeof BRANCH !== 'undefined' && BRANCH) ? BRANCH : 'default';
+        return `ks2_${br}_${scope}_scripts_${kind}`;
+    }
+
+    function getPinnedScriptNames(scope) {
+        try {
+            const arr = JSON.parse(localStorage.getItem(getScriptPrefKey(scope, 'pinned')) || '[]');
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) { return []; }
+    }
+
+    function getOrderedScriptNames(scope) {
+        try {
+            const arr = JSON.parse(localStorage.getItem(getScriptPrefKey(scope, 'order')) || '[]');
+            return Array.isArray(arr) ? arr : [];
+        } catch (e) { return []; }
+    }
+
+    function saveScriptPrefs(scope, pinnedArr, orderArr) {
+        if (Array.isArray(pinnedArr)) {
+            localStorage.setItem(getScriptPrefKey(scope, 'pinned'), JSON.stringify(pinnedArr));
+        }
+        if (Array.isArray(orderArr)) {
+            localStorage.setItem(getScriptPrefKey(scope, 'order'), JSON.stringify(orderArr));
+        }
+    }
+
+    function cleanupScriptPrefsForName(scope, name) {
+        if (!name) return;
+        const pinnedArr = getPinnedScriptNames(scope).filter(n => n !== name);
+        const orderArr = getOrderedScriptNames(scope).filter(n => n !== name);
+        saveScriptPrefs(scope, pinnedArr, orderArr);
+    }
+
+    function getScriptsRef(scope) {
+        return scope === 'menu' ? menuScripts : posScripts;
+    }
+
+    function rerenderScope(scope) {
+        if (scope === 'menu') renderMenuScripts();
+        else renderPosScripts();
+    }
+
+    function getSortedScriptsWithIdx(scope, list) {
+        const pinnedArr = getPinnedScriptNames(scope);
+        const orderArr = getOrderedScriptNames(scope);
+        const pinnedSet = new Set(pinnedArr);
+
+        const wrapped = list.map((s, originalIdx) => ({ s, originalIdx }));
+        const pinnedItems = wrapped
+            .filter(({ s }) => pinnedSet.has(s.name))
+            .sort((a, b) => pinnedArr.indexOf(a.s.name) - pinnedArr.indexOf(b.s.name));
+
+        const unpinnedItems = wrapped
+            .filter(({ s }) => !pinnedSet.has(s.name))
+            .sort((a, b) => {
+                const ai = orderArr.indexOf(a.s.name);
+                const bi = orderArr.indexOf(b.s.name);
+                if (ai === -1 && bi === -1) return a.originalIdx - b.originalIdx;
+                if (ai === -1) return 1;
+                if (bi === -1) return -1;
+                return ai - bi;
+            });
+
+        return { items: [...pinnedItems, ...unpinnedItems], pinnedSet, pinnedCount: pinnedItems.length };
+    }
+
+    function togglePinScript(scope, encodedName) {
+        const name = decodeURIComponent(encodedName);
+        let pinnedArr = getPinnedScriptNames(scope);
+        if (pinnedArr.includes(name)) {
+            pinnedArr = pinnedArr.filter(n => n !== name);
+            saveScriptPrefs(scope, pinnedArr, null);
+            showToast('📍 បានដក Pin ចេញ');
+        } else {
+            pinnedArr.unshift(name);
+            saveScriptPrefs(scope, pinnedArr, null);
+            showToast('📌 បាន Pin មុខងារឡើងលើគេ!');
+        }
+        rerenderScope(scope);
+    }
+
+    function moveScriptOrder(scope, encodedName, dir) {
+        const name = decodeURIComponent(encodedName);
+        const list = getScriptsRef(scope);
+        const { items, pinnedSet } = getSortedScriptsWithIdx(scope, list);
+
+        if (pinnedSet.has(name)) {
+            const pinnedNames = items.filter(({ s }) => pinnedSet.has(s.name)).map(({ s }) => s.name);
+            const idx = pinnedNames.indexOf(name);
+            const newIdx = idx + dir;
+            if (idx === -1 || newIdx < 0 || newIdx >= pinnedNames.length) return;
+            [pinnedNames[idx], pinnedNames[newIdx]] = [pinnedNames[newIdx], pinnedNames[idx]];
+            saveScriptPrefs(scope, pinnedNames, null);
+        } else {
+            const unpinnedNames = items.filter(({ s }) => !pinnedSet.has(s.name)).map(({ s }) => s.name);
+            const idx = unpinnedNames.indexOf(name);
+            const newIdx = idx + dir;
+            if (idx === -1 || newIdx < 0 || newIdx >= unpinnedNames.length) return;
+            [unpinnedNames[idx], unpinnedNames[newIdx]] = [unpinnedNames[newIdx], unpinnedNames[idx]];
+            saveScriptPrefs(scope, null, unpinnedNames);
+
+            const totalVisiblePos = items.filter(({ s }) => pinnedSet.has(s.name)).length + newIdx + 1;
+            if (totalVisiblePos > 8) {
+                if (scope === 'menu') menuScriptsExpanded = true;
+                else posScriptsExpanded = true;
+            }
+        }
+        rerenderScope(scope);
+    }
+
+    function sortActiveScriptsFirst(scope) {
+        const list = getScriptsRef(scope);
+        const { items, pinnedSet } = getSortedScriptsWithIdx(scope, list);
+        const unpinnedSorted = items
+            .filter(({ s }) => !pinnedSet.has(s.name))
+            .sort((a, b) => (b.s.active ? 1 : 0) - (a.s.active ? 1 : 0))
+            .map(({ s }) => s.name);
+        saveScriptPrefs(scope, null, unpinnedSorted);
+        rerenderScope(scope);
+        showToast('⚡ បានតម្រៀបមុខងារដែលកំពុងបើក (On) ឡើងលើ!');
+    }
+
+    function resetScriptOrder(scope) {
+        localStorage.removeItem(getScriptPrefKey(scope, 'pinned'));
+        localStorage.removeItem(getScriptPrefKey(scope, 'order'));
+        rerenderScope(scope);
+        showToast('🔄 បានកំណត់លំដាប់ដើមវិញ!');
+    }
+
+    function onScriptDragStart(e, scope, encodedName) {
+        dragScriptState = { scope, name: decodeURIComponent(encodedName) };
+        e.currentTarget.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', dragScriptState.name);
+    }
+
+    function onScriptDragOver(e, scope) {
+        if (dragScriptState.scope !== scope) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        const el = e.currentTarget;
+        const rect = el.getBoundingClientRect();
+        const isTopHalf = (e.clientY - rect.top) < (rect.height / 2);
+        el.classList.toggle('drag-over-top', isTopHalf);
+        el.classList.toggle('drag-over-bottom', !isTopHalf);
+    }
+
+    function onScriptDragLeave(e) {
+        e.currentTarget.classList.remove('drag-over-top', 'drag-over-bottom');
+    }
+
+    function onScriptDragEnd(e) {
+        e.currentTarget.classList.remove('dragging');
+        document.querySelectorAll('.script-item.drag-over-top, .script-item.drag-over-bottom')
+            .forEach(el => el.classList.remove('drag-over-top', 'drag-over-bottom'));
+        dragScriptState = { scope: null, name: null };
+    }
+
+    function onScriptDrop(e, scope, targetEncodedName) {
+        e.preventDefault();
+        const targetEl = e.currentTarget;
+        const rect = targetEl.getBoundingClientRect();
+        const insertBefore = (e.clientY - rect.top) < (rect.height / 2);
+        targetEl.classList.remove('drag-over-top', 'drag-over-bottom');
+
+        if (dragScriptState.scope !== scope || !dragScriptState.name) return;
+        const draggedName = dragScriptState.name;
+        const targetName = decodeURIComponent(targetEncodedName);
+        if (draggedName === targetName) return;
+
+        const list = getScriptsRef(scope);
+        const { items, pinnedSet } = getSortedScriptsWithIdx(scope, list);
+        let pinnedNames = items.filter(({ s }) => pinnedSet.has(s.name)).map(({ s }) => s.name);
+        let unpinnedNames = items.filter(({ s }) => !pinnedSet.has(s.name)).map(({ s }) => s.name);
+
+        const targetIsPinned = pinnedSet.has(targetName);
+        const draggedWasPinned = pinnedSet.has(draggedName);
+
+        pinnedNames = pinnedNames.filter(n => n !== draggedName);
+        unpinnedNames = unpinnedNames.filter(n => n !== draggedName);
+
+        const destArr = targetIsPinned ? pinnedNames : unpinnedNames;
+        let destIdx = destArr.indexOf(targetName);
+        if (destIdx === -1) destArr.push(draggedName);
+        else destArr.splice(insertBefore ? destIdx : destIdx + 1, 0, draggedName);
+
+        saveScriptPrefs(scope, pinnedNames, unpinnedNames);
+        if (!draggedWasPinned && targetIsPinned) showToast('📌 បាន Pin & ប្តូរទីតាំង!');
+        else if (draggedWasPinned && !targetIsPinned) showToast('📍 បានដក Pin & ប្តូរទីតាំង!');
+        rerenderScope(scope);
+    }
+
+    function renderScriptListByScope(scope) {
+        const isMenu = scope === 'menu';
+        const scriptsArr = isMenu ? menuScripts : posScripts;
+        const container = document.getElementById(isMenu ? 'menuScriptsListContainer' : 'posScriptsListContainer');
+        const badge = document.getElementById(isMenu ? 'menuActiveCountBadge' : 'posActiveCountBadge');
+        const searchEl = document.getElementById(isMenu ? 'menuPluginSearchInput' : 'posPluginSearchInput');
+        const isExpanded = isMenu ? menuScriptsExpanded : posScriptsExpanded;
         if (!container) return;
 
-        const activeCount = menuScripts.filter(s => s.active).length;
-        if (badge) badge.innerText = `${activeCount} / ${menuScripts.length} On`;
+        const activeCount = scriptsArr.filter(s => s.active).length;
+        if (badge) badge.innerText = `${activeCount} / ${scriptsArr.length} On`;
 
-        const query = (document.getElementById('menuPluginSearchInput')?.value || '').toLowerCase().trim();
-        const filtered = menuScripts
-            .map((s, originalIdx) => ({ s, originalIdx }))
-            .filter(({ s }) => !query || String(s.label || s.name).toLowerCase().includes(query) || String(s.name).toLowerCase().includes(query));
+        const query = (searchEl?.value || '').toLowerCase().trim();
+        const { items: sortedAll, pinnedSet } = getSortedScriptsWithIdx(scope, scriptsArr);
+
+        const filtered = sortedAll.filter(({ s }) =>
+            !query ||
+            String(s.label || s.name).toLowerCase().includes(query) ||
+            String(s.name).toLowerCase().includes(query)
+        );
 
         container.innerHTML = '';
         if (filtered.length === 0) {
@@ -2186,34 +2438,77 @@
             return;
         }
 
-        const limit = query ? filtered.length : 8;
+        const pinnedTotal = sortedAll.filter(({ s }) => pinnedSet.has(s.name)).length;
+        const unpinnedTotal = sortedAll.length - pinnedTotal;
+        const limit = query ? filtered.length : Math.max(8, pinnedTotal);
         const total = filtered.length;
-        const showCount = (menuScriptsExpanded || query) ? total : Math.min(limit, total);
+        const showCount = (isExpanded || query) ? total : Math.min(limit, total);
+
+        const toggleFn = isMenu ? 'toggleMenuScript' : 'togglePosScript';
+        const deleteFn = isMenu ? 'deleteMenuScript' : 'deletePosScript';
+        const expandToggleJs = isMenu
+            ? 'menuScriptsExpanded = !menuScriptsExpanded; renderMenuScripts();'
+            : 'posScriptsExpanded = !posScriptsExpanded; renderPosScripts();';
+
+        let html = '';
+        let pinnedRank = 0;
+        let unpinnedRank = 0;
 
         for (let i = 0; i < showCount; i++) {
             const { s: script, originalIdx } = filtered[i];
             const isScriptOn = Boolean(script.active);
+            const isPinned = pinnedSet.has(script.name);
+            const encName = encodeScriptKey(script.name);
             const activeClass = isScriptOn ? 'btn-toggle-on' : 'btn-toggle-off';
             const activeIcon = isScriptOn ? 'fa-toggle-on' : 'fa-toggle-off';
-            const delBtn = script.builtIn ? '' : `<button class="btn-script btn-delete" onclick="deleteMenuScript(${originalIdx})"><i class="fa-solid fa-trash"></i></button>`;
-            container.innerHTML += `
-                <div class="script-item">
-                    <div class="script-name">${script.label || script.name} ${formatTagBadges(script.tags)}</div>
+
+            const groupIdx = isPinned ? pinnedRank++ : unpinnedRank++;
+            const groupLen = isPinned ? pinnedTotal : unpinnedTotal;
+            const canMoveUp = !query && groupIdx > 0;
+            const canMoveDown = !query && groupIdx < groupLen - 1;
+
+            const delBtn = script.builtIn ? '' : `<button type="button" class="btn-script btn-delete" onclick="${deleteFn}(${originalIdx})" title="លុប"><i class="fa-solid fa-trash"></i></button>`;
+
+            html += `
+                <div class="script-item ${isPinned ? 'is-pinned' : ''}"
+                     draggable="${query ? 'false' : 'true'}"
+                     ondragstart="onScriptDragStart(event, '${scope}', '${encName}')"
+                     ondragover="onScriptDragOver(event, '${scope}')"
+                     ondragleave="onScriptDragLeave(event)"
+                     ondrop="onScriptDrop(event, '${scope}', '${encName}')"
+                     ondragend="onScriptDragEnd(event)">
+                    <div class="script-left">
+                        ${query ? '' : '<span class="drag-handle" title="អូសដើម្បីប្តូរទីតាំង"><i class="fa-solid fa-grip-vertical"></i></span>'}
+                        <div class="script-name">${script.label || script.name} ${formatTagBadges(script.tags)}</div>
+                    </div>
                     <div class="script-actions">
-                        <button class="btn-script ${activeClass}" onclick="toggleMenuScript(${originalIdx})"><i class="fa-solid ${activeIcon}"></i> ${isScriptOn ? 'On' : 'Off'}</button>
+                        <button type="button" class="btn-script-icon ${isPinned ? 'pinned' : ''}" onclick="togglePinScript('${scope}', '${encName}')" title="${isPinned ? 'ដក Pin ចេញ' : 'Pin ឡើងលើគេ'}">
+                            <i class="fa-solid fa-thumbtack"></i>
+                        </button>
+                        <button type="button" class="btn-script-icon" onclick="moveScriptOrder('${scope}', '${encName}', -1)" ${canMoveUp ? '' : 'disabled'} title="រំកិលឡើងលើ">
+                            <i class="fa-solid fa-arrow-up"></i>
+                        </button>
+                        <button type="button" class="btn-script-icon" onclick="moveScriptOrder('${scope}', '${encName}', 1)" ${canMoveDown ? '' : 'disabled'} title="រំកិលចុះក្រោម">
+                            <i class="fa-solid fa-arrow-down"></i>
+                        </button>
+                        <button type="button" class="btn-script ${activeClass}" onclick="${toggleFn}(${originalIdx})"><i class="fa-solid ${activeIcon}"></i> ${isScriptOn ? 'On' : 'Off'}</button>
                         ${delBtn}
                     </div>
                 </div>`;
         }
 
         if (!query && total > limit) {
-            const btnText = menuScriptsExpanded ? '🔼 បង្រួមបញ្ជីវិញ' : `🔽 បង្ហាញមុខងារ ${total - limit} ទៀត...`;
-            container.innerHTML += `
-                <button type="button" class="btn-action" style="width: 100%; justify-content: center; background: rgba(0,0,0,0.02); color: var(--text-muted); border: 1px dashed var(--border-color); margin-top: 5px; box-shadow: none;" onclick="menuScriptsExpanded = !menuScriptsExpanded; renderMenuScripts();">
+            const btnText = isExpanded ? '🔼 បង្រួមបញ្ជីវិញ' : `🔽 បង្ហាញមុខងារ ${total - limit} ទៀត...`;
+            html += `
+                <button type="button" class="btn-action" style="width: 100%; justify-content: center; background: rgba(0,0,0,0.02); color: var(--text-muted); border: 1px dashed var(--border-color); margin-top: 5px; box-shadow: none;" onclick="${expandToggleJs}">
                     ${btnText}
                 </button>`;
         }
+
+        container.innerHTML = html;
     }
+
+    function renderMenuScripts() { renderScriptListByScope('menu'); }
 
     function toggleMenuScript(idx) {
         const nextState = !Boolean(menuScripts[idx].active);
@@ -2223,7 +2518,7 @@
         saveAdminSettings();
     }
 
-    function deleteMenuScript(idx) { menuScripts.splice(idx, 1); renderMenuScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
+    function deleteMenuScript(idx) { const removed = menuScripts.splice(idx, 1)[0]; if (removed) cleanupScriptPrefsForName('menu', removed.name); renderMenuScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
     function toggleAllMenuScripts() {
         const anyOff = menuScripts.some(s => !s.active);
         menuScripts.forEach(s => { s.active = anyOff; s.isActive = anyOff; });
@@ -2269,53 +2564,7 @@
         e.target.value = '';
     }
 
-    function renderPosScripts() {
-        const container = document.getElementById('posScriptsListContainer');
-        const badge = document.getElementById('posActiveCountBadge');
-        if (!container) return;
-
-        const activeCount = posScripts.filter(s => s.active).length;
-        if (badge) badge.innerText = `${activeCount} / ${posScripts.length} On`;
-
-        const query = (document.getElementById('posPluginSearchInput')?.value || '').toLowerCase().trim();
-        const filtered = posScripts
-            .map((s, originalIdx) => ({ s, originalIdx }))
-            .filter(({ s }) => !query || String(s.label || s.name).toLowerCase().includes(query) || String(s.name).toLowerCase().includes(query));
-
-        container.innerHTML = '';
-        if (filtered.length === 0) {
-            container.innerHTML = '<div style="font-size:12px; color:var(--text-muted); text-align:center; padding:10px;">រកមិនឃើញមុខងារដែលស្វែងរកទេ។</div>';
-            return;
-        }
-
-        const limit = query ? filtered.length : 8;
-        const total = filtered.length;
-        const showCount = (posScriptsExpanded || query) ? total : Math.min(limit, total);
-
-        for (let i = 0; i < showCount; i++) {
-            const { s: script, originalIdx } = filtered[i];
-            const isScriptOn = Boolean(script.active);
-            const activeClass = isScriptOn ? 'btn-toggle-on' : 'btn-toggle-off';
-            const activeIcon = isScriptOn ? 'fa-toggle-on' : 'fa-toggle-off';
-            const delBtn = script.builtIn ? '' : `<button class="btn-script btn-delete" onclick="deletePosScript(${originalIdx})"><i class="fa-solid fa-trash"></i></button>`;
-            container.innerHTML += `
-                <div class="script-item">
-                    <div class="script-name">${script.label || script.name} ${formatTagBadges(script.tags)}</div>
-                    <div class="script-actions">
-                        <button class="btn-script ${activeClass}" onclick="togglePosScript(${originalIdx})"><i class="fa-solid ${activeIcon}"></i> ${isScriptOn ? 'On' : 'Off'}</button>
-                        ${delBtn}
-                    </div>
-                </div>`;
-        }
-
-        if (!query && total > limit) {
-            const btnText = posScriptsExpanded ? '🔼 បង្រួមបញ្ជីវិញ' : `🔽 បង្ហាញមុខងារ ${total - limit} ទៀត...`;
-            container.innerHTML += `
-                <button type="button" class="btn-action" style="width: 100%; justify-content: center; background: rgba(0,0,0,0.02); color: var(--text-muted); border: 1px dashed var(--border-color); margin-top: 5px; box-shadow: none;" onclick="posScriptsExpanded = !posScriptsExpanded; renderPosScripts();">
-                    ${btnText}
-                </button>`;
-        }
-    }
+    function renderPosScripts() { renderScriptListByScope('pos'); }
 
     function togglePosScript(idx) {
         const nextState = !Boolean(posScripts[idx].active);
@@ -2324,7 +2573,7 @@
         renderPosScripts();
         saveAdminSettings();
     }
-    function deletePosScript(idx) { posScripts.splice(idx, 1); renderPosScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
+    function deletePosScript(idx) { const removed = posScripts.splice(idx, 1)[0]; if (removed) cleanupScriptPrefsForName('pos', removed.name); renderPosScripts(); saveAdminSettings(); showToast('🗑️ បានលុបកូដ!'); }
     function toggleAllPosScripts() {
         const anyOff = posScripts.some(s => !s.active);
         posScripts.forEach(s => { s.active = anyOff; s.isActive = anyOff; });
