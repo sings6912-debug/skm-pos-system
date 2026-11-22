@@ -142,16 +142,38 @@
         [data-admin-theme="pharmacy"] { --tab-active-bg: var(--success); --tab-active-text: #ffffff; }
         [data-admin-theme="cafe"] { --tab-active-bg: var(--brand-cyan); --tab-active-text: #ffffff; }
 
-        .layout-wrapper { display: flex; gap: 25px; max-width: 1300px; margin: 0 auto; align-items: flex-start; }
+        /* Split Independent Scroll on Desktop (> 900px) */
+        @media (min-width: 901px) {
+            html, body { height: 100vh; overflow: hidden; }
+        }
+
+        .layout-wrapper {
+            display: flex; gap: 22px; max-width: 1320px; margin: 0 auto;
+            align-items: stretch; height: calc(100vh - 40px); overflow: hidden;
+        }
         
         .sidebar { 
             width: 300px; flex-shrink: 0; background: var(--card-bg); 
-            border-radius: 20px; padding: 25px; border: 1px solid var(--border-color); 
-            position: sticky; top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
-            backdrop-filter: blur(10px); 
+            border-radius: 20px; padding: 22px; border: 1px solid var(--border-color); 
+            height: 100%; overflow-y: auto; overscroll-behavior: contain;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05); 
+            backdrop-filter: blur(10px); scroll-behavior: smooth;
         }
         
-        .content-area { flex-grow: 1; min-width: 0; display: flex; flex-direction: column; }
+        .content-area {
+            flex-grow: 1; min-width: 0; display: flex; flex-direction: column;
+            height: 100%; overflow-y: auto; overscroll-behavior: contain;
+            padding-right: 6px; scroll-behavior: smooth;
+        }
+
+        .sidebar::-webkit-scrollbar, .content-area::-webkit-scrollbar { width: 6px; }
+        .sidebar::-webkit-scrollbar-track, .content-area::-webkit-scrollbar-track { background: transparent; }
+        .sidebar::-webkit-scrollbar-thumb, .content-area::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.28); border-radius: 999px;
+        }
+        .sidebar::-webkit-scrollbar-thumb:hover, .content-area::-webkit-scrollbar-thumb:hover {
+            background: var(--brand-cyan);
+        }
         
         .sidebar-nav { display: flex; flex-direction: column; gap: 8px; margin-top: 15px; }
         .tab-btn { 
@@ -175,8 +197,10 @@
         .btn-save-mobile { display: none; }
         
         @media (max-width: 900px) {
-            .layout-wrapper { flex-direction: column; gap: 15px; padding-bottom: 120px; }
-            .sidebar { width: 100%; position: static; padding: 15px; }
+            html, body { height: auto; overflow-y: auto; }
+            .layout-wrapper { flex-direction: column; gap: 15px; padding-bottom: 120px; height: auto; overflow: visible; }
+            .sidebar { width: 100%; height: auto; overflow: visible; position: static; padding: 15px; }
+            .content-area { height: auto; overflow: visible; padding-right: 0; }
             .sidebar-nav { display: flex; flex-direction: row; overflow-x: auto; padding-bottom: 10px; gap: 8px; scroll-snap-type: x mandatory; margin-top: 10px; }
             .sidebar-nav::-webkit-scrollbar { height: 4px; }
             .sidebar-nav::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
@@ -1153,7 +1177,12 @@
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         document.querySelector(`[onclick="switchTab('${tabId}')"]`).classList.add('active');
-        if(window.innerWidth <= 768) { window.scrollTo({ top: 0, behavior: 'smooth' }); }
+        if(window.innerWidth <= 900) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+            const ca = document.querySelector('.content-area');
+            if (ca) ca.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     }
 
     function setAdminTheme(themeName) {
