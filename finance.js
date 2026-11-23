@@ -1,3 +1,14 @@
+// Clean internal tags ([SLIP_URL:...], [KDS:...]) from notes for display/print/CSV
+window.cleanOrderNoteForDisplay = function(note, forReceipt = false) {
+    if (!note) return '';
+    let s = String(note)
+        .replace(/\[KDS:(PREP|READY)\]/g, '')
+        .replace(/\[SLIP_URL:[^\]]+\]/g, forReceipt ? '' : '📸 [មាន Slip]')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+    return s;
+};
+
 /**
  * finance.js - គ្រប់គ្រងវិក្កយបត្រ ការចំណាយ និងការទូទាត់ប្រាក់ (Invoices, Expenses & Settle Debt)
  */
@@ -42,7 +53,7 @@ async function syncInvoiceToCloud(inv) {
             paid_amount: parseFloat(inv.paidUsd || inv.paidAmount || 0),
             status: inv.status || 'unpaid',
             seller: inv.seller || inv.cashier || '',
-            order_data: inv.items || [],
+            order_data: (inv.items || []).map(it => { if (!it || typeof it !== 'object') return it; const { image: _img, ...rest } = it; return rest; }),
             note: inv.note || '',
             timestamp: inv.timestamp || Date.now()
         });
@@ -289,7 +300,8 @@ window.renderUnpaid = function() {
         }
         actionButtons += `</div>`;
 
-        const safeNote = inv.note ? (window.escapeHTML ? window.escapeHTML(inv.note) : inv.note) : '';
+        const cleanUnpaidNote = window.cleanOrderNoteForDisplay(inv.note, false);
+        const safeNote = cleanUnpaidNote ? (window.escapeHTML ? window.escapeHTML(cleanUnpaidNote) : cleanUnpaidNote) : '';
         const noteTag = safeNote ? `<br><small style="color:#0284c7; font-weight:bold;">📝 ${safeNote}</small>` : '';
 
         const row = document.createElement('tr');
@@ -348,7 +360,8 @@ window.notifyCustomerOrderDone = async function(invId) {
     await syncInvoiceToCloud(inv);
 
     const shopName = window.shopName || localStorage.getItem(window.getBranchKey('shop_name')) || 'ហាងរបស់យើង';
-    const noteLine = inv.note ? `\n📝 ចំណាំ៖ ${inv.note}` : '';
+    const cleanReadyNote = window.cleanOrderNoteForDisplay(inv.note, true);
+    const noteLine = cleanReadyNote ? `\n📝 ចំណាំ៖ ${cleanReadyNote}` : '';
     const message = `🎉 សួស្តី ${inv.customerName || inv.customer || 'អតិថិជន'}!\n\nការកុម្ម៉ង់លេខ [${invId}] របស់អ្នកនៅហាង "${shopName}" ត្រូវបានរៀបចំរួចរាល់ហើយ! 🛍️${noteLine}\n\n💵 សរុបទឹកប្រាក់៖ $${parseFloat(inv.totalAmount || inv.total || 0).toFixed(2)}\nសូមអញ្ជើញមកទទួលទំនិញ ឬរង់ចាំការដឹកជញ្ជូន។ អរគុណច្រើន! 🙏`;
 
     try {
@@ -639,7 +652,8 @@ window.addItemToEditingInvoice = function() {
         existing.cartQty = currentNewQty + 1;
         existing.qty = existing.cartQty;
     } else {
-        window.currentEditingInvoice.items.push({ ...p, price: unitUsd, cartQty: 1, qty: 1 });
+        const { image: _stripPImg, ...cleanP } = p;
+        window.currentEditingInvoice.items.push({ ...cleanP, price: unitUsd, cartQty: 1, qty: 1 });
     }
 
     select.value = '';
@@ -917,8 +931,9 @@ window.viewInvoiceDetails = function(invId) {
     const safeSeller = window.escapeHTML ? window.escapeHTML(inv.seller || inv.cashier || 'N/A') : (inv.seller || inv.cashier || 'N/A');
 
     itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 8px; text-align: left;">អតិថិជន៖ <b>${safeCustName}</b> (${safeCustPhone})</div>`;
-    if (inv.note) {
-        const safeNote = window.escapeHTML ? window.escapeHTML(inv.note) : inv.note;
+    const cleanViewNote = window.cleanOrderNoteForDisplay(inv.note, false);
+    if (cleanViewNote) {
+        const safeNote = window.escapeHTML ? window.escapeHTML(cleanViewNote) : cleanViewNote;
         itemsHtml += `<div style="font-size: 12px; color: #000; background: #f1f5f9; border-left: 3px solid #0284c7; padding: 5px 8px; margin-top: 5px; text-align: left; font-weight: bold;">📝 ចំណាំ៖ ${safeNote}</div>`;
     }
     itemsHtml += `<div style="font-size: 12px; color: #555; margin-top: 4px; text-align: left;">អ្នកលក់៖ ${safeSeller}</div></div>`;
@@ -960,8 +975,9 @@ window.reprintInvoice = function() {
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">កាលបរិច្ឆេទ: ${inv.date || inv.createdAt || 'N/A'}</p>`;
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">លេខវិក្កយបត្រ: ${inv.id || inv.invoiceNo || window.currentActiveInvoiceId}</p>`;
     receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left;">អតិថិជន: <b>${window.escapeHTML ? window.escapeHTML(inv.customerName || inv.customer || 'ទូទៅ') : (inv.customerName || inv.customer || 'ទូទៅ')}</b> ${inv.phone || inv.customerPhone ? '('+(window.escapeHTML ? window.escapeHTML(inv.phone || inv.customerPhone) : (inv.phone || inv.customerPhone))+')':''}</p>`;
-    if (inv.note) {
-        receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left; font-weight:bold;">ចំណាំ: ${window.escapeHTML ? window.escapeHTML(inv.note) : inv.note}</p>`;
+    const cleanPrintNote = window.cleanOrderNoteForDisplay(inv.note, true);
+    if (cleanPrintNote) {
+        receiptHTML += `<p style="margin:2px 0; font-size:11px; text-align:left; font-weight:bold;">ចំណាំ: ${window.escapeHTML ? window.escapeHTML(cleanPrintNote) : cleanPrintNote}</p>`;
     }
     receiptHTML += `<div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div></div>`;
 
@@ -1093,7 +1109,7 @@ window.exportInvoicesCSV = function() {
         
         const c = `"${(inv.customerName || inv.customer || '').replace(/"/g, '""')}"`;
         const p = `"${(inv.customerPhone || inv.phone || '').replace(/"/g, '""')}"`;
-        const n = `"${(inv.note || '').replace(/"/g, '""')}"`;
+        const n = `"${window.cleanOrderNoteForDisplay(inv.note, false).replace(/"/g, '""')}"`;
         
         let itemsStr = '';
         if (inv.items && Array.isArray(inv.items)) {

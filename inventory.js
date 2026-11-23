@@ -1,3 +1,22 @@
+window.SKM_IMG_FALLBACK = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect fill='%231e293b' width='120' height='120' rx='12'/%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='13' font-weight='bold'%3ENo Image%3C/text%3E%3C/svg%3E";
+
+function skmCanvasToBestBlob(canvas, quality = 0.78) {
+    return new Promise((resolve) => {
+        canvas.toBlob((blob) => {
+            if (blob && blob.type === 'image/webp') return resolve({ blob, mime: 'image/webp', ext: 'webp' });
+            canvas.toBlob((jpgBlob) => resolve({ blob: jpgBlob, mime: 'image/jpeg', ext: 'jpg' }), 'image/jpeg', quality);
+        }, 'image/webp', quality);
+    });
+}
+
+function skmCanvasToBestDataUrl(canvas, quality = 0.65) {
+    try {
+        const webp = canvas.toDataURL('image/webp', quality);
+        if (webp && webp.startsWith('data:image/webp')) return webp;
+    } catch(e) {}
+    return canvas.toDataURL('image/jpeg', quality);
+}
+
 // inventory.js
 window.currentInventoryView = 'grid';
 
@@ -142,7 +161,7 @@ window.renderInventory = function() {
                 let conditionBadge = (window.sysSettings.condition && p.condition) ? `<span style="font-size:11px; background:rgba(255,255,255,0.1); padding:2px 6px; border-radius:4px; margin-left:5px;">${p.condition}</span>` : '';
                 let expiryBadge = (window.sysSettings.expiry && p.expiry) ? `<div style="font-size:11px; color:var(--warning); margin-top:2px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</div>` : '';
 
-                finalHtml += `<div class="product-card"><div class="media-container">${p.category?`<div class="badge-cat">${p.category}</div>`:''}<img src="${img}" alt="Product"></div><div class="product-info"><div class="p-title">${p.name} ${conditionBadge}</div><div style="font-size: var(--fs-11); color: var(--primary); margin-bottom: 4px; font-family: monospace;">Barcode: ${p.customId||p.id}</div><div style="font-size: var(--fs-12); color: var(--text-muted); margin-bottom: 8px; line-height: 1.3; flex-grow: 1;">${p.description || p.desc || d.noDesc || 'មិនមានការពណ៌នា'}</div><div class="p-finances"><div style="display:${showCost ? 'block':'none'}">ដើម: <span class="p-cost">${window.fMoney(p.cost)}</span></div><div>${d.lblSellShort || 'លក់:'} <span class="p-price">${window.fMoney(p.price)} ${rielStr} <small style="color:var(--text-muted); font-size:var(--fs-11);">/ ${p.unit||'ឯកតា'}</small></span></div></div>${expiryBadge}<div class="qty-control" style="border-color:${sCol}"><button class="qty-btn" onclick="window.updateQty('${p.id}', -1)">-</button><span class="qty-val" style="color:${sCol}">${pQty} <small style="font-size:var(--fs-11);">${p.unit||'ឯកតា'}</small></span><button class="qty-btn" onclick="window.updateQty('${p.id}', 1)">+</button></div>${actionBtns}</div></div>`;
+                finalHtml += `<div class="product-card"><div class="media-container">${p.category?`<div class="badge-cat">${p.category}</div>`:''}<img src="${img}" alt="Product" loading="lazy" onerror="this.onerror=null;this.src=window.SKM_IMG_FALLBACK;"></div><div class="product-info"><div class="p-title">${p.name} ${conditionBadge}</div><div style="font-size: var(--fs-11); color: var(--primary); margin-bottom: 4px; font-family: monospace;">Barcode: ${p.customId||p.id}</div><div style="font-size: var(--fs-12); color: var(--text-muted); margin-bottom: 8px; line-height: 1.3; flex-grow: 1;">${p.description || p.desc || d.noDesc || 'មិនមានការពណ៌នា'}</div><div class="p-finances"><div style="display:${showCost ? 'block':'none'}">ដើម: <span class="p-cost">${window.fMoney(p.cost)}</span></div><div>${d.lblSellShort || 'លក់:'} <span class="p-price">${window.fMoney(p.price)} ${rielStr} <small style="color:var(--text-muted); font-size:var(--fs-11);">/ ${p.unit||'ឯកតា'}</small></span></div></div>${expiryBadge}<div class="qty-control" style="border-color:${sCol}"><button class="qty-btn" onclick="window.updateQty('${p.id}', -1)">-</button><span class="qty-val" style="color:${sCol}">${pQty} <small style="font-size:var(--fs-11);">${p.unit||'ឯកតា'}</small></span><button class="qty-btn" onclick="window.updateQty('${p.id}', 1)">+</button></div>${actionBtns}</div></div>`;
             });
             finalHtml += `</div>`; 
             container.innerHTML = finalHtml;
@@ -163,7 +182,7 @@ window.renderInventory = function() {
                     expiryTD = `<td>${p.expiry ? new Date(p.expiry).toLocaleDateString('km-KH') : '<span style="color:var(--text-muted); font-size:11px;">មិនមាន</span>'}</td>`;
                 }
                 
-                tableHTML += `<tr data-id="${p.id}"><td><img src="${img}" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border:1px solid var(--border);"></td><td data-sort="${safeName}"><div style="font-weight: bold; font-size:var(--fs-15); color:var(--text-main); margin-bottom: 2px;">${p.name} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--primary); font-family:monospace;">Barcode: ${p.customId||p.id}</div></td><td data-sort="${p.category||'-'}"><span class="badge-cat" style="position:static; display:inline-block; font-size:var(--fs-11); padding:4px 8px;">${p.category||'-'}</span></td><td data-sort="${p.price}"><div class="p-price" style="font-size:var(--fs-15);">${window.fMoney(p.price)} ${rielHtml}</div><div class="p-cost" style="font-size:var(--fs-11); margin-top:2px; display:${showCost ? 'block':'none'}">${d.lblCostShort || 'ដើម:'} ${window.fMoney(p.cost)}</div></td><td data-sort="${pQty}" style="text-align:center;"><div class="qty-control" style="border-color:${sCol}; margin: 0 auto; padding: 2px 5px;"><button class="qty-btn" onclick="window.updateQty('${p.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-16);">-</button><span class="qty-val" style="color:${sCol}; min-width:25px;">${pQty}</span><button class="qty-btn" onclick="window.updateQty('${p.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-16);">+</button></div><div style="font-size:var(--fs-11); color:var(--text-muted); margin-top:3px;">${p.unit||'ឯកតា'}</div></td>${expiryTD}${actCol}</tr>`; 
+                tableHTML += `<tr data-id="${p.id}"><td><img src="${img}" loading="lazy" onerror="this.onerror=null;this.src=window.SKM_IMG_FALLBACK;" style="width: 45px; height: 45px; object-fit: cover; border-radius: 6px; border:1px solid var(--border);"></td><td data-sort="${safeName}"><div style="font-weight: bold; font-size:var(--fs-15); color:var(--text-main); margin-bottom: 2px;">${p.name} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--primary); font-family:monospace;">Barcode: ${p.customId||p.id}</div></td><td data-sort="${p.category||'-'}"><span class="badge-cat" style="position:static; display:inline-block; font-size:var(--fs-11); padding:4px 8px;">${p.category||'-'}</span></td><td data-sort="${p.price}"><div class="p-price" style="font-size:var(--fs-15);">${window.fMoney(p.price)} ${rielHtml}</div><div class="p-cost" style="font-size:var(--fs-11); margin-top:2px; display:${showCost ? 'block':'none'}">${d.lblCostShort || 'ដើម:'} ${window.fMoney(p.cost)}</div></td><td data-sort="${pQty}" style="text-align:center;"><div class="qty-control" style="border-color:${sCol}; margin: 0 auto; padding: 2px 5px;"><button class="qty-btn" onclick="window.updateQty('${p.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-16);">-</button><span class="qty-val" style="color:${sCol}; min-width:25px;">${pQty}</span><button class="qty-btn" onclick="window.updateQty('${p.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-16);">+</button></div><div style="font-size:var(--fs-11); color:var(--text-muted); margin-top:3px;">${p.unit||'ឯកតា'}</div></td>${expiryTD}${actCol}</tr>`; 
             });
             tableHTML += `</tbody></table></div>`; 
             container.innerHTML = tableHTML;
@@ -303,23 +322,56 @@ window.updateImagePreview = function(src) {
 
 window.handleImage = function(e) { 
     const file = e.target.files[0]; if(!file) return; 
+    if (typeof window.showToast === 'function') window.showToast('⏳ កំពុងបង្ហាប់ និងផ្ទុករូបភាពទំនិញ...');
     const reader = new FileReader(); 
-    reader.onload = (e) => { 
+    reader.onload = (ev) => { 
         const img = new Image(); 
-        img.onload = () => { 
-            const canvas = document.createElement('canvas'); const max = 400; let w = img.width, h = img.height; 
-            if(w>h) { if(w>max) { h*=max/w; w=max; } } else { if(h>max) { w*=max/h; h=max; } } 
+        img.onload = async () => { 
+            const canvas = document.createElement('canvas'); const max = 600; let w = img.width, h = img.height; 
+            if(w>h) { if(w>max) { h = Math.round(h * (max/w)); w = max; } } else { if(h>max) { w = Math.round(w * (max/h)); h = max; } } 
             canvas.width = w; canvas.height = h; 
             const ctx = canvas.getContext('2d'); 
-            ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, w, h); 
+            ctx.clearRect(0, 0, w, h); 
             ctx.drawImage(img, 0, 0, w, h); 
-            const compressedUrl = canvas.toDataURL('image/jpeg', 0.6); 
-            document.getElementById('pImage').value = compressedUrl; 
-            window.updateImagePreview(compressedUrl); 
+
+            let finalImgUrl = '';
+            if (window.supabaseClient && navigator.onLine) {
+                try {
+                    const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                    const { blob, mime, ext } = await skmCanvasToBestBlob(canvas, 0.78);
+                    if (blob) {
+                        const filePath = `products/${branchId}_${Date.now()}_${Math.random().toString(36).slice(2,7)}.${ext}`;
+                        const { error } = await window.supabaseClient.storage.from('shop_assets').upload(filePath, blob, { contentType: mime, upsert: true });
+                        if (!error) {
+                            const { data } = window.supabaseClient.storage.from('shop_assets').getPublicUrl(filePath);
+                            if (data && data.publicUrl) finalImgUrl = data.publicUrl;
+                        }
+                    }
+                } catch(err) { console.warn('Product storage upload fallback to Base64:', err); }
+            }
+
+            if (!finalImgUrl) {
+                // Offline / Storage fallback: compact WebP/JPEG (max 400px) to keep localStorage tiny
+                const fbCanvas = document.createElement('canvas');
+                const fbMax = 400; let fw = img.width, fh = img.height;
+                if(fw>fh) { if(fw>fbMax) { fh = Math.round(fh * (fbMax/fw)); fw = fbMax; } } else { if(fh>fbMax) { fw = Math.round(fw * (fbMax/fh)); fh = fbMax; } }
+                fbCanvas.width = fw; fbCanvas.height = fh;
+                const fctx = fbCanvas.getContext('2d');
+                fctx.clearRect(0, 0, fw, fh);
+                fctx.drawImage(img, 0, 0, fw, fh);
+                finalImgUrl = skmCanvasToBestDataUrl(fbCanvas, 0.62);
+            }
+
+            document.getElementById('pImage').value = finalImgUrl; 
+            window.updateImagePreview(finalImgUrl); 
+            if (typeof window.showToast === 'function') {
+                window.showToast(finalImgUrl.startsWith('http') ? '✅ Upload រូបទំនិញចូល Cloud ជោគជ័យ!' : '✅ បានបង្ហាប់រូបទំនិញរួចរាល់!');
+            }
         }; 
-        img.src = e.target.result; 
+        img.src = ev.target.result; 
     }; 
     reader.readAsDataURL(file); 
+    e.target.value = '';
 };
 
 window.saveProduct = async function() { 
