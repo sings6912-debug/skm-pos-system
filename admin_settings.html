@@ -456,13 +456,13 @@
             <div class="lux-tool-card" style="margin-bottom: 16px; background: linear-gradient(135deg, rgba(197,155,56,0.08), rgba(6,182,212,0.05)); border-color: rgba(197,155,56,0.38);">
                 <div class="lux-tool-head">
                     <span><i class="fa-solid fa-wand-magic-sparkles" style="color:#B68A28;"></i> រៀបចំហាងថ្មីក្នុង ១ ចុច (1-Click Business Setup Wizard)</span>
-                    <span style="font-size:10.5px; color:#B68A28; font-weight:800;">បំពាក់ស្បែក + ប្លង់ + Plugin + លេខតុ ស្វ័យប្រវត្តិ</span>
+                    <span style="font-size:10.5px; color:#B68A28; font-weight:800;">បំពាក់ស្បែក + ប្លង់ + លេខតុ (មិនប៉ះពាល់ Plugin ក្នុង Tab 6 ទេ)</span>
                 </div>
                 <div class="lux-wizard-grid">
                     <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('cafe')">☕ <span>ហាងកាហ្វេ</span><small>#01 + Magazine + តុ</small></button>
                     <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('restaurant')">🍽️ <span>ភោជនីយដ្ឋាន</span><small>#08 + List + តុ VIP</small></button>
                     <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('bakery')">🧁 <span>នំខេក & បង្អែម</span><small>#15 + Magazine</small></button>
-                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('pharmacy')">💊 <span>ឱសថស្ថាន</span><small>#21 + List + Med</small></button>
+                    <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('pharmacy')">💊 <span>ឱសថស្ថាន</span><small>#21 + List</small></button>
                     <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('beauty')">💄 <span>សាឡន & សម្រស់</span><small>#16 + Grid</small></button>
                     <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('jewelry')">💎 <span>អលង្ការ VIP</span><small>#34 + Magazine</small></button>
                     <button type="button" class="lux-wiz-btn" onclick="runBusinessSetupWizard('tech')">📱 <span>Tech / Anime</span><small>#41 + Grid</small></button>
@@ -1134,6 +1134,24 @@
             <p class="help-text">
                 មានតែផ្ទាំង <b>Admin Settings</b> នេះប៉ុណ្ណោះដែលអាចបិទ ឬបើកមុខងារទាំង ១១ ខាងក្រោមតាមប្រភេទអាជីវកម្មរបស់អតិថិជននីមួយៗ។ មុខងារណាដែលបិទ (Off) នឹងមិនបង្ហាញលើ POS ឬ Digital Menu ឡើយ ហើយទំព័រដាច់ដោយឡែក (`display.html`, `kds.html`, `master_branches.html`) ក៏នឹងត្រូវចាក់សោស្វ័យប្រវត្តិដែរ។
             </p>
+
+            <!-- ⚡ 1-CLICK PRO FEATURE PRESETS BY INDUSTRY -->
+            <div style="background: rgba(139, 92, 246, 0.08); border: 1px solid rgba(139, 92, 246, 0.3); padding: 14px 16px; border-radius: 14px; margin-bottom: 18px;">
+                <div style="font-size: 13px; font-weight: 900; color: #8b5cf6; margin-bottom: 6px;">
+                    ⚡ កញ្ចប់បើករហ័ស ១ ចុចតាមប្រភេទអាជីវកម្ម (1-Click Pro Feature Presets)
+                </div>
+                <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px;">
+                    ចុចប៊ូតុងប្រភេទអាជីវកម្មខាងក្រោមដើម្បីបិទ/បើកមុខងារ Pro ទាំង ១១ ឱ្យត្រូវតាមតម្រូវការជាក់ស្តែងស្វ័យប្រវត្តិ៖
+                </div>
+                <div class="action-btn-group" style="margin-bottom: 0;">
+                    <button type="button" class="btn-action" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;" onclick="applyProFeaturePreset('retail')">🧸 ហាង Figure / លក់រាយ</button>
+                    <button type="button" class="btn-action" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;" onclick="applyProFeaturePreset('cafe')">☕ ហាងកាហ្វេ / អាហារ</button>
+                    <button type="button" class="btn-action" style="background: #fdf2f8; color: #db2777; border: 1px solid #fbcfe8;" onclick="applyProFeaturePreset('online')">📦 លក់ Online សុទ្ធ</button>
+                    <button type="button" class="btn-action" style="background: #ecfdf5; color: #059669; border: 1px solid #a7f3d0;" onclick="applyProFeaturePreset('mart')">🛒 ម៉ាត / ឱសថស្ថាន</button>
+                    <button type="button" class="btn-action" style="background: #f0fdf4; color: var(--success);" onclick="toggleAllProFeatures(true)">✅ បើកទាំងអស់</button>
+                    <button type="button" class="btn-action" style="background: #fff1f2; color: var(--danger);" onclick="toggleAllProFeatures(false)">⭕ បិទទាំងអស់</button>
+                </div>
+            </div>
 
             <!-- 9.1 POS & OWNER PRO FEATURES -->
             <div class="section-box" style="border-left: 4px solid var(--brand-cyan);">
@@ -2112,6 +2130,7 @@
                 shopAddress: shopAddressVal,
                 shopLogo: window.shopLogo || localStorage.getItem(`ks2_${BRANCH}_shop_logo`) || '',
                 shopQR: window.shopQR || sys.menuQR || localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || '',
+                shopTelegram: localStorage.getItem(`ks2_${BRANCH}_shop_telegram`) || existingShopInfo.shopTelegram || '',
                 telegramBotToken: orderTok,
                 telegramChatId: orderChat,
                 bakongId: sys.bakongId || '',
@@ -3180,21 +3199,12 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         if (document.getElementById('toggleCafeAddons')) document.getElementById('toggleCafeAddons').checked = (profileKey === 'cafe' || profileKey === 'bakery');
         if (document.getElementById('setAdminReceiptFooter')) document.getElementById('setAdminReceiptFooter').value = p.footer;
 
-        // Also apply matching Tab 6 Plugin Preset
-        const updatePlugList = (list) => list.forEach(s => {
-            const next = Array.isArray(s.tags) && s.tags.includes(p.pluginPreset);
-            s.active = next; s.isActive = next;
-        });
-        updatePlugList(menuScripts);
-        updatePlugList(posScripts);
-
-        renderMenuScripts();
-        renderPosScripts();
+        // ⚡ សម្គាល់៖ មិនប៉ះពាល់ ឬផ្លាស់ប្តូរកូដបន្ថែម (Plugins) ក្នុង Tab 6 ឡើយ (រក្សាតាមការកំណត់របស់ម្ចាស់ហាង ១០០%)
         updateAdminMenuLayoutButtons();
         renderLuxuryThemeStore();
         updateLiveReceiptPreview();
         saveAdminSettings();
-        showToast(`🚀 បានរៀបចំប្រព័ន្ធសម្រាប់ "${p.name}" ១០០% រួចរាល់!`);
+        showToast(`🚀 បានរៀបចំស្បែក & ប្លង់សម្រាប់ "${p.name}" រួចរាល់!`);
     }
 
     // Auto Brand-from-Logo Theme Generator (#2)
@@ -3375,6 +3385,77 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         const a = document.createElement('a'); a.href = url; a.download = fileName;
         document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
         showToast(`⬇️ បានទាញយក "${fileName}" ជោគជ័យ!`);
+    }
+
+    const PRO_PRESETS_CONFIG = {
+        retail: {
+            pfCustomerDisplay: true,
+            pfKds: false,
+            pfMultiBranch: false,
+            pfSuppliers: true,
+            pfStockAudit: true,
+            pfTelegramZReport: true,
+            pfSplitBill: false,
+            pfPaymentSlip: true,
+            pfGpsLocation: true,
+            pfDigitalReceipt: true,
+            pfProductTags: true,
+            label: '🧸 ហាង Figure / លក់រាយ'
+        },
+        cafe: {
+            pfCustomerDisplay: true,
+            pfKds: true,
+            pfMultiBranch: false,
+            pfSuppliers: true,
+            pfStockAudit: false,
+            pfTelegramZReport: true,
+            pfSplitBill: true,
+            pfPaymentSlip: false,
+            pfGpsLocation: false,
+            pfDigitalReceipt: true,
+            pfProductTags: true,
+            label: '☕ ហាងកាហ្វេ / អាហារ'
+        },
+        online: {
+            pfCustomerDisplay: false,
+            pfKds: false,
+            pfMultiBranch: false,
+            pfSuppliers: true,
+            pfStockAudit: true,
+            pfTelegramZReport: true,
+            pfSplitBill: false,
+            pfPaymentSlip: true,
+            pfGpsLocation: true,
+            pfDigitalReceipt: true,
+            pfProductTags: true,
+            label: '📦 ហាងលក់ Online សុទ្ធ'
+        },
+        mart: {
+            pfCustomerDisplay: true,
+            pfKds: false,
+            pfMultiBranch: false,
+            pfSuppliers: true,
+            pfStockAudit: true,
+            pfTelegramZReport: true,
+            pfSplitBill: false,
+            pfPaymentSlip: true,
+            pfGpsLocation: true,
+            pfDigitalReceipt: true,
+            pfProductTags: true,
+            label: '🛒 ម៉ាត / ឱសថស្ថាន'
+        }
+    };
+
+    function applyProFeaturePreset(presetKey) {
+        const cfg = PRO_PRESETS_CONFIG[presetKey];
+        if (!cfg) return;
+        ['pfCustomerDisplay','pfKds','pfMultiBranch','pfSuppliers','pfStockAudit','pfTelegramZReport','pfSplitBill','pfPaymentSlip','pfGpsLocation','pfDigitalReceipt','pfProductTags']
+            .forEach(id => {
+                const el = document.getElementById(id);
+                if (el && cfg[id] !== undefined) el.checked = Boolean(cfg[id]);
+            });
+        saveAdminSettings();
+        showToast(`✅ បានបើកកញ្ចប់មុខងារ Pro សម្រាប់ "${cfg.label}" រួចរាល់!`);
     }
 
     function toggleAllProFeatures(state) {
