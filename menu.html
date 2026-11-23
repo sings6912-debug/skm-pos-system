@@ -1941,6 +1941,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     window.sysSettings = sys;
                     if (sys && parseFloat(sys.exchangeRate) > 0) exRate = parseFloat(sys.exchangeRate);
                     if (sys.activePlugins && typeof window.skmApplyActivePlugins === 'function') window.skmApplyActivePlugins(sys.activePlugins);
+                    if (typeof window.syncMenuProFeatures === 'function') window.syncMenuProFeatures();
 
                     // --- កំណត់រៀបចំ Settings លើ Menu ---
                     const qpMenu = new URLSearchParams(window.location.search);
@@ -2710,8 +2711,21 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             if (giftFee > 0) {
                 note = note ? `${note} [🎁 Gift Order +$2.00]` : `[🎁 Gift Order +$2.00]`;
             }
+            if (window.__skmPendingGpsUrl && sys?.proFeatures?.gpsLocation) {
+                note = note ? `${note} [📍 GPS: ${window.__skmPendingGpsUrl}]` : `[📍 GPS: ${window.__skmPendingGpsUrl}]`;
+            }
 
             let orderId = 'ORD-' + Date.now().toString().slice(-6);
+            let uploadedSlipUrl = '';
+            let uploadedSlipBlob = null;
+            if (sys?.proFeatures?.paymentSlip && typeof window.uploadMenuPaymentSlipIfAny === 'function' && window.__skmPendingPaymentSlip) {
+                const slipRes = await window.uploadMenuPaymentSlipIfAny(supabaseClient, orderId);
+                uploadedSlipUrl = slipRes.slipUrl || '';
+                uploadedSlipBlob = slipRes.blob || null;
+                if (uploadedSlipUrl) {
+                    note = note ? `${note} [SLIP_URL:${uploadedSlipUrl}]` : `[SLIP_URL:${uploadedSlipUrl}]`;
+                }
+            }
             let nowDateStr = new Date().toLocaleDateString('km-KH') + ' ' + new Date().toLocaleTimeString('km-KH');
 
             const normalizedItems = cart.map(c => ({
@@ -2903,9 +2917,15 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                         method: 'POST', headers: {'Content-Type':'application/json'},
                         body: JSON.stringify({chat_id: orderChatId, text: msg, parse_mode: 'HTML'})
                     }).catch(err => console.warn("Telegram fetch warning:", err));
+                    if (uploadedSlipBlob && typeof window.sendMenuSlipToTelegram === 'function') {
+                        window.sendMenuSlipToTelegram(orderBotToken, orderChatId, `📸 Payment Slip — #${orderId} (${n}) $${tot.toFixed(2)}`, uploadedSlipBlob);
+                    }
                 }
 
                 showToast(`Order Success! ID: ${orderId}`);
+                if (typeof window.clearMenuSlip === 'function') window.clearMenuSlip();
+                window.__skmPendingGpsUrl = '';
+                const gpsSt = document.getElementById('skmGpsStatus'); if (gpsSt) gpsSt.style.display = 'none';
                 cart = []; window.cart = cart;
                 appliedPromo = null;
                 discount = 0;
@@ -2914,6 +2934,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 if (statusEl) statusEl.style.display = 'none';
                 updateCartBadges(); 
                 closeModal('cartModal');
+                if (typeof window.showCustomerDigitalReceipt === 'function') window.showCustomerDigitalReceipt(ord);
                 init();
             } catch(e) { 
                 showToast('Error processing order', true); 
@@ -3031,5 +3052,6 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 </script>
     <!-- All-In-One Menu Plugins (Loaded from GitHub Pages - 0 Supabase Egress) -->
     <script src="all_menu_plugins.js" defer></script>
+    <script src="menu_pro_addons.js" defer></script>
 </body>
 </html>

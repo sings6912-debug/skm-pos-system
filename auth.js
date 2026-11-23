@@ -62,6 +62,7 @@ window.syncUsersFromCloud = async function() {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         const key = getSafeBranchKey('auth_users_pro');
         
+        // ទាញយកទិន្នន័យពី Column user_accounts ផ្ទាល់
         const { data, error } = await window.supabaseClient
             .from('branch_store')
             .select('user_accounts')
@@ -76,39 +77,6 @@ window.syncUsersFromCloud = async function() {
             if (Array.isArray(cloudUsers) && cloudUsers.length > 0) {
                 window.userAccounts = cloudUsers;
                 localStorage.setItem(key, JSON.stringify(window.userAccounts));
-
-                // ផ្ទៀងផ្ទាត់គណនីដែលកំពុង Login ជាប់៖ បើត្រូវលុប បិទគណនី ដូរលេខសម្ងាត់ ឬដូរ Role -> ដេញចេញភ្លាមៗ!
-                if (window.activeUser) {
-                    const matched = cloudUsers.find(u => u && (
-                        (u.id && window.activeUser.id && String(u.id) === String(window.activeUser.id)) ||
-                        (u.username && window.activeUser.username && String(u.username).toLowerCase() === String(window.activeUser.username).toLowerCase())
-                    ));
-                    const passChanged = matched && window.activeUser.password !== undefined && String(matched.password) !== String(window.activeUser.password);
-                    const roleChanged = matched && String(matched.role) !== String(window.activeUser.role);
-
-                    if (!matched || passChanged || roleChanged || matched.isActive === false) {
-                        window.activeUser = null;
-                        window.currentRole = 'guest';
-                        localStorage.removeItem(getSafeBranchKey('active_user_obj'));
-                        sessionStorage.removeItem(getSafeBranchKey('active_user_obj'));
-                        sessionStorage.removeItem('ks2_auth_passed');
-                        notifyAuthUser('⚠️ គណនីរបស់អ្នកត្រូវបានបិទ ឬផ្លាស់ប្តូរព័ត៌មាន! សូមចូលប្រព័ន្ធម្តងទៀត។', 'ផ្អាកសិទ្ធិប្រើប្រាស់', true);
-                        if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:' && window.location.protocol !== 'file:') {
-                            setTimeout(() => { window.location.href = `welcome.html?branch=${encodeURIComponent(branchId)}`; }, 1000);
-                        } else if (typeof window.checkAuthentication === 'function') {
-                            window.checkAuthentication();
-                        }
-                        return;
-                    } else {
-                        window.activeUser = matched;
-                        if (localStorage.getItem(getSafeBranchKey('active_user_obj'))) {
-                            localStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(matched));
-                        } else if (sessionStorage.getItem(getSafeBranchKey('active_user_obj'))) {
-                            sessionStorage.setItem(getSafeBranchKey('active_user_obj'), JSON.stringify(matched));
-                        }
-                    }
-                }
-
                 if (typeof window.renderUsersList === 'function') window.renderUsersList();
                 console.log('✅ បានទាញយកគណនីពី Column user_accounts មកឧបករណ៍នេះជោគជ័យ!');
             }
@@ -282,6 +250,7 @@ window.handleResetPassword = async function() {
     const u = document.getElementById('resetUsername')?.value.trim() || ''; 
     const pin = document.getElementById('resetPin')?.value.trim() || ''; 
     const newP = document.getElementById('newResetPassword')?.value.trim() || ''; 
+    const userIndex = (window.userAccounts || []).findIndex(x => x && String(x.username).toLowerCase() === u.toLowerCase()); 
     
     const lang = localStorage.getItem('app_lang') || 'km';
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
@@ -289,12 +258,6 @@ window.handleResetPassword = async function() {
     if (!u || !pin) {
         return notifyAuthUser("សូមបញ្ចូលឈ្មោះអ្នកប្រើប្រាស់ និងលេខ PIN សម្ងាត់!", d.confirmNoticeTitle || "ជូនដំណឹង", true);
     }
-
-    if (typeof window.syncUsersFromCloud === 'function') {
-        await window.syncUsersFromCloud();
-    }
-    window.userAccounts = loadLocalUsers();
-    const userIndex = (window.userAccounts || []).findIndex(x => x && String(x.username).toLowerCase() === u.toLowerCase());
 
     if (userIndex !== -1 && String(window.userAccounts[userIndex].pin).trim() === pin) { 
         if (!newP) {
@@ -346,8 +309,6 @@ window.renderUsersList = function() {
     if (!tbody) return;
     const lang = localStorage.getItem('app_lang') || 'km';
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
-    const isAdminViewer = window.activeUser.role === 'admin';
-    const esc = window.escapeHTML || (s => s);
 
     tbody.innerHTML = (window.userAccounts || []).map(u => { 
         if (!u) return '';
@@ -355,16 +316,10 @@ window.renderUsersList = function() {
                     (u.role === 'manager' ? '<span class="badge" style="background:rgba(139,92,246,0.15); color:#8b5cf6; border:1px solid rgba(139,92,246,0.3);">💼 Manager</span>' :
                     (u.role === 'sales' ? '<span class="badge badge-sales">🛒 Sales</span>' : '<span class="badge badge-warehouse">📦 Warehouse</span>')); 
                     
-        const canManageThisUser = isAdminViewer || (u.role !== 'admin' && u.username !== 'admin');
-        const pinDisplay = (u.role === 'admin' && !isAdminViewer) ? '••••' : esc(u.pin || '0000');
-
-        let editBtn = canManageThisUser
-            ? `<button class="btn-outline" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer; color:var(--warning);" onclick="window.editUserAccount('${u.id}')">${d.btnEdit || '✏️ កែប្រែ'}</button>`
-            : '';
-        let deleteBtn = (u.username === 'admin' || !canManageThisUser)
-            ? `<span style="color:var(--text-muted); font-size:var(--fs-11);">${d.cantDeleteAdmin || 'មិនអាចលុប'}</span>`
-            : `<button class="btn-danger" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="window.deleteUserAccount('${u.id}')">${d.btnDelete || '🗑️ លុប'}</button>`; 
-        return `<tr><td data-sort="${esc(u.fullName||'')}"><span style="font-weight:bold;">${esc(u.fullName||'-')}</span></td><td data-sort="${esc(u.username)}"><span style="color:var(--primary);">${esc(u.username)}</span></td><td data-sort="${u.role}">${badge}</td><td data-sort="${pinDisplay}"><span style="background:rgba(128,128,128,0.1); padding:2px 5px; border-radius:4px; font-family:monospace; letter-spacing:2px;">${pinDisplay}</span></td><td style="text-align: center;"><div style="display: inline-flex; gap: 5px; justify-content: center;">${editBtn}${deleteBtn}</div></td></tr>`; 
+        let deleteBtn = `<button class="btn-danger" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer;" onclick="window.deleteUserAccount('${u.id}')">${d.btnDelete || '🗑️ លុប'}</button>`; 
+        let editBtn = `<button class="btn-outline" style="border:none; padding:4px 8px; border-radius:4px; cursor:pointer; color:var(--warning);" onclick="window.editUserAccount('${u.id}')">${d.btnEdit || '✏️ កែប្រែ'}</button>`; 
+        if (u.username === 'admin') deleteBtn = `<span style="color:var(--text-muted); font-size:var(--fs-11);">${d.cantDeleteAdmin || 'មិនអាចលុប'}</span>`; 
+        return `<tr><td data-sort="${u.fullName||''}"><span style="font-weight:bold;">${u.fullName||'-'}</span></td><td data-sort="${u.username}"><span style="color:var(--primary);">${u.username}</span></td><td data-sort="${u.role}">${badge}</td><td data-sort="${u.pin||''}"><span style="background:rgba(128,128,128,0.1); padding:2px 5px; border-radius:4px; font-family:monospace; letter-spacing:2px;">${u.pin||'0000'}</span></td><td style="text-align: center;"><div style="display: inline-flex; gap: 5px; justify-content: center;">${editBtn}${deleteBtn}</div></td></tr>`; 
     }).join('');
     if (typeof window.filterTable === 'function') window.filterTable('mainUserTable');
 };
@@ -389,10 +344,7 @@ window.editUserAccount = function(id) {
     const lang = localStorage.getItem('app_lang') || 'km';
     const d = window.sysI18n ? window.sysI18n[lang] || window.sysI18n.km : {};
     const u = (window.userAccounts || []).find(x => x && x.id === id); 
-    if (!u) return;
-    if ((u.role === 'admin' || u.username === 'admin') && window.currentRole !== 'admin') {
-        return notifyAuthUser("❌ មានតែ Admin ទេដែលអាចកែប្រែគណនី Admin បាន!", "គ្មានសិទ្ធិ", true);
-    }
+    if (!u) return; 
     document.getElementById('editUserId').value = u.id; 
     const titleEl = document.getElementById('userModalTitle');
     if (titleEl) titleEl.innerText = d.modalEditUserTitle || '✏️ កែប្រែគណនីបុគ្គលិក'; 
@@ -485,23 +437,17 @@ window.saveNewUser = async function() {
 };
 
 window.deleteUserAccount = async function(id) { 
-    if (!window.activeUser || (window.activeUser.role !== 'admin' && window.activeUser.role !== 'manager')) {
-        return notifyAuthUser("❌ អ្នកមិនមានសិទ្ធិលុបគណនីទេ!", "គ្មានសិទ្ធិ", true);
-    }
     const u = (window.userAccounts || []).find(x => x && x.id === id); 
     if (!u) return; 
-    if (u.username === 'admin' || (u.role === 'admin' && window.activeUser.role !== 'admin')) {
-        return notifyAuthUser("មិនអាចលុបគណនី Admin បានទេ!", "បម្រាម", true); 
+    if (u.username === 'admin') {
+        return notifyAuthUser("មិនអាចលុបគណនី Admin ដើមបានទេ!", "បម្រាម", true); 
     }
     if (window.activeUser && u.id === window.activeUser.id) {
         return notifyAuthUser("មិនអាចលុបគណនីដែលកំពុងប្រើប្រាស់បានទេ!", "បម្រាម", true); 
     }
 
     const executeDeleteUser = async () => {
-        if (typeof window.syncUsersFromCloud === 'function') {
-            await window.syncUsersFromCloud();
-        }
-        window.userAccounts = loadLocalUsers().filter(x => x && x.id !== id); 
+        window.userAccounts = (window.userAccounts || []).filter(x => x && x.id !== id); 
         await syncUsersToCloud();
         window.renderUsersList(); 
         notifyAuthUser("គណនីត្រូវបានលុបដោយជោគជ័យ!", "ជោគជ័យ"); 
@@ -521,10 +467,3 @@ if (document.readyState === 'loading') {
 } else {
     if (typeof window.syncUsersFromCloud === 'function') window.syncUsersFromCloud();
 }
-
-// ឆែកផ្ទៀងសិទ្ធិបុគ្គលិកឡើងវិញរាល់ពេលត្រឡប់មកបើកអេក្រង់កម្មវិធី
-document.addEventListener('visibilitychange', () => {
-    if (!document.hidden && typeof window.syncUsersFromCloud === 'function') {
-        window.syncUsersFromCloud();
-    }
-});

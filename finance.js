@@ -18,57 +18,6 @@ function notifyFinanceUser(msg, title = 'ជូនដំណឹង', isError = fa
     }
 }
 
-// បម្លែងថ្ងៃ YYYY-MM-DD ទៅម៉ោងក្នុងស្រុក (00:00:00 ឬ 23:59:59) ដើម្បីការពារបញ្ហា UTC
-function parseLocalDateBound(dateStr, isEndOfDay = false) {
-    if (!dateStr) return null;
-    const parts = String(dateStr).split('-').map(Number);
-    if (parts.length !== 3 || parts.some(isNaN)) return null;
-    return isEndOfDay
-        ? new Date(parts[0], parts[1] - 1, parts[2], 23, 59, 59, 999).getTime()
-        : new Date(parts[0], parts[1] - 1, parts[2], 0, 0, 0, 0).getTime();
-}
-
-function getScopedTrackerKey(name) {
-    return typeof window.getBranchKey === 'function' ? window.getBranchKey(name) : name;
-}
-
-function injectVoidModalIfNeeded() {
-    if (document.getElementById('voidInvoiceModal')) return;
-    const html = `
-    <div class="modal-overlay" id="voidInvoiceModal" style="z-index: 1010; display:none;" onclick="if(event.target === this) window.closeVoidModal()">
-        <div class="modal" style="max-width: 420px;">
-            <div class="modal-header">
-                <h2 style="font-size: var(--fs-18); color: var(--danger);">🚫 បញ្ជាក់ការលុបវិក្កយបត្រ (Void)</h2>
-                <button class="btn-outline" style="border:none; font-size: var(--fs-20); padding:0;" onclick="window.closeVoidModal()">✕</button>
-            </div>
-            <div class="modal-body" style="text-align: left;">
-                <input type="hidden" id="voidTargetInvId">
-                <p id="voidTargetInvLabel" style="font-size: 13px; margin-bottom: 10px; font-weight: bold;"></p>
-                <label style="display:block; margin-bottom:5px; font-size: 13px;">មូលហេតុនៃការលុប (Void Reason) *</label>
-                <select id="voidReasonPreset" class="form-control" style="width:100%; margin-bottom:8px;" onchange="if(this.value) document.getElementById('voidReasonInput').value = this.value;">
-                    <option value="">-- ជ្រើសរើសមូលហេតុរហ័ស --</option>
-                    <option value="ភ្ញៀវបោះបង់ការកុម្ម៉ង់">ភ្ញៀវបោះបង់ការកុម្ម៉ង់</option>
-                    <option value="បុគ្គលិកចុចច្រឡំមុខទំនិញ">បុគ្គលិកចុចច្រឡំមុខទំនិញ</option>
-                    <option value="វិក្កយបត្រជាន់គ្នា">វិក្កយបត្រជាន់គ្នា</option>
-                    <option value="សាកល្បងប្រព័ន្ធ (Test)">សាកល្បងប្រព័ន្ធ (Test)</option>
-                </select>
-                <textarea id="voidReasonInput" class="form-control" placeholder="សរសេរមូលហេតុលម្អិត..." style="width:100%; height:70px; resize:none;"></textarea>
-                <small style="color:var(--text-muted); display:block; margin-top:6px;">ℹ️ វិក្កយបត្រនឹងត្រូវរក្សាទុកក្នុងប្រវត្តិ (Void Log) ហើយស្តុកនឹងត្រូវបង្វិលចូលវិញ។</small>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-outline" onclick="window.closeVoidModal()">បោះបង់</button>
-                <button class="btn btn-danger" onclick="window.confirmVoidInvoice()">🚫 បញ្ជាក់ Void</button>
-            </div>
-        </div>
-    </div>`;
-    document.body.insertAdjacentHTML('beforeend', html);
-}
-
-window.closeVoidModal = function() {
-    const m = document.getElementById('voidInvoiceModal');
-    if (m) m.style.display = 'none';
-};
-
 // អថេរសម្រាប់កំណត់ការបែងចែកទំព័រ (Pagination) សម្រាប់ Invoices និង Expenses
 window.invListCurrentPage = 1;
 window.invListItemsPerPage = 20; 
@@ -129,7 +78,7 @@ window.syncLocalExpensesToCloud = async function() {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
         const branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('expenses_pro') : `ks2_${branchId}_expenses_pro`;
         let localExps = window.expenses && window.expenses.length > 0 ? window.expenses : (JSON.parse(localStorage.getItem(branchKey)) || []);
-        let deletedExps = JSON.parse(localStorage.getItem(getScopedTrackerKey('deleted_expenses_tracker')) || localStorage.getItem('deleted_expenses_tracker') || '[]');
+        let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
 
         localExps = localExps.filter(e => e && !deletedExps.includes(String(e.id)));
         if (localExps.length === 0) return;
@@ -184,7 +133,7 @@ window.renderUnpaid = function() {
 
     invoices = invoices.filter(inv => inv !== null && typeof inv === 'object');
 
-    const deletedTracker = JSON.parse(localStorage.getItem(getScopedTrackerKey('deleted_invoices_tracker')) || localStorage.getItem('deleted_invoices_tracker') || '[]');
+    const deletedTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
     if (deletedTracker.length > 0) {
         invoices = invoices.filter((inv, idx) => {
             let tempId = String(inv?.id || inv?.invoiceNo || `ORD-${idx}`).trim().toLowerCase();
@@ -200,10 +149,11 @@ window.renderUnpaid = function() {
     });
 
     const searchVal = (document.getElementById('searchUnpaid')?.value || '').toLowerCase().trim();
+    
     const dateFromEl = document.getElementById('invoiceDateFrom');
     const dateToEl = document.getElementById('invoiceDateTo');
-    const dFrom = parseLocalDateBound(dateFromEl ? dateFromEl.value : '', false);
-    const dTo = parseLocalDateBound(dateToEl ? dateToEl.value : '', true);
+    const dateFrom = dateFromEl ? dateFromEl.value : '';
+    const dateTo = dateToEl ? dateToEl.value : '';
 
     let totalPaid = 0;
     let totalUnpaid = 0;
@@ -218,21 +168,27 @@ window.renderUnpaid = function() {
         const seller = inv.seller || inv.cashier || 'N/A';
         
         if (searchVal) {
-            const combinedText = `${invId} ${custName} ${custPhone} ${seller} ${inv.status || ''} ${inv.note || ''} ${inv.voidReason || ''}`.toLowerCase();
+            const combinedText = `${invId} ${custName} ${custPhone} ${seller} ${inv.note || ''}`.toLowerCase();
             if (!combinedText.includes(searchVal)) return false;
         }
 
-        const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
-        if (dFrom !== null && !isNaN(dCurrent) && dCurrent < dFrom) return false;
-        if (dTo !== null && !isNaN(dCurrent) && dCurrent > dTo) return false;
+        if (dateFrom) {
+            const dFrom = new Date(dateFrom).getTime();
+            const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
+            if (!isNaN(dCurrent) && dCurrent < dFrom) return false;
+        }
+
+        if (dateTo) {
+            const dTo = new Date(dateTo).getTime();
+            const dCurrent = inv.timestamp || new Date(dateStr.split(' ')[0]).getTime();
+            if (!isNaN(dCurrent) && dCurrent > dTo) return false;
+        }
 
         return true;
     });
 
     filtered.forEach(inv => {
         const status = String(inv.status || 'unpaid').toLowerCase();
-        if (status === 'voided') return;
-
         const totalAmount = parseFloat(inv.totalAmount || inv.total || 0);
         let paidAmount = parseFloat(inv.paidUsd || inv.paidAmount || 0);
         if (status === 'paid') paidAmount = totalAmount;
@@ -270,38 +226,34 @@ window.renderUnpaid = function() {
         displayItems = filtered.slice(startIndex, endIndex);
     }
 
-    const esc = window.escapeHTML || (s => s);
     tableBody.innerHTML = '';
     displayItems.forEach((inv, index) => {
         const invId = String(inv.id || inv.invoiceNo || `ORD-${index}`);
-        const custName = esc(inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
-        const custPhone = esc(inv.customerPhone || inv.phone || '');
+        const custName = window.escapeHTML ? window.escapeHTML(inv.customerName || inv.customer || 'អតិថិជនទូទៅ') : (inv.customerName || inv.customer || 'អតិថិជនទូទៅ');
+        const custPhone = window.escapeHTML ? window.escapeHTML(inv.customerPhone || inv.phone || '') : (inv.customerPhone || inv.phone || '');
         const dateStr = inv.date || inv.createdAt || 'N/A';
-        const seller = esc(inv.seller || inv.cashier || 'N/A');
+        const seller = window.escapeHTML ? window.escapeHTML(inv.seller || inv.cashier || 'N/A') : (inv.seller || inv.cashier || 'N/A');
         const status = String(inv.status || 'unpaid').toLowerCase();
-        const isVoided = status === 'voided';
         
         const totalAmount = parseFloat(inv.totalAmount || inv.total || 0);
-        let paidAmount = isVoided ? 0 : parseFloat(inv.paidUsd || inv.paidAmount || 0);
+        let paidAmount = parseFloat(inv.paidUsd || inv.paidAmount || 0);
         if (status === 'paid') paidAmount = totalAmount;
-        const remainingAmount = isVoided ? 0 : Math.max(0, totalAmount - paidAmount);
+        const remainingAmount = Math.max(0, totalAmount - paidAmount);
 
         let itemsSummary = '';
         if (Array.isArray(inv.items)) {
             itemsSummary = inv.items.map(it => {
                 if (!it) return '';
-                let name = esc(it.name || it.title || 'ទំនិញ');
+                let name = it.name || it.title || 'ទំនិញ';
                 let qty = it.cartQty !== undefined ? it.cartQty : (it.qty || 1);
                 return `${name} (x${qty})`;
             }).filter(Boolean).join(', ');
         } else {
-            itemsSummary = esc(inv.itemsSummary || 'ទំនិញចម្រុះ');
+            itemsSummary = inv.itemsSummary || 'ទំនិញចម្រុះ';
         }
 
         let statusBadge = '';
-        if (isVoided) {
-            statusBadge = `<span class="badge" style="background:rgba(239,68,68,0.15); color:#ef4444; padding:4px 8px; border-radius:12px; font-weight:bold;">🚫 បានលុប (Void)</span>`;
-        } else if (status === 'paid') {
+        if (status === 'paid') {
             statusBadge = `<span class="badge" style="background:rgba(16,185,129,0.15); color:#10b981; padding:4px 8px; border-radius:12px; font-weight:bold;">${d.stPaid || 'ទូទាត់រួច'}</span>`;
         } else if (status === 'ready') {
             statusBadge = `<span class="badge" style="background:rgba(56,189,248,0.15); color:#0284c7; padding:4px 8px; border-radius:12px; font-weight:bold;">${d.stReady || 'រួចរាល់'}</span>`;
@@ -314,47 +266,43 @@ window.renderUnpaid = function() {
         let actionButtons = `<div style="display: flex; gap: 4px; justify-content: center; align-items: center; flex-wrap: wrap;">`;
         actionButtons += `<button class="btn btn-outline" style="padding: 4px 7px; font-size: 11px;" onclick="window.viewInvoiceDetails('${invId}')" title="មើលលម្អិត">${d.btnViewShort || '👁️ មើល'}</button>`;
         
-        if (!isVoided) {
-            if (window.currentRole === 'admin' || window.currentRole === 'manager' || status !== 'paid') {
-                actionButtons += `<button class="btn btn-warning" style="padding: 4px 7px; font-size: 11px;" onclick="window.openInvoiceEditModal('${invId}')" title="កែប្រែវិក្កយបត្រ ឬការកុម្ម៉ង់">${d.btnEdit || '✏️ កែប្រែ'}</button>`;
-            }
+        if (window.currentRole === 'admin' || window.currentRole === 'manager' || status !== 'paid') {
+            actionButtons += `<button class="btn btn-warning" style="padding: 4px 7px; font-size: 11px;" onclick="window.openInvoiceEditModal('${invId}')" title="កែប្រែវិក្កយបត្រ ឬការកុម្ម៉ង់">${d.btnEdit || '✏️ កែប្រែ'}</button>`;
+        }
 
-            if (status !== 'paid') {
-                actionButtons += `<button class="btn btn-success" style="padding: 4px 7px; font-size: 11px;" onclick="window.openDebtPaymentModal('${invId}')" title="ទូទាត់ប្រាក់">${d.btnPayShort || '💸 ទូទាត់'}</button>`;
-                if (status !== 'ready') {
-                    actionButtons += `<button class="btn btn-primary" style="padding: 4px 7px; font-size: 11px; background:#0284c7; color: #fff; border: none;" onclick="window.notifyCustomerOrderDone('${invId}')" title="ប្រាប់ភ្ញៀវថារួចរាល់">${d.btnReadyShort || '📢 រួចរាល់'}</button>`;
-                }
+        if (status !== 'paid') {
+            actionButtons += `<button class="btn btn-success" style="padding: 4px 7px; font-size: 11px;" onclick="window.openDebtPaymentModal('${invId}')" title="ទូទាត់ប្រាក់">${d.btnPayShort || '💸 ទូទាត់'}</button>`;
+            if (status !== 'ready') {
+                actionButtons += `<button class="btn btn-primary" style="padding: 4px 7px; font-size: 11px; background:#0284c7; color: #fff; border: none;" onclick="window.notifyCustomerOrderDone('${invId}')" title="ប្រាប់ភ្ញៀវថារួចរាល់">${d.btnReadyShort || '📢 រួចរាល់'}</button>`;
             }
+        }
 
-            const isNoteDone = (inv.note || '').includes('[✅ រួចរាល់]');
-            if (isNoteDone) {
-                actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#64748b; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="ដកចំណាំចេញវិញ">${d.btnUndoDone || '❌ ដកចេញ'}</button>`;
-            } else {
-                actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#10b981; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="កត់ចំណាំថាធ្វើរួច">${d.btnMarkDone || '✅ ធ្វើរួច'}</button>`;
-            }
+        const isNoteDone = (inv.note || '').includes('[✅ រួចរាល់]');
+        if (isNoteDone) {
+            actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#64748b; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="ដកចំណាំចេញវិញ">${d.btnUndoDone || '❌ ដកចេញ'}</button>`;
+        } else {
+            actionButtons += `<button class="btn" style="padding: 4px 7px; font-size: 11px; background:#10b981; color: #fff; border: none;" onclick="window.markAsDone('${invId}')" title="កត់ចំណាំថាធ្វើរួច">${d.btnMarkDone || '✅ ធ្វើរួច'}</button>`;
+        }
 
-            if (window.currentRole === 'admin' || window.currentRole === 'manager') {
-                actionButtons += `<button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបវិក្កយបត្រ (Void Log)">🚫 Void</button>`;
-            }
+        if (window.currentRole === 'admin' || window.currentRole === 'manager') {
+            actionButtons += `<button class="btn btn-danger" style="padding: 4px 7px; font-size: 11px; background:#ef4444; color: #fff; border: none;" onclick="window.deleteInvoiceRecord('${invId}')" title="លុបចោល">${d.btnDelete || '🗑️ លុប'}</button>`;
         }
         actionButtons += `</div>`;
 
-        const safeNote = inv.note ? esc(inv.note) : '';
-        const noteColor = isVoided ? '#ef4444' : '#0284c7';
-        const noteTag = safeNote ? `<br><small style="color:${noteColor}; font-weight:bold;">📝 ${safeNote}</small>` : '';
+        const safeNote = inv.note ? (window.escapeHTML ? window.escapeHTML(inv.note) : inv.note) : '';
+        const noteTag = safeNote ? `<br><small style="color:#0284c7; font-weight:bold;">📝 ${safeNote}</small>` : '';
 
         const row = document.createElement('tr');
-        if (isVoided) row.style.opacity = '0.68';
         row.setAttribute('data-paid', paidAmount);
         row.setAttribute('data-unpaid', remainingAmount);
         row.innerHTML = `
-            <td style="font-family: monospace; font-weight: bold; color: ${isVoided ? '#ef4444' : 'var(--primary)'};">${invId}</td>
+            <td style="font-family: monospace; font-weight: bold; color: var(--primary);">${invId}</td>
             <td style="font-size: 12px;">${dateStr}</td>
             <td><b>${custName}</b><br><small style="color:var(--text-muted);">${custPhone}</small>${noteTag}</td>
             <td style="font-size: 12px; max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${itemsSummary}">${itemsSummary}</td>
             <td>
-                <b style="${isVoided ? 'text-decoration:line-through; color:#ef4444;' : ''}">$${totalAmount.toFixed(2)}</b>
-                ${!isVoided && remainingAmount > 0 && status !== 'paid' ? `<br><small style="color:var(--danger);">ខ្វះ៖ $${remainingAmount.toFixed(2)}</small>` : ''}
+                <b>$${totalAmount.toFixed(2)}</b>
+                ${remainingAmount > 0 && status !== 'paid' ? `<br><small style="color:var(--danger);">ខ្វះ៖ $${remainingAmount.toFixed(2)}</small>` : ''}
             </td>
             <td>${statusBadge}</td>
             <td><small>${seller}</small></td>
@@ -559,9 +507,6 @@ window.openInvoiceEditModal = function(invId) {
 
     if (!inv) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
 
-    if (String(inv.status).toLowerCase() === 'voided') {
-        return notifyFinanceUser("❌ មិនអាចកែប្រែវិក្កយបត្រដែលបាន Void រួចទេ!", "បម្រាម", true);
-    }
     if (String(inv.status).toLowerCase() === 'paid' && window.currentRole !== 'admin' && window.currentRole !== 'manager') {
         return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិកែប្រែវិក្កយបត្រដែលបានទូទាត់រួចទេ!", "គ្មានសិទ្ធិ", true);
     }
@@ -722,24 +667,20 @@ window.saveInvoiceChanges = async function() {
     if (invIndex === -1) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រដើម!", "បរាជ័យ", true);
 
     const origInv = invoices[invIndex];
-    const origStatus = String(origInv.status || '').toLowerCase();
-    if (origStatus === 'voided') {
-        return notifyFinanceUser("❌ មិនអាចកែប្រែវិក្កយបត្រដែលបាន Void រួចទេ!", "បម្រាម", true);
-    }
-    const isPreorder = origStatus === 'preorder';
+    const isPreorder = String(origInv.status || '').toLowerCase() === 'preorder';
 
     if (!isPreorder && window.inventory && Array.isArray(window.inventory)) {
         const oldQtyMap = {};
         (origInv.items || []).forEach(it => {
             if (!it || !it.id) return;
-            const q = parseFloat(it.cartQty !== undefined ? it.cartQty : (it.qty || 1)) || 0;
+            const q = parseInt(it.cartQty !== undefined ? it.cartQty : (it.qty || 1)) || 0;
             oldQtyMap[it.id] = (oldQtyMap[it.id] || 0) + q;
         });
 
         const newQtyMap = {};
         (window.currentEditingInvoice.items || []).forEach(it => {
             if (!it || !it.id) return;
-            const q = parseFloat(it.cartQty !== undefined ? it.cartQty : (it.qty || 1)) || 0;
+            const q = parseInt(it.cartQty !== undefined ? it.cartQty : (it.qty || 1)) || 0;
             newQtyMap[it.id] = (newQtyMap[it.id] || 0) + q;
         });
 
@@ -779,21 +720,6 @@ window.saveInvoiceChanges = async function() {
     window.currentEditingInvoice.phone = newPhone;
     window.currentEditingInvoice.customerPhone = newPhone;
 
-    // គណនាប្រាក់បានបង់ ប្រាក់នៅខ្វះ និងស្ថានភាពបំណុលឡើងវិញឱ្យត្រឹមត្រូវ
-    const newTotal = parseFloat(window.currentEditingInvoice.totalAmount || window.currentEditingInvoice.total || 0);
-    const prevPaid = parseFloat(origInv.paidUsd || origInv.paidAmount || (origStatus === 'paid' ? (origInv.totalAmount || origInv.total || 0) : 0));
-    if (prevPaid >= newTotal - 0.01) {
-        window.currentEditingInvoice.paidUsd = newTotal;
-        window.currentEditingInvoice.paidAmount = newTotal;
-        window.currentEditingInvoice.remainingAmount = 0;
-        if (!isPreorder) window.currentEditingInvoice.status = 'paid';
-    } else {
-        window.currentEditingInvoice.paidUsd = prevPaid;
-        window.currentEditingInvoice.paidAmount = prevPaid;
-        window.currentEditingInvoice.remainingAmount = Math.max(0, newTotal - prevPaid);
-        if (origStatus === 'paid') window.currentEditingInvoice.status = 'unpaid';
-    }
-
     invoices[invIndex] = window.currentEditingInvoice;
     window.invoices = invoices;
 
@@ -803,116 +729,106 @@ window.saveInvoiceChanges = async function() {
     if (typeof window.setAutoRegisterCustomer === 'function') window.setAutoRegisterCustomer(newName, newPhone);
     setTimeout(() => { if (typeof window.touchCloudSync === 'function') window.touchCloudSync(); else if (typeof window.saveData === 'function') window.saveData(window.userAccounts); }, 100);
 
-    notifyFinanceUser("✅ វិក្កយបត្រ ប្រាក់នៅខ្វះ និងចំនួនស្តុកត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!", "ជោគជ័យ");
+    notifyFinanceUser("✅ វិក្កយបត្រ និងចំនួនស្តុកត្រូវបានធ្វើបច្ចុប្បន្នភាពជោគជ័យ!", "ជោគជ័យ");
     
     window.closeInvoiceEditModal();
     window.renderUnpaid();
     if (typeof window.renderInventory === 'function') window.renderInventory();
     if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
-    if (typeof window.renderCustomers === 'function') window.renderCustomers();
     if (typeof window.renderDashboard === 'function') window.renderDashboard();
 };
 
-// បើកផ្ទាំងសួរមូលហេតុ Void (រក្សាទុកប្រវត្តិ Void Log មិនលុបបាត់ដាន)
 window.deleteInvoiceRecord = function(invId) {
     if (window.currentRole !== 'admin' && window.currentRole !== 'manager') {
-        return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិ Void វិក្កយបត្រនេះទេ!", "គ្មានសិទ្ធិ", true);
-    }
-    injectVoidModalIfNeeded();
-    document.getElementById('voidTargetInvId').value = invId;
-    document.getElementById('voidTargetInvLabel').innerText = `លេខវិក្កយបត្រ៖ ${invId}`;
-    document.getElementById('voidReasonPreset').value = '';
-    document.getElementById('voidReasonInput').value = '';
-    document.getElementById('voidInvoiceModal').style.display = 'flex';
-};
-
-window.confirmVoidInvoice = async function() {
-    if (window.currentRole !== 'admin' && window.currentRole !== 'manager') {
-        return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិ Void វិក្កយបត្រនេះទេ!", "គ្មានសិទ្ធិ", true);
-    }
-    const invId = document.getElementById('voidTargetInvId')?.value;
-    const reason = (document.getElementById('voidReasonInput')?.value || '').trim();
-    if (!reason) {
-        return notifyFinanceUser("⚠️ សូមបញ្ចូលមូលហេតុនៃការ Void ជាមុនសិន!", "ជូនដំណឹង", true);
+        return notifyFinanceUser("❌ អ្នកមិនមានសិទ្ធិលុបទិន្នន័យនេះទេ!", "គ្មានសិទ្ធិ", true);
     }
 
-    try {
-        const targetId = String(invId).trim().toLowerCase();
-        let branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('invoices_pro') : 'invoices_pro';
-        let invoices = JSON.parse(localStorage.getItem(branchKey)) || window.invoices || [];
-        const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
-        if (invIndex === -1) return notifyFinanceUser("❌ រកមិនឃើញវិក្កយបត្រនេះទេ!", "បរាជ័យ", true);
+    const executeDeleteInvoice = async () => {
+        try {
+            const targetId = String(invId).trim().toLowerCase();
+            let branchKey = typeof window.getBranchKey === 'function' ? window.getBranchKey('invoices_pro') : 'invoices_pro';
+            let invoices = JSON.parse(localStorage.getItem(branchKey)) || window.invoices || [];
+            
+            const invIndex = invoices.findIndex((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() === targetId);
 
-        const inv = invoices[invIndex];
-        const prevStatus = String(inv?.status || '').toLowerCase();
-        if (prevStatus === 'voided') {
-            window.closeVoidModal();
-            return notifyFinanceUser("ℹ️ វិក្កយបត្រនេះត្រូវបាន Void រួចហើយ!", "ជូនដំណឹង");
-        }
+            if (invIndex !== -1) {
+                const inv = invoices[invIndex];
+                const isPreorder = String(inv?.status || '').toLowerCase() === 'preorder';
 
-        const actor = window.activeUser ? (window.activeUser.fullName || window.activeUser.username) : 'Admin';
-        const voidTime = new Date().toLocaleString('km-KH');
+                if (!isPreorder && inv && Array.isArray(inv.items) && window.inventory) {
+                    inv.items.forEach(item => {
+                        if (item && item.id) {
+                            const realItem = window.inventory.find(p => p && String(p.id) === String(item.id));
+                            const returnQty = parseInt(item.cartQty !== undefined ? item.cartQty : item.qty) || 1;
+                            if (realItem) {
+                                realItem.qty = (parseFloat(realItem.qty) || 0) + returnQty;
+                                if (typeof window.logAction === 'function') {
+                                    window.logAction('update', realItem.name, returnQty, `បង្វិលស្តុកពីការលុបវិក្កយបត្រ ${invId}`, window.activeUser);
+                                }
+                            }
+                        }
+                    });
+                    if (typeof window.getBranchKey === 'function') {
+                        localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+                    }
+                }
+            }
 
-        const restoredItemIds = [];
-        if (prevStatus !== 'preorder' && Array.isArray(inv.items) && window.inventory) {
-            inv.items.forEach(item => {
-                if (item && item.id) {
-                    const realItem = window.inventory.find(p => p && String(p.id) === String(item.id));
-                    const returnQty = parseFloat(item.cartQty !== undefined ? item.cartQty : item.qty) || 1;
-                    if (realItem) {
-                        realItem.qty = (parseFloat(realItem.qty) || 0) + returnQty;
-                        restoredItemIds.push(realItem.id);
-                        if (typeof window.logAction === 'function') {
-                            window.logAction('update', realItem.name, returnQty, `បង្វិលស្តុកពីការ Void វិក្កយបត្រ ${invId}`, window.activeUser);
+            let deletedInvTracker = JSON.parse(localStorage.getItem('deleted_invoices_tracker')) || [];
+            if (!deletedInvTracker.includes(targetId)) {
+                deletedInvTracker.push(targetId);
+                localStorage.setItem('deleted_invoices_tracker', JSON.stringify(deletedInvTracker));
+            }
+
+            const deletedInvObj = invIndex !== -1 ? invoices[invIndex] : null;
+            invoices = invoices.filter((i, idx) => String(i?.id || i?.invoiceNo || `ORD-${idx}`).trim().toLowerCase() !== targetId);
+            window.invoices = invoices;
+            localStorage.setItem(branchKey, JSON.stringify(invoices));
+            
+            if (window.supabaseClient && navigator.onLine) {
+                const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+                const { error: delOrdErr } = await window.supabaseClient.from('pos_orders').delete().eq('id', invId).eq('branch_id', bId);
+                if (delOrdErr) console.error("Supabase Invoice Delete Error:", delOrdErr);
+
+                // បាញ់ស្តុកដែលបានបង្វិលត្រឡប់ទៅ pos_products លើ Cloud ផងដែរ
+                const wasPreorder = String(deletedInvObj?.status || '').toLowerCase() === 'preorder';
+                if (!wasPreorder && deletedInvObj && Array.isArray(deletedInvObj.items) && window.inventory) {
+                    for (const item of deletedInvObj.items) {
+                        if (item && item.id) {
+                            const realItem = window.inventory.find(p => p && String(p.id) === String(item.id));
+                            if (realItem) {
+                                await window.supabaseClient.from('pos_products')
+                                    .update({ qty: parseFloat(realItem.qty) || 0, updated_at: new Date().toISOString() })
+                                    .eq('id', String(realItem.id))
+                                    .eq('branch_id', bId);
+                            }
                         }
                     }
                 }
-            });
-            if (typeof window.getBranchKey === 'function') {
-                localStorage.setItem(window.getBranchKey('inv_pro'), JSON.stringify(window.inventory));
+
+                if (typeof window.touchCloudSync === 'function') {
+                    await window.touchCloudSync();
+                } else if (typeof window.saveData === 'function') {
+                    await window.saveData(window.userAccounts);
+                }
             }
+
+            window.renderUnpaid();
+            if (typeof window.renderInventory === 'function') window.renderInventory();
+            if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
+            if (typeof window.renderDashboard === 'function') window.renderDashboard();
+
+            notifyFinanceUser("✅ បានលុបវិក្កយបត្រដោយជោគជ័យ និងបាត់ពី Cloud ទាំងស្រុង!", "ជោគជ័យ");
+        } catch (error) {
+            console.error("Error deleting invoice:", error);
+            notifyFinanceUser("❌ មានបញ្ហាក្នុងការលុប៖ " + error.message, "បរាជ័យ", true);
         }
+    };
 
-        inv.status = 'voided';
-        inv.voidedBy = actor;
-        inv.voidedAt = voidTime;
-        inv.voidReason = reason;
-        const voidTag = `[🚫 VOID ដោយ ${actor} (${voidTime}): ${reason}]`;
-        inv.note = inv.note ? `${inv.note} | ${voidTag}` : voidTag;
-
-        invoices[invIndex] = inv;
-        window.invoices = invoices;
-        localStorage.setItem(branchKey, JSON.stringify(invoices));
-
-        if (typeof window.logAction === 'function') {
-            window.logAction('void', inv.customerName || inv.customer || invId, parseFloat(inv.totalAmount || inv.total || 0),
-                `Void វិក្កយបត្រ ${invId} - មូលហេតុ៖ ${reason}`, window.activeUser);
-        }
-
-        await syncInvoiceToCloud(inv);
-        if (restoredItemIds.length > 0) {
-            await syncProductsQtyToCloud(restoredItemIds);
-        }
-
-        if (window.supabaseClient && navigator.onLine) {
-            if (typeof window.touchCloudSync === 'function') {
-                await window.touchCloudSync();
-            } else if (typeof window.saveData === 'function') {
-                await window.saveData(window.userAccounts);
-            }
-        }
-
-        window.closeVoidModal();
-        window.renderUnpaid();
-        if (typeof window.renderInventory === 'function') window.renderInventory();
-        if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
-        if (typeof window.renderCustomers === 'function') window.renderCustomers();
-        if (typeof window.renderDashboard === 'function') window.renderDashboard();
-
-        notifyFinanceUser(`✅ បាន Void វិក្កយបត្រ ${invId} និងកត់ទុកក្នុងប្រវត្តិ (Void Log) រួចរាល់!`, "ជោគជ័យ");
-    } catch (error) {
-        console.error("Error voiding invoice:", error);
-        notifyFinanceUser("❌ មានបញ្ហាក្នុងការ Void៖ " + error.message, "បរាជ័យ", true);
+    if (typeof window.ksMsg === 'function') {
+        window.ksMsg(`⚠️ តើអ្នកពិតជាចង់លុបវិក្កយបត្រ [${invId}] មែនទេ?`, 'បញ្ជាក់ការលុប', true, executeDeleteInvoice);
+    } else {
+        executeDeleteInvoice();
     }
 };
 
@@ -1100,8 +1016,8 @@ window.reprintInvoice = function() {
         receiptHTML += `<div style="text-align:center; margin-top: 10px; border-top: 1px dashed #000; padding-top: 10px;"><p style="font-size:12px; margin-bottom:5px; font-weight:bold;">${repBakongId && navigator.onLine && repTotalUsd > 0 ? 'ស្កេន Bakong KHQR (លោតលុយអូតូ)' : 'ស្កេនទូទាត់ប្រាក់ (Scan to Pay)'}</p><img class="receipt-qr" src="${repQrSrc}" style="width: ${rCfg.qrPx}px; height: ${rCfg.qrPx}px; object-fit: contain;"></div>`;
     }
 
-    let rawFooterText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter) : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
-    let footerText = (window.escapeHTML ? window.escapeHTML(rawFooterText) : rawFooterText).replace(/\n/g, '<br>');
+    let footerText = (window.sysSettings && window.sysSettings.receiptFooter) ? String(window.sysSettings.receiptFooter).replace(/\n/g, '<br>') : 'សូមអរគុណ! សូមអញ្ជើញមកម្តងទៀត។';
+    if (window.escapeHTML) footerText = window.escapeHTML(footerText).replace(/\n/g, '<br>');
     receiptHTML += `<p style="text-align:center; font-size:10px; margin-top: 10px;">(Rate: 1$ = ${rate}៛)</p><p style="text-align:center; font-size:12px; margin-top: 5px; font-weight:bold;">${footerText}</p>`;
 
     if (typeof window.executePrint === 'function') {
@@ -1185,11 +1101,11 @@ window.exportInvoicesCSV = function() {
         }
         let safeItems = `"${itemsStr.replace(/"/g, '""')}"`;
 
-        const st = inv.status || 'unpaid';
-        const isVoided = String(st).toLowerCase() === 'voided';
         const tot = parseFloat(inv.totalAmount || inv.total || 0).toFixed(2);
-        const paidAmt = isVoided ? 0 : parseFloat(inv.paidUsd || inv.paidAmount || 0);
-        const remainAmt = isVoided ? 0 : Math.max(0, tot - paidAmt);
+        const paidAmt = parseFloat(inv.paidUsd || inv.paidAmount || 0);
+        const remainAmt = Math.max(0, tot - paidAmt);
+        
+        const st = inv.status || 'unpaid';
         const s = `"${(inv.seller || inv.cashier || '').replace(/"/g, '""')}"`;
         
         let row = [
@@ -1427,12 +1343,9 @@ window.renderExpenses = function() {
         } catch(e) {}
     }
 
-    let deletedExps = JSON.parse(localStorage.getItem(getScopedTrackerKey('deleted_expenses_tracker')) || localStorage.getItem('deleted_expenses_tracker') || '[]');
+    let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
     let validExpenses = (window.expenses || []).filter(e => e && !deletedExps.includes(String(e.id)));
     window.expenses = validExpenses;
-
-    const expFrom = parseLocalDateBound(dateFrom, false);
-    const expTo = parseLocalDateBound(dateTo, true);
 
     let filtered = validExpenses.filter(e => {
         let textMatch = (e.category && e.category.toLowerCase().includes(searchVal)) || 
@@ -1443,8 +1356,14 @@ window.renderExpenses = function() {
 
         let eTime = e.timestamp || new Date(e.date || 0).getTime();
         
-        if (expFrom !== null && eTime < expFrom) return false;
-        if (expTo !== null && eTime > expTo) return false;
+        if (dateFrom) {
+            const dFrom = new Date(dateFrom).getTime();
+            if (eTime < dFrom) return false;
+        }
+        if (dateTo) {
+            const dTo = new Date(dateTo).getTime();
+            if (eTime > dTo) return false;
+        }
         return true;
     });
 
@@ -1477,11 +1396,8 @@ window.renderExpenses = function() {
         displayItems = filtered.slice(startIndex, endIndex);
     }
 
-    const escExp = window.escapeHTML || (s => s);
     tbody.innerHTML = displayItems.map(e => {
         let amt = parseFloat(e.amount || 0);
-        const safeCat = escExp(e.category || '');
-        const safeNote = escExp(e.note || '-');
         
         let actionButtonsHtml = '';
         if (window.currentRole === 'admin' || window.currentRole === 'manager') {
@@ -1495,10 +1411,10 @@ window.renderExpenses = function() {
         
         return `
         <tr>
-            <td style="font-size: 13px; color: var(--text-muted);" data-sort="${e.timestamp || 0}">${escExp(e.date || '')}</td>
-            <td data-sort="${safeCat}"><span class="badge" style="background:rgba(239,68,68,0.1); color:var(--danger); border: 1px solid rgba(239,68,68,0.3); padding:4px 8px; border-radius:6px;">${safeCat}</span></td>
+            <td style="font-size: 13px; color: var(--text-muted);" data-sort="${e.timestamp || 0}">${e.date}</td>
+            <td data-sort="${e.category}"><span class="badge" style="background:rgba(239,68,68,0.1); color:var(--danger); border: 1px solid rgba(239,68,68,0.3); padding:4px 8px; border-radius:6px;">${e.category}</span></td>
             <td data-sort="${amt}" style="color:var(--danger); font-weight:900; font-size:15px;">$${amt.toFixed(2)}</td>
-            <td data-sort="${safeNote}" style="font-size: 13px;">${safeNote}</td>
+            <td data-sort="${e.note || ''}" style="font-size: 13px;">${e.note || '-'}</td>
             <td style="text-align: center;">
                 <div style="display: flex; gap: 5px; justify-content: center;">
                     ${actionButtonsHtml}
@@ -1532,11 +1448,10 @@ window.deleteExpense = function(id) {
     }
 
     const executeDeleteExp = async () => {
-        const expTrackerKey = getScopedTrackerKey('deleted_expenses_tracker');
-        let deletedExps = JSON.parse(localStorage.getItem(expTrackerKey) || '[]');
+        let deletedExps = JSON.parse(localStorage.getItem('deleted_expenses_tracker')) || [];
         if (!deletedExps.includes(String(id))) {
             deletedExps.push(String(id));
-            localStorage.setItem(expTrackerKey, JSON.stringify(deletedExps));
+            localStorage.setItem('deleted_expenses_tracker', JSON.stringify(deletedExps));
         }
 
         window.expenses = (window.expenses || []).filter(e => String(e.id) !== String(id));

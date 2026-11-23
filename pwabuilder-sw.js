@@ -1,6 +1,6 @@
 // pwabuilder-sw.js
-// ⚡ ធ្វើបច្ចុប្បន្នភាពទៅ v30 ដើម្បីបង្ខំឱ្យ Browser សម្អាត Cache ចាស់ៗចោល
-const CACHE_NAME = "skm-integrate-pos-offline-v30";
+// ⚡ ធ្វើបច្ចុប្បន្នភាពទៅ v31 ដើម្បីបង្ខំឱ្យ Browser សម្អាត Cache ចាស់ៗចោល
+const CACHE_NAME = "skm-integrate-pos-offline-v31";
 
 // បញ្ជីឯកសារទាំងអស់ក្នុងប្រព័ន្ធដែលត្រូវរក្សាទុកសម្រាប់ប្រើប្រាស់ពេលគ្មានអ៊ីនធឺណិត (Offline Mode)
 const FILES_TO_CACHE = [
@@ -26,7 +26,12 @@ const FILES_TO_CACHE = [
   "./logo1.png",
   "./all_pos_plugins.js",
   "./all_menu_plugins.js",
-  "./all_luxury_themes.js"
+  "./all_luxury_themes.js",
+  "./display.html",
+  "./kds.html",
+  "./master_branches.html",
+  "./pro_erp_addons.js",
+  "./menu_pro_addons.js"
 ];
 
 // ១. ដំណាក់កាល Install: ដោនឡូដ និងផ្ទុកឯកសារទាំងអស់ចូល Cache

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Branch Master Dashboard - SKM ERP</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700;800&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kantumruy Pro', 'Nunito', sans-serif; }
+        body { background: #0f172a; color: #f8fafc; min-height: 100vh; padding: 20px; }
+        #lockedScreen {
+            position: fixed; inset: 0; background: #0f172a; z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px;
+        }
+        .wrap { max-width: 1220px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+        .card { background: #1e293b; border: 1px solid #334155; border-radius: 18px; padding: 22px; box-shadow: 0 12px 32px rgba(0,0,0,0.3); }
+        .top-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+        .inp {
+            background: #0f172a; border: 1px solid #334155; color: #f8fafc; padding: 10px 14px;
+            border-radius: 10px; font-size: 13.5px; outline: none;
+        }
+        .inp:focus { border-color: #38bdf8; }
+        .btn {
+            padding: 10px 16px; border-radius: 10px; border: none; font-weight: 800; font-size: 13.5px;
+            cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+        }
+        .btn-blue { background: #0284c7; color: #fff; }
+        .btn-green { background: #059669; color: #fff; }
+        .btn-outline { background: transparent; border: 1px solid #475569; color: #cbd5e1; }
+        .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 14px; }
+        .kpi { background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 16px; border-left: 4px solid #38bdf8; }
+        .kpi span { font-size: 12.5px; color: #94a3b8; font-weight: 700; }
+        .kpi h3 { font-size: 26px; font-weight: 900; margin-top: 6px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+        th, td { padding: 12px 10px; border-bottom: 1px solid #334155; text-align: left; }
+        th { color: #38bdf8; background: rgba(15,23,42,0.7); }
+        .transfer-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; align-items: end; }
+        label { display: block; font-size: 12px; color: #94a3b8; margin-bottom: 6px; font-weight: 700; }
+        #toast {
+            position: fixed; top: 20px; left: 50%; transform: translate(-50%, -100px);
+            background: #10b981; color: #fff; padding: 12px 24px; border-radius: 999px; font-weight: 800;
+            z-index: 99999; transition: transform 0.3s ease;
+        }
+        #toast.show { transform: translate(-50%, 0); }
+    </style>
+</head>
+<body>
+    <div id="lockedScreen">
+        <div style="font-size:64px; margin-bottom:14px;">🔒</div>
+        <h1 style="font-size:26px; color:#f87171; margin-bottom:10px;">មុខងារសរុបឆ្លងសាខា ត្រូវបានបិទ</h1>
+        <p style="color:#94a3b8; max-width:460px; line-height:1.6;">សូមចូលទៅកាន់ <b>Admin Settings ➔ Tab 9 (មុខងារ Pro)</b> ដើម្បីបើកដំណើរការ <b>របាយការណ៍សរុបឆ្លងសាខា & ផ្ទេរស្តុក</b>។</p>
+    </div>
+
+    <div id="toast"></div>
+
+    <div class="wrap">
+        <div class="card">
+            <div class="top-row">
+                <div>
+                    <h1 style="font-size:22px; color:#38bdf8;"><i class="fa-solid fa-building"></i> ផ្ទាំងសរុបគ្រប់សាខា & ផ្ទេរស្តុក (Master Multi-Branch ERP)</h1>
+                    <p style="font-size:13px; color:#94a3b8; margin-top:4px;">ប្រៀបធៀបចំណូល ចំណាយ ចំណេញ និងផ្ទេរស្តុកទំនិញរវាងសាខានីមួយៗក្នុងពេលតែមួយ</p>
+                </div>
+                <div style="display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
+                    <select id="dateRangeSel" class="inp" onchange="loadAllBranches()">
+                        <option value="today">📅 ថ្ងៃនេះ (Today)</option>
+                        <option value="7d">📅 ៧ ថ្ងៃចុងក្រោយ</option>
+                        <option value="30d" selected>📅 ៣០ ថ្ងៃចុងក្រោយ</option>
+                        <option value="all">📅 ទាំងអស់ (All Time)</option>
+                    </select>
+                    <button class="btn btn-blue" onclick="loadAllBranches()"><i class="fa-solid fa-rotate"></i> ទាញទិន្នន័យ</button>
+                    <button class="btn btn-outline" onclick="window.location.href='index.html?branch=' + encodeURIComponent(BRANCH)"><i class="fa-solid fa-arrow-left"></i> ត្រឡប់ POS</button>
+                </div>
+            </div>
+
+            <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:16px; align-items:center;">
+                <span style="font-size:13px; font-weight:800; color:#cbd5e1;">បញ្ជីលេខកូដសាខា (ខណ្ឌដោយក្បៀស ","):</span>
+                <input type="text" id="branchesInput" class="inp" style="flex:1; min-width:240px;" placeholder="ឧ. branch_1, branch_2, branch_3">
+                <button class="btn btn-green" onclick="saveAndReloadBranches()"><i class="fa-solid fa-floppy-disk"></i> រក្សាទុក & ពិនិត្យ</button>
+            </div>
+        </div>
+
+        <!-- Grand Total KPIs -->
+        <div class="kpi-grid">
+            <div class="kpi" style="border-left-color:#10b981;"><span>ចំណូលសរុបគ្រប់សាខា (Revenue)</span><h3 id="kpiRev" style="color:#34d399;">$0.00</h3></div>
+            <div class="kpi" style="border-left-color:#ef4444;"><span>ចំណាយសរុបគ្រប់សាខា (Expenses)</span><h3 id="kpiExp" style="color:#f87171;">$0.00</h3></div>
+            <div class="kpi" style="border-left-color:#a78bfa;"><span>ចំណេញសុទ្ធប៉ាន់ស្មាន (Net Profit)</span><h3 id="kpiProfit" style="color:#c4b5fd;">$0.00</h3></div>
+            <div class="kpi" style="border-left-color:#f59e0b;"><span>ប្រាក់រង់ចាំទូទាត់ (Pending)</span><h3 id="kpiPend" style="color:#fbbf24;">$0.00</h3></div>
+            <div class="kpi" style="border-left-color:#38bdf8;"><span>ចំនួនវិក្កយបត្រសរុប (Orders)</span><h3 id="kpiOrds" style="color:#38bdf8;">0</h3></div>
+        </div>
+
+        <!-- Branch Comparison Table -->
+        <div class="card">
+            <h2 style="font-size:17px; color:#38bdf8; margin-bottom:14px;"><i class="fa-solid fa-chart-column"></i> ប្រៀបធៀបលទ្ធផលលក់តាមសាខា</h2>
+            <div style="overflow-x:auto;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>សាខា (Branch)</th>
+                            <th>វិក្កយបត្រ</th>
+                            <th>ចំណូល (Revenue)</th>
+                            <th>ចំណាយ (Expenses)</th>
+                            <th>ចំណេញ (Net)</th>
+                            <th>ជំពាក់ (Pending)</th>
+                            <th>មុខទំនិញក្នុងស្តុក</th>
+                            <th>បើក POS</th>
+                        </tr>
+                    </thead>
+                    <tbody id="branchTableBody"><tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:24px;">កំពុងទាញទិន្នន័យ...</td></tr></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Cross-Branch Stock Transfer -->
+        <div class="card" style="border-left: 4px solid #10b981;">
+            <h2 style="font-size:17px; color:#34d399; margin-bottom:6px;"><i class="fa-solid fa-right-left"></i> ផ្ទេរស្តុកទំនិញឆ្លងសាខា (Cross-Branch Stock Transfer)</h2>
+            <p style="font-size:12.5px; color:#94a3b8; margin-bottom:16px;">កាត់ស្តុកពីសាខាប្រភព ហើយបូកបញ្ចូលទៅសាខាគោលដៅដោយស្វ័យប្រវត្តិលើ Supabase Cloud។</p>
+            <div class="transfer-grid">
+                <div>
+                    <label>ពីសាខា (Source Branch):</label>
+                    <select id="trFromBranch" class="inp" style="width:100%;" onchange="populateTransferProducts()"></select>
+                </div>
+                <div>
+                    <label>ជ្រើសរើសទំនិញ (Product):</label>
+                    <select id="trProduct" class="inp" style="width:100%;"></select>
+                </div>
+                <div>
+                    <label>ចំនួនផ្ទេរ (Qty):</label>
+                    <input type="number" id="trQty" class="inp" style="width:100%;" min="1" value="1">
+                </div>
+                <div>
+                    <label>ទៅកាន់សាខា (Destination Branch):</label>
+                    <select id="trToBranch" class="inp" style="width:100%;"></select>
+                </div>
+                <div>
+                    <button class="btn btn-green" style="width:100%; justify-content:center;" id="btnDoTransfer" onclick="executeStockTransfer()"><i class="fa-solid fa-paper-plane"></i> បញ្ជាក់ផ្ទេរស្តុក</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const SUPABASE_URL = 'https://qlzyyfqjwudbapgwsugu.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ';
+        const sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+        let sysSettings = {};
+        let branchProductsMap = {};
+
+        function toast(msg, err = false) {
+            const t = document.getElementById('toast');
+            t.innerText = msg; t.style.background = err ? '#ef4444' : '#10b981';
+            t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2800);
+        }
+
+        function getBranchList() {
+            const raw = document.getElementById('branchesInput').value || sysSettings.masterBranchesList || BRANCH;
+            const list = raw.split(',').map(s => s.trim()).filter(Boolean);
+            return list.length ? [...new Set(list)] : [BRANCH];
+        }
+
+        async function saveAndReloadBranches() {
+            const val = document.getElementById('branchesInput').value.trim();
+            sysSettings.masterBranchesList = val || BRANCH;
+            localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sysSettings));
+            if (sb && navigator.onLine) {
+                try {
+                    await sb.from('branch_store').update({ sys_settings: sysSettings, updated_at: new Date().toISOString() }).eq('branch_id', BRANCH);
+                } catch(e) {}
+            }
+            toast('✅ បានរក្សាទុកបញ្ជីសាខា!');
+            loadAllBranches();
+        }
+
+        function getCutoffMs() {
+            const mode = document.getElementById('dateRangeSel').value;
+            const now = new Date();
+            if (mode === 'today') return new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+            if (mode === '7d') return Date.now() - 7 * 86400000;
+            if (mode === '30d') return Date.now() - 30 * 86400000;
+            return 0;
+        }
+
+        async function loadAllBranches() {
+            if (!sb || !navigator.onLine) return toast('⚠️ ត្រូវការអ៊ីនធឺណិតដើម្បីទាញទិន្នន័យគ្រប់សាខា!', true);
+            const list = getBranchList();
+            const cutoff = getCutoffMs();
+            const tbody = document.getElementById('branchTableBody');
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center; color:#94a3b8; padding:24px;">⏳ កំពុងប្រមូលទិន្នន័យពីគ្រប់សាខា...</td></tr>';
+
+            let grandRev = 0, grandExp = 0, grandPend = 0, grandOrds = 0;
+            const rows = [];
+            branchProductsMap = {};
+
+            for (const bId of list) {
+                const [storeRes, ordRes, expRes, prodRes] = await Promise.all([
+                    sb.from('branch_store').select('shop_info').eq('branch_id', bId).maybeSingle(),
+                    sb.from('pos_orders').select('total_amount, paid_amount, status, timestamp').eq('branch_id', bId).gte('timestamp', cutoff),
+                    sb.from('pos_expenses').select('amount, timestamp').eq('branch_id', bId).gte('timestamp', cutoff),
+                    sb.from('pos_products').select('*').eq('branch_id', bId)
+                ]);
+
+                const shopName = storeRes.data?.shop_info?.shopName || bId;
+                const ords = ordRes.data || [];
+                const exps = expRes.data || [];
+                const prods = prodRes.data || [];
+                branchProductsMap[bId] = prods;
+
+                let rev = 0, pend = 0, exp = 0;
+                ords.forEach(o => {
+                    const tot = parseFloat(o.total_amount || 0);
+                    const paid = parseFloat(o.paid_amount || 0);
+                    if (String(o.status).toLowerCase() === 'paid') { rev += tot; }
+                    else { rev += paid; pend += Math.max(0, tot - paid); }
+                });
+                exps.forEach(e => { exp += parseFloat(e.amount || 0); });
+                const net = rev - exp;
+
+                grandRev += rev; grandExp += exp; grandPend += pend; grandOrds += ords.length;
+                rows.push({ bId, shopName, ordCount: ords.length, rev, exp, net, pend, prodCount: prods.length });
+            }
+
+            rows.sort((a, b) => b.rev - a.rev);
+            document.getElementById('kpiRev').innerText = `$${grandRev.toFixed(2)}`;
+            document.getElementById('kpiExp').innerText = `$${grandExp.toFixed(2)}`;
+            document.getElementById('kpiProfit').innerText = `$${(grandRev - grandExp).toFixed(2)}`;
+            document.getElementById('kpiPend').innerText = `$${grandPend.toFixed(2)}`;
+            document.getElementById('kpiOrds').innerText = grandOrds;
+
+            tbody.innerHTML = rows.map((r, i) => `
+                <tr>
+                    <td><b>${i === 0 ? '🏆 ' : ''}${r.shopName}</b><br><small style="color:#64748b;">${r.bId}</small></td>
+                    <td><b>${r.ordCount}</b></td>
+                    <td style="color:#34d399; font-weight:800;">$${r.rev.toFixed(2)}</td>
+                    <td style="color:#f87171;">$${r.exp.toFixed(2)}</td>
+                    <td style="color:${r.net >= 0 ? '#c4b5fd' : '#f87171'}; font-weight:900;">$${r.net.toFixed(2)}</td>
+                    <td style="color:#fbbf24;">$${r.pend.toFixed(2)}</td>
+                    <td>${r.prodCount} មុខ</td>
+                    <td><a class="btn btn-outline" style="padding:5px 10px; font-size:12px; text-decoration:none;" href="index.html?branch=${encodeURIComponent(r.bId)}" target="_blank">បើក POS ↗</a></td>
+                </tr>`).join('');
+
+            const opts = list.map(b => `<option value="${b}">${b}</option>`).join('');
+            document.getElementById('trFromBranch').innerHTML = opts;
+            document.getElementById('trToBranch').innerHTML = opts;
+            if (list.length > 1) document.getElementById('trToBranch').value = list[1];
+            populateTransferProducts();
+        }
+
+        function populateTransferProducts() {
+            const fromB = document.getElementById('trFromBranch').value;
+            const prods = branchProductsMap[fromB] || [];
+            const sel = document.getElementById('trProduct');
+            if (prods.length === 0) {
+                sel.innerHTML = '<option value="">-- គ្មានទំនិញក្នុងសាខានេះ --</option>';
+                return;
+            }
+            sel.innerHTML = prods.map(p => `<option value="${p.id}">${p.name} (សល់: ${p.qty})</option>`).join('');
+        }
+
+        async function executeStockTransfer() {
+            const fromB = document.getElementById('trFromBranch').value;
+            const toB = document.getElementById('trToBranch').value;
+            const prodId = document.getElementById('trProduct').value;
+            const qty = parseInt(document.getElementById('trQty').value) || 0;
+
+            if (!fromB || !toB || fromB === toB) return toast('⚠️ សូមជ្រើសរើសសាខាប្រភព និងសាខាគោលដៅឱ្យខុសគ្នា!', true);
+            if (!prodId || qty <= 0) return toast('⚠️ សូមជ្រើសរើសទំនិញ និងចំនួនផ្ទេរ!', true);
+
+            const srcProd = (branchProductsMap[fromB] || []).find(p => String(p.id) === String(prodId));
+            if (!srcProd) return toast('❌ រកមិនឃើញទំនិញ!', true);
+            if (parseInt(srcProd.qty || 0) < qty) return toast(`⚠️ ស្តុកសាខា ${fromB} សល់តែ ${srcProd.qty} ប៉ុណ្ណោះ!`, true);
+
+            const btn = document.getElementById('btnDoTransfer');
+            btn.disabled = true; btn.innerText = '⏳ កំពុងផ្ទេរ...';
+
+            try {
+                const nowIso = new Date().toISOString();
+                const newSrcQty = Math.max(0, parseInt(srcProd.qty) - qty);
+                await sb.from('pos_products').update({ qty: newSrcQty, updated_at: nowIso }).eq('id', srcProd.id).eq('branch_id', fromB);
+
+                // Match by custom_id or name in destination branch
+                const destProds = branchProductsMap[toB] || [];
+                const matchDest = destProds.find(p => (srcProd.custom_id && p.custom_id === srcProd.custom_id) || p.name === srcProd.name);
+                if (matchDest) {
+                    const newDestQty = (parseInt(matchDest.qty) || 0) + qty;
+                    await sb.from('pos_products').update({ qty: newDestQty, updated_at: nowIso }).eq('id', matchDest.id).eq('branch_id', toB);
+                } else {
+                    await sb.from('pos_products').insert([{
+                        id: 'P_' + Date.now() + '_TR',
+                        branch_id: toB,
+                        name: srcProd.name,
+                        category: srcProd.category || '',
+                        cost: srcProd.cost || 0,
+                        price: srcProd.price || 0,
+                        riel: srcProd.riel || 0,
+                        qty: qty,
+                        unit: srcProd.unit || '',
+                        condition: srcProd.condition || '',
+                        expiry: srcProd.expiry || '',
+                        image: srcProd.image || '',
+                        description: srcProd.description || '',
+                        custom_id: srcProd.custom_id || '',
+                        updated_at: nowIso
+                    }]);
+                }
+
+                // Log & touch sync for both branches
+                const dateStr = new Date().toLocaleString('km-KH');
+                await sb.from('pos_history_logs').insert([
+                    { id: Date.now(), branch_id: fromB, type: 'update', item_name: srcProd.name, qty: -qty, note: `ផ្ទេរស្តុកទៅសាខា ${toB}`, date: dateStr },
+                    { id: Date.now() + 1, branch_id: toB, type: 'add', item_name: srcProd.name, qty: qty, note: `ទទួលស្តុកពីសាខា ${fromB}`, date: dateStr }
+                ]);
+                await sb.from('branch_store').update({ updated_at: nowIso }).in('branch_id', [fromB, toB]);
+
+                toast(`✅ បានផ្ទេរ "${srcProd.name}" ចំនួន ${qty} ពី ${fromB} ➔ ${toB} ជោគជ័យ!`);
+                await loadAllBranches();
+            } catch(e) {
+                toast('❌ បរាជ័យពេលផ្ទេរស្តុក: ' + e.message, true);
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> បញ្ជាក់ផ្ទេរស្តុក';
+            }
+        }
+
+        async function boot() {
+            try {
+                const raw = localStorage.getItem(`ks2_${BRANCH}_sys_settings`);
+                if (raw) sysSettings = JSON.parse(raw) || {};
+            } catch(e) {}
+            if (sb && navigator.onLine) {
+                try {
+                    const { data } = await sb.from('branch_store').select('sys_settings').eq('branch_id', BRANCH).maybeSingle();
+                    if (data && data.sys_settings) sysSettings = Object.assign({}, sysSettings, data.sys_settings);
+                } catch(e) {}
+            }
+            if (!sysSettings.proFeatures || !sysSettings.proFeatures.multiBranch) {
+                document.getElementById('lockedScreen').style.display = 'flex';
+                return;
+            }
+            document.getElementById('branchesInput').value = sysSettings.masterBranchesList || BRANCH;
+            loadAllBranches();
+        }
+        window.onload = boot;
+    </script>
+</body>
+</html>

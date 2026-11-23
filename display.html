@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Customer Display - SKM POS</title>
+    <link href="https://fonts.googleapis.com/css2?family=Kantumruy+Pro:wght@400;600;700;800&family=Nunito:wght@600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Kantumruy Pro', 'Nunito', sans-serif; }
+        body {
+            background: radial-gradient(circle at top right, #1e1b4b 0%, #0f172a 55%, #020617 100%);
+            color: #f8fafc; height: 100vh; overflow: hidden; display: flex; flex-direction: column;
+        }
+        #lockedScreen {
+            position: fixed; inset: 0; background: #0f172a; z-index: 9999;
+            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px;
+        }
+        .topbar {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 14px 28px; background: rgba(15, 23, 42, 0.78);
+            border-bottom: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px);
+        }
+        .brand-wrap { display: flex; align-items: center; gap: 14px; }
+        .brand-wrap img { width: 52px; height: 52px; border-radius: 50%; object-fit: cover; border: 2px solid #38bdf8; display: none; background: #fff; }
+        .brand-name { font-size: 22px; font-weight: 900; letter-spacing: 0.5px; color: #fff; }
+        .clock-box { display: flex; align-items: center; gap: 14px; font-weight: 800; font-size: 16px; color: #cbd5e1; }
+        .btn-fs {
+            background: rgba(56,189,248,0.15); border: 1px solid rgba(56,189,248,0.4); color: #38bdf8;
+            padding: 8px 14px; border-radius: 10px; cursor: pointer; font-weight: 800; font-size: 13px;
+        }
+        .main-grid {
+            flex: 1; display: grid; grid-template-columns: 1.45fr 1fr; gap: 22px; padding: 22px 28px; min-height: 0;
+        }
+        @media (max-width: 850px) { .main-grid { grid-template-columns: 1fr; overflow-y: auto; } }
+        .panel {
+            background: rgba(30, 41, 59, 0.62); border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 22px; padding: 22px; display: flex; flex-direction: column; min-height: 0;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.35); backdrop-filter: blur(14px);
+        }
+        .panel-title { font-size: 18px; font-weight: 800; color: #38bdf8; margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px dashed rgba(255,255,255,0.12); padding-bottom: 10px; }
+        .cart-list { flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; padding-right: 4px; }
+        .cart-row {
+            display: flex; align-items: center; gap: 14px; background: rgba(15,23,42,0.7);
+            padding: 12px 16px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.07);
+            animation: slideIn 0.22s ease;
+        }
+        @keyframes slideIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        .cart-row img { width: 54px; height: 54px; border-radius: 10px; object-fit: cover; background: #fff; }
+        .cart-row-name { font-size: 17px; font-weight: 800; color: #f8fafc; }
+        .cart-row-sub { font-size: 13px; color: #94a3b8; margin-top: 2px; }
+        .cart-row-tot { margin-left: auto; font-size: 19px; font-weight: 900; color: #34d399; white-space: nowrap; }
+
+        .idle-box {
+            flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center;
+            text-align: center; gap: 16px; padding: 20px;
+        }
+        .idle-banner {
+            width: 100%; max-height: 360px; object-fit: cover; border-radius: 18px;
+            border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 18px 40px rgba(0,0,0,0.45);
+        }
+        .summary-card { justify-content: space-between; text-align: center; }
+        .total-usd { font-size: 54px; font-weight: 900; color: #34d399; line-height: 1.1; text-shadow: 0 4px 20px rgba(52,211,153,0.3); }
+        .total-khr { font-size: 26px; font-weight: 800; color: #fde047; margin-top: 6px; }
+        .sub-meta { display: flex; justify-content: space-between; font-size: 15px; color: #cbd5e1; padding: 6px 0; border-bottom: 1px dashed rgba(255,255,255,0.1); }
+        .qr-stage {
+            margin: 14px auto; background: #ffffff; padding: 14px; border-radius: 20px;
+            display: inline-flex; flex-direction: column; align-items: center; gap: 8px;
+            box-shadow: 0 14px 36px rgba(0,0,0,0.4);
+        }
+        .qr-stage img { width: 230px; height: 230px; object-fit: contain; }
+        .qr-caption { color: #0f172a; font-weight: 900; font-size: 14px; }
+        .ticker {
+            background: rgba(16, 185, 129, 0.14); border-top: 1px solid rgba(16,185,129,0.3);
+            color: #fde047; padding: 9px 20px; font-weight: 700; font-size: 14px; white-space: nowrap; overflow: hidden;
+        }
+        .ticker span { display: inline-block; padding-left: 100%; animation: marq 24s linear infinite; }
+        @keyframes marq { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
+        #thankYouOverlay {
+            position: fixed; inset: 0; background: rgba(6, 78, 59, 0.94); z-index: 5000;
+            display: none; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 30px;
+            backdrop-filter: blur(12px);
+        }
+    </style>
+</head>
+<body>
+    <div id="lockedScreen">
+        <div style="font-size:64px; margin-bottom:14px;">🔒</div>
+        <h1 style="font-size:26px; color:#f87171; margin-bottom:10px;">មុខងារអេក្រង់ទី ២ ត្រូវបានបិទ (Disabled)</h1>
+        <p style="color:#94a3b8; max-width:460px; line-height:1.6;">មុខងារ <b>អេក្រង់ទី ២ សម្រាប់ភ្ញៀវមើល (Customer Display)</b> មិនទាន់ត្រូវបានបើកដោយ Admin ទេ។ សូមចូលទៅកាន់ <b>Admin Settings ➔ Tab 9 (មុខងារ Pro)</b> ដើម្បីបើកដំណើរការ។</p>
+    </div>
+
+    <div id="thankYouOverlay">
+        <div style="font-size:80px; margin-bottom:12px;">✅</div>
+        <h1 style="font-size:40px; font-weight:900; color:#fff; margin-bottom:10px;">សូមអរគុណ! ការទូទាត់ជោគជ័យ</h1>
+        <div id="tyDetails" style="font-size:24px; color:#fde047; font-weight:800; line-height:1.7;"></div>
+    </div>
+
+    <div class="topbar">
+        <div class="brand-wrap">
+            <img id="dispShopLogo" src="" alt="Logo">
+            <div>
+                <div class="brand-name" id="dispShopName">SKM INTEGRATE POS</div>
+                <div style="font-size:12px; color:#94a3b8;" id="dispBranchLbl">អេក្រង់បង្ហាញជូនអតិថិជន (Customer Display)</div>
+            </div>
+        </div>
+        <div class="clock-box">
+            <span id="liveClock">--:--:--</span>
+            <button class="btn-fs" onclick="toggleFS()"><i class="fa-solid fa-expand"></i> ពេញអេក្រង់</button>
+        </div>
+    </div>
+
+    <div class="main-grid">
+        <!-- Left: Live Cart or Idle Slideshow -->
+        <div class="panel">
+            <div class="panel-title">
+                <span id="leftPanelHeading">🛍️ បញ្ជីទំនិញកំពុងគិតលុយ</span>
+                <span id="dispItemCount" style="background:rgba(56,189,248,0.18); padding:4px 12px; border-radius:999px; font-size:13px;">0 មុខ</span>
+            </div>
+            <div id="idleView" class="idle-box">
+                <img id="idleBannerImg" class="idle-banner" src="" style="display:none;" alt="Banner">
+                <div id="idleEmoji" style="font-size:68px;">✨🛒✨</div>
+                <h2 style="font-size:28px; color:#fff;">សូមស្វាគមន៍មកកាន់ <span id="idleShopName">ហាងរបស់យើង</span></h2>
+                <p style="color:#94a3b8; font-size:16px;">ទំនិញដែលបុគ្គលិកស្កេន នឹងលោតបង្ហាញលើអេក្រង់នេះភ្លាមៗដោយស្វ័យប្រវត្តិ។</p>
+            </div>
+            <div id="activeCartList" class="cart-list" style="display:none;"></div>
+        </div>
+
+        <!-- Right: Live Total + Dynamic Bakong KHQR -->
+        <div class="panel summary-card">
+            <div>
+                <div style="font-size:14px; font-weight:800; color:#94a3b8; letter-spacing:1px; text-transform:uppercase;">សរុបទឹកប្រាក់ត្រូវបង់ (TOTAL)</div>
+                <div class="total-usd" id="dispTotalUsd">$0.00</div>
+                <div class="total-khr" id="dispTotalKhr">0 ៛</div>
+                <div style="margin-top:14px;">
+                    <div class="sub-meta"><span>បញ្ចុះតម្លៃ (Discount):</span><b id="dispDiscount" style="color:#f87171;">-$0.00</b></div>
+                    <div class="sub-meta"><span>ពន្ធអាករ (Tax/VAT):</span><b id="dispTax" style="color:#fbbf24;">+$0.00</b></div>
+                    <div class="sub-meta" style="border-bottom:none;"><span>អត្រាប្តូរប្រាក់ (Rate):</span><b id="dispRate">1$ = 4,000 ៛</b></div>
+                </div>
+            </div>
+
+            <div id="qrWrap">
+                <div class="qr-stage" id="qrStageBox" style="display:none;">
+                    <img id="dispQrImg" src="" alt="Payment QR">
+                    <div class="qr-caption" id="dispQrCaption">ស្កេន KHQR ដើម្បីទូទាត់ប្រាក់</div>
+                </div>
+                <div id="noQrHint" style="color:#64748b; font-size:14px; padding:20px;">រង់ចាំការស្កេនទំនិញ...</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ticker"><span id="dispTicker">📢 សូមស្វាគមន៍! សូមអរគុណសម្រាប់ការគាំទ្រហាងរបស់យើងខ្ញុំ។</span></div>
+
+    <script>
+        const BRANCH = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
+        const SUPABASE_URL = 'https://qlzyyfqjwudbapgwsugu.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ';
+        let sb = window.supabase ? window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY) : null;
+
+        let sysSettings = {};
+        let shopName = 'SKM INTEGRATE POS';
+        let shopLogo = '';
+        let shopQR = '';
+        let banners = [];
+        let bannerIdx = 0;
+
+        function generateBakongKHQR(bakongId, merchantName, amount) {
+            const cleanId = String(bakongId || '').trim();
+            if (!cleanId) return '';
+            const tlv = (t, v) => { const s = String(v); return t + String(s.length).padStart(2, '0') + s; };
+            const numAmt = parseFloat(amount) || 0;
+            const amtStr = numAmt > 0 ? numAmt.toFixed(2) : '';
+            const safeName = String(merchantName || 'SKM SHOP').replace(/[^\x20-\x7E]/g, '').trim().slice(0, 25) || 'SKM SHOP';
+            let p = tlv('00', '01') + tlv('01', amtStr ? '12' : '11') + tlv('29', tlv('00', cleanId)) + tlv('52', '5999') + tlv('53', '840');
+            if (amtStr) p += tlv('54', amtStr);
+            p += tlv('58', 'KH') + tlv('59', safeName) + tlv('60', 'Phnom Penh') + '6304';
+            let crc = 0xFFFF;
+            for (let i = 0; i < p.length; i++) {
+                crc ^= (p.charCodeAt(i) << 8);
+                for (let j = 0; j < 8; j++) crc = (crc & 0x8000) ? (((crc << 1) ^ 0x1021) & 0xFFFF) : ((crc << 1) & 0xFFFF);
+            }
+            return p + crc.toString(16).toUpperCase().padStart(4, '0');
+        }
+
+        function toggleFS() {
+            if (!document.fullscreenElement) document.documentElement.requestFullscreen?.();
+            else document.exitFullscreen?.();
+        }
+
+        setInterval(() => {
+            document.getElementById('liveClock').innerText = new Date().toLocaleTimeString('km-KH');
+        }, 1000);
+
+        async function loadConfig() {
+            try {
+                const rawSys = localStorage.getItem(`ks2_${BRANCH}_sys_settings`);
+                if (rawSys) sysSettings = JSON.parse(rawSys) || {};
+                shopName = localStorage.getItem(`ks2_${BRANCH}_shop_name`) || shopName;
+                shopLogo = localStorage.getItem(`ks2_${BRANCH}_shop_logo`) || '';
+                shopQR = localStorage.getItem(`ks2_${BRANCH}_shop_qr`) || sysSettings.menuQR || '';
+            } catch(e) {}
+
+            if (sb && navigator.onLine) {
+                try {
+                    const { data } = await sb.from('branch_store').select('shop_info, sys_settings').eq('branch_id', BRANCH).maybeSingle();
+                    if (data) {
+                        if (data.sys_settings) sysSettings = Object.assign({}, sysSettings, data.sys_settings);
+                        if (data.shop_info) {
+                            shopName = data.shop_info.shopName || shopName;
+                            shopLogo = data.shop_info.shopLogo || shopLogo;
+                            shopQR = data.shop_info.shopQR || sysSettings.menuQR || shopQR;
+                        }
+                    }
+                } catch(e) {}
+            }
+
+            // Strictly gated by Admin Settings Tab 9
+            if (!sysSettings.proFeatures || !sysSettings.proFeatures.customerDisplay) {
+                document.getElementById('lockedScreen').style.display = 'flex';
+                return false;
+            }
+            document.getElementById('lockedScreen').style.display = 'none';
+
+            document.getElementById('dispShopName').innerText = shopName;
+            document.getElementById('idleShopName').innerText = shopName;
+            document.getElementById('dispBranchLbl').innerText = `សាខា៖ ${BRANCH} • អេក្រង់បង្ហាញជូនអតិថិជន`;
+            if (shopLogo) {
+                const lg = document.getElementById('dispShopLogo');
+                lg.src = shopLogo; lg.style.display = 'block';
+            }
+            if (sysSettings.tickerText || sysSettings.tickerNews) {
+                document.getElementById('dispTicker').innerText = '📢 ' + (sysSettings.tickerText || sysSettings.tickerNews);
+            }
+            banners = Array.isArray(sysSettings.menuBanners) ? sysSettings.menuBanners.filter(Boolean) : [];
+            if (banners.length > 0) {
+                const img = document.getElementById('idleBannerImg');
+                img.src = banners[0]; img.style.display = 'block';
+                document.getElementById('idleEmoji').style.display = 'none';
+                if (banners.length > 1) {
+                    setInterval(() => {
+                        bannerIdx = (bannerIdx + 1) % banners.length;
+                        img.src = banners[bannerIdx];
+                    }, 5000);
+                }
+            }
+            return true;
+        }
+
+        let tyTimer = null;
+        function renderDisplayState(state) {
+            if (!state) return;
+            if (state.type === 'checkout_done') {
+                const ov = document.getElementById('thankYouOverlay');
+                const det = document.getElementById('tyDetails');
+                det.innerHTML = `សរុប៖ $${Number(state.totalUsd || 0).toFixed(2)} (${Math.round(state.totalRiel || 0).toLocaleString()} ៛)` +
+                    (state.changeUsd > 0 ? `<br>ប្រាក់អាប់៖ $${Number(state.changeUsd).toFixed(2)} | ${Math.round(state.changeRiel || 0).toLocaleString()} ៛` : '');
+                ov.style.display = 'flex';
+                clearTimeout(tyTimer);
+                tyTimer = setTimeout(() => { ov.style.display = 'none'; }, 7000);
+            }
+
+            const items = Array.isArray(state.items) ? state.items : [];
+            const totalUsd = Number(state.totalUsd || 0);
+            const totalRiel = Number(state.totalRiel || 0);
+            const rate = Number(state.rate || 4000);
+            const disc = Number(state.discountUsd || 0);
+            const tax = Number(state.taxUsd || 0);
+            const totalQty = items.reduce((s, x) => s + (parseInt(x.cartQty || x.qty) || 0), 0);
+
+            document.getElementById('dispItemCount').innerText = `${totalQty} មុខ`;
+            document.getElementById('dispTotalUsd').innerText = `$${totalUsd.toFixed(2)}`;
+            document.getElementById('dispTotalKhr').innerText = `${Math.round(totalRiel).toLocaleString()} ៛`;
+            document.getElementById('dispDiscount').innerText = `-$${disc.toFixed(2)}`;
+            document.getElementById('dispTax').innerText = `+$${tax.toFixed(2)}`;
+            document.getElementById('dispRate').innerText = `1$ = ${rate.toLocaleString()} ៛`;
+
+            const idleView = document.getElementById('idleView');
+            const listEl = document.getElementById('activeCartList');
+            const qrStage = document.getElementById('qrStageBox');
+            const noQrHint = document.getElementById('noQrHint');
+            const qrImg = document.getElementById('dispQrImg');
+            const qrCap = document.getElementById('dispQrCaption');
+
+            if (items.length === 0) {
+                idleView.style.display = 'flex';
+                listEl.style.display = 'none';
+                if (shopQR) {
+                    qrImg.src = shopQR;
+                    qrCap.innerText = 'ស្កេន QR កូដហាង';
+                    qrStage.style.display = 'inline-flex';
+                    noQrHint.style.display = 'none';
+                } else {
+                    qrStage.style.display = 'none';
+                    noQrHint.style.display = 'block';
+                }
+                return;
+            }
+
+            idleView.style.display = 'none';
+            listEl.style.display = 'flex';
+            listEl.innerHTML = items.map(it => {
+                const q = parseInt(it.cartQty || it.qty) || 1;
+                const p = Number(it.price || 0);
+                return `
+                    <div class="cart-row">
+                        <img src="${it.image || 'https://placehold.co/80?text=Item'}" onerror="this.src='https://placehold.co/80?text=Item'">
+                        <div>
+                            <div class="cart-row-name">${String(it.name || '').replace(/</g,'&lt;')}</div>
+                            <div class="cart-row-sub">$${p.toFixed(2)} × <b>${q}</b></div>
+                        </div>
+                        <div class="cart-row-tot">$${(p * q).toFixed(2)}</div>
+                    </div>`;
+            }).join('');
+
+            const bakongId = sysSettings.bakongId ? String(sysSettings.bakongId).trim() : '';
+            const bakongName = sysSettings.bakongName || shopName;
+            if (bakongId && navigator.onLine && totalUsd > 0) {
+                const khqr = generateBakongKHQR(bakongId, bakongName, totalUsd);
+                qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&margin=10&data=${encodeURIComponent(khqr)}`;
+                qrCap.innerText = `ស្កេន Bakong KHQR • $${totalUsd.toFixed(2)}`;
+                qrStage.style.display = 'inline-flex';
+                noQrHint.style.display = 'none';
+            } else if (shopQR) {
+                qrImg.src = shopQR;
+                qrCap.innerText = `ស្កេនទូទាត់ប្រាក់ • $${totalUsd.toFixed(2)}`;
+                qrStage.style.display = 'inline-flex';
+                noQrHint.style.display = 'none';
+            }
+        }
+
+        async function boot() {
+            const ok = await loadConfig();
+            if (!ok) return;
+
+            const stateKey = `skm_pos_display_state_${BRANCH}`;
+            try {
+                const initial = JSON.parse(localStorage.getItem(stateKey) || 'null');
+                if (initial) renderDisplayState(initial);
+                else renderDisplayState({ items: [], totalUsd: 0, totalRiel: 0, rate: 4000 });
+            } catch(e) {}
+
+            if (typeof BroadcastChannel !== 'undefined') {
+                const ch = new BroadcastChannel(`skm_pos_display_${BRANCH}`);
+                ch.onmessage = (ev) => renderDisplayState(ev.data);
+            }
+            window.addEventListener('storage', (ev) => {
+                if (ev.key === stateKey && ev.newValue) {
+                    try { renderDisplayState(JSON.parse(ev.newValue)); } catch(e) {}
+                }
+            });
+        }
+        window.onload = boot;
+    </script>
+</body>
+</html>
