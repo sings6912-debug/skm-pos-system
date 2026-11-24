@@ -1132,7 +1132,7 @@
                 </div>
             </div>
             <p class="help-text">
-                មានតែផ្ទាំង <b>Admin Settings</b> នេះប៉ុណ្ណោះដែលអាចបិទ ឬបើកមុខងារទាំង ១១ ខាងក្រោមតាមប្រភេទអាជីវកម្មរបស់អតិថិជននីមួយៗ។ មុខងារណាដែលបិទ (Off) នឹងមិនបង្ហាញលើ POS ឬ Digital Menu ឡើយ ហើយទំព័រដាច់ដោយឡែក (`display.html`, `kds.html`, `master_branches.html`) ក៏នឹងត្រូវចាក់សោស្វ័យប្រវត្តិដែរ។
+                មានតែផ្ទាំង <b>Admin Settings</b> នេះប៉ុណ្ណោះដែលអាចបិទ ឬបើកមុខងារទាំង ១៨ ខាងក្រោមតាមប្រភេទអាជីវកម្មរបស់អតិថិជននីមួយៗ។ មុខងារណាដែលបិទ (Off) នឹងមិនបង្ហាញលើ POS ឬ Digital Menu ឡើយ ហើយទំព័រដាច់ដោយឡែក (`display.html`, `kds.html`, `master_branches.html`) ក៏នឹងត្រូវចាក់សោស្វ័យប្រវត្តិដែរ។
             </p>
 
             <!-- ⚡ 1-CLICK PRO FEATURE PRESETS BY INDUSTRY -->
@@ -1141,7 +1141,7 @@
                     ⚡ កញ្ចប់បើករហ័ស ១ ចុចតាមប្រភេទអាជីវកម្ម (1-Click Pro Feature Presets)
                 </div>
                 <div style="font-size: 12px; color: var(--text-muted); line-height: 1.5; margin-bottom: 10px;">
-                    ចុចប៊ូតុងប្រភេទអាជីវកម្មខាងក្រោមដើម្បីបិទ/បើកមុខងារ Pro ទាំង ១១ ឱ្យត្រូវតាមតម្រូវការជាក់ស្តែងស្វ័យប្រវត្តិ៖
+                    ចុចប៊ូតុងប្រភេទអាជីវកម្មខាងក្រោមដើម្បីបិទ/បើកមុខងារ Pro ទាំង ១៨ ឱ្យត្រូវតាមតម្រូវការជាក់ស្តែងស្វ័យប្រវត្តិ៖
                 </div>
                 <div class="action-btn-group" style="margin-bottom: 0;">
                     <button type="button" class="btn-action" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe;" onclick="applyProFeaturePreset('retail')">🧸 ហាង Figure / លក់រាយ</button>
@@ -1264,6 +1264,77 @@
                         <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ដាក់ស្លាកលើទំនិញក្នុងផ្ទាំងកែទំនិញ POS ហើយបង្ហាញ Badge និងតម្រងរហ័សលើ Digital Menu</div>
                     </div>
                     <input type="checkbox" id="pfProductTags" style="width:20px; height:20px; accent-color:var(--success); cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+            </div>
+
+            <!-- 9.3 ADVANCED POS & F&B SUITE (7 NEW MODULES — 100% ADMIN CONTROLLED) -->
+            <div class="section-box" style="border-left: 4px solid #f59e0b; margin-top:20px; margin-bottom:0;">
+                <div class="section-title" style="font-size:14.5px; color:#d97706;"><i class="fa-solid fa-crown"></i> 9.3 មុខងារ POS & F&B កម្រិតខ្ពស់បន្ថែម (Advanced POS Suite — 7 មុខងារ)</div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🗺️ ប្លង់តុបែបគំនូរ 2D អូសដាក់តាមជាន់/បន្ទប់ (Visual 2D Floor Plan)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">រៀបចំទីតាំងតុមូល/ជ្រុងលើក្រឡា Grid បែងចែកជាន់/VIP មើលស្ថានភាពតុទំនេរ-មានភ្ញៀវផ្ទាល់</div>
+                    </div>
+                    <input type="checkbox" id="pfFloorPlan" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🍱 ឈុតទំនិញ Combo & កាត់ស្តុកគ្រឿងផ្សំស្វ័យប្រវត្តិ (Combo Sets / Recipe Auto-Deduct)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ចងទំនិញច្រើនមុខជាឈុតតម្លៃពិសេស — ពេលលក់ ១ ឈុត ប្រព័ន្ធកាត់ស្តុកគ្រឿងផ្សំនីមួយៗស្វ័យប្រវត្តិ</div>
+                    </div>
+                    <input type="checkbox" id="pfComboSets" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>⏱️ គ្រប់គ្រងវេនលក់ & ផ្ទៀងផ្ទាត់លុយបាត់/លើសក្នុងទូរ (Shift & Cash Discrepancy Log)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">កត់ត្រាប្រាក់ដើមគ្រាពេលបើកវេន រាប់លុយជាក់ស្តែងពេលបិទវេន គណនាលើស/ខ្វះ និងផ្ញើចូល Telegram</div>
+                    </div>
+                    <input type="checkbox" id="pfShiftManagement" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🍽️ ប៊ូតុងប្រភេទលក់ ៣ ម៉ូដលើ POS (Dine-In / Takeaway / Delivery + ថ្លៃដឹក)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ចុចប្តូរម៉ូដលក់ភ្លាមៗលើកន្ត្រក POS បញ្ជូនស្លាកទៅ KDS/វិក្កយបត្រ និងបូកថ្លៃដឹកជញ្ជូនស្វ័យប្រវត្តិ</div>
+                    </div>
+                    <input type="checkbox" id="pfOrderModes" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🏷️ បញ្ចុះតម្លៃចំមុខទំនិញរាយ & កូដបញ្ចុះតម្លៃស្រាប់ៗ (Per-Item & Pre-set Discounts)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">បញ្ចុះតម្លៃលើទំនិញណាមួយជាក់លាក់ (% / $) និងប៊ូតុងចុចរហ័សដូចជា Student 5%, VIP 10%, Grab 22%</div>
+                    </div>
+                    <input type="checkbox" id="pfItemDiscounts" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="form-group" style="margin: -4px 0 12px 0; padding:10px 14px; background:rgba(245,158,11,0.07); border-radius:10px; border:1px dashed #f59e0b;">
+                    <label style="font-size:12px;">🏷️ បញ្ជីប៊ូតុងបញ្ចុះតម្លៃស្រាប់ៗ (ទម្រង់ ឈ្មោះ:តម្លៃ ខណ្ឌដោយក្បៀស ","):</label>
+                    <input type="text" id="setPresetDiscountsList" class="input-st" style="padding:8px 12px; font-size:13px; margin-bottom:0;" placeholder="Student:5%, VIP:10%, Promo:15%, Nham24:18%, Grab:22%" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🧋 ជម្រើសថែមថយ Size/ស្ករ/ទឹកកក & ក្តារចុចលេខលើ POS (Modifiers & Quick Numpad)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ចុច ⚙️ លើទំនិញក្នុងកន្ត្រកដើម្បីវាយចំនួនតាមក្តារចុចលេខ រើសទំហំ S/M/L ស្ករ ទឹកកក Topping & ចំណាំ</div>
+                    </div>
+                    <input type="checkbox" id="pfPosModifiers" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🏭 ឃ្លាំងស្តុកច្រើនទីតាំង & ផ្ទេរស្តុកក្នុងសាខា (Multi-Warehouse Locations)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">បែងចែកស្តុកតាមឃ្លាំង (Main, BKK, TK...) នាំចូល-ដកចេញ និងផ្ទេរស្តុករវាងឃ្លាំង (Admin/Manager)</div>
+                    </div>
+                    <input type="checkbox" id="pfMultiWarehouse" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="form-group" style="margin: -4px 0 0 0; padding:10px 14px; background:rgba(56,189,248,0.06); border-radius:10px; border:1px dashed var(--brand-cyan);">
+                    <label style="font-size:12px;">🏭 បញ្ជីឈ្មោះឃ្លាំងស្តុក (ខណ្ឌដោយសញ្ញាក្បៀស ","):</label>
+                    <input type="text" id="setWarehousesList" class="input-st" style="padding:8px 12px; font-size:13px; margin-bottom:0;" placeholder="ហាងគោល (Main), ឃ្លាំង BKK, ឃ្លាំង TK" onchange="saveAdminSettings()">
                 </div>
             </div>
         </div>
@@ -1927,8 +1998,21 @@
         setPfChk('pfGpsLocation', pf.gpsLocation);
         setPfChk('pfDigitalReceipt', pf.digitalReceipt);
         setPfChk('pfProductTags', pf.productTags);
+        setPfChk('pfFloorPlan', pf.floorPlan);
+        setPfChk('pfComboSets', pf.comboSets);
+        setPfChk('pfShiftManagement', pf.shiftManagement);
+        setPfChk('pfOrderModes', pf.orderModes);
+        setPfChk('pfItemDiscounts', pf.itemDiscounts);
+        setPfChk('pfPosModifiers', pf.posModifiers);
+        setPfChk('pfMultiWarehouse', pf.multiWarehouse);
         if (document.getElementById('setMasterBranchesList')) {
             document.getElementById('setMasterBranchesList').value = sys.masterBranchesList || BRANCH;
+        }
+        if (document.getElementById('setPresetDiscountsList')) {
+            document.getElementById('setPresetDiscountsList').value = sys.presetDiscountsList || 'Student:5%, VIP:10%, Promo:15%, Nham24:18%, Grab:22%';
+        }
+        if (document.getElementById('setWarehousesList')) {
+            document.getElementById('setWarehousesList').value = sys.warehousesList || 'ហាងគោល (Main), ឃ្លាំង BKK, ឃ្លាំង TK';
         }
 
         const orderTok = sys.orderTelegramBotToken || sys.telegramBotToken || shopInfo.telegramBotToken || '';
@@ -2093,9 +2177,18 @@
             paymentSlip: document.getElementById('pfPaymentSlip')?.checked || false,
             gpsLocation: document.getElementById('pfGpsLocation')?.checked || false,
             digitalReceipt: document.getElementById('pfDigitalReceipt')?.checked || false,
-            productTags: document.getElementById('pfProductTags')?.checked || false
+            productTags: document.getElementById('pfProductTags')?.checked || false,
+            floorPlan: document.getElementById('pfFloorPlan')?.checked || false,
+            comboSets: document.getElementById('pfComboSets')?.checked || false,
+            shiftManagement: document.getElementById('pfShiftManagement')?.checked || false,
+            orderModes: document.getElementById('pfOrderModes')?.checked || false,
+            itemDiscounts: document.getElementById('pfItemDiscounts')?.checked || false,
+            posModifiers: document.getElementById('pfPosModifiers')?.checked || false,
+            multiWarehouse: document.getElementById('pfMultiWarehouse')?.checked || false
         };
         sys.masterBranchesList = document.getElementById('setMasterBranchesList')?.value.trim() || BRANCH;
+        sys.presetDiscountsList = document.getElementById('setPresetDiscountsList')?.value.trim() || 'Student:5%, VIP:10%, Promo:15%, Nham24:18%, Grab:22%';
+        sys.warehousesList = document.getElementById('setWarehousesList')?.value.trim() || 'ហាងគោល (Main), ឃ្លាំង BKK, ឃ្លាំង TK';
 
         let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim(); let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
         let servTok = document.getElementById('setServiceTelegramBotToken').value.trim(); let servChat = document.getElementById('setServiceTelegramChatId').value.trim();
@@ -3387,61 +3480,43 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         showToast(`⬇️ បានទាញយក "${fileName}" ជោគជ័យ!`);
     }
 
+    const ALL_PRO_CHECKBOX_IDS = [
+        'pfCustomerDisplay','pfKds','pfMultiBranch','pfSuppliers','pfStockAudit','pfTelegramZReport',
+        'pfSplitBill','pfPaymentSlip','pfGpsLocation','pfDigitalReceipt','pfProductTags',
+        'pfFloorPlan','pfComboSets','pfShiftManagement','pfOrderModes','pfItemDiscounts','pfPosModifiers','pfMultiWarehouse'
+    ];
+
     const PRO_PRESETS_CONFIG = {
         retail: {
-            pfCustomerDisplay: true,
-            pfKds: false,
-            pfMultiBranch: false,
-            pfSuppliers: true,
-            pfStockAudit: true,
-            pfTelegramZReport: true,
-            pfSplitBill: false,
-            pfPaymentSlip: true,
-            pfGpsLocation: true,
-            pfDigitalReceipt: true,
-            pfProductTags: true,
+            pfCustomerDisplay: true,  pfKds: false, pfMultiBranch: false, pfSuppliers: true,
+            pfStockAudit: true,       pfTelegramZReport: true, pfSplitBill: false,
+            pfPaymentSlip: true,      pfGpsLocation: true, pfDigitalReceipt: true, pfProductTags: true,
+            pfFloorPlan: false,       pfComboSets: true,   pfShiftManagement: true,
+            pfOrderModes: false,      pfItemDiscounts: true, pfPosModifiers: false, pfMultiWarehouse: true,
             label: '🧸 ហាង Figure / លក់រាយ'
         },
         cafe: {
-            pfCustomerDisplay: true,
-            pfKds: true,
-            pfMultiBranch: false,
-            pfSuppliers: true,
-            pfStockAudit: false,
-            pfTelegramZReport: true,
-            pfSplitBill: true,
-            pfPaymentSlip: false,
-            pfGpsLocation: false,
-            pfDigitalReceipt: true,
-            pfProductTags: true,
+            pfCustomerDisplay: true,  pfKds: true,  pfMultiBranch: false, pfSuppliers: true,
+            pfStockAudit: false,      pfTelegramZReport: true, pfSplitBill: true,
+            pfPaymentSlip: false,     pfGpsLocation: false, pfDigitalReceipt: true, pfProductTags: true,
+            pfFloorPlan: true,        pfComboSets: true,   pfShiftManagement: true,
+            pfOrderModes: true,       pfItemDiscounts: true, pfPosModifiers: true, pfMultiWarehouse: false,
             label: '☕ ហាងកាហ្វេ / អាហារ'
         },
         online: {
-            pfCustomerDisplay: false,
-            pfKds: false,
-            pfMultiBranch: false,
-            pfSuppliers: true,
-            pfStockAudit: true,
-            pfTelegramZReport: true,
-            pfSplitBill: false,
-            pfPaymentSlip: true,
-            pfGpsLocation: true,
-            pfDigitalReceipt: true,
-            pfProductTags: true,
+            pfCustomerDisplay: false, pfKds: false, pfMultiBranch: false, pfSuppliers: true,
+            pfStockAudit: true,       pfTelegramZReport: true, pfSplitBill: false,
+            pfPaymentSlip: true,      pfGpsLocation: true, pfDigitalReceipt: true, pfProductTags: true,
+            pfFloorPlan: false,       pfComboSets: true,   pfShiftManagement: true,
+            pfOrderModes: true,       pfItemDiscounts: true, pfPosModifiers: false, pfMultiWarehouse: true,
             label: '📦 ហាងលក់ Online សុទ្ធ'
         },
         mart: {
-            pfCustomerDisplay: true,
-            pfKds: false,
-            pfMultiBranch: false,
-            pfSuppliers: true,
-            pfStockAudit: true,
-            pfTelegramZReport: true,
-            pfSplitBill: false,
-            pfPaymentSlip: true,
-            pfGpsLocation: true,
-            pfDigitalReceipt: true,
-            pfProductTags: true,
+            pfCustomerDisplay: true,  pfKds: false, pfMultiBranch: false, pfSuppliers: true,
+            pfStockAudit: true,       pfTelegramZReport: true, pfSplitBill: false,
+            pfPaymentSlip: true,      pfGpsLocation: true, pfDigitalReceipt: true, pfProductTags: true,
+            pfFloorPlan: false,       pfComboSets: true,   pfShiftManagement: true,
+            pfOrderModes: false,      pfItemDiscounts: true, pfPosModifiers: false, pfMultiWarehouse: true,
             label: '🛒 ម៉ាត / ឱសថស្ថាន'
         }
     };
@@ -3449,20 +3524,21 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
     function applyProFeaturePreset(presetKey) {
         const cfg = PRO_PRESETS_CONFIG[presetKey];
         if (!cfg) return;
-        ['pfCustomerDisplay','pfKds','pfMultiBranch','pfSuppliers','pfStockAudit','pfTelegramZReport','pfSplitBill','pfPaymentSlip','pfGpsLocation','pfDigitalReceipt','pfProductTags']
-            .forEach(id => {
-                const el = document.getElementById(id);
-                if (el && cfg[id] !== undefined) el.checked = Boolean(cfg[id]);
-            });
+        ALL_PRO_CHECKBOX_IDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el && cfg[id] !== undefined) el.checked = Boolean(cfg[id]);
+        });
         saveAdminSettings();
         showToast(`✅ បានបើកកញ្ចប់មុខងារ Pro សម្រាប់ "${cfg.label}" រួចរាល់!`);
     }
 
     function toggleAllProFeatures(state) {
-        ['pfCustomerDisplay','pfKds','pfMultiBranch','pfSuppliers','pfStockAudit','pfTelegramZReport','pfSplitBill','pfPaymentSlip','pfGpsLocation','pfDigitalReceipt','pfProductTags']
-            .forEach(id => { const el = document.getElementById(id); if (el) el.checked = !!state; });
+        ALL_PRO_CHECKBOX_IDS.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.checked = !!state;
+        });
         saveAdminSettings();
-        showToast(state ? '✅ បានបើកមុខងារ Pro ទាំងអស់!' : '⭕ បានបិទមុខងារ Pro ទាំងអស់!');
+        showToast(state ? '✅ បានបើកមុខងារ Pro ទាំង ១៨ រួចរាល់!' : '⭕ បានបិទមុខងារ Pro ទាំង ១៨ រួចរាល់!');
     }
 
     window.onload = initAdmin;

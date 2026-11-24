@@ -192,7 +192,7 @@ window.renderPOSProducts = function() {
                 let itemOpacity = pQty <= 0 ? 'opacity: 0.6; filter: grayscale(50%);' : '';
                 
                 let safeName = window.escapeHTML(p.name);
-                finalHtml += `<div class="pos-item" style="${itemOpacity}" onclick="window.addToCart('${p.id}')"><div class="pos-item-img-container">${stockBadge}${conditionBadge}<img src="${p.image||'https://placehold.co/200?text=No+Img'}" alt="Product">${btnHtml}</div><div class="pos-item-details"><div class="pos-item-price">${window.fMoney(p.price)} ${rielHtml}</div><div class="pos-item-name" title="${safeName}">${safeName}</div>${expiryBadge}</div></div>`; 
+                finalHtml += `<div class="pos-item" style="${itemOpacity}" onclick="window.addToCart('${p.id}')"><div class="pos-item-img-container">${stockBadge}${conditionBadge}<img src="${p.image||window.SKM_IMG_FALLBACK||'https://placehold.co/200?text=No+Img'}" alt="Product" loading="lazy" onerror="this.onerror=null;this.src=window.SKM_IMG_FALLBACK||'https://placehold.co/200?text=No+Img';">${btnHtml}</div><div class="pos-item-details"><div class="pos-item-price">${window.fMoney(p.price)} ${rielHtml}</div><div class="pos-item-name" title="${safeName}">${safeName}</div>${expiryBadge}</div></div>`; 
             });
             container.innerHTML = finalHtml + `</div>`;
         } else {
@@ -209,7 +209,7 @@ window.renderPOSProducts = function() {
                 let expiryDisplay = (window.sysSettings && window.sysSettings.expiry && p.expiry) ? `<br><span style="color:var(--warning); font-size:10px;">📅 ផុតកំណត់: ${new Date(p.expiry).toLocaleDateString('km-KH')}</span>` : '';
                 let safeName = window.escapeHTML(p.name);
 
-                tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||'https://placehold.co/100?text=Img'}" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeName} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${p.price}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">${d.btnAddShort || '➕ បន្ថែម'}</button></td></tr>`;
+                tableHTML += `<tr data-id="${p.id}" style="${itemOpacity}"><td style="text-align:center; padding: 5px;"><img src="${p.image||window.SKM_IMG_FALLBACK||'https://placehold.co/100?text=Img'}" loading="lazy" onerror="this.onerror=null;this.src=window.SKM_IMG_FALLBACK||'https://placehold.co/100?text=Img';" style="width:45px; height:45px; object-fit:cover; border-radius:6px; border:1px solid var(--border);"></td><td data-sort="${String(p.name).replace(/"/g, '&quot;')}" style="padding: 5px 10px;"><div style="font-weight:bold; color:var(--text-main); margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${safeName} ${conditionBadge}</div><div style="font-size:var(--fs-11); color:var(--text-muted);">ស្តុក: ${stockText} ${expiryDisplay}</div></td><td data-sort="${p.price}" style="text-align:right; font-weight:bold; color:var(--success); padding: 5px 10px;">${window.fMoney(p.price)}${rielHtml}</td><td style="text-align:center; padding: 5px;"><button class="btn btn-primary" style="padding: 6px 12px; font-size:var(--fs-12);" onclick="window.addToCart('${p.id}')">${d.btnAddShort || '➕ បន្ថែម'}</button></td></tr>`;
             });
             container.innerHTML = tableHTML + `</tbody></table></div>`;
         }
@@ -267,17 +267,49 @@ window.addToCart = function(id) {
     executeAddToCart();
 };
 
+window.getCartItemUnitPricing = function(c) {
+    const rate = window.cartRate || 4000;
+    const origProd = c.isCombo ? null : (window.inventory || []).find(i => i && i.id === c.id);
+    const origUsd = origProd ? (parseFloat(origProd.price) || 0) : (parseFloat(c.price) || 0);
+    const pRiel = parseFloat(c.riel) || 0;
+    const baseUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / rate) : (parseFloat(c.price) || 0));
+    const modExtra = parseFloat(c.modifierExtra) || 0;
+    const beforeDiscUsd = baseUsd + modExtra;
+    const discVal = parseFloat(c.itemDiscVal) || 0;
+    let discUsd = 0;
+    if (discVal > 0) {
+        discUsd = (c.itemDiscType === '$')
+            ? Math.min(beforeDiscUsd, discVal)
+            : beforeDiscUsd * (Math.min(100, Math.max(0, discVal)) / 100);
+    }
+    const finalUnitUsd = Math.max(0, beforeDiscUsd - discUsd);
+    return { origUsd, pRiel, baseUsd, modExtra, beforeDiscUsd, discUsd, finalUnitUsd };
+};
+
+function getComboMaxAvailableSets(cItem) {
+    if (!cItem || !Array.isArray(cItem.comboItems) || cItem.comboItems.length === 0) return 9999;
+    let minSets = 9999;
+    cItem.comboItems.forEach(comp => {
+        const p = (window.inventory || []).find(i => i && String(i.id) === String(comp.id));
+        const avail = p ? (parseInt(p.qty) || 0) : 0;
+        const perSet = Math.max(1, parseInt(comp.qty) || 1);
+        minSets = Math.min(minSets, Math.floor(avail / perSet));
+    });
+    return Math.max(0, minSets);
+}
+
 window.updateCartQty = function(id, change) { 
     if(change > 0 && typeof window.playBeep === 'function') window.playBeep(); 
     const cItem = (window.cart || []).find(c => c && c.id === id); 
-    const p = (window.inventory || []).find(i => i && i.id === id); 
-    if (!p || !cItem) return;
-    let stockQty = parseInt(p.qty) || 0; 
+    if (!cItem) return;
+    const p = cItem.isCombo ? null : (window.inventory || []).find(i => i && i.id === id); 
+    if (!cItem.isCombo && !p) return;
+    let stockQty = cItem.isCombo ? getComboMaxAvailableSets(cItem) : (parseInt(p.qty) || 0); 
     cItem.cartQty += change; 
     
     if(cItem.cartQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
         cItem.cartQty = stockQty; 
-        notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${window.escapeHTML(p.unit)||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+        notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${window.escapeHTML(cItem.isCombo ? 'ឈុត' : (p.unit||'ឯកតា'))} ប៉ុណ្ណោះ!`); 
     } 
     
     cItem.qty = cItem.cartQty;
@@ -296,13 +328,14 @@ window.setCartQtyManually = function(id, val) {
         window.cart = (window.cart || []).filter(c => c && c.id !== id);
     } else {
         const cItem = (window.cart || []).find(c => c && c.id === id); 
-        const p = (window.inventory || []).find(i => i && i.id === id); 
-        if(!p || !cItem) return;
-        let stockQty = parseInt(p.qty) || 0;
+        if (!cItem) return;
+        const p = cItem.isCombo ? null : (window.inventory || []).find(i => i && i.id === id); 
+        if(!cItem.isCombo && !p) return;
+        let stockQty = cItem.isCombo ? getComboMaxAvailableSets(cItem) : (parseInt(p.qty) || 0);
         
         if(newQty > stockQty && !(window.sysSettings && window.sysSettings.preorder)) { 
             cItem.cartQty = stockQty; 
-            notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${window.escapeHTML(p.unit)||'ឯកតា'} ប៉ុណ្ណោះ!`); 
+            notifyPosUser(`ស្តុកមានត្រឹមតែ ${stockQty} ${window.escapeHTML(cItem.isCombo ? 'ឈុត' : (p.unit||'ឯកតា'))} ប៉ុណ្ណោះ!`); 
         } else {
             cItem.cartQty = newQty;
         }
@@ -324,26 +357,43 @@ window.renderCart = function() {
         cHTML.innerHTML = `<div style="text-align: center; color: var(--text-muted); margin-top: 50px; font-size: var(--fs-14);">${d.cartEmpty || 'កន្ត្រកទទេ'}</div>`; 
     } else {
         let finalCartHtml = '';
+        const pfAdv = (window.sysSettings && window.sysSettings.proFeatures) ? window.sysSettings.proFeatures : {};
         window.cart.forEach(c => {
             if(!c) return; 
             tQty += c.cartQty; 
-            let origProd = (window.inventory || []).find(i => i && i.id === c.id);
-            let origUsd = origProd ? (parseFloat(origProd.price) || 0) : (parseFloat(c.price) || 0);
-            let pRiel = parseFloat(c.riel) || 0;
-            let pUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / window.cartRate) : (parseFloat(c.price) || 0));
-            c.price = pUsd;
+            const pr = window.getCartItemUnitPricing(c);
+            c.price = pr.finalUnitUsd;
             c.qty = c.cartQty;
 
-            if (origUsd > 0) tUsdOnly += origUsd * c.cartQty; 
-            else if (pRiel > 0) tRielOnly += pRiel * c.cartQty;
-            else tUsdOnly += pUsd * c.cartQty;
+            if (pr.discUsd > 0 || pr.modExtra > 0 || c.isCombo) {
+                tUsdOnly += pr.finalUnitUsd * c.cartQty;
+            } else if (pr.origUsd > 0) {
+                tUsdOnly += pr.origUsd * c.cartQty;
+            } else if (pr.pRiel > 0) {
+                tRielOnly += pr.pRiel * c.cartQty;
+            } else {
+                tUsdOnly += pr.finalUnitUsd * c.cartQty;
+            }
 
-            let priceDisplay = origUsd > 0 ? window.fMoney(origUsd) : (pRiel > 0 ? pRiel.toLocaleString()+' ៛' : window.fMoney(pUsd)); 
-            let totalDisplay = origUsd > 0 ? window.fMoney(origUsd * c.cartQty) : (pRiel > 0 ? (pRiel * c.cartQty).toLocaleString()+' ៛' : window.fMoney(pUsd * c.cartQty));
+            let priceDisplay = (pr.discUsd > 0)
+                ? `<s style="color:var(--text-muted); font-size:10px; margin-right:3px;">${window.fMoney(pr.beforeDiscUsd)}</s>${window.fMoney(pr.finalUnitUsd)}`
+                : ((pr.origUsd > 0 || pr.modExtra > 0 || c.isCombo) ? window.fMoney(pr.finalUnitUsd) : (pr.pRiel > 0 ? pr.pRiel.toLocaleString()+' ៛' : window.fMoney(pr.finalUnitUsd)));
+            let totalDisplay = (pr.origUsd > 0 || pr.discUsd > 0 || pr.modExtra > 0 || c.isCombo)
+                ? window.fMoney(pr.finalUnitUsd * c.cartQty)
+                : (pr.pRiel > 0 ? (pr.pRiel * c.cartQty).toLocaleString()+' ៛' : window.fMoney(pr.finalUnitUsd * c.cartQty));
             
             let safeName = window.escapeHTML(c.name);
             let safeUnit = window.escapeHTML(c.unit) || 'ឯកតា';
-            finalCartHtml += `<div class="cart-item"><img src="${c.image||'https://placehold.co/100?text=Img'}" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 10px; border: 1px solid var(--border);"><div style="flex:1;"><div style="font-weight:bold; font-size:var(--fs-14); margin-bottom:2px; line-height: 1.2; color: var(--text-main);">${safeName}</div><div style="color:var(--success); font-size:var(--fs-12);">${priceDisplay} <small style="color:var(--text-muted);">/ ${safeUnit}</small></div></div><div style="display:flex; align-items:center; gap:4px; background:var(--bg-dark); padding:2px; border-radius:6px; border:1px solid var(--border);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-14);"> - </button><input type="number" class="cart-qty-input" value="${c.cartQty}" onchange="window.setCartQtyManually('${c.id}', this.value)" style="width: 35px; height:22px; text-align: center; background: transparent; border: none; font-weight: bold; color: var(--text-main); outline:none; font-size: var(--fs-13);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-14);"> + </button></div><div style="width:70px; text-align:right; font-weight:bold; font-size:var(--fs-14); margin-left: 10px; color: var(--text-main);">${totalDisplay}</div></div>`;
+            let advItemBtns = '';
+            if (pfAdv.itemDiscounts) {
+                const discActive = pr.discUsd > 0;
+                advItemBtns += `<button type="button" onclick="window.openItemDiscountModal && window.openItemDiscountModal('${c.id}')" title="បញ្ចុះតម្លៃមុខទំនិញនេះ" style="border:1px solid ${discActive ? 'var(--warning)' : 'var(--border)'}; background:${discActive ? 'rgba(245,158,11,0.18)' : 'transparent'}; color:${discActive ? 'var(--warning)' : 'var(--text-muted)'}; border-radius:5px; padding:1px 5px; font-size:10px; cursor:pointer; margin-left:4px;">🏷️${discActive ? (c.itemDiscType==='$' ? '-$'+c.itemDiscVal : '-'+c.itemDiscVal+'%') : ''}</button>`;
+            }
+            if (pfAdv.posModifiers && !c.isCombo) {
+                advItemBtns += `<button type="button" onclick="window.openPosModifierModal && window.openPosModifierModal('${c.id}')" title="ជម្រើស Size/ស្ករ/ទឹកកក & ក្តារចុចលេខ" style="border:1px solid var(--border); background:transparent; color:var(--primary); border-radius:5px; padding:1px 5px; font-size:10px; cursor:pointer; margin-left:3px;">⚙️</button>`;
+            }
+
+            finalCartHtml += `<div class="cart-item"><img src="${c.image||window.SKM_IMG_FALLBACK||'https://placehold.co/100?text=Img'}" loading="lazy" onerror="this.onerror=null;this.src=window.SKM_IMG_FALLBACK||'https://placehold.co/100?text=Img';" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 10px; border: 1px solid var(--border);"><div style="flex:1;"><div style="font-weight:bold; font-size:var(--fs-14); margin-bottom:2px; line-height: 1.2; color: var(--text-main);">${safeName}</div><div style="color:var(--success); font-size:var(--fs-12); display:flex; align-items:center; flex-wrap:wrap; gap:2px;">${priceDisplay} <small style="color:var(--text-muted);">/ ${safeUnit}</small>${advItemBtns}</div></div><div style="display:flex; align-items:center; gap:4px; background:var(--bg-dark); padding:2px; border-radius:6px; border:1px solid var(--border);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-14);"> - </button><input type="number" class="cart-qty-input" value="${c.cartQty}" onchange="window.setCartQtyManually('${c.id}', this.value)" style="width: 35px; height:22px; text-align: center; background: transparent; border: none; font-weight: bold; color: var(--text-main); outline:none; font-size: var(--fs-13);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-14);"> + </button></div><div style="width:70px; text-align:right; font-weight:bold; font-size:var(--fs-14); margin-left: 10px; color: var(--text-main);">${totalDisplay}</div></div>`;
         });
         cHTML.innerHTML = finalCartHtml;
     }
@@ -370,7 +420,9 @@ window.renderCart = function() {
         let taxRate = parseFloat(window.sysSettings.taxRate) || 0; 
         taxAmountUsd = subTotalAfterDiscount * (taxRate / 100); 
     }
-    window.cartFinalUsd = subTotalAfterDiscount + taxAmountUsd; 
+    const deliveryFeeNow = (window.sysSettings?.proFeatures?.orderModes && window.currentPosOrderMode === 'delivery' && window.cart && window.cart.length > 0)
+        ? (parseFloat(window.currentDeliveryFeeUsd) || 0) : 0;
+    window.cartFinalUsd = subTotalAfterDiscount + taxAmountUsd + deliveryFeeNow; 
     window.cartFinalRiel = window.cartFinalUsd * window.cartRate;
     
     const cartTotalQtyEl = document.getElementById('cartTotalQty');
@@ -704,15 +756,17 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     const printerRouting = (window.sysSettings && window.sysSettings.categoryRouting) ? window.sysSettings.categoryRouting : {};
     let printerJobs = {}; 
 
+    const stockDeductionsList = [];
     window.cart.forEach((c, index) => {
         if(!c) return; 
-        const idx = (window.inventory || []).findIndex(p => p && p.id === c.id);
-        let origUsd = (idx !== -1 && parseFloat(window.inventory[idx].price) > 0) ? parseFloat(window.inventory[idx].price) : (parseFloat(c.price) || 0);
-        let pRiel = parseFloat(c.riel) || 0;
-        let effectiveUsd = origUsd > 0 ? origUsd : (pRiel > 0 ? (pRiel / window.cartRate) : 0);
+        const idx = c.isCombo ? -1 : (window.inventory || []).findIndex(p => p && p.id === c.id);
+        const pr = window.getCartItemUnitPricing(c);
+        let effectiveUsd = pr.finalUnitUsd;
 
+        // ⚡ Low-Storage: កាត់ image ចេញពី order_data ដើម្បីកុំឱ្យពេញ localStorage & ស៊ី Supabase Egress
+        const { image: _stripImg, ...cleanCartItem } = c;
         normalizedCartItems.push({
-            ...c,
+            ...cleanCartItem,
             price: effectiveUsd,
             cartQty: c.cartQty,
             qty: c.cartQty
@@ -725,16 +779,29 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
             printerJobs[routeId].push(c);
         }
 
-        if(idx !== -1) {
+        if (c.isCombo && Array.isArray(c.comboItems)) {
             if (status !== 'preorder') {
-                window.inventory[idx].qty = Math.max(0, (parseFloat(window.inventory[idx].qty) || 0) - c.cartQty); 
+                c.comboItems.forEach(comp => {
+                    const cIdx = (window.inventory || []).findIndex(p => p && String(p.id) === String(comp.id));
+                    const dQty = (parseInt(comp.qty) || 1) * (parseInt(c.cartQty) || 1);
+                    if (cIdx !== -1) {
+                        window.inventory[cIdx].qty = Math.max(0, (parseFloat(window.inventory[cIdx].qty) || 0) - dQty);
+                        stockDeductionsList.push({ id: window.inventory[cIdx].id, qty: dQty });
+                    }
+                });
+            }
+            if (typeof window.logAction === 'function') window.logAction('sale', c.name, c.cartQty, 'លក់ឈុត Combo (កាត់ស្តុកគ្រឿងផ្សំអូតូ)', window.activeUser);
+        } else if(idx !== -1) {
+            if (status !== 'preorder') {
+                window.inventory[idx].qty = Math.max(0, (parseFloat(window.inventory[idx].qty) || 0) - c.cartQty);
+                stockDeductionsList.push({ id: c.id, qty: parseInt(c.cartQty) || 1 });
             }
             if (typeof window.logAction === 'function') window.logAction('sale', c.name, c.cartQty, status === 'paid' ? 'លក់ចេញ (ទូទាត់រួច)' : (status === 'preorder' ? `កក់ប្រាក់ (Pre-order ដោយ ${custNameInput})` : `លក់ចេញ (រង់ចាំទូទាត់ ដោយ ${custNameInput})`), window.activeUser);
         }
 
         let lineStr = '', uPriceStr = '';
-        if(origUsd > 0) { lineStr = window.fMoney(origUsd * c.cartQty); uPriceStr = window.fMoney(origUsd); } 
-        else if(pRiel > 0) { lineStr = (pRiel * c.cartQty).toLocaleString() + '៛'; uPriceStr = pRiel.toLocaleString() + '៛'; } 
+        if(pr.origUsd > 0 || pr.discUsd > 0 || pr.modExtra > 0 || c.isCombo) { lineStr = window.fMoney(effectiveUsd * c.cartQty); uPriceStr = window.fMoney(effectiveUsd); } 
+        else if(pr.pRiel > 0) { lineStr = (pr.pRiel * c.cartQty).toLocaleString() + '៛'; uPriceStr = pr.pRiel.toLocaleString() + '៛'; } 
         else { lineStr = window.fMoney(effectiveUsd * c.cartQty); uPriceStr = window.fMoney(effectiveUsd); } 
         
         let safeItemName = window.escapeHTML(c.name);
@@ -748,7 +815,16 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     else if (status === 'preorder') paidUsdAmount = rUsd + (rRiel / window.cartRate);
 
     const finalCustomerName = custNameInput || selectedTable || 'អតិថិជនទូទៅ';
-    const invoiceNote = (selectedTable && selectedTable !== finalCustomerName) ? `[${selectedTable}]` : '';
+    const orderModeEnabled = !!(window.sysSettings?.proFeatures?.orderModes);
+    const orderModeLabel = orderModeEnabled
+        ? (window.currentPosOrderMode === 'takeaway' ? '[🛍️ Takeaway]' : (window.currentPosOrderMode === 'delivery' ? '[🛵 Delivery]' : '[🍽️ Dine-In]'))
+        : '';
+    const deliveryFeeApplied = (orderModeEnabled && window.currentPosOrderMode === 'delivery') ? (parseFloat(window.currentDeliveryFeeUsd) || 0) : 0;
+    const noteParts = [];
+    if (orderModeLabel) noteParts.push(orderModeLabel);
+    if (selectedTable && selectedTable !== finalCustomerName) noteParts.push(`[${selectedTable}]`);
+    if (deliveryFeeApplied > 0) noteParts.push(`[Delivery Fee: $${deliveryFeeApplied.toFixed(2)}]`);
+    const invoiceNote = noteParts.join(' ');
 
     const newInvoice = { 
         id: newInvId, 
@@ -790,6 +866,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     receiptHTML += `<table style="width:100%; font-size: 12px; margin-top: 5px;">`;
     if (discountValue > 0) receiptHTML += `<tr><td>បញ្ចុះតម្លៃ:</td><td style="text-align:right;">${discountType === '%' ? `${discountValue}%` : window.fMoney(discountValue)}</td></tr>`;
     if (appliedTaxRate > 0) receiptHTML += `<tr><td>VAT (${appliedTaxRate}%):</td><td style="text-align:right;">បូកបញ្ចូល</td></tr>`;
+    if (deliveryFeeApplied > 0) receiptHTML += `<tr><td>ថ្លៃដឹកជញ្ជូន (Delivery):</td><td style="text-align:right;">+${window.fMoney(deliveryFeeApplied)}</td></tr>`;
     receiptHTML += `<tr><td style="font-weight:bold; font-size:14px; padding-top:4px;">សរុបប្រាក់:</td><td style="text-align:right; font-weight:bold; font-size:14px; padding-top:4px;">${window.fMoney(window.cartFinalUsd)}</td></tr>`;
     if(window.cartFinalRiel > 0) receiptHTML += `<tr><td></td><td style="text-align:right; font-weight:bold; font-size:14px;">${Math.round(window.cartFinalRiel).toLocaleString()} ៛</td></tr>`;
     
@@ -848,6 +925,7 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
     if(typeof window.renderUnpaid === 'function') window.renderUnpaid();
     if(typeof window.renderCustomers === 'function') window.renderCustomers();
     if(typeof window.renderDashboard === 'function') window.renderDashboard();
+    if(typeof window.refreshFloorPlanStatus === 'function') window.refreshFloorPlanStatus();
     
     let combinedPrintHTML = receiptHTML;
     if (window.sysSettings && window.sysSettings.toggleMultiPrinter && Object.keys(printerJobs).length > 0) {
@@ -880,16 +958,16 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
 
                 if (status !== 'preorder') {
                     const bId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
-                    for (let item of normalizedCartItems) {
-                        const deductQty = parseInt(item.cartQty) || 1;
+                    for (let sd of stockDeductionsList) {
+                        const deductQty = parseInt(sd.qty) || 1;
                         const { error: stockError } = await window.supabaseClient.rpc('deduct_stock_safely', {
-                            p_product_id: item.id,
+                            p_product_id: sd.id,
                             p_branch_id: bId,
                             deduct_qty: deductQty
                         });
                         if (stockError) {
                             console.warn("RPC deduct_stock_safely fallback -> direct update:", stockError);
-                            const localProd = (window.inventory || []).find(p => p && String(p.id) === String(item.id));
+                            const localProd = (window.inventory || []).find(p => p && String(p.id) === String(sd.id));
                             if (localProd) {
                                 await window.supabaseClient.from('pos_products')
                                     .update({ qty: Math.max(0, parseFloat(localProd.qty) || 0), updated_at: new Date().toISOString() })
