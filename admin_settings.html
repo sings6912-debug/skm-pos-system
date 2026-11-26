@@ -1324,6 +1324,18 @@
                     <input type="checkbox" id="pfPosModifiers" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
                 </div>
 
+                <div class="form-group" style="margin: -4px 0 12px 0; padding:12px 14px; background:rgba(245,158,11,0.07); border-radius:10px; border:1px dashed #f59e0b; display:flex; flex-direction:column; gap:10px;">
+                    <div>
+                        <label style="font-size:12px; margin-bottom:4px; display:block;">📐 បញ្ជីទំហំ & តម្លៃបន្ថែម (Size:Price$ — ប្រើបានទាំង POS & Digital Menu):</label>
+                        <input type="text" id="setModifierSizesList" class="input-st" style="padding:8px 12px; font-size:13px; margin-bottom:0;" placeholder="ធម្មតា (S):0, Size M:0.50, Size L:1.00" onchange="saveAdminSettings()">
+                    </div>
+                    <div>
+                        <label style="font-size:12px; margin-bottom:4px; display:block;">✨ បញ្ជី Topping / Add-ons & តម្លៃបន្ថែម (Name:Price$ — ខណ្ឌដោយក្បៀស ","):</label>
+                        <input type="text" id="setModifierToppingsList" class="input-st" style="padding:8px 12px; font-size:13px; margin-bottom:0;" placeholder="ថែមគុជ:0.50, ថែមគ្រីម:0.50, ថែមឈីស:0.75, Extra Shot:0.75" onchange="saveAdminSettings()">
+                    </div>
+                    <div style="font-size:11px; color:var(--text-muted);">💡 ឧទាហរណ៍៖ <code>Size M:0.50, Size L:1.00</code> ឬសម្រាប់ម្ហូប៖ <code>ថែមពងទា:0.50, ថែមសាច់:1.50, ថែមបាយ:0.25</code> (ដាក់ <code>0</code> បើឥតគិតថ្លៃ)</div>
+                </div>
+
                 <div class="toggle-row">
                     <div>
                         <div>🏭 ឃ្លាំងស្តុកច្រើនទីតាំង & ផ្ទេរស្តុកក្នុងសាខា (Multi-Warehouse Locations)</div>
@@ -2014,6 +2026,12 @@
         if (document.getElementById('setWarehousesList')) {
             document.getElementById('setWarehousesList').value = sys.warehousesList || 'ហាងគោល (Main), ឃ្លាំង BKK, ឃ្លាំង TK';
         }
+        if (document.getElementById('setModifierSizesList')) {
+            document.getElementById('setModifierSizesList').value = sys.modifierSizesList || 'ធម្មតា (S):0, Size M:0.50, Size L:1.00';
+        }
+        if (document.getElementById('setModifierToppingsList')) {
+            document.getElementById('setModifierToppingsList').value = sys.modifierToppingsList || 'ថែមគុជ:0.50, ថែមគ្រីម:0.50, ថែមឈីស:0.75, Extra Shot:0.75';
+        }
 
         const orderTok = sys.orderTelegramBotToken || sys.telegramBotToken || shopInfo.telegramBotToken || '';
         const orderChat = sys.orderTelegramChatId || sys.telegramChatId || shopInfo.telegramChatId || '';
@@ -2189,6 +2207,8 @@
         sys.masterBranchesList = document.getElementById('setMasterBranchesList')?.value.trim() || BRANCH;
         sys.presetDiscountsList = document.getElementById('setPresetDiscountsList')?.value.trim() || 'Student:5%, VIP:10%, Promo:15%, Nham24:18%, Grab:22%';
         sys.warehousesList = document.getElementById('setWarehousesList')?.value.trim() || 'ហាងគោល (Main), ឃ្លាំង BKK, ឃ្លាំង TK';
+        sys.modifierSizesList = document.getElementById('setModifierSizesList')?.value.trim() || 'ធម្មតា (S):0, Size M:0.50, Size L:1.00';
+        sys.modifierToppingsList = document.getElementById('setModifierToppingsList')?.value.trim() || 'ថែមគុជ:0.50, ថែមគ្រីម:0.50, ថែមឈីស:0.75, Extra Shot:0.75';
 
         let orderTok = document.getElementById('setOrderTelegramBotToken').value.trim(); let orderChat = document.getElementById('setOrderTelegramChatId').value.trim();
         let servTok = document.getElementById('setServiceTelegramBotToken').value.trim(); let servChat = document.getElementById('setServiceTelegramChatId').value.trim();

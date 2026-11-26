@@ -2258,7 +2258,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     ${urgencyHtml}
                     ${conditionBadge}
                     <button class="p-fav-btn" style="color:${isFav?'var(--danger)':'#ffffff'};" onclick="toggleWl('${safeId}', this, event)"><i class="fa-solid fa-heart"></i></button>
-                    <img src="${p.image||'https://placehold.co/200'}" onerror="this.src='https://placehold.co/200'">
+                    <img src="${p.image||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect fill='%231e293b' width='120' height='120' rx='12'/%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='13' font-weight='bold'%3ENo Image%3C/text%3E%3C/svg%3E"}" loading="lazy" onerror="this.onerror=null;this.src='data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 120 120'%3E%3Crect fill='%231e293b' width='120' height='120' rx='12'/%3E%3Ctext x='50%25' y='52%25' dominant-baseline='middle' text-anchor='middle' fill='%2394a3b8' font-family='sans-serif' font-size='13' font-weight='bold'%3ENo Image%3C/text%3E%3C/svg%3E';">
                 </div>
                 <div class="p-info">
                     <div class="p-title">${p.name}</div>
@@ -2348,6 +2348,57 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             return /(coffee|cafe|latte|tea|matcha|boba|milk|espresso|frappe|smoothie|juice|soda|drink|beverage|iced|កាហ្វេ|តែ|ភេសជ្ជៈ|ទឹកក្រឡុក|គុជ|សូដា|ដូងក្រអូប)/.test(txt);
         }
 
+        function parseMenuModifierPairs(rawStr, fallbackStr) {
+            const src = (rawStr && String(rawStr).trim()) ? String(rawStr) : fallbackStr;
+            return src.split(',').map(part => {
+                const t = part.trim();
+                if (!t) return null;
+                const sepIdx = t.lastIndexOf(':');
+                if (sepIdx === -1) return { name: t, price: 0 };
+                const name = t.slice(0, sepIdx).trim();
+                const price = Math.max(0, parseFloat(t.slice(sepIdx + 1).replace(/[^0-9.]/g, '')) || 0);
+                if (!name) return null;
+                return { name, price };
+            }).filter(Boolean);
+        }
+
+        function buildMenuCafeModifiersHtml() {
+            const sizes = parseMenuModifierPairs(sys?.modifierSizesList, 'ធម្មតា (S):0, Size M:0.50, Size L:1.00');
+            const toppings = parseMenuModifierPairs(sys?.modifierToppingsList, 'ថែមគុជ:0.50, ថែមគ្រីម:0.50, ថែមឈីស:0.75, Extra Shot:0.75');
+            const escM = (s) => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+            const sizeOpts = sizes.map((s, idx) => {
+                const valKey = (idx === 0 && s.price === 0) ? '|0' : `${escM(s.name)}|${s.price.toFixed(2)}`;
+                const txt = s.price > 0 ? `${escM(s.name)} (+$${s.price.toFixed(2)})` : escM(s.name);
+                return `<option value="${valKey}">${txt}</option>`;
+            }).join('');
+            const topHtml = toppings.map(tp => {
+                const pTxt = tp.price > 0 ? `(+$${tp.price.toFixed(2)})` : '(Free)';
+                return `<label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);"><input type="checkbox" class="skm-addon-chk" data-name="${escM(tp.name)}" data-price="${tp.price.toFixed(2)}"> <span>${escM(tp.name)} ${pTxt}</span></label>`;
+            }).join('');
+            return `
+                <div style="background:var(--store-bg); padding:12px; border-radius:14px; border:1px solid var(--border-color); margin-bottom:16px;">
+                    <div style="font-size:12px; font-weight:800; color:var(--text-dark); margin-bottom:8px;">📐 ទំហំ, កម្រិតស្ករ & ទឹកកក (Options - ស្រេចចិត្ត)</div>
+                    ${sizes.length > 0 ? `<select id="optSize" class="input-st" style="margin-bottom:8px; padding:8px 10px; font-size:12px; background:var(--card-bg);">${sizeOpts}</select>` : ''}
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
+                        <select id="optSugar" class="input-st" style="margin-bottom:0; padding:8px 10px; font-size:12px; background:var(--card-bg);">
+                            <option value="">ស្ករ៖ ធម្មតា (100%)</option>
+                            <option value="ស្ករ 75%">ស្ករ 75%</option>
+                            <option value="ស្ករ 50%">ស្ករ 50%</option>
+                            <option value="ស្ករ 25%">ស្ករ 25%</option>
+                            <option value="អត់ស្ករ 0%">អត់ស្ករ (0%)</option>
+                        </select>
+                        <select id="optIce" class="input-st" style="margin-bottom:0; padding:8px 10px; font-size:12px; background:var(--card-bg);">
+                            <option value="">ទឹកកក៖ ធម្មតា</option>
+                            <option value="ទឹកកកតិច">ទឹកកកតិច (Less Ice)</option>
+                            <option value="អត់ទឹកកក">អត់ទឹកកក (No Ice)</option>
+                            <option value="ក្តៅ (Hot)">ក្តៅ (Hot)</option>
+                        </select>
+                    </div>
+                    <div style="font-size:12px; font-weight:800; color:var(--text-dark); margin-bottom:6px;">✨ បន្ថែម Topping / Add-ons:</div>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px;">${topHtml}</div>
+                </div>`;
+        }
+
         function openDet(id) {
             const p = inventory.find(x=>String(x.id)===String(id)); if(!p) return;
             curProd = p; selVar = (p.variants && p.variants.length) ? p.variants[0] : 'Base';
@@ -2376,41 +2427,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 <div style="font-size:12px; color:var(--text-muted); margin-bottom:15px; line-height: 1.4;">${p.desc || ''}</div>
                 <div style="margin-bottom:5px; font-size:12px; font-weight:800; color:var(--text-muted);">Variant / ជម្រើស:</div>
                 <div style="margin-bottom:14px;">${vHtml}</div>
-                ${shouldShowCafeAddons(p) ? `
-                <div style="background:var(--store-bg); padding:12px; border-radius:14px; border:1px solid var(--border-color); margin-bottom:16px;">
-                    <div style="font-size:12px; font-weight:800; color:var(--text-dark); margin-bottom:8px;">🧊 កម្រិតស្ករ & ទឹកកក (Options - ស្រេចចិត្ត)</div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px;">
-                        <select id="optSugar" class="input-st" style="margin-bottom:0; padding:8px 10px; font-size:12px; background:var(--card-bg);">
-                            <option value="">ស្ករ៖ ធម្មតា (100%)</option>
-                            <option value="ស្ករ 75%">ស្ករ 75%</option>
-                            <option value="ស្ករ 50%">ស្ករ 50%</option>
-                            <option value="ស្ករ 25%">ស្ករ 25%</option>
-                            <option value="អត់ស្ករ 0%">អត់ស្ករ (0%)</option>
-                        </select>
-                        <select id="optIce" class="input-st" style="margin-bottom:0; padding:8px 10px; font-size:12px; background:var(--card-bg);">
-                            <option value="">ទឹកកក៖ ធម្មតា</option>
-                            <option value="ទឹកកកតិច">ទឹកកកតិច (Less Ice)</option>
-                            <option value="អត់ទឹកកក">អត់ទឹកកក (No Ice)</option>
-                            <option value="ក្តៅ (Hot)">ក្តៅ (Hot)</option>
-                        </select>
-                    </div>
-                    <div style="font-size:12px; font-weight:800; color:var(--text-dark); margin-bottom:6px;">✨ បន្ថែម Topping / Add-ons:</div>
-                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px; font-size:12px;">
-                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);">
-                            <input type="checkbox" class="skm-addon-chk" data-name="ថែមគុជ" data-price="0.50"> <span>ថែមគុជ (+$0.50)</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);">
-                            <input type="checkbox" class="skm-addon-chk" data-name="ថែមគ្រីម" data-price="0.50"> <span>ថែមគ្រីម (+$0.50)</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);">
-                            <input type="checkbox" class="skm-addon-chk" data-name="ថែមឈីស" data-price="0.75"> <span>ថែមឈីស (+$0.75)</span>
-                        </label>
-                        <label style="display:flex; align-items:center; gap:6px; cursor:pointer; background:var(--card-bg); padding:7px 9px; border-radius:10px; border:1px solid var(--border-color);">
-                            <input type="checkbox" class="skm-addon-chk" data-name="ដូរទំហំធំ" data-price="0.50"> <span>ទំហំធំ (+$0.50)</span>
-                        </label>
-                    </div>
-                </div>
-                ` : ''}
+                ${shouldShowCafeAddons(p) ? buildMenuCafeModifiersHtml() : ''}
                 <button class="btn-act btn-green" style="width:100%; ${btnStyle}" ${btnClick}>${(trans[lang] || trans.km).addToOrder}</button>
             `;
             renderQA(); openModal('detailModal');
@@ -2437,6 +2454,9 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             let finalVar = selVar;
             let addonExtra = 0;
             if (!silent) {
+                const sizeRaw = document.getElementById('optSize')?.value || '|0';
+                const [sizeLbl, sizePrcStr] = sizeRaw.split('|');
+                addonExtra += parseFloat(sizePrcStr) || 0;
                 const sugar = document.getElementById('optSugar')?.value || '';
                 const ice = document.getElementById('optIce')?.value || '';
                 const addons = [];
@@ -2444,7 +2464,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                     addons.push('+' + chk.getAttribute('data-name'));
                     addonExtra += parseFloat(chk.getAttribute('data-price')) || 0;
                 });
-                const parts = [selVar, sugar, ice, ...addons].filter(Boolean);
+                const parts = [selVar, sizeLbl, sugar, ice, ...addons].filter(Boolean);
                 finalVar = parts.join(' | ');
             }
             const basePrice = getPrc(curProd);
@@ -2728,12 +2748,16 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             }
             let nowDateStr = new Date().toLocaleDateString('km-KH') + ' ' + new Date().toLocaleTimeString('km-KH');
 
-            const normalizedItems = cart.map(c => ({
-                ...c,
-                price: getPrc(c),
-                qty: c.qty,
-                cartQty: c.qty
-            }));
+            // ⚡ Low-Egress: កាត់ image ចេញពី order_data កុំឱ្យស៊ី Supabase & localStorage
+            const normalizedItems = cart.map(c => {
+                const { image: _stripImg, ...cleanC } = c;
+                return {
+                    ...cleanC,
+                    price: getPrc(c),
+                    qty: c.qty,
+                    cartQty: c.qty
+                };
+            });
 
             const ord = {
                 id: orderId,
@@ -2907,7 +2931,8 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
                 if(orderBotToken && orderChatId && navigator.onLine) {
                     let itxt = ord.items.map((i,x)=>`${x+1}. ${escapeTelegramHTML(i.name)} [${escapeTelegramHTML(i.cartVar)}] x${i.qty} = $${(getPrc(i)*i.qty).toFixed(2)}`).join('\n');
                     let discTxt = discUsd > 0 ? `\n🏷️ បញ្ចុះតម្លៃ: <b>-$${discUsd.toFixed(2)}</b>` : '';
-                    let safeNote = escapeTelegramHTML(ord.note) || 'គ្មាន';
+                    let cleanNoteForTg = String(ord.note || '').replace(/\[SLIP_URL:[^\]]+\]/g, '📸 [មានរូប Slip បង់ប្រាក់]').trim();
+                    let safeNote = escapeTelegramHTML(cleanNoteForTg) || 'គ្មាន';
                     let safeCustName = escapeTelegramHTML(n);
                     let safePhone = escapeTelegramHTML(ph) || 'គ្មាន';
 
@@ -2997,14 +3022,23 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
             const n = document.getElementById('rName').value.trim();
             if(!n) return showToast('Name required!', true);
             try {
-                if (!supabaseClient || !navigator.onLine) return showToast('Thanks for your rating!', false);
-                let { data } = await supabaseClient.from('branch_store').select('data_json').eq('branch_id', BRANCH).maybeSingle();
-                let d = (data && data.data_json) ? data.data_json : {};
-                if(!d.reviews) d.reviews=[];
-                d.reviews.unshift({ name:n, comment:document.getElementById('rCom').value, rating:rateStar, date:new Date().toLocaleString() });
-                await supabaseClient.from('branch_store').upsert({branch_id: BRANCH, data_json: d, updated_at: new Date().toISOString()}, {onConflict: 'branch_id'});
+                const reviewEntry = { name: n, comment: document.getElementById('rCom').value.trim(), rating: rateStar, date: new Date().toLocaleString('km-KH') };
+                if (!sys || typeof sys !== 'object') sys = {};
+                if (!Array.isArray(sys.reviews)) sys.reviews = [];
+                sys.reviews.unshift(reviewEntry);
+                sys.reviews = sys.reviews.slice(0, 60);
+                localStorage.setItem(`ks2_${BRANCH}_sys_settings`, JSON.stringify(sys));
+                if (supabaseClient && navigator.onLine) {
+                    let { data } = await supabaseClient.from('branch_store').select('sys_settings').eq('branch_id', BRANCH).maybeSingle();
+                    let nextSys = Object.assign({}, (data && data.sys_settings) ? data.sys_settings : sys);
+                    if (!Array.isArray(nextSys.reviews)) nextSys.reviews = [];
+                    nextSys.reviews.unshift(reviewEntry);
+                    nextSys.reviews = nextSys.reviews.slice(0, 60);
+                    await supabaseClient.from('branch_store').update({ sys_settings: nextSys, updated_at: new Date().toISOString() }).eq('branch_id', BRANCH);
+                }
+                document.getElementById('rCom').value = '';
                 showToast('Thanks for your rating!'); closeModal('reviewModal');
-            } catch(e) {}
+            } catch(e) { showToast('Thanks for your rating!'); closeModal('reviewModal'); }
         }
 
         window.onload = init;

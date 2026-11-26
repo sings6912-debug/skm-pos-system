@@ -184,8 +184,22 @@
     };
 
     // =========================================================
-    // 3. POS ITEM MODIFIERS & TABLET QUICK NUMPAD
+    // 3. POS ITEM MODIFIERS & TABLET QUICK NUMPAD (ADMIN CONFIGURABLE)
     // =========================================================
+    function parseModifierPairs(rawStr, fallbackStr) {
+        const src = (rawStr && String(rawStr).trim()) ? String(rawStr) : fallbackStr;
+        return src.split(',').map(part => {
+            const t = part.trim();
+            if (!t) return null;
+            const sepIdx = t.lastIndexOf(':');
+            if (sepIdx === -1) return { name: t, price: 0 };
+            const name = t.slice(0, sepIdx).trim();
+            const price = Math.max(0, parseFloat(t.slice(sepIdx + 1).replace(/[^0-9.]/g, '')) || 0);
+            if (!name) return null;
+            return { name, price };
+        }).filter(Boolean);
+    }
+
     let numpadBuffer = '';
     window.openPosModifierModal = function(cartId) {
         const pf = getPF();
@@ -201,7 +215,7 @@
             modal.style.zIndex = '10031';
             modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
             modal.innerHTML = `
-                <div class="modal" style="max-width:560px; width:96%;">
+                <div class="modal" style="max-width:580px; width:96%;">
                     <div class="modal-header">
                         <h2 style="font-size:17px;">🧋 ជម្រើសថែមថយ & ក្តារចុចលេខ (Modifiers & Numpad)</h2>
                         <button class="btn-outline" style="border:none; font-size:20px; padding:0;" onclick="document.getElementById('skmPosModModal').style.display='none'">✕</button>
@@ -210,7 +224,7 @@
                         <input type="hidden" id="skmModCartId">
                         <div id="skmModProdTitle" style="font-weight:900; font-size:15.5px; color:var(--primary); margin-bottom:12px;"></div>
 
-                        <div style="display:grid; grid-template-columns:1fr 1.25fr; gap:14px;">
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:14px;">
                             <!-- Left: Quick Numpad for Quantity -->
                             <div style="background:rgba(0,0,0,0.06); padding:12px; border-radius:12px; border:1px solid var(--border);">
                                 <div style="font-size:12px; font-weight:800; color:var(--text-muted); margin-bottom:6px;">🔢 ចំនួន (Quantity Keypad):</div>
@@ -223,15 +237,11 @@
                                 </div>
                             </div>
 
-                            <!-- Right: Size / Sugar / Ice / Toppings -->
+                            <!-- Right: Dynamic Size / Sugar / Ice / Toppings -->
                             <div style="display:flex; flex-direction:column; gap:10px;">
                                 <div>
                                     <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">📐 ទំហំ (Size):</label>
-                                    <select id="skmModSize" class="form-control" style="width:100%;">
-                                        <option value="|0">ធម្មតា (Regular / S)</option>
-                                        <option value="Size M|0.50">Size M (+$0.50)</option>
-                                        <option value="Size L|1.00">Size L (+$1.00)</option>
-                                    </select>
+                                    <select id="skmModSize" class="form-control" style="width:100%;"></select>
                                 </div>
                                 <div>
                                     <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">🍬 កម្រិតស្ករ (Sugar):</label>
@@ -254,13 +264,8 @@
                                     </select>
                                 </div>
                                 <div>
-                                    <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">✨ បន្ថែម Topping:</label>
-                                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:5px; font-size:11.5px;">
-                                        <label style="display:flex; align-items:center; gap:4px; cursor:pointer; background:var(--bg-dark); padding:5px 7px; border-radius:8px; border:1px solid var(--border);"><input type="checkbox" class="skm-pos-mod-addon" data-name="ថែមគុជ" data-price="0.50"> ថែមគុជ +$0.5</label>
-                                        <label style="display:flex; align-items:center; gap:4px; cursor:pointer; background:var(--bg-dark); padding:5px 7px; border-radius:8px; border:1px solid var(--border);"><input type="checkbox" class="skm-pos-mod-addon" data-name="ថែមគ្រីម" data-price="0.50"> ថែមគ្រីម +$0.5</label>
-                                        <label style="display:flex; align-items:center; gap:4px; cursor:pointer; background:var(--bg-dark); padding:5px 7px; border-radius:8px; border:1px solid var(--border);"><input type="checkbox" class="skm-pos-mod-addon" data-name="ថែមឈីស" data-price="0.75"> ថែមឈីស +$0.75</label>
-                                        <label style="display:flex; align-items:center; gap:4px; cursor:pointer; background:var(--bg-dark); padding:5px 7px; border-radius:8px; border:1px solid var(--border);"><input type="checkbox" class="skm-pos-mod-addon" data-name="Extra Shot" data-price="0.75"> Shot +$0.75</label>
-                                    </div>
+                                    <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">✨ បន្ថែម Topping / Add-ons:</label>
+                                    <div id="skmModToppingsGrid" style="display:grid; grid-template-columns:1fr 1fr; gap:5px; font-size:11.5px;"></div>
                                 </div>
                                 <div>
                                     <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">📝 ចំណាំផ្ទះបាយ (Item Note):</label>
@@ -277,18 +282,39 @@
             document.body.appendChild(modal);
         }
 
+        // Populate Sizes & Toppings dynamically from Admin Settings (Tab 9.3)
+        const sizesArr = parseModifierPairs(window.sysSettings?.modifierSizesList, 'ធម្មតា (S):0, Size M:0.50, Size L:1.00');
+        const toppingsArr = parseModifierPairs(window.sysSettings?.modifierToppingsList, 'ថែមគុជ:0.50, ថែមគ្រីម:0.50, ថែមឈីស:0.75, Extra Shot:0.75');
+
+        const sizeSel = document.getElementById('skmModSize');
+        if (sizeSel) {
+            sizeSel.innerHTML = sizesArr.map((s, idx) => {
+                const lbl = s.price > 0 ? `${esc(s.name)} (+$${s.price.toFixed(2)})` : esc(s.name);
+                const valKey = (idx === 0 && s.price === 0) ? '|0' : `${esc(s.name)}|${s.price.toFixed(2)}`;
+                return `<option value="${valKey}">${lbl}</option>`;
+            }).join('');
+            const wantedSize = item._modSize || '|0';
+            if (Array.from(sizeSel.options).some(o => o.value === wantedSize)) sizeSel.value = wantedSize;
+            else if (sizeSel.options.length > 0) sizeSel.selectedIndex = 0;
+        }
+
+        const topGrid = document.getElementById('skmModToppingsGrid');
+        const savedAddons = Array.isArray(item._modAddons) ? item._modAddons : [];
+        if (topGrid) {
+            topGrid.innerHTML = toppingsArr.map(tp => {
+                const checkedAttr = savedAddons.includes(tp.name) ? 'checked' : '';
+                const pTxt = tp.price > 0 ? `+$${tp.price.toFixed(2)}` : 'Free';
+                return `<label style="display:flex; align-items:center; gap:4px; cursor:pointer; background:var(--bg-dark); padding:5px 7px; border-radius:8px; border:1px solid var(--border);"><input type="checkbox" class="skm-pos-mod-addon" data-name="${esc(tp.name)}" data-price="${tp.price.toFixed(2)}" ${checkedAttr}> <span>${esc(tp.name)} <small style="color:var(--success);">${pTxt}</small></span></label>`;
+            }).join('');
+        }
+
         numpadBuffer = '';
         document.getElementById('skmModCartId').value = item.id;
         document.getElementById('skmModProdTitle').innerText = item.baseName || item.name;
         document.getElementById('skmModQtyInp').value = item.cartQty || 1;
-        document.getElementById('skmModSize').value = item._modSize || '|0';
         document.getElementById('skmModSugar').value = item._modSugar || '';
         document.getElementById('skmModIce').value = item._modIce || '';
         document.getElementById('skmModCustomNote').value = item._modNote || '';
-        const savedAddons = Array.isArray(item._modAddons) ? item._modAddons : [];
-        document.querySelectorAll('.skm-pos-mod-addon').forEach(chk => {
-            chk.checked = savedAddons.includes(chk.getAttribute('data-name'));
-        });
         modal.style.display = 'flex';
     };
 
