@@ -192,8 +192,9 @@ window.checkAuthentication = function(applyPermissionsCallback) {
         window.syncUsersFromCloud();
     }
 
+    const isDesktopApp = Boolean(window.SKMDesktopBridge && window.SKMDesktopBridge.isDesktopApp);
     const authPassed = sessionStorage.getItem('ks2_auth_passed');
-    if (window.activeUser && authPassed !== 'true') {
+    if ((window.activeUser || isDesktopApp) && authPassed !== 'true') {
         sessionStorage.setItem('ks2_auth_passed', 'true');
     } else if (authPassed !== 'true') {
         const branchId = window.SHOP_BRANCH_ID || new URLSearchParams(window.location.search).get('branch') || 'branch_1';
