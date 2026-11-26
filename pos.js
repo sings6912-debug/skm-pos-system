@@ -1152,13 +1152,15 @@ window.dispatchSilentOrBrowserPrint = async function(order, printerJobs, fallbac
     const mode = sys.silentPrintMode || 'browser';
     const rCfg = window.getActiveReceiptConfig ? window.getActiveReceiptConfig() : { paperMm: 80 };
 
-    // 0. Native PC Desktop App (Electron SKMDesktopBridge — True Silent USB/Windows + LAN IP Printing)
+    // 0. Native PC Desktop App (Electron SKMDesktopBridge — Parallel Fast Silent USB/Windows + LAN IP Printing)
     if (window.SKMDesktopBridge && window.SKMDesktopBridge.isDesktopApp && (mode === 'desktop_silent' || mode === 'bridge')) {
         try {
             const deptPrinters = sys.deptPrinters || [];
             const ipJobs = [];
+            const usbTasks = [];
+            let hasCashierUsb = false;
 
-            // A. Cashier Print: LAN IP if configured in bridge mode, otherwise Silent USB/Windows HTML (supports Khmer + Logo + KHQR 100%)
+            // A. Cashier Print
             const cashierIp = (sys.cashierPrinterIp || '').trim();
             if (mode === 'bridge' && cashierIp) {
                 ipJobs.push({
@@ -1170,21 +1172,17 @@ window.dispatchSilentOrBrowserPrint = async function(order, printerJobs, fallbac
                     text: window.buildPlainReceiptText(order, '')
                 });
             } else {
+                hasCashierUsb = true;
                 const cashierOnlyHtml = fallbackHTML.split('<div class="skm-page-break"></div>')[0] || fallbackHTML;
-                const res = await window.SKMDesktopBridge.printSilentHtml({
+                usbTasks.push(window.SKMDesktopBridge.printSilentHtml({
                     html: cashierOnlyHtml,
                     deviceName: (sys.cashierWinPrinter || '').trim(),
                     paperMm: rCfg.paperMm || 80,
                     title: docTitle || 'SKM Receipt'
-                });
-                if (!res || !res.ok) {
-                    console.warn('Desktop silent print failed, fallback to iframe:', res?.error);
-                    window.executePrint(fallbackHTML, docTitle);
-                    return;
-                }
+                }));
             }
 
-            // B. Multi-Printer Kitchen / Bar Routing (supports BOTH Windows USB Printer & LAN IP:9100 simultaneously!)
+            // B. Multi-Printer Kitchen / Bar Routing (Fire ALL printers in parallel!)
             if (sys.toggleMultiPrinter && printerJobs && typeof printerJobs === 'object') {
                 for (const [pid, items] of Object.entries(printerJobs)) {
                     if (pid === 'cashier' || pid === 'none') continue;
@@ -1205,22 +1203,30 @@ window.dispatchSilentOrBrowserPrint = async function(order, printerJobs, fallbac
                             ? window.buildKitchenTicketsHTML(order, { [pid]: items }).replace('<div class="skm-page-break"></div>', '')
                             : '';
                         if (ticketHtml) {
-                            await window.SKMDesktopBridge.printSilentHtml({
+                            usbTasks.push(window.SKMDesktopBridge.printSilentHtml({
                                 html: ticketHtml,
                                 deviceName: (pInfo.winPrinter || '').trim(),
                                 paperMm: rCfg.paperMm || 80,
                                 title: `Ticket - ${pInfo.name}`
-                            });
+                            }));
                         }
                     }
                 }
             }
 
+            const allTasks = [...usbTasks];
             if (ipJobs.length > 0 && typeof window.SKMDesktopBridge.printRawIp === 'function') {
-                await window.SKMDesktopBridge.printRawIp({ jobs: ipJobs });
+                allTasks.push(window.SKMDesktopBridge.printRawIp({ jobs: ipJobs }));
+            }
+
+            const results = await Promise.all(allTasks);
+            if (hasCashierUsb && (!results[0] || !results[0].ok)) {
+                console.warn('Desktop silent print failed, fallback to iframe:', results[0]?.error);
+                window.executePrint(fallbackHTML, docTitle);
+                return;
             }
             if (typeof window.showToast === 'function') {
-                window.showToast('🖨️ PC App បានព្រីនស្វ័យប្រវត្តិជោគជ័យ!');
+                window.showToast('⚡ PC App បានបាញ់ព្រីនព្រមគ្នាជោគជ័យ!');
             }
             return;
         } catch (err) {
