@@ -450,7 +450,7 @@
             <h1 id="displayShopName">Loading...</h1>
             
             <div class="tags-container">
-                <div class="branch-tag" id="displayBranchTag">សាខា៖ ទូទៅ</div>
+                <div class="branch-tag" id="displayBranchTag" onclick="openWelcomeBranchModal()" style="cursor:pointer;" title="ចុចដើម្បីប្តូរសាខា">សាខា៖ ទូទៅ</div>
                 <div class="status-tag" id="displayStoreStatus">🟢 កំពុងបើកលក់</div>
             </div>
 
@@ -521,7 +521,8 @@
         } catch(e) {}
 
         const urlParams = new URLSearchParams(window.location.search);
-        const SHOP_BRANCH_ID = urlParams.get('branch') || 'branch_1';
+        const SHOP_BRANCH_ID = (urlParams.get('branch') || localStorage.getItem('skm_last_branch') || 'branch_1').trim();
+        try { localStorage.setItem('skm_last_branch', SHOP_BRANCH_ID); } catch(e) {}
         const TABLE_PARAM = urlParams.get('table') || '';
         let currentLang = localStorage.getItem('app_lang') || 'km';
         let branchSysSettings = {};
@@ -1062,7 +1063,7 @@
 
         function applyLanguageUI(lang) {
             const d = i18n[lang] || i18n.km;
-            document.getElementById('displayBranchTag').innerText = d.branch + SHOP_BRANCH_ID;
+            document.getElementById('displayBranchTag').innerText = d.branch + SHOP_BRANCH_ID + ' ▾';
             document.getElementById('displaySubtitle').innerText = d.subtitle;
             document.getElementById('btnMenuEl').innerText = d.btnMenu;
             document.getElementById('btnAdminEl').innerText = d.btnAdmin;
@@ -1123,5 +1124,39 @@
     });
 </script>
 <script src="pwa_app_installer.js" defer></script>
+
+<!-- 🏢 Branch Switcher Modal on Welcome Screen -->
+<div id="welcomeBranchModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.72); backdrop-filter:blur(6px); z-index:9999; justify-content:center; align-items:center; padding:18px;">
+    <div style="background:#1e293b; color:#f8fafc; max-width:380px; width:100%; border-radius:20px; padding:22px; border:1px solid rgba(56,189,248,0.35); box-shadow:0 24px 60px rgba(0,0,0,0.45); text-align:center;">
+        <h3 style="margin:0 0 8px 0; font-size:17px; color:#38bdf8;">🏢 ប្តូរសាខា (Switch Branch)</h3>
+        <p style="font-size:12.5px; color:#94a3b8; margin-bottom:14px;">បញ្ចូលលេខកូដសាខារបស់ហាងអ្នក (ឧ. HENG, branch_1, DEMO)៖</p>
+        <input type="text" id="welcomeBranchInput" placeholder="ឧ. HENG" style="width:100%; padding:11px 14px; border-radius:12px; border:1px solid rgba(255,255,255,0.2); background:rgba(15,23,42,0.85); color:#fff; font-size:15px; font-weight:800; text-align:center; margin-bottom:14px; outline:none;" onkeydown="if(event.key==='Enter') applyWelcomeBranchSwitch()">
+        <div style="display:flex; gap:8px;">
+            <button type="button" onclick="document.getElementById('welcomeBranchModal').style.display='none'" style="flex:1; padding:10px; border-radius:12px; border:1px solid rgba(255,255,255,0.2); background:transparent; color:#cbd5e1; font-weight:700; cursor:pointer;">បោះបង់</button>
+            <button type="button" onclick="applyWelcomeBranchSwitch()" style="flex:1.4; padding:10px; border-radius:12px; border:none; background:linear-gradient(135deg,#06b6d4,#10b981); color:#fff; font-weight:800; cursor:pointer;">✓ ប្តូរសាខាឥឡូវនេះ</button>
+        </div>
+    </div>
+</div>
+<script>
+    window.openWelcomeBranchModal = function() {
+        const m = document.getElementById('welcomeBranchModal');
+        const inp = document.getElementById('welcomeBranchInput');
+        if (!m || !inp) return;
+        inp.value = SHOP_BRANCH_ID || '';
+        m.style.display = 'flex';
+        setTimeout(() => { inp.focus(); inp.select(); }, 60);
+    };
+    window.applyWelcomeBranchSwitch = function() {
+        const val = (document.getElementById('welcomeBranchInput')?.value || '').trim();
+        if (!val) return;
+        try { localStorage.setItem('skm_last_branch', val); } catch(e) {}
+        if (window.SKMDesktopBridge && typeof window.SKMDesktopBridge.setBranch === 'function') {
+            window.SKMDesktopBridge.setBranch(val);
+        }
+        const u = new URL(window.location.href);
+        u.searchParams.set('branch', val);
+        window.location.href = u.toString();
+    };
+</script>
 </body>
 </html>
