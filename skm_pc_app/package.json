@@ -1,0 +1,67 @@
+{
+  "name": "skm-pos-desktop",
+  "version": "31.0.0",
+  "description": "SKM INTEGRATE POS & ERP \u2014 Standalone PC Desktop App (Windows/Mac) with Silent Printing",
+  "main": "main.js",
+  "author": "SKM INTEGRATE",
+  "scripts": {
+    "start": "electron .",
+    "build:win": "electron-builder --win nsis portable",
+    "build:mac": "electron-builder --mac dmg"
+  },
+  "devDependencies": {
+    "electron": "^31.0.0",
+    "electron-builder": "^24.13.3"
+  },
+  "build": {
+    "appId": "com.skmintegrate.pos.desktop",
+    "productName": "SKM POS",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "package.json"
+    ],
+    "extraResources": [
+      {
+        "from": "..",
+        "to": "web",
+        "filter": [
+          "**/*",
+          "!skm_pc_app/**",
+          "!skm_android_app/**",
+          "!skm_print_bridge/**",
+          "!.git/**",
+          "!.github/**",
+          "!node_modules/**"
+        ]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        },
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "../favicon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "SKM POS"
+    }
+  }
+}

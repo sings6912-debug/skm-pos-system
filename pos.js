@@ -392,6 +392,10 @@ window.renderCart = function() {
             if (pfAdv.posModifiers && !c.isCombo) {
                 advItemBtns += `<button type="button" onclick="window.openPosModifierModal && window.openPosModifierModal('${c.id}')" title="ជម្រើស Size/ស្ករ/ទឹកកក & ក្តារចុចលេខ" style="border:1px solid var(--border); background:transparent; color:var(--primary); border-radius:5px; padding:1px 5px; font-size:10px; cursor:pointer; margin-left:3px;">⚙️</button>`;
             }
+            if (pfAdv.serialImei && !c.isCombo) {
+                const hasSn = Boolean(c.serialNo);
+                advItemBtns += `<button type="button" onclick="window.openCartImeiModal && window.openCartImeiModal('${c.id}')" title="បញ្ចូល / ស្កេន Serial ឬ IMEI" style="border:1px solid ${hasSn ? 'var(--success)' : 'var(--border)'}; background:${hasSn ? 'rgba(16,185,129,0.16)' : 'transparent'}; color:${hasSn ? 'var(--success)' : 'var(--text-muted)'}; border-radius:5px; padding:1px 5px; font-size:10px; cursor:pointer; margin-left:3px;">🔢${hasSn ? '✓' : 'IMEI'}</button>`;
+            }
 
             finalCartHtml += `<div class="cart-item"><img src="${c.image||window.SKM_IMG_FALLBACK||'https://placehold.co/100?text=Img'}" loading="lazy" onerror="this.onerror=null;this.src=window.SKM_IMG_FALLBACK||'https://placehold.co/100?text=Img';" style="width: 40px; height: 40px; border-radius: 6px; object-fit: cover; margin-right: 10px; border: 1px solid var(--border);"><div style="flex:1;"><div style="font-weight:bold; font-size:var(--fs-14); margin-bottom:2px; line-height: 1.2; color: var(--text-main);">${safeName}</div><div style="color:var(--success); font-size:var(--fs-12); display:flex; align-items:center; flex-wrap:wrap; gap:2px;">${priceDisplay} <small style="color:var(--text-muted);">/ ${safeUnit}</small>${advItemBtns}</div></div><div style="display:flex; align-items:center; gap:4px; background:var(--bg-dark); padding:2px; border-radius:6px; border:1px solid var(--border);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', -1)" style="width:20px; height:20px; font-size:var(--fs-14);"> - </button><input type="number" class="cart-qty-input" value="${c.cartQty}" onchange="window.setCartQtyManually('${c.id}', this.value)" style="width: 35px; height:22px; text-align: center; background: transparent; border: none; font-weight: bold; color: var(--text-main); outline:none; font-size: var(--fs-13);"><button class="qty-btn" onclick="window.updateCartQty('${c.id}', 1)" style="width:20px; height:20px; font-size:var(--fs-14);"> + </button></div><div style="width:70px; text-align:right; font-weight:bold; font-size:var(--fs-14); margin-left: 10px; color: var(--text-main);">${totalDisplay}</div></div>`;
         });
@@ -546,8 +550,8 @@ window.calculateChange = function() {
 };
 
 window.processCheckoutPaid = function() { 
-    let recvUsdText = document.getElementById('checkoutReceivedUsd').value; 
-    let recvRielText = document.getElementById('checkoutReceivedRiel').value; 
+    const recvUsdText = (document.getElementById('checkoutReceivedUsd')?.value || '').trim(); 
+    const recvRielText = (document.getElementById('checkoutReceivedRiel')?.value || '').trim(); 
     let recvUsd = parseFloat(recvUsdText) || 0;
     let recvRiel = parseFloat(recvRielText) || 0;
 
@@ -556,11 +560,23 @@ window.processCheckoutPaid = function() {
         recvRiel = 0;
     }
 
-    let totalKhr = Math.round(window.cartFinalRiel); 
-    let recvKhr = (recvUsd * window.cartRate) + recvRiel; 
+    const totalKhr = Math.round(window.cartFinalRiel || 0); 
+    const recvKhr = Math.round((recvUsd * (window.cartRate || 4000)) + recvRiel); 
+
+    // 🛡️ ទប់ស្កាត់ការកាត់ Paid នៅពេលប្រាក់ទទួលតិចជាងតម្លៃសរុប (អនុគ្រោះគម្លាត 100៛ សម្រាប់ការបង្គត់)
+    if (totalKhr > 0 && (recvKhr + 100) < totalKhr) {
+        const shortKhr = totalKhr - recvKhr;
+        const shortUsd = (shortKhr / (window.cartRate || 4000)).toFixed(2);
+        return notifyPosUser(
+            `⚠️ ប្រាក់ទទួលមិនគ្រប់គ្រាន់ទេ! នៅខ្វះ $${shortUsd} (${shortKhr.toLocaleString()} ៛)`,
+            'ប្រាក់ទទួលមិនគ្រប់',
+            true
+        );
+    }
+
     let changeKhr = recvKhr - totalKhr; 
     if (changeKhr < 0) changeKhr = 0; 
-    let changeUsd = changeKhr / window.cartRate; 
+    let changeUsd = changeKhr / (window.cartRate || 4000); 
     
     document.getElementById('checkoutModal').style.display = 'none'; 
     window.checkout('paid', recvUsd, recvRiel, changeUsd, changeKhr); 
@@ -806,7 +822,8 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         
         let safeItemName = window.escapeHTML(c.name);
         let safeItemUnit = window.escapeHTML(c.unit) || '';
-        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${safeItemName}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${safeItemUnit}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
+        const snHtml = c.serialNo ? `<div style="font-size:10px; font-family:monospace; color:#333; margin-top:1px;">S/N: ${window.escapeHTML(c.serialNo)}</div>` : '';
+        receiptHTML += `<tr><td colspan="3" style="padding-top: 4px; font-weight:bold; font-size: 12px;">${index + 1}. ${safeItemName}${snHtml}</td></tr><tr><td style="padding-bottom: 4px; font-size: 11px;">${uPriceStr}</td><td style="text-align:center; padding-bottom: 4px; font-size: 11px;">${c.cartQty} ${safeItemUnit}</td><td style="text-align:right; font-weight:bold; padding-bottom: 4px;">${lineStr}</td></tr>`;
     });
     receiptHTML += `</tbody></table><div class="print-dashed-line"></div>`;
 
@@ -932,7 +949,11 @@ window.checkout = function(status, rUsd = 0, rRiel = 0, cUsd = 0, cRiel = 0) {
         const extraTickets = window.buildKitchenTicketsHTML ? window.buildKitchenTicketsHTML(newInvoice, printerJobs) : '';
         if (extraTickets) combinedPrintHTML += extraTickets;
     }
-    window.executePrint(combinedPrintHTML, `Receipt - ${newInvId}`);
+    if (typeof window.dispatchSilentOrBrowserPrint === 'function') {
+        window.dispatchSilentOrBrowserPrint(newInvoice, printerJobs, combinedPrintHTML, `Receipt - ${newInvId}`);
+    } else {
+        window.executePrint(combinedPrintHTML, `Receipt - ${newInvId}`);
+    }
 
     setTimeout(async () => {
         if (window.supabaseClient && navigator.onLine) {
@@ -1083,3 +1104,235 @@ window.addEventListener('visibilitychange', function() {
         }
     }
 });
+
+// =========================================================================
+// 🖨️ SILENT PRINT BRIDGE (PC LAN IP:9100) + ANDROID RAWBT / APK BRIDGE
+// =========================================================================
+window.buildPlainReceiptText = function(order, titleHeader = '') {
+    const line = '--------------------------------';
+    const out = [];
+    if (titleHeader) {
+        out.push(`*** ${titleHeader} ***`);
+    } else {
+        out.push(String(window.shopName || 'SKM INTEGRATE'));
+        if (window.shopPhone) out.push(`Tel: ${window.shopPhone}`);
+        if (window.shopAddress) out.push(String(window.shopAddress));
+    }
+    out.push(line);
+    out.push(`INV: ${order.id || ''}`);
+    out.push(`Date: ${order.date || ''}`);
+    out.push(`Customer: ${order.customerName || 'Walk-in'}`);
+    if (order.seller) out.push(`Staff: ${order.seller}`);
+    if (order.note) out.push(`Note: ${order.note}`);
+    out.push(line);
+    (order.items || []).forEach((it, idx) => {
+        const qty = it.cartQty || it.qty || 1;
+        const price = Number(it.price || 0);
+        out.push(`${idx + 1}. ${it.name}`);
+        if (it.serialNo) out.push(`   S/N: ${it.serialNo}`);
+        out.push(`   ${qty} x $${price.toFixed(2)} = $${(qty * price).toFixed(2)}`);
+    });
+    out.push(line);
+    if (!titleHeader) {
+        out.push(`TOTAL: $${Number(order.totalAmount || 0).toFixed(2)}`);
+        if (order.totalRiel) out.push(`TOTAL KHR: ${Number(order.totalRiel).toLocaleString()} KHR`);
+        if (order.status === 'paid' && (order.receivedUsd > 0 || order.receivedRiel > 0)) {
+            out.push(`PAID: $${Number(order.receivedUsd || 0).toFixed(2)} | ${Number(order.receivedRiel || 0).toLocaleString()} KHR`);
+            out.push(`CHANGE: $${Number(order.changeUsd || 0).toFixed(2)} | ${Math.round(order.changeRiel || 0).toLocaleString()} KHR`);
+        }
+        out.push(line);
+        out.push((window.sysSettings && window.sysSettings.receiptFooter) || 'Thank you! Please come again.');
+    }
+    out.push('\n\n');
+    return out.join('\n');
+};
+
+window.dispatchSilentOrBrowserPrint = async function(order, printerJobs, fallbackHTML, docTitle) {
+    const sys = window.sysSettings || {};
+    const mode = sys.silentPrintMode || 'browser';
+    const rCfg = window.getActiveReceiptConfig ? window.getActiveReceiptConfig() : { paperMm: 80 };
+
+    // 0. Native PC Desktop App (Electron SKMDesktopBridge — True Silent USB/Windows + LAN IP Printing)
+    if (window.SKMDesktopBridge && window.SKMDesktopBridge.isDesktopApp && (mode === 'desktop_silent' || mode === 'bridge')) {
+        try {
+            const deptPrinters = sys.deptPrinters || [];
+            const ipJobs = [];
+
+            // A. Cashier Print: LAN IP if configured in bridge mode, otherwise Silent USB/Windows HTML (supports Khmer + Logo + KHQR 100%)
+            const cashierIp = (sys.cashierPrinterIp || '').trim();
+            if (mode === 'bridge' && cashierIp) {
+                ipJobs.push({
+                    targetName: 'Cashier',
+                    ip: cashierIp,
+                    port: parseInt(sys.cashierPrinterPort) || 9100,
+                    openDrawer: Boolean(sys.toggleOpenCashDrawer && order.status === 'paid'),
+                    cutPaper: true,
+                    text: window.buildPlainReceiptText(order, '')
+                });
+            } else {
+                const cashierOnlyHtml = fallbackHTML.split('<div class="skm-page-break"></div>')[0] || fallbackHTML;
+                const res = await window.SKMDesktopBridge.printSilentHtml({
+                    html: cashierOnlyHtml,
+                    deviceName: (sys.cashierWinPrinter || '').trim(),
+                    paperMm: rCfg.paperMm || 80,
+                    title: docTitle || 'SKM Receipt'
+                });
+                if (!res || !res.ok) {
+                    console.warn('Desktop silent print failed, fallback to iframe:', res?.error);
+                    window.executePrint(fallbackHTML, docTitle);
+                    return;
+                }
+            }
+
+            // B. Multi-Printer Kitchen / Bar Routing (supports BOTH Windows USB Printer & LAN IP:9100 simultaneously!)
+            if (sys.toggleMultiPrinter && printerJobs && typeof printerJobs === 'object') {
+                for (const [pid, items] of Object.entries(printerJobs)) {
+                    if (pid === 'cashier' || pid === 'none') continue;
+                    const pInfo = deptPrinters.find(p => p.id === pid);
+                    if (!pInfo) continue;
+
+                    if (pInfo.type === 'network' && pInfo.ip) {
+                        ipJobs.push({
+                            targetName: pInfo.name,
+                            ip: String(pInfo.ip).trim(),
+                            port: parseInt(pInfo.port) || 9100,
+                            openDrawer: false,
+                            cutPaper: true,
+                            text: window.buildPlainReceiptText({ ...order, items }, pInfo.name)
+                        });
+                    } else {
+                        const ticketHtml = window.buildKitchenTicketsHTML
+                            ? window.buildKitchenTicketsHTML(order, { [pid]: items }).replace('<div class="skm-page-break"></div>', '')
+                            : '';
+                        if (ticketHtml) {
+                            await window.SKMDesktopBridge.printSilentHtml({
+                                html: ticketHtml,
+                                deviceName: (pInfo.winPrinter || '').trim(),
+                                paperMm: rCfg.paperMm || 80,
+                                title: `Ticket - ${pInfo.name}`
+                            });
+                        }
+                    }
+                }
+            }
+
+            if (ipJobs.length > 0 && typeof window.SKMDesktopBridge.printRawIp === 'function') {
+                await window.SKMDesktopBridge.printRawIp({ jobs: ipJobs });
+            }
+            if (typeof window.showToast === 'function') {
+                window.showToast('🖨️ PC App បានព្រីនស្វ័យប្រវត្តិជោគជ័យ!');
+            }
+            return;
+        } catch (err) {
+            console.warn('SKMDesktopBridge print error -> fallback:', err);
+        }
+    }
+
+    // 1. Native Android APK WebView Bridge (if running inside custom Android APK)
+    if (typeof window.SKMAndroidBridge !== 'undefined' && typeof window.SKMAndroidBridge.printHtml === 'function') {
+        try {
+            window.SKMAndroidBridge.printHtml(fallbackHTML, docTitle || 'Receipt');
+            return;
+        } catch (e) { console.warn('SKMAndroidBridge error:', e); }
+    }
+
+    // 2. Android App / RawBT Silent Thermal Printer Mode
+    if (mode === 'rawbt') {
+        try {
+            let fullTxt = window.buildPlainReceiptText(order, '');
+            if (sys.toggleMultiPrinter && printerJobs) {
+                const deptPrinters = sys.deptPrinters || [];
+                Object.entries(printerJobs).forEach(([pid, items]) => {
+                    if (pid === 'cashier' || pid === 'none') return;
+                    const pInfo = deptPrinters.find(p => p.id === pid);
+                    if (pInfo) {
+                        fullTxt += '\n================================\n';
+                        fullTxt += window.buildPlainReceiptText({ ...order, items }, pInfo.name);
+                    }
+                });
+            }
+            const utf8B64 = btoa(unescape(encodeURIComponent(fullTxt)));
+            window.location.href = `intent:base64,${utf8B64}#Intent;scheme=rawbt;package=ru.a402d.rawbtprinter;end;`;
+            if (typeof window.showToast === 'function') window.showToast('🖨️ បញ្ជូនទៅម៉ាស៊ីនព្រីន Android (RawBT)!');
+            return;
+        } catch (err) {
+            console.warn('RawBT fallback to browser print:', err);
+            window.executePrint(fallbackHTML, docTitle);
+            return;
+        }
+    }
+
+    // 3. PC Local Print Bridge (Silent Direct LAN IP Port 9100 + Multi-Printer Kitchen/Bar Routing)
+    if (mode === 'bridge') {
+        const bridgeUrl = (sys.printBridgeUrl || 'http://127.0.0.1:9191').replace(/\/+$/, '');
+        const jobs = [];
+        const cashierIp = (sys.cashierPrinterIp || '').trim();
+        const cashierPort = parseInt(sys.cashierPrinterPort) || 9100;
+
+        if (cashierIp) {
+            jobs.push({
+                targetName: 'Cashier',
+                ip: cashierIp,
+                port: cashierPort,
+                paperWidth: sys.receiptSize === '58mm' ? 58 : 80,
+                openDrawer: Boolean(sys.toggleOpenCashDrawer && order.status === 'paid'),
+                cutPaper: true,
+                text: window.buildPlainReceiptText(order, ''),
+                order
+            });
+        }
+
+        if (sys.toggleMultiPrinter && printerJobs && typeof printerJobs === 'object') {
+            const deptPrinters = sys.deptPrinters || [];
+            Object.entries(printerJobs).forEach(([pid, items]) => {
+                if (pid === 'cashier' || pid === 'none') return;
+                const pInfo = deptPrinters.find(p => p.id === pid);
+                if (pInfo && pInfo.type === 'network' && pInfo.ip) {
+                    jobs.push({
+                        targetName: pInfo.name,
+                        ip: String(pInfo.ip).trim(),
+                        port: parseInt(pInfo.port) || 9100,
+                        paperWidth: parseInt(pInfo.paperWidth) || 80,
+                        openDrawer: false,
+                        cutPaper: true,
+                        text: window.buildPlainReceiptText({ ...order, items }, pInfo.name),
+                        order: { ...order, items }
+                    });
+                }
+            });
+        }
+
+        if (jobs.length > 0) {
+            try {
+                const controller = new AbortController();
+                const timer = setTimeout(() => controller.abort(), 3200);
+                const resp = await fetch(`${bridgeUrl}/print-batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jobs }),
+                    signal: controller.signal
+                });
+                clearTimeout(timer);
+                if (resp.ok) {
+                    const json = await resp.json();
+                    if (json && json.ok) {
+                        if (typeof window.showToast === 'function') {
+                            window.showToast(`🖨️ ព្រីនស្វ័យប្រវត្តិជោគជ័យ (${jobs.length} ម៉ាស៊ីន)!`);
+                        }
+                        if (!cashierIp) {
+                            window.executePrint(fallbackHTML, docTitle);
+                        }
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.warn('SKM Print Bridge unreachable -> falling back to browser iframe print:', err);
+                if (typeof window.showToast === 'function') {
+                    window.showToast('⚠️ មិនអាចភ្ជាប់ Print Bridge បាន — ប្តូរទៅព្រីនតាម Browser ជំនួស!', true);
+                }
+            }
+        }
+    }
+
+    window.executePrint(fallbackHTML, docTitle);
+};

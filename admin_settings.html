@@ -1065,6 +1065,55 @@
                 <input type="checkbox" id="toggleMultiPrinter" style="width: 20px; height: 20px; accent-color: #f59e0b; cursor: pointer;" onchange="saveAdminSettings()">
             </div>
 
+            <!-- ⚡ SILENT PRINT BRIDGE & ANDROID RAWBT CONTROLS -->
+            <div class="section-box" style="margin-top: 14px; background: rgba(6, 182, 212, 0.05); border-color: rgba(6, 182, 212, 0.35);">
+                <div class="section-title" style="font-size: 14px; margin-bottom: 10px;">
+                    <i class="fa-solid fa-bolt"></i> ម៉ាស៊ីនព្រីនស្វ័យប្រវត្តិមិនលោតផ្ទាំង Print Dialog (Silent Printing & LAN IP Port 9100)
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 10px;">
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>របៀបបោះពុម្ព (Print Engine Mode):</label>
+                        <select id="setSilentPrintMode" class="input-st" onchange="saveAdminSettings()">
+                            <option value="browser">🌐 Browser Print (ស្តង់ដារដើម)</option>
+                            <option value="desktop_silent">🖥️ PC Desktop App Silent (USB/Windows — ខ្មែរ/Logo/QR អូតូ)</option>
+                            <option value="bridge">⚡ PC Local Print Bridge (Silent LAN IP:9100)</option>
+                            <option value="rawbt">📱 Android App / RawBT (ទូរស័ព្ទ/Tablet)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Print Bridge URL (លើកុំព្យូទ័រ PC):</label>
+                        <input type="text" id="setPrintBridgeUrl" class="input-st" value="http://127.0.0.1:9191" placeholder="http://127.0.0.1:9191" onchange="saveAdminSettings()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>IP ម៉ាស៊ីនព្រីន Cashier (ទទេ = ប្រើ Browser):</label>
+                        <input type="text" id="setCashierPrinterIp" class="input-st" placeholder="ឧ. 192.168.1.200" onchange="saveAdminSettings()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label>Port ម៉ាស៊ីនព្រីន Cashier (លំនាំដើម 9100):</label>
+                        <input type="number" id="setCashierPrinterPort" class="input-st" value="9100" min="1" max="65535" onchange="saveAdminSettings()">
+                    </div>
+                    <div class="form-group" style="margin-bottom: 0; grid-column: 1 / -1;">
+                        <label>🖨️ ឈ្មោះម៉ាស៊ីនព្រីន USB/Windows សម្រាប់ PC App (ទទេ = ម៉ាស៊ីនព្រីន Default របស់ Windows):</label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+                            <input type="text" id="setCashierWinPrinter" list="skmWinPrintersDatalist" class="input-st" placeholder="ឧ. XP-80C ឬទុកទទេដើម្បីប្រើ Windows Default Printer" style="flex:1; margin-bottom:0;" onchange="saveAdminSettings()">
+                            <datalist id="skmWinPrintersDatalist"></datalist>
+                            <button type="button" class="btn-action" style="background:var(--brand-dark); color:#fff;" onclick="detectDesktopPrinters()"><i class="fa-solid fa-magnifying-glass"></i> 🔍 រកម៉ាស៊ីនព្រីនលើ PC</button>
+                            <button type="button" class="btn-action" style="background:#8b5cf6; color:#fff;" onclick="openDesktopSecondScreen()"><i class="fa-solid fa-display"></i> 🖥️ បើក Monitor ទី២</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="toggle-row" style="margin-bottom: 10px; background: var(--card-bg);">
+                    <span>💵 បើកថតដាក់លុយស្វ័យប្រវត្តិក្រោយទូទាត់រួច (Auto Kick Cash Drawer — Bridge Mode)</span>
+                    <input type="checkbox" id="toggleOpenCashDrawer" style="width: 18px; height: 18px; accent-color: var(--brand-cyan); cursor: pointer;" onchange="saveAdminSettings()">
+                </div>
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <button type="button" class="btn-action" style="background: var(--brand-cyan); color: #fff;" onclick="testPrintBridgeConnection()">
+                        <i class="fa-solid fa-plug-circle-check"></i> 🧪 សាកល្បងភ្ជាប់ Print Bridge
+                    </button>
+                    <span id="printBridgeStatusText" style="font-size: 12px; color: var(--text-muted); font-weight: 700;">💡 បើកឯកសារ <code>skm_print_bridge/START_BRIDGE.bat</code> លើ PC ដើម្បីព្រីនត្រង់ចូល IP ផ្ទះបាយ/បារ</span>
+                </div>
+            </div>
+
             <div style="display: flex; gap: 20px; max-width: 100%; padding: 0; flex-wrap: wrap; margin-top: 15px; align-items: flex-start;">
                 
                 <!-- ផ្នែកទី១៖ បញ្ជីម៉ាស៊ីនព្រីន -->
@@ -1078,12 +1127,16 @@
 
                     <div id="addPrinterForm" style="display: none; background: rgba(0,0,0,0.02); padding: 12px; border-radius: 12px; border: 1px dashed var(--border-color); margin-bottom: 15px;">
                         <input type="text" id="newPrinterName" class="input-st" placeholder="ឈ្មោះម៉ាស៊ីន (ឧ. Kitchen)" style="margin-bottom: 8px; padding: 8px; font-size: 13px;">
-                        <select id="newPrinterType" class="input-st" style="margin-bottom: 8px; padding: 8px; font-size: 13px;" onchange="document.getElementById('newPrinterIpContainer').style.display = this.value === 'network' ? 'block' : 'none'">
-                            <option value="local">USB / Bluetooth / Local</option>
-                            <option value="network">Network (IP Address)</option>
+                        <select id="newPrinterType" class="input-st" style="margin-bottom: 8px; padding: 8px; font-size: 13px;" onchange="document.getElementById('newPrinterIpContainer').style.display = this.value === 'network' ? 'block' : 'none'; document.getElementById('newPrinterWinContainer').style.display = this.value === 'local' ? 'block' : 'none';">
+                            <option value="local">USB / Windows Printer (Local)</option>
+                            <option value="network">Network (LAN IP Address)</option>
                         </select>
+                        <div id="newPrinterWinContainer" style="margin-bottom: 8px;">
+                            <input type="text" id="newPrinterWinName" list="skmWinPrintersDatalist" class="input-st" placeholder="ឈ្មោះ Windows Printer (ឧ. XP-80C-Kitchen ឬទទេ = Default)" style="padding: 8px; font-size: 13px;">
+                        </div>
                         <div id="newPrinterIpContainer" style="display: none; margin-bottom: 8px;">
-                            <input type="text" id="newPrinterIp" class="input-st" placeholder="IP Address (ឧ. 192.168.1.100)" style="padding: 8px; font-size: 13px;">
+                            <input type="text" id="newPrinterIp" class="input-st" placeholder="IP Address (ឧ. 192.168.1.100)" style="padding: 8px; font-size: 13px; margin-bottom: 6px;">
+                            <input type="number" id="newPrinterPort" class="input-st" value="9100" placeholder="Port (9100)" style="padding: 8px; font-size: 13px;">
                         </div>
                         <div style="display: flex; gap: 8px;">
                             <button class="btn-action" style="flex: 1; background: var(--success); color: white; padding: 8px; font-size: 12px; justify-content: center;" onclick="saveNewDepartmentPrinter()">រក្សាទុក</button>
@@ -1349,6 +1402,75 @@
                     <input type="text" id="setWarehousesList" class="input-st" style="padding:8px 12px; font-size:13px; margin-bottom:0;" placeholder="ហាងគោល (Main), ឃ្លាំង BKK, ឃ្លាំង TK" onchange="saveAdminSettings()">
                 </div>
             </div>
+
+            <!-- 9.4 ENTERPRISE SECURITY, ANTI-FRAUD, EXPIRY/IMEI & APP INSTALLER (ADMIN-ONLY TOGGLES) -->
+            <div class="section-box" style="border-left: 4px solid var(--danger); margin-top:20px; margin-bottom:0;">
+                <div class="section-title" style="font-size:14.5px; color:var(--danger);"><i class="fa-solid fa-shield-halved"></i> 9.4 សុវត្ថិភាព, ការពារការបន្លំ, ថ្ងៃផុតកំណត់, IMEI & App Mode (បិទ/បើកតាមតម្រូវការហាង)</div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🔐 រឹតបន្តឹងសុវត្ថិភាព Admin & Hash ពាក្យសម្ងាត់ SHA-256 (Strict Admin Lock)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">បំលែងពាក្យសម្ងាត់បុគ្គលិកជា SHA-256 ពេលបង្កើត/កែប្រែ និងចាក់សោផ្ទាំង Admin មិនឱ្យបុគ្គលិកលួចចូលតាម URL</div>
+                    </div>
+                    <input type="checkbox" id="pfStrictAdminAuth" style="width:20px; height:20px; accent-color:var(--danger); cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🛡️ កំណត់ត្រាការពារការបន្លំបុគ្គលិក (Anti-Fraud Audit Log — បុគ្គលិកលុបមិនបាន)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">កត់ត្រាអូតូរាល់ពេលលុបទំនិញពីកន្ត្រក លុប/កែវិក្កយបត្រ បញ្ចុះតម្លៃខ្ពស់ ឬព្រីនវិក្កយបត្រឡើងវិញ</div>
+                    </div>
+                    <input type="checkbox" id="pfAntiFraudAudit" style="width:20px; height:20px; accent-color:var(--danger); cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>📲 បាញ់សារដាស់តឿនការបន្លំភ្លាមៗចូល Telegram ម្ចាស់ហាង (Instant Fraud Alert)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">លោតសារចូល Telegram ម្ចាស់ហាងភ្លាមៗពេលមានការលុប/កែវិក្កយបត្រ បញ្ចុះតម្លៃលើសកម្រិត ឬលុបកន្ត្រក</div>
+                    </div>
+                    <input type="checkbox" id="pfAntiFraudTelegram" style="width:20px; height:20px; accent-color:var(--danger); cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="form-group" style="margin: -4px 0 12px 0; padding:12px 14px; background:rgba(239,68,68,0.06); border-radius:10px; border:1px dashed var(--danger); display:grid; grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); gap:10px;">
+                    <div>
+                        <label style="font-size:12px;">🏷️ កម្រិតបញ្ចុះតម្លៃដាស់តឿន Telegram (%):</label>
+                        <input type="number" id="setAntiFraudDiscountLimit" class="input-st" value="15" min="1" max="100" style="padding:8px 12px; font-size:13px; margin-bottom:0;" onchange="saveAdminSettings()">
+                    </div>
+                    <div>
+                        <label style="font-size:12px;">💬 Telegram Chat ID ម្ចាស់ហាង (ទទេ = ប្រើ Order Bot):</label>
+                        <input type="text" id="setAntiFraudTelegramChatId" class="input-st" placeholder="ឧ. 123456789 ឬ -100xxxxxxxx" style="padding:8px 12px; font-size:13px; margin-bottom:0;" onchange="saveAdminSettings()">
+                    </div>
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>📅 ផ្ទាំងដាស់តឿនទំនិញផុតកំណត់ & លេខឡូត៍ (Expiry Alert Dashboard & Lot/Batch)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">បង្ហាញប៊ូតុងដាស់តឿនទំនិញផុតកំណត់/ជិតផុតកំណត់ លេខ Lot/Batch និងផ្ញើរបាយការណ៍ទៅ Telegram (ល្អសម្រាប់ឱសថស្ថាន/ម៉ាត)</div>
+                    </div>
+                    <input type="checkbox" id="pfExpiryAlerts" style="width:20px; height:20px; accent-color:#f59e0b; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="form-group" style="margin: -4px 0 12px 0; padding:10px 14px; background:rgba(245,158,11,0.07); border-radius:10px; border:1px dashed #f59e0b;">
+                    <label style="font-size:12px;">⏰ ចំនួនថ្ងៃដាស់តឿនមុនទំនិញផុតកំណត់ (Expiry Warning Days):</label>
+                    <input type="number" id="setExpiryWarnDays" class="input-st" value="30" min="1" max="365" style="padding:8px 12px; font-size:13px; margin-bottom:0;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🔢 តាមដានលេខ Serial / IMEI ជាប់វិក្កយបត្រ & ស្វែងរកធានា (Serial / IMEI Tracking)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">បង្ហាញប៊ូតុងស្កេន IMEI លើកន្ត្រកលក់ ព្រីន S/N លើវិក្កយបត្រ និងស្វែងរកប្រវត្តិធានា (ល្អសម្រាប់ហាងទូរស័ព្ទ/គ្រឿងអេឡិចត្រូនិក)</div>
+                    </div>
+                    <input type="checkbox" id="pfSerialImei" style="width:20px; height:20px; accent-color:var(--brand-cyan); cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row" style="margin-bottom:0;">
+                    <div>
+                        <div>📲 បង្ហាញប៊ូតុង «ដំឡើងជា App» លើ POS & Welcome (PWA Standalone App Button)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">អនុញ្ញាតឱ្យម្ចាស់ហាង/បុគ្គលិកចុច ១ ដងដំឡើង SKM POS ជា App លើ Android, iPhone ឬ Windows</div>
+                    </div>
+                    <input type="checkbox" id="pfInstallAppBtn" style="width:20px; height:20px; accent-color:var(--success); cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+            </div>
         </div>
 
     </div>
@@ -1383,6 +1505,23 @@
     </div>
 </div>
 
+
+<!-- 🔐 STRICT ADMIN AUTH GATE (Blocks direct URL access by Sales/Warehouse) -->
+<div id="skmAdminLockGate" style="position:fixed; inset:0; background:linear-gradient(135deg,#0f172a,#1e1b4b); z-index:99999; display:none; justify-content:center; align-items:center; padding:20px;">
+    <div style="background:#ffffff; color:#1e293b; max-width:390px; width:100%; border-radius:22px; padding:28px; box-shadow:0 28px 65px rgba(0,0,0,0.45); text-align:center;">
+        <div style="width:58px; height:58px; border-radius:50%; background:rgba(239,68,68,0.12); color:#ef4444; display:flex; align-items:center; justify-content:center; font-size:24px; margin:0 auto 12px;">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+        <h3 style="font-size:19px; font-weight:900; margin-bottom:6px; color:#0f172a;">ផ្ទាំងការពារសុវត្ថិភាព Admin</h3>
+        <p style="font-size:12.5px; color:#64748b; margin-bottom:18px; line-height:1.5;">មានតែគណនី <b>Admin</b> ប៉ុណ្ណោះដែលអាចចូលកែការកំណត់ប្រព័ន្ធបាន។ សូមបញ្ជាក់គណនី Admin របស់អ្នក៖</p>
+        <input type="text" id="gateAdminUser" class="input-st" placeholder="ឈ្មោះគណនី Admin (ឧ. admin)" style="margin-bottom:10px;" value="admin">
+        <input type="password" id="gateAdminPass" class="input-st" placeholder="លេខកូដសម្ងាត់ Admin..." style="margin-bottom:14px;" onkeydown="if(event.key==='Enter') unlockAdminGate()">
+        <div id="gateAdminErr" style="color:#ef4444; font-size:12px; font-weight:800; margin-bottom:10px; display:none;"></div>
+        <button type="button" onclick="unlockAdminGate()" style="width:100%; padding:13px; border:none; border-radius:12px; background:linear-gradient(135deg,#06b6d4,#0284c7); color:#fff; font-weight:900; font-size:14px; cursor:pointer; margin-bottom:10px;">🔓 ផ្ទៀងផ្ទាត់ និងចូល Admin Settings</button>
+        <button type="button" onclick="window.location.href='index.html?branch=' + encodeURIComponent(BRANCH)" style="width:100%; padding:10px; border:1px solid #cbd5e1; border-radius:12px; background:#f8fafc; color:#475569; font-weight:800; font-size:13px; cursor:pointer;">← ត្រឡប់ទៅផ្ទាំងលក់</button>
+    </div>
+</div>
+
 <div id="toast">Saved Successfully!</div>
 
 <script>
@@ -1411,7 +1550,96 @@
         });
     }
 
+    // 🔐 Pure-JS SHA-256 Helper (matches auth.js identically for strict Admin verification)
+    function adminSha256(ascii) {
+        function rr(v, a) { return (v >>> a) | (v << (32 - a)); }
+        const maxWord = Math.pow(2, 32);
+        const words = [], isComp = {};
+        const h = [], k = [];
+        let pc = 0;
+        for (let c = 2; pc < 64; c++) {
+            if (!isComp[c]) {
+                for (let i = 0; i < 313; i += c) isComp[i] = c;
+                h[pc] = (Math.pow(c, 0.5) * maxWord) | 0;
+                k[pc++] = (Math.pow(c, 1 / 3) * maxWord) | 0;
+            }
+        }
+        const utf8 = unescape(encodeURIComponent(String(ascii)));
+        const bitLen = utf8.length * 8;
+        let pad = utf8 + '\x80';
+        while (pad.length % 64 - 56) pad += '\x00';
+        for (let i = 0; i < pad.length; i++) words[i >> 2] |= pad.charCodeAt(i) << ((3 - i) % 4) * 8;
+        words.push((bitLen / maxWord) | 0, bitLen | 0);
+        for (let j = 0; j < words.length;) {
+            const w = words.slice(j, j += 16), oldH = h.slice(0);
+            for (let i = 0; i < 64; i++) {
+                const w15 = w[i - 15], w2 = w[i - 2], a = h[0], e = h[4];
+                const t1 = h[7] + (rr(e, 6) ^ rr(e, 11) ^ rr(e, 25)) + ((e & h[5]) ^ ((~e) & h[6])) + k[i]
+                    + (w[i] = (i < 16) ? w[i] : (w[i - 16] + (rr(w15, 7) ^ rr(w15, 18) ^ (w15 >>> 3)) + w[i - 7] + (rr(w2, 17) ^ rr(w2, 19) ^ (w2 >>> 10))) | 0);
+                const t2 = (rr(a, 2) ^ rr(a, 13) ^ rr(a, 22)) + ((a & h[1]) ^ (a & h[2]) ^ (h[1] & h[2]));
+                h.unshift((t1 + t2) | 0); h.pop(); h[4] = (h[4] + t1) | 0;
+            }
+            for (let i = 0; i < 8; i++) h[i] = (h[i] + oldH[i]) | 0;
+        }
+        let out = '';
+        for (let i = 0; i < 8; i++) for (let j = 3; j >= 0; j--) { const b = (h[i] >> (j * 8)) & 255; out += (b < 16 ? '0' : '') + b.toString(16); }
+        return out;
+    }
+    function adminVerifyPass(inputPlain, storedPass) {
+        const s = String(storedPass || '');
+        if (!s) return false;
+        if (s.startsWith('sha256:')) return ('sha256:' + adminSha256('KOUSUKE_ERP_PRO_V1_' + String(inputPlain || ''))) === s;
+        return s === String(inputPlain || '');
+    }
+    function adminComputeSig(u) {
+        return adminSha256(`ADM_SIG|KOUSUKE_ERP_PRO_V1_|${BRANCH}|${u.id}|${u.username}|${u.password}`);
+    }
+    async function fetchAdminAccountsList() {
+        let list = [];
+        try {
+            const raw = localStorage.getItem(`ks2_${BRANCH}_auth_users_pro`);
+            if (raw) { const p = JSON.parse(raw); if (Array.isArray(p)) list = p; }
+        } catch (e) {}
+        if (supabaseClient && navigator.onLine) {
+            try {
+                const { data } = await supabaseClient.from('branch_store').select('user_accounts').eq('branch_id', BRANCH).maybeSingle();
+                if (data && data.user_accounts) {
+                    const cloud = typeof data.user_accounts === 'string' ? JSON.parse(data.user_accounts) : data.user_accounts;
+                    if (Array.isArray(cloud) && cloud.length > 0) {
+                        list = cloud;
+                        localStorage.setItem(`ks2_${BRANCH}_auth_users_pro`, JSON.stringify(list));
+                    }
+                }
+            } catch (e) {}
+        }
+        if (!list.length) list = [{ id: 'U_ADMIN', username: 'admin', password: '123', pin: '0000', role: 'admin', fullName: 'អ្នកគ្រប់គ្រងប្រព័ន្ធ' }];
+        return list;
+    }
+    window.unlockAdminGate = async function() {
+        const uVal = (document.getElementById('gateAdminUser')?.value || '').trim().toLowerCase();
+        const pVal = (document.getElementById('gateAdminPass')?.value || '').trim();
+        const errEl = document.getElementById('gateAdminErr');
+        if (!uVal || !pVal) {
+            if (errEl) { errEl.innerText = 'សូមបញ្ចូលឈ្មោះ និងលេខសម្ងាត់ Admin!'; errEl.style.display = 'block'; }
+            return;
+        }
+        const accounts = await fetchAdminAccountsList();
+        const match = accounts.find(a => a && String(a.role).toLowerCase() === 'admin' && String(a.username).toLowerCase() === uVal && adminVerifyPass(pVal, a.password));
+        if (!match) {
+            if (errEl) { errEl.innerText = '❌ គណនី Admin ឬលេខសម្ងាត់មិនត្រឹមត្រូវទេ!'; errEl.style.display = 'block'; }
+            return;
+        }
+        sessionStorage.setItem(`skm_admin_sig_${BRANCH}`, adminComputeSig(match));
+        sessionStorage.setItem(`ks2_${BRANCH}_active_user_obj`, JSON.stringify(match));
+        sessionStorage.setItem('ks2_auth_passed', 'true');
+        const gate = document.getElementById('skmAdminLockGate');
+        if (gate) gate.style.display = 'none';
+        if (errEl) errEl.style.display = 'none';
+        showToast('🔓 ផ្ទៀងផ្ទាត់សិទ្ធិ Admin ជោគជ័យ!');
+    };
+
     (async function verifyAdminAccess() {
+        if (window.location.protocol === 'blob:' || window.location.protocol === 'data:') return;
         let isSupabaseAuthed = false;
         if (supabaseClient) {
             try {
@@ -1419,15 +1647,25 @@
                 if (session) isSupabaseAuthed = true;
             } catch(e) {}
         }
-        const authPassed = sessionStorage.getItem('ks2_auth_passed');
         let activeUser = null;
         try { activeUser = JSON.parse(localStorage.getItem(`ks2_${BRANCH}_active_user_obj`) || sessionStorage.getItem(`ks2_${BRANCH}_active_user_obj`) || 'null'); } catch(e) {}
+        const accounts = await fetchAdminAccountsList();
+        const savedSig = sessionStorage.getItem(`skm_admin_sig_${BRANCH}`) || '';
 
-        const isAdminRole = activeUser && String(activeUser.role).toLowerCase() === 'admin';
-        const isPinPassed = authPassed === 'true';
+        const verifiedAdmin = activeUser && String(activeUser.role).toLowerCase() === 'admin' && accounts.some(a =>
+            a && String(a.role).toLowerCase() === 'admin' &&
+            String(a.username).toLowerCase() === String(activeUser.username).toLowerCase() &&
+            String(a.password) === String(activeUser.password) &&
+            (!savedSig || savedSig === adminComputeSig(a))
+        );
 
-        if (!isSupabaseAuthed && !isAdminRole && !isPinPassed) {
-            if (window.location.protocol !== 'blob:' && window.location.protocol !== 'data:') {
+        // 🛡️ លុបចោលការឆ្លងកាត់តាម Store PIN (isPinPassed) — ទប់ស្កាត់បុគ្គលិក Sales/Warehouse ចូលតាម URL
+        if (!isSupabaseAuthed && !verifiedAdmin) {
+            const gate = document.getElementById('skmAdminLockGate');
+            if (gate) {
+                gate.style.display = 'flex';
+                setTimeout(() => document.getElementById('gateAdminPass')?.focus(), 100);
+            } else {
                 window.location.href = `welcome.html?branch=${encodeURIComponent(BRANCH)}`;
             }
         }
@@ -1997,6 +2235,12 @@
         if (sys.categoryRouting) categoryRouting = sys.categoryRouting;
         if (document.getElementById('toggleMultiPrinter')) document.getElementById('toggleMultiPrinter').checked = !!sys.toggleMultiPrinter;
         if (document.getElementById('printAllSync')) document.getElementById('printAllSync').checked = !!sys.printAllSync;
+        if (document.getElementById('setSilentPrintMode')) document.getElementById('setSilentPrintMode').value = sys.silentPrintMode || 'browser';
+        if (document.getElementById('setPrintBridgeUrl')) document.getElementById('setPrintBridgeUrl').value = sys.printBridgeUrl || 'http://127.0.0.1:9191';
+        if (document.getElementById('setCashierPrinterIp')) document.getElementById('setCashierPrinterIp').value = sys.cashierPrinterIp || '';
+        if (document.getElementById('setCashierPrinterPort')) document.getElementById('setCashierPrinterPort').value = sys.cashierPrinterPort || 9100;
+        if (document.getElementById('setCashierWinPrinter')) document.getElementById('setCashierWinPrinter').value = sys.cashierWinPrinter || '';
+        if (document.getElementById('toggleOpenCashDrawer')) document.getElementById('toggleOpenCashDrawer').checked = !!sys.toggleOpenCashDrawer;
         const pf = sys.proFeatures || {};
         const setPfChk = (id, val) => { const el = document.getElementById(id); if (el) el.checked = !!val; };
         setPfChk('pfCustomerDisplay', pf.customerDisplay);
@@ -2017,6 +2261,15 @@
         setPfChk('pfItemDiscounts', pf.itemDiscounts);
         setPfChk('pfPosModifiers', pf.posModifiers);
         setPfChk('pfMultiWarehouse', pf.multiWarehouse);
+        setPfChk('pfStrictAdminAuth', pf.strictAdminAuth);
+        setPfChk('pfAntiFraudAudit', pf.antiFraudAudit);
+        setPfChk('pfAntiFraudTelegram', pf.antiFraudTelegram);
+        setPfChk('pfExpiryAlerts', pf.expiryAlerts);
+        setPfChk('pfSerialImei', pf.serialImei);
+        setPfChk('pfInstallAppBtn', pf.installAppBtn !== undefined ? pf.installAppBtn : true);
+        if (document.getElementById('setAntiFraudDiscountLimit')) document.getElementById('setAntiFraudDiscountLimit').value = sys.antiFraudDiscountLimit || 15;
+        if (document.getElementById('setAntiFraudTelegramChatId')) document.getElementById('setAntiFraudTelegramChatId').value = sys.antiFraudTelegramChatId || '';
+        if (document.getElementById('setExpiryWarnDays')) document.getElementById('setExpiryWarnDays').value = sys.expiryWarnDays || 30;
         if (document.getElementById('setMasterBranchesList')) {
             document.getElementById('setMasterBranchesList').value = sys.masterBranchesList || BRANCH;
         }
@@ -2184,6 +2437,12 @@
         sys.deptPrinters = deptPrinters; sys.categoryRouting = categoryRouting;
         sys.toggleMultiPrinter = document.getElementById('toggleMultiPrinter')?.checked || false;
         sys.printAllSync = document.getElementById('printAllSync')?.checked || false;
+        sys.silentPrintMode = document.getElementById('setSilentPrintMode')?.value || 'browser';
+        sys.printBridgeUrl = (document.getElementById('setPrintBridgeUrl')?.value || 'http://127.0.0.1:9191').trim();
+        sys.cashierPrinterIp = (document.getElementById('setCashierPrinterIp')?.value || '').trim();
+        sys.cashierPrinterPort = parseInt(document.getElementById('setCashierPrinterPort')?.value) || 9100;
+        sys.cashierWinPrinter = (document.getElementById('setCashierWinPrinter')?.value || '').trim();
+        sys.toggleOpenCashDrawer = document.getElementById('toggleOpenCashDrawer')?.checked || false;
         sys.proFeatures = {
             customerDisplay: document.getElementById('pfCustomerDisplay')?.checked || false,
             kds: document.getElementById('pfKds')?.checked || false,
@@ -2202,8 +2461,17 @@
             orderModes: document.getElementById('pfOrderModes')?.checked || false,
             itemDiscounts: document.getElementById('pfItemDiscounts')?.checked || false,
             posModifiers: document.getElementById('pfPosModifiers')?.checked || false,
-            multiWarehouse: document.getElementById('pfMultiWarehouse')?.checked || false
+            multiWarehouse: document.getElementById('pfMultiWarehouse')?.checked || false,
+            strictAdminAuth: document.getElementById('pfStrictAdminAuth')?.checked || false,
+            antiFraudAudit: document.getElementById('pfAntiFraudAudit')?.checked || false,
+            antiFraudTelegram: document.getElementById('pfAntiFraudTelegram')?.checked || false,
+            expiryAlerts: document.getElementById('pfExpiryAlerts')?.checked || false,
+            serialImei: document.getElementById('pfSerialImei')?.checked || false,
+            installAppBtn: document.getElementById('pfInstallAppBtn')?.checked !== false
         };
+        sys.antiFraudDiscountLimit = parseFloat(document.getElementById('setAntiFraudDiscountLimit')?.value) || 15;
+        sys.antiFraudTelegramChatId = (document.getElementById('setAntiFraudTelegramChatId')?.value || '').trim();
+        sys.expiryWarnDays = parseInt(document.getElementById('setExpiryWarnDays')?.value) || 30;
         sys.masterBranchesList = document.getElementById('setMasterBranchesList')?.value.trim() || BRANCH;
         sys.presetDiscountsList = document.getElementById('setPresetDiscountsList')?.value.trim() || 'Student:5%, VIP:10%, Promo:15%, Nham24:18%, Grab:22%';
         sys.warehousesList = document.getElementById('setWarehousesList')?.value.trim() || 'ហាងគោល (Main), ឃ្លាំង BKK, ឃ្លាំង TK';
@@ -2384,9 +2652,11 @@
     function saveNewDepartmentPrinter() {
         let name = document.getElementById('newPrinterName').value.trim(); if(!name) return showToast('សូមវាយឈ្មោះម៉ាស៊ីន!', true);
         let type = document.getElementById('newPrinterType').value; let ip = type === 'network' ? document.getElementById('newPrinterIp').value.trim() : 'default';
+        let port = type === 'network' ? (parseInt(document.getElementById('newPrinterPort')?.value) || 9100) : 9100;
         let id = 'printer_' + Date.now(); let icon = name.toLowerCase().includes('bar') || name.includes('ភេសជ្ជៈ') || name.includes('កាហ្វេ') ? 'fa-coffee' : (name.toLowerCase().includes('kitchen') || name.includes('បាយ') ? 'fa-fire-burner' : 'fa-print');
         let color = icon === 'fa-coffee' ? '#f59e0b' : (icon === 'fa-fire-burner' ? 'var(--danger)' : 'var(--brand-cyan)');
-        deptPrinters.push({ id, name, type, ip, icon, color }); document.getElementById('addPrinterForm').style.display = 'none'; renderDeptPrinters(); saveAdminSettings(); showToast('បានបន្ថែមម៉ាស៊ីនព្រីនថ្មី!');
+        let winPrinter = type === 'local' ? (document.getElementById('newPrinterWinName')?.value?.trim() || '') : '';
+        deptPrinters.push({ id, name, type, ip, port, winPrinter, icon, color }); document.getElementById('addPrinterForm').style.display = 'none'; renderDeptPrinters(); saveAdminSettings(); showToast('បានបន្ថែមម៉ាស៊ីនព្រីនថ្មី!');
     }
     function deleteDepartmentPrinter(idx) { deptPrinters.splice(idx, 1); renderDeptPrinters(); saveAdminSettings(); showToast("បានលុបម៉ាស៊ីនព្រីនជោគជ័យ!"); }
     
@@ -3500,10 +3770,62 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         showToast(`⬇️ បានទាញយក "${fileName}" ជោគជ័យ!`);
     }
 
+    async function detectDesktopPrinters() {
+        if (!window.SKMDesktopBridge || typeof window.SKMDesktopBridge.getPrinters !== 'function') {
+            showToast('ℹ️ មុខងារស្វែងរក USB Printer អូតូដំណើរការពេលបើកក្នុង PC Desktop App (skm_pc_app)!', true);
+            return;
+        }
+        try {
+            const list = await window.SKMDesktopBridge.getPrinters();
+            const dl = document.getElementById('skmWinPrintersDatalist');
+            if (dl) {
+                dl.innerHTML = (list || []).map(p => `<option value="${p.name.replace(/"/g, '&quot;')}">${p.displayName}${p.isDefault ? ' (Default)' : ''}</option>`).join('');
+            }
+            const statusEl = document.getElementById('printBridgeStatusText');
+            if (statusEl) {
+                statusEl.innerHTML = list.length
+                    ? `<span style="color:var(--success);">✅ រកឃើញម៉ាស៊ីនព្រីន ${list.length} លើ PC៖ <b>${list.map(p => p.name).join(', ')}</b></span>`
+                    : '<span style="color:var(--warning);">⚠️ រកមិនឃើញម៉ាស៊ីនព្រីនលើ PC ទេ</span>';
+            }
+            showToast(`✅ រកឃើញម៉ាស៊ីនព្រីនចំនួន ${list.length} លើកុំព្យូទ័រ!`);
+        } catch (e) {
+            showToast('❌ មិនអាចទាញបញ្ជីម៉ាស៊ីនព្រីនបានទេ: ' + e.message, true);
+        }
+    }
+
+    function openDesktopSecondScreen() {
+        if (window.SKMDesktopBridge && typeof window.SKMDesktopBridge.openCustomerDisplay === 'function') {
+            window.SKMDesktopBridge.openCustomerDisplay(BRANCH);
+            showToast('🖥️ បានបើកអេក្រង់ភ្ញៀវ (Customer Display)!');
+        } else {
+            window.open(getPageUrl('display.html'), '_blank');
+        }
+    }
+
+    async function testPrintBridgeConnection() {
+        const url = (document.getElementById('setPrintBridgeUrl')?.value || 'http://127.0.0.1:9191').trim().replace(/\/+$/, '');
+        const statusEl = document.getElementById('printBridgeStatusText');
+        if (statusEl) statusEl.innerHTML = '⏳ កំពុងតេស្តភ្ជាប់ Print Bridge...';
+        try {
+            const r = await fetch(url + '/health');
+            const j = await r.json();
+            if (r.ok && j && j.ok) {
+                if (statusEl) statusEl.innerHTML = `<span style="color:var(--success);">✅ ភ្ជាប់ Print Bridge ជោគជ័យ! (v${j.version || '1.0'} — ត្រៀមព្រីន LAN IP:9100)</span>`;
+                showToast('✅ Print Bridge កំពុងដំណើរការ ១០០%!');
+            } else {
+                throw new Error('Invalid response');
+            }
+        } catch (err) {
+            if (statusEl) statusEl.innerHTML = '<span style="color:var(--danger);">❌ រកមិនឃើញ Print Bridge ទេ — សូមបើកឯកសារ <code>skm_print_bridge/START_BRIDGE.bat</code> លើកុំព្យូទ័រសិន!</span>';
+            showToast('❌ មិនអាចភ្ជាប់ Print Bridge បានទេ!', true);
+        }
+    }
+
     const ALL_PRO_CHECKBOX_IDS = [
         'pfCustomerDisplay','pfKds','pfMultiBranch','pfSuppliers','pfStockAudit','pfTelegramZReport',
         'pfSplitBill','pfPaymentSlip','pfGpsLocation','pfDigitalReceipt','pfProductTags',
-        'pfFloorPlan','pfComboSets','pfShiftManagement','pfOrderModes','pfItemDiscounts','pfPosModifiers','pfMultiWarehouse'
+        'pfFloorPlan','pfComboSets','pfShiftManagement','pfOrderModes','pfItemDiscounts','pfPosModifiers','pfMultiWarehouse',
+        'pfStrictAdminAuth','pfAntiFraudAudit','pfAntiFraudTelegram','pfExpiryAlerts','pfSerialImei','pfInstallAppBtn'
     ];
 
     const PRO_PRESETS_CONFIG = {
@@ -3513,6 +3835,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
             pfPaymentSlip: true,      pfGpsLocation: true, pfDigitalReceipt: true, pfProductTags: true,
             pfFloorPlan: false,       pfComboSets: true,   pfShiftManagement: true,
             pfOrderModes: false,      pfItemDiscounts: true, pfPosModifiers: false, pfMultiWarehouse: true,
+            pfStrictAdminAuth: true,  pfAntiFraudAudit: true, pfAntiFraudTelegram: true, pfExpiryAlerts: false, pfSerialImei: true, pfInstallAppBtn: true,
             label: '🧸 ហាង Figure / លក់រាយ'
         },
         cafe: {
@@ -3521,6 +3844,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
             pfPaymentSlip: false,     pfGpsLocation: false, pfDigitalReceipt: true, pfProductTags: true,
             pfFloorPlan: true,        pfComboSets: true,   pfShiftManagement: true,
             pfOrderModes: true,       pfItemDiscounts: true, pfPosModifiers: true, pfMultiWarehouse: false,
+            pfStrictAdminAuth: true,  pfAntiFraudAudit: true, pfAntiFraudTelegram: true, pfExpiryAlerts: false, pfSerialImei: false, pfInstallAppBtn: true,
             label: '☕ ហាងកាហ្វេ / អាហារ'
         },
         online: {
@@ -3529,6 +3853,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
             pfPaymentSlip: true,      pfGpsLocation: true, pfDigitalReceipt: true, pfProductTags: true,
             pfFloorPlan: false,       pfComboSets: true,   pfShiftManagement: true,
             pfOrderModes: true,       pfItemDiscounts: true, pfPosModifiers: false, pfMultiWarehouse: true,
+            pfStrictAdminAuth: true,  pfAntiFraudAudit: true, pfAntiFraudTelegram: true, pfExpiryAlerts: false, pfSerialImei: false, pfInstallAppBtn: true,
             label: '📦 ហាងលក់ Online សុទ្ធ'
         },
         mart: {
@@ -3537,6 +3862,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
             pfPaymentSlip: true,      pfGpsLocation: true, pfDigitalReceipt: true, pfProductTags: true,
             pfFloorPlan: false,       pfComboSets: true,   pfShiftManagement: true,
             pfOrderModes: false,      pfItemDiscounts: true, pfPosModifiers: false, pfMultiWarehouse: true,
+            pfStrictAdminAuth: true,  pfAntiFraudAudit: true, pfAntiFraudTelegram: true, pfExpiryAlerts: true, pfSerialImei: false, pfInstallAppBtn: true,
             label: '🛒 ម៉ាត / ឱសថស្ថាន'
         }
     };
@@ -3558,7 +3884,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
             if (el) el.checked = !!state;
         });
         saveAdminSettings();
-        showToast(state ? '✅ បានបើកមុខងារ Pro ទាំង ១៨ រួចរាល់!' : '⭕ បានបិទមុខងារ Pro ទាំង ១៨ រួចរាល់!');
+        showToast(state ? '✅ បានបើកមុខងារ Pro ទាំង ២៤ រួចរាល់!' : '⭕ បានបិទមុខងារ Pro ទាំង ២៤ រួចរាល់!');
     }
 
     window.onload = initAdmin;

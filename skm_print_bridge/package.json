@@ -1,0 +1,9 @@
+{
+  "name": "skm-pos-print-bridge",
+  "version": "1.0.0",
+  "description": "Zero-dependency local ESC/POS LAN IP:9100 silent print bridge for SKM POS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js"
+  }
+}
