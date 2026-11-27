@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="km">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>SKM POS — វត្តមានបុគ្គលិក (Staff Attendance)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+    <meta name="theme-color" content="#0f172a">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg: #0f172a;
+            --card: rgba(30, 41, 59, 0.92);
+            --border: rgba(148, 163, 184, 0.22);
+            --primary: #10b981;
+            --danger: #ef4444;
+            --info: #38bdf8;
+            --warn: #f59e0b;
+            --text: #f8fafc;
+            --muted: #94a3b8;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Battambang', 'Nunito', sans-serif; }
+        body {
+            min-height: 100vh;
+            background: radial-gradient(circle at top, #1e293b 0%, #0f172a 70%);
+            color: var(--text);
+            padding: 16px 14px 40px;
+            display: flex;
+            justify-content: center;
+        }
+        .wrap { width: 100%; max-width: 460px; display: flex; flex-direction: column; gap: 14px; }
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 18px;
+            box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+            backdrop-filter: blur(12px);
+        }
+        .header { display: flex; align-items: center; gap: 12px; }
+        .logo {
+            width: 54px; height: 54px; border-radius: 14px;
+            background: rgba(16,185,129,0.15); border: 1.5px solid rgba(16,185,129,0.5);
+            display: flex; align-items: center; justify-content: center;
+            overflow: hidden; flex-shrink: 0; font-size: 26px;
+        }
+        .logo img { width: 100%; height: 100%; object-fit: cover; display: none; }
+        .shop-title { font-size: 18px; font-weight: 800; line-height: 1.25; }
+        .branch-pill {
+            display: inline-block; margin-top: 4px; font-size: 11.5px; font-weight: 700;
+            color: var(--info); background: rgba(56,189,248,0.15);
+            border: 1px solid rgba(56,189,248,0.35); padding: 2px 10px; border-radius: 999px;
+        }
+        .clock-box { text-align: center; padding: 10px 0 4px; }
+        .clock-time { font-size: 36px; font-weight: 900; letter-spacing: 1px; color: #34d399; font-family: 'Nunito', sans-serif; }
+        .clock-date { font-size: 13px; color: var(--muted); margin-top: 2px; }
+
+        .tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: rgba(15,23,42,0.65); padding: 5px; border-radius: 14px; border: 1px solid var(--border); }
+        .tab-btn {
+            border: none; background: transparent; color: var(--muted); padding: 10px 8px;
+            border-radius: 10px; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: 0.2s;
+        }
+        .tab-btn.active { background: linear-gradient(135deg, #0284c7, #10b981); color: #fff; box-shadow: 0 6px 16px rgba(16,185,129,0.28); }
+
+        label { display: block; font-size: 12.5px; color: #cbd5e1; margin-bottom: 6px; font-weight: 700; }
+        select, input, textarea {
+            width: 100%; padding: 11px 13px; border-radius: 12px;
+            border: 1px solid rgba(148,163,184,0.28); background: rgba(15,23,42,0.85);
+            color: #fff; font-size: 14px; outline: none; margin-bottom: 12px;
+        }
+        select:focus, input:focus, textarea:focus { border-color: var(--info); }
+
+        .gps-banner {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+            padding: 11px 13px; border-radius: 14px; font-size: 12.5px; margin-bottom: 14px;
+            border: 1px solid rgba(148,163,184,0.25); background: rgba(15,23,42,0.7);
+        }
+        .gps-ok { border-color: rgba(16,185,129,0.55); background: rgba(16,185,129,0.12); color: #6ee7b7; }
+        .gps-warn { border-color: rgba(245,158,11,0.55); background: rgba(245,158,11,0.12); color: #fcd34d; }
+        .gps-bad { border-color: rgba(239,68,68,0.55); background: rgba(239,68,68,0.12); color: #fca5a5; }
+        .mini-btn {
+            border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.08);
+            color: #fff; padding: 6px 10px; border-radius: 10px; font-size: 12px; font-weight: 700;
+            cursor: pointer; white-space: nowrap;
+        }
+
+        .action-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        .btn-main {
+            border: none; border-radius: 14px; padding: 15px 12px; font-size: 15px; font-weight: 800;
+            color: #fff; cursor: pointer; display: flex; flex-direction: column; align-items: center; gap: 4px;
+            transition: transform 0.15s, opacity 0.15s;
+        }
+        .btn-main:active { transform: scale(0.97); }
+        .btn-main:disabled { opacity: 0.55; cursor: not-allowed; }
+        .btn-in { background: linear-gradient(135deg, #10b981, #059669); box-shadow: 0 10px 24px rgba(16,185,129,0.32); }
+        .btn-out { background: linear-gradient(135deg, #f97316, #ef4444); box-shadow: 0 10px 24px rgba(239,68,68,0.32); }
+        .btn-submit { width: 100%; background: linear-gradient(135deg, #0284c7, #6366f1); padding: 13px; border-radius: 14px; border: none; color: #fff; font-size: 15px; font-weight: 800; cursor: pointer; }
+
+        .status-strip {
+            margin-top: 12px; padding: 11px 13px; border-radius: 12px;
+            background: rgba(15,23,42,0.65); border: 1px dashed rgba(148,163,184,0.3);
+            font-size: 12.5px; color: #cbd5e1; line-height: 1.6;
+        }
+        .log-item {
+            padding: 10px 12px; border-radius: 12px; background: rgba(15,23,42,0.65);
+            border: 1px solid rgba(148,163,184,0.16); margin-top: 8px; font-size: 12.5px;
+            display: flex; justify-content: space-between; align-items: center; gap: 8px;
+        }
+        .badge { padding: 3px 8px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+        .b-ok { background: rgba(16,185,129,0.2); color: #34d399; }
+        .b-late { background: rgba(245,158,11,0.2); color: #fbbf24; }
+        .b-out { background: rgba(239,68,68,0.2); color: #f87171; }
+        .b-pend { background: rgba(56,189,248,0.2); color: #38bdf8; }
+
+        #toast {
+            position: fixed; top: 16px; left: 50%; transform: translate(-50%, -120px);
+            background: #10b981; color: #fff; padding: 10px 20px; border-radius: 999px;
+            font-size: 13px; font-weight: 800; z-index: 9999; transition: transform 0.25s ease;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.45); max-width: 92vw; text-align: center;
+        }
+        #toast.show { transform: translate(-50%, 0); }
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+    <div id="toast"></div>
+    <div class="wrap">
+        <div class="card">
+            <div class="header">
+                <div class="logo">
+                    <span id="defaultLogo">🏪</span>
+                    <img id="shopLogo" alt="Logo">
+                </div>
+                <div>
+                    <div class="shop-title" id="shopName">SKM POS Attendance</div>
+                    <span class="branch-pill" id="branchLabel">សាខា៖ ...</span>
+                </div>
+            </div>
+            <div class="clock-box">
+                <div class="clock-time" id="liveClock">--:--:--</div>
+                <div class="clock-date" id="liveDate">...</div>
+            </div>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" id="tabBtnClock" onclick="switchTab('clock')">📍 ស្កេនវត្តមាន</button>
+            <button class="tab-btn" id="tabBtnLeave" onclick="switchTab('leave')">📝 សុំច្បាប់ / កែម៉ោង</button>
+        </div>
+
+        <!-- TAB 1: CLOCK IN / OUT -->
+        <div class="card" id="panelClock">
+            <div class="gps-banner" id="gpsBanner">
+                <div>
+                    <div id="gpsTitle" style="font-weight:800;">📡 កំពុងរកទីតាំង GPS...</div>
+                    <div id="gpsSub" style="font-size:11.5px; opacity:0.85;">សូមអនុញ្ញាត Location លើទូរស័ព្ទ</div>
+                </div>
+                <button class="mini-btn" onclick="refreshGPS()">🔄 រកម្តងទៀត</button>
+            </div>
+
+            <label for="staffSelect">👤 ជ្រើសរើសឈ្មោះបុគ្គលិក</label>
+            <select id="staffSelect" onchange="onStaffChanged()">
+                <option value="">-- កំពុងទាញបញ្ជីបុគ្គលិក --</option>
+            </select>
+
+            <div id="manualStaffWrap" class="hidden">
+                <label for="manualStaffName">✏️ វាយឈ្មោះបុគ្គលិក</label>
+                <input type="text" id="manualStaffName" placeholder="ឧ. សុខា / ដារ៉ា">
+            </div>
+
+            <label for="staffPin">🔐 លេខកូដសម្ងាត់ផ្ទាល់ខ្លួន / Store PIN (បើមាន)</label>
+            <input type="password" id="staffPin" inputmode="numeric" placeholder="វាយ PIN ឬ Password បុគ្គលិក">
+
+            <label for="clockNote">💬 កំណត់ចំណាំ (ជម្រើសបន្ថែម)</label>
+            <input type="text" id="clockNote" placeholder="ឧ. វេនព្រឹក / ចេញទៅដឹកទំនិញ">
+
+            <div class="action-grid">
+                <button class="btn-main btn-in" id="btnClockIn" onclick="handleClock('in')">
+                    <span style="font-size:22px;">🟢</span>
+                    <span>ចូលធ្វើការ</span>
+                    <span style="font-size:11px; opacity:0.9;">Clock In</span>
+                </button>
+                <button class="btn-main btn-out" id="btnClockOut" onclick="handleClock('out')">
+                    <span style="font-size:22px;">🔴</span>
+                    <span>ចេញពីធ្វើការ</span>
+                    <span style="font-size:11px; opacity:0.9;">Clock Out</span>
+                </button>
+            </div>
+
+            <div class="status-strip" id="todayStatusBox">
+                ℹ️ ស្ថានភាពថ្ងៃនេះ៖ មិនទាន់មានកំណត់ត្រាវត្តមាននៅឡើយទេ។
+            </div>
+        </div>
+
+        <!-- TAB 2: LEAVE & TIME ADJUSTMENT -->
+        <div class="card hidden" id="panelLeave">
+            <label for="leaveStaffSelect">👤 ឈ្មោះបុគ្គលិក</label>
+            <select id="leaveStaffSelect"></select>
+
+            <label for="leaveType">📌 ប្រភេទសំណើ</label>
+            <select id="leaveType" onchange="toggleRequestedTime()">
+                <option value="leave">🏖️ សុំច្បាប់ឈប់សម្រាកប្រចាំឆ្នាំ / ធុរៈផ្ទាល់ខ្លួន</option>
+                <option value="sick">🤒 សុំច្បាប់ឈឺ (Sick Leave)</option>
+                <option value="late_notice">⏰ សុំអនុញ្ញាតចូលយឺត / ចេញមុនម៉ោង</option>
+                <option value="time_edit">✏️ សុំកែម៉ោងវត្តមាន (ភ្លេចស្កេន)</option>
+            </select>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                <div>
+                    <label for="leaveFrom">📅 ចាប់ពីថ្ងៃ</label>
+                    <input type="date" id="leaveFrom">
+                </div>
+                <div>
+                    <label for="leaveTo">📅 ដល់ថ្ងៃ</label>
+                    <input type="date" id="leaveTo">
+                </div>
+            </div>
+
+            <div id="requestedTimeWrap" class="hidden">
+                <label for="requestedTime">🕒 ម៉ោងដែលសុំកែ / ចូលយឺត</label>
+                <input type="text" id="requestedTime" placeholder="ឧ. ចូលម៉ោង 08:15 ឬ ភ្លេចចុចចេញម៉ោង 17:30">
+            </div>
+
+            <label for="leaveReason">📝 មូលហេតុលម្អិត</label>
+            <textarea id="leaveReason" rows="3" placeholder="សរសេរមូលហេតុជូនម្ចាស់ហាង..."></textarea>
+
+            <button class="btn-submit" id="btnSubmitLeave" onclick="submitLeaveRequest()">📨 ផ្ញើសំណើជូនម្ចាស់ហាង (Telegram)</button>
+        </div>
+
+        <!-- RECENT LOGS -->
+        <div class="card">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                <strong style="font-size:14px;">📋 ប្រវត្តិវត្តមានថ្ងៃនេះ</strong>
+                <button class="mini-btn" onclick="loadTodayLogs()">🔄 អាប់ដេត</button>
+            </div>
+            <div id="todayLogsList" style="color:var(--muted); font-size:12.5px;">កំពុងផ្ទុកទិន្នន័យ...</div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://qlzyyfqjwudbapgwsugu.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFsenl5ZnFqd3VkYmFwZ3dzdWd1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTMwODk2MzUsImV4cCI6MjEwODY2NTYzNX0.XQxNiUn2ZhivOjbqcWj0T6W1Abtx1H3kWrzIwqJPVtQ';
+
+        const params = new URLSearchParams(window.location.search);
+        const BRANCH_ID = (params.get('branch') || localStorage.getItem('skm_last_branch') || 'branch_1').trim();
+        const URL_TOKEN = (params.get('token') || '').trim();
+
+        let sb = null;
+        try {
+            if (window.supabase && typeof window.supabase.createClient === 'function') {
+                sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            }
+        } catch (e) {}
+
+        let shopInfo = {};
+        let sysSettings = {};
+        let attConfig = {
+            enabled: true,
+            shopLat: null,
+            shopLng: null,
+            radiusMeters: 150,
+            requireGpsInside: false,
+            workStart: '08:00',
+            workEnd: '17:00',
+            graceMinutes: 10,
+            requirePin: false,
+            telegramEnabled: true,
+            telegramToken: '',
+            telegramChatId: ''
+        };
+        let staffList = [];
+        let currentPos = null;
+        let currentDistMeters = null;
+
+        function getTodayStr() {
+            const d = new Date();
+            const y = d.getFullYear();
+            const m = String(d.getMonth() + 1).padStart(2, '0');
+            const day = String(d.getDate()).padStart(2, '0');
+            return `${y}-${m}-${day}`;
+        }
+
+        function formatTimeKH(iso) {
+            if (!iso) return '--:--';
+            const d = new Date(iso);
+            return d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        }
+
+        function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+        function showToast(msg, isError = false) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.style.background = isError ? '#ef4444' : '#10b981';
+            el.classList.add('show');
+            setTimeout(() => el.classList.remove('show'), 3200);
+        }
+
+        function updateLiveClock() {
+            const now = new Date();
+            document.getElementById('liveClock').textContent = now.toLocaleTimeString('en-GB', { hour12: false });
+            document.getElementById('liveDate').textContent = now.toLocaleDateString('km-KH', {
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+        setInterval(updateLiveClock, 1000);
+        updateLiveClock();
+
+        function switchTab(tab) {
+            const isClock = tab === 'clock';
+            document.getElementById('panelClock').classList.toggle('hidden', !isClock);
+            document.getElementById('panelLeave').classList.toggle('hidden', isClock);
+            document.getElementById('tabBtnClock').classList.toggle('active', isClock);
+            document.getElementById('tabBtnLeave').classList.toggle('active', !isClock);
+        }
+
+        function toggleRequestedTime() {
+            const t = document.getElementById('leaveType').value;
+            document.getElementById('requestedTimeWrap').classList.toggle('hidden', !(t === 'time_edit' || t === 'late_notice'));
+        }
+
+        function haversineMeters(lat1, lon1, lat2, lon2) {
+            const R = 6371000;
+            const toRad = x => x * Math.PI / 180;
+            const dLat = toRad(lat2 - lat1);
+            const dLon = toRad(lon2 - lon1);
+            const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLon / 2) ** 2;
+            return Math.round(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+        }
+
+        function refreshGPS() {
+            const banner = document.getElementById('gpsBanner');
+            const title = document.getElementById('gpsTitle');
+            const sub = document.getElementById('gpsSub');
+            banner.className = 'gps-banner';
+            title.textContent = '📡 កំពុងចាប់ទីតាំង GPS...';
+            sub.textContent = 'សូមរង់ចាំបន្តិច';
+
+            if (!navigator.geolocation) {
+                banner.className = 'gps-banner gps-warn';
+                title.textContent = '⚠️ ឧបករណ៍មិនគាំទ្រ GPS';
+                sub.textContent = 'នៅតែអាចចុចវត្តមានបាន បើហាងមិនបិទ GPS Strict';
+                return;
+            }
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    currentPos = {
+                        lat: Number(pos.coords.latitude.toFixed(6)),
+                        lng: Number(pos.coords.longitude.toFixed(6)),
+                        acc: Math.round(pos.coords.accuracy || 0)
+                    };
+                    evaluateGpsBanner();
+                },
+                (err) => {
+                    currentPos = null;
+                    currentDistMeters = null;
+                    banner.className = 'gps-banner gps-bad';
+                    title.textContent = '❌ មិនអាចចាប់ GPS បានទេ';
+                    sub.textContent = 'សូមបើក Location និងអនុញ្ញាតសិទ្ធិលើ Browser';
+                },
+                { enableHighAccuracy: true, timeout: 12000, maximumAge: 15000 }
+            );
+        }
+
+        function evaluateGpsBanner() {
+            const banner = document.getElementById('gpsBanner');
+            const title = document.getElementById('gpsTitle');
+            const sub = document.getElementById('gpsSub');
+            if (!currentPos) return;
+
+            if (attConfig.shopLat && attConfig.shopLng) {
+                currentDistMeters = haversineMeters(currentPos.lat, currentPos.lng, Number(attConfig.shopLat), Number(attConfig.shopLng));
+                const maxR = Number(attConfig.radiusMeters || 150);
+                if (currentDistMeters <= maxR) {
+                    banner.className = 'gps-banner gps-ok';
+                    title.textContent = `✅ ស្ថិតក្នុងបរិវេណហាង (${currentDistMeters}m)`;
+                    sub.textContent = `ដែនអនុញ្ញាត ≤ ${maxR}m • កម្រិតច្បាស់ ±${currentPos.acc}m`;
+                } else {
+                    banner.className = 'gps-banner gps-bad';
+                    title.textContent = `⚠️ នៅក្រៅបរិវេណហាង (${currentDistMeters}m)`;
+                    sub.textContent = `លើសដែនកំណត់ ${maxR}m • ${attConfig.requireGpsInside ? 'ហាមចុចក្រៅហាង' : 'នឹងផ្ញើការដាស់តឿនទៅម្ចាស់ហាង'}`;
+                }
+            } else {
+                currentDistMeters = null;
+                banner.className = 'gps-banner gps-ok';
+                title.textContent = `📍 ចាប់ GPS ជោគជ័យ (${currentPos.lat}, ${currentPos.lng})`;
+                sub.textContent = 'ហាងមិនទាន់កំណត់ដែន GPS ទេ (កត់ត្រាទីតាំងធម្មតា)';
+            }
+        }
+
+        async function loadBranchConfig() {
+            document.getElementById('branchLabel').textContent = `សាខា៖ ${BRANCH_ID}`;
+            document.getElementById('leaveFrom').value = getTodayStr();
+            document.getElementById('leaveTo').value = getTodayStr();
+
+            // 1. Local fallback first
+            try {
+                const rawSys = localStorage.getItem(`ks2_${BRANCH_ID}_sys_settings`);
+                if (rawSys) sysSettings = JSON.parse(rawSys);
+                const rawAtt = localStorage.getItem(`ks2_${BRANCH_ID}_attendance_cfg`);
+                if (rawAtt) attConfig = Object.assign(attConfig, JSON.parse(rawAtt));
+                const rawUsers = localStorage.getItem(`ks2_${BRANCH_ID}_auth_users_pro`);
+                if (rawUsers) staffList = JSON.parse(rawUsers);
+            } catch (e) {}
+
+            // 2. Cloud load from Supabase branch_store
+            if (sb && navigator.onLine) {
+                try {
+                    const { data } = await sb.from('branch_store')
+                        .select('shop_info, sys_settings, user_accounts')
+                        .eq('branch_id', BRANCH_ID)
+                        .maybeSingle();
+                    if (data) {
+                        if (data.shop_info) shopInfo = data.shop_info;
+                        if (data.sys_settings) {
+                            sysSettings = Object.assign({}, sysSettings, data.sys_settings);
+                            if (data.sys_settings.attendanceConfig) {
+                                attConfig = Object.assign(attConfig, data.sys_settings.attendanceConfig);
+                            }
+                            if (!attConfig.telegramToken && (data.sys_settings.telegramBotToken || data.sys_settings.tgBotToken || data.sys_settings.telegramToken)) {
+                                attConfig.telegramToken = data.sys_settings.telegramBotToken || data.sys_settings.tgBotToken || data.sys_settings.telegramToken;
+                            }
+                            if (!attConfig.telegramChatId && (data.sys_settings.telegramChatId || data.sys_settings.tgChatId)) {
+                                attConfig.telegramChatId = data.sys_settings.telegramChatId || data.sys_settings.tgChatId;
+                            }
+                        }
+                        if (Array.isArray(data.user_accounts) && data.user_accounts.length > 0) {
+                            staffList = data.user_accounts;
+                        }
+                    }
+                } catch (e) {
+                    console.warn('Cloud load warning:', e);
+                }
+            }
+
+            // Apply UI
+            const name = shopInfo.shopName || localStorage.getItem(`ks2_${BRANCH_ID}_shop_name`) || 'SKM POS Store';
+            const logo = shopInfo.shopLogo || localStorage.getItem(`ks2_${BRANCH_ID}_shop_logo`) || '';
+            document.getElementById('shopName').textContent = name;
+            if (logo) {
+                const img = document.getElementById('shopLogo');
+                img.src = logo;
+                img.style.display = 'block';
+                document.getElementById('defaultLogo').style.display = 'none';
+            }
+
+            populateStaffDropdowns();
+            evaluateGpsBanner();
+            loadTodayLogs();
+        }
+
+        function populateStaffDropdowns() {
+            const sel1 = document.getElementById('staffSelect');
+            const sel2 = document.getElementById('leaveStaffSelect');
+            const savedStaff = localStorage.getItem(`ks2_${BRANCH_ID}_att_last_staff`) || '';
+
+            let opts = '';
+            if (Array.isArray(staffList) && staffList.length > 0) {
+                opts = staffList.map(u => {
+                    const label = u.fullName || u.name || u.username || u.id;
+                    const role = u.role ? ` (${u.role})` : '';
+                    return `<option value="${encodeURIComponent(u.id || label)}" data-name="${label}" data-role="${u.role || 'staff'}">${label}${role}</option>`;
+                }).join('');
+                opts += `<option value="__manual__">✏️ វាយឈ្មោះដោយផ្ទាល់...</option>`;
+            } else {
+                opts = `<option value="__manual__">✏️ វាយឈ្មោះដោយផ្ទាល់...</option>`;
+            }
+            sel1.innerHTML = opts;
+            sel2.innerHTML = opts;
+
+            if (savedStaff && [...sel1.options].some(o => o.value === savedStaff)) {
+                sel1.value = savedStaff;
+                sel2.value = savedStaff;
+            }
+            onStaffChanged();
+        }
+
+        function onStaffChanged() {
+            const val = document.getElementById('staffSelect').value;
+            document.getElementById('manualStaffWrap').classList.toggle('hidden', val !== '__manual__');
+            if (val && val !== '__manual__') {
+                localStorage.setItem(`ks2_${BRANCH_ID}_att_last_staff`, val);
+            }
+            updatePersonalTodayStatus();
+        }
+
+        function getSelectedStaff(selectId) {
+            const sel = document.getElementById(selectId);
+            const val = sel.value;
+            if (val === '__manual__') {
+                const manual = (document.getElementById('manualStaffName').value || '').trim();
+                return { id: manual ? 'manual_' + manual.toLowerCase() : '', name: manual, role: 'staff', rawObj: null };
+            }
+            const opt = sel.options[sel.selectedIndex];
+            const decodedId = decodeURIComponent(val);
+            const found = staffList.find(u => String(u.id || u.name || u.username) === decodedId) || null;
+            return {
+                id: decodedId,
+                name: opt ? (opt.getAttribute('data-name') || opt.textContent) : decodedId,
+                role: opt ? (opt.getAttribute('data-role') || 'staff') : 'staff',
+                rawObj: found
+            };
+        }
+
+        function computeLateMinutes(clockInDate) {
+            const parts = String(attConfig.workStart || '08:00').split(':');
+            const sh = Number(parts[0] || 8), sm = Number(parts[1] || 0);
+            const start = new Date(clockInDate);
+            start.setHours(sh, sm, 0, 0);
+            const diffMin = Math.floor((clockInDate.getTime() - start.getTime()) / 60000);
+            const grace = Number(attConfig.graceMinutes || 10);
+            return diffMin > grace ? diffMin : 0;
+        }
+
+        async function sendTelegramAlert(text) {
+            const token = (attConfig.telegramToken || sysSettings.telegramBotToken || sysSettings.tgBotToken || sysSettings.telegramToken || '').trim();
+            const chatId = (attConfig.telegramChatId || sysSettings.telegramChatId || sysSettings.tgChatId || '').trim();
+            if (!attConfig.telegramEnabled || !token || !chatId) return;
+            try {
+                await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        chat_id: chatId,
+                        text,
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: true
+                    })
+                });
+            } catch (e) {
+                console.warn('Telegram send failed:', e);
+            }
+        }
+
+        function getLocalAttKey() { return `ks2_${BRANCH_ID}_staff_attendance_logs`; }
+        function getLocalLeaveKey() { return `ks2_${BRANCH_ID}_staff_leave_requests`; }
+
+        function readLocalLogs() {
+            try { return JSON.parse(localStorage.getItem(getLocalAttKey()) || '[]'); } catch (e) { return []; }
+        }
+        function saveLocalLog(rec) {
+            const list = readLocalLogs();
+            const idx = list.findIndex(x => x.id === rec.id);
+            if (idx >= 0) list[idx] = rec; else list.unshift(rec);
+            localStorage.setItem(getLocalAttKey(), JSON.stringify(list.slice(0, 300)));
+        }
+
+        async function handleClock(action) {
+            const staff = getSelectedStaff('staffSelect');
+            if (!staff.name) {
+                showToast('⚠️ សូមជ្រើសរើស ឬវាយឈ្មោះបុគ្គលិក!', true);
+                return;
+            }
+
+            // Optional PIN check
+            const enteredPin = (document.getElementById('staffPin').value || '').trim();
+            if (attConfig.requirePin) {
+                const storePin = String(sysSettings.storePin || '1234').trim();
+                const userPin = staff.rawObj ? String(staff.rawObj.pin || '').trim() : '';
+                const userPass = staff.rawObj ? String(staff.rawObj.password || '').trim() : '';
+                const pinOk = (enteredPin === storePin) || (userPin && enteredPin === userPin) || (userPass && !userPass.startsWith('sha256:') && enteredPin === userPass);
+                if (!enteredPin || !pinOk) {
+                    showToast('❌ លេខកូដ PIN មិនត្រឹមត្រូវទេ!', true);
+                    return;
+                }
+            }
+
+            // Strict GPS geofence check
+            const maxR = Number(attConfig.radiusMeters || 150);
+            const isOutside = (attConfig.shopLat && attConfig.shopLng && currentDistMeters !== null && currentDistMeters > maxR);
+            if (attConfig.requireGpsInside) {
+                if (!currentPos) {
+                    showToast('⚠️ ហាងតម្រូវឱ្យបើក GPS ជាមុនសិន!', true);
+                    refreshGPS();
+                    return;
+                }
+                if (isOutside) {
+                    showToast(`❌ អ្នកនៅឆ្ងាយពីហាង ${currentDistMeters}m (ដែនកំណត់ ${maxR}m)!`, true);
+                    return;
+                }
+            }
+
+            const now = new Date();
+            const workDate = getTodayStr();
+            const recId = `${BRANCH_ID}_${staff.id || staff.name}_${workDate}`.replace(/[^a-zA-Z0-9_\-]/g, '_');
+            const note = (document.getElementById('clockNote').value || '').trim();
+
+            let existing = readLocalLogs().find(x => x.id === recId) || null;
+            if (!existing && sb && navigator.onLine) {
+                try {
+                    const { data } = await sb.from('pos_staff_attendance').select('*').eq('id', recId).maybeSingle();
+                    if (data) existing = data;
+                } catch (e) {}
+            }
+
+            let record;
+            if (action === 'in') {
+                if (existing && existing.clock_in) {
+                    showToast(`ℹ️ ${staff.name} បានចុចចូលធ្វើការរួចហើយនៅម៉ោង ${formatTimeKH(existing.clock_in)}!`, true);
+                    return;
+                }
+                const lateMin = computeLateMinutes(now);
+                record = {
+                    id: recId,
+                    branch_id: BRANCH_ID,
+                    staff_id: staff.id,
+                    staff_name: staff.name,
+                    staff_role: staff.role,
+                    work_date: workDate,
+                    clock_in: now.toISOString(),
+                    clock_out: existing ? existing.clock_out : null,
+                    clock_in_lat: currentPos ? currentPos.lat : null,
+                    clock_in_lng: currentPos ? currentPos.lng : null,
+                    clock_in_distance_m: currentDistMeters,
+                    late_minutes: lateMin,
+                    worked_minutes: 0,
+                    status: isOutside ? 'outside_gps' : (lateMin > 0 ? 'late' : 'present'),
+                    note: note,
+                    device_info: navigator.userAgent.slice(0, 120),
+                    updated_at: now.toISOString()
+                };
+            } else {
+                if (!existing || !existing.clock_in) {
+                    showToast('⚠️ មិនទាន់បានចុច "ចូលធ្វើការ" ថ្ងៃនេះទេ!', true);
+                    return;
+                }
+                const inTime = new Date(existing.clock_in);
+                const workedMin = Math.max(0, Math.round((now.getTime() - inTime.getTime()) / 60000));
+                record = Object.assign({}, existing, {
+                    clock_out: now.toISOString(),
+                    clock_out_lat: currentPos ? currentPos.lat : null,
+                    clock_out_lng: currentPos ? currentPos.lng : null,
+                    clock_out_distance_m: currentDistMeters,
+                    worked_minutes: workedMin,
+                    note: note ? ((existing.note ? existing.note + ' | ' : '') + note) : (existing.note || ''),
+                    updated_at: now.toISOString()
+                });
+            }
+
+            // Save locally + Supabase
+            saveLocalLog(record);
+            if (sb && navigator.onLine) {
+                try {
+                    await sb.from('pos_staff_attendance').upsert(record, { onConflict: 'id' });
+                } catch (e) {
+                    console.warn('Supabase upsert warning:', e);
+                }
+            }
+
+            // Send Telegram Alert
+            const mapLink = currentPos ? `\n🗺️ <a href="https://maps.google.com/?q=${currentPos.lat},${currentPos.lng}">មើលទីតាំងលើ Google Maps</a>` : '';
+            const distTxt = currentDistMeters !== null ? `${currentDistMeters}m ${isOutside ? '⚠️ (ក្រៅហាង)' : '✅ (ក្នុងហាង)'}` : 'មិនបានកំណត់ដែន';
+            if (action === 'in') {
+                const lateTxt = record.late_minutes > 0 ? `⚠️ យឺត ${record.late_minutes} នាទី` : '✅ ទាន់ម៉ោង';
+                await sendTelegramAlert(
+                    `🟢 <b>បុគ្គលិកចូលធ្វើការ (CLOCK IN)</b>\n` +
+                    `🏪 សាខា៖ <b>${BRANCH_ID}</b>\n` +
+                    `👤 ឈ្មោះ៖ <b>${staff.name}</b>\n` +
+                    `🕒 ម៉ោងចូល៖ <b>${formatTimeKH(record.clock_in)}</b> (${lateTxt})\n` +
+                    `📍 ចម្ងាយ GPS៖ ${distTxt}` +
+                    (note ? `\n💬 កំណត់ចំណាំ៖ ${note}` : '') + mapLink
+                );
+                showToast(`✅ ${staff.name} ចូលធ្វើការជោគជ័យ!`);
+            } else {
+                const hrs = Math.floor(record.worked_minutes / 60);
+                const mins = record.worked_minutes % 60;
+                await sendTelegramAlert(
+                    `🔴 <b>បុគ្គលិកចេញពីធ្វើការ (CLOCK OUT)</b>\n` +
+                    `🏪 សាខា៖ <b>${BRANCH_ID}</b>\n` +
+                    `👤 ឈ្មោះ៖ <b>${staff.name}</b>\n` +
+                    `🕒 ម៉ោងចេញ៖ <b>${formatTimeKH(record.clock_out)}</b>\n` +
+                    `⏱️ សរុបម៉ោងធ្វើការ៖ <b>${hrs} ម៉ោង ${mins} នាទី</b>\n` +
+                    `📍 ចម្ងាយ GPS៖ ${distTxt}` +
+                    (note ? `\n💬 កំណត់ចំណាំ៖ ${note}` : '') + mapLink
+                );
+                showToast(`✅ ${staff.name} ចេញពីធ្វើការជោគជ័យ (${hrs}ម៉ ${mins}នាទី)!`);
+            }
+
+            document.getElementById('clockNote').value = '';
+            loadTodayLogs();
+        }
+
+        async function submitLeaveRequest() {
+            const staff = getSelectedStaff('leaveStaffSelect');
+            if (!staff.name) {
+                showToast('⚠️ សូមជ្រើសរើសឈ្មោះបុគ្គលិក!', true);
+                return;
+            }
+            const reqType = document.getElementById('leaveType').value;
+            const fromDate = document.getElementById('leaveFrom').value || getTodayStr();
+            const toDate = document.getElementById('leaveTo').value || fromDate;
+            const reqTime = (document.getElementById('requestedTime').value || '').trim();
+            const reason = (document.getElementById('leaveReason').value || '').trim();
+            if (!reason) {
+                showToast('⚠️ សូមសរសេរមូលហេតុជាមុនសិន!', true);
+                return;
+            }
+
+            const rec = {
+                id: `LR_${BRANCH_ID}_${Date.now()}`,
+                branch_id: BRANCH_ID,
+                staff_id: staff.id,
+                staff_name: staff.name,
+                request_type: reqType,
+                from_date: fromDate,
+                to_date: toDate,
+                requested_time: reqTime,
+                reason: reason,
+                status: 'pending',
+                created_at: new Date().toISOString()
+            };
+
+            const list = JSON.parse(localStorage.getItem(getLocalLeaveKey()) || '[]');
+            list.unshift(rec);
+            localStorage.setItem(getLocalLeaveKey(), JSON.stringify(list.slice(0, 150)));
+
+            if (sb && navigator.onLine) {
+                try { await sb.from('pos_leave_requests').insert(rec); } catch (e) {}
+            }
+
+            const typeMap = {
+                leave: '🏖️ សុំច្បាប់ឈប់សម្រាក',
+                sick: '🤒 សុំច្បាប់ឈឺ',
+                late_notice: '⏰ សុំចូលយឺត / ចេញមុនម៉ោង',
+                time_edit: '✏️ សុំកែម៉ោងវត្តមាន'
+            };
+            await sendTelegramAlert(
+                `📝 <b>សំណើថ្មីពីបុគ្គលិក (${typeMap[reqType] || reqType})</b>\n` +
+                `🏪 សាខា៖ <b>${BRANCH_ID}</b>\n` +
+                `👤 បុគ្គលិក៖ <b>${staff.name}</b>\n` +
+                `📅 កាលបរិច្ឆេទ៖ <b>${fromDate} → ${toDate}</b>` +
+                (reqTime ? `\n🕒 ម៉ោងសុំកែ៖ <b>${reqTime}</b>` : '') +
+                `\n💬 មូលហេតុ៖ ${reason}\n` +
+                `👉 សូមចូល Admin POS ដើម្បីអនុម័ត (Approve / Reject)`
+            );
+
+            document.getElementById('leaveReason').value = '';
+            document.getElementById('requestedTime').value = '';
+            showToast('✅ បានផ្ញើសំណើជូនម្ចាស់ហាងជោគជ័យ!');
+        }
+
+        let cachedTodayLogs = [];
+        async function loadTodayLogs() {
+            const today = getTodayStr();
+            let logs = readLocalLogs().filter(x => x.work_date === today);
+            if (sb && navigator.onLine) {
+                try {
+                    const { data } = await sb.from('pos_staff_attendance')
+                        .select('*')
+                        .eq('branch_id', BRANCH_ID)
+                        .eq('work_date', today)
+                        .order('updated_at', { ascending: false });
+                    if (Array.isArray(data) && data.length > 0) logs = data;
+                } catch (e) {}
+            }
+            cachedTodayLogs = logs;
+            const box = document.getElementById('todayLogsList');
+            if (!logs.length) {
+                box.innerHTML = '<div style="padding:8px 0; color:#94a3b8;">មិនទាន់មានបុគ្គលិកស្កេនវត្តមានថ្ងៃនេះទេ។</div>';
+            } else {
+                box.innerHTML = logs.map(r => {
+                    const badgeClass = r.status === 'outside_gps' ? 'b-out' : (r.late_minutes > 0 ? 'b-late' : 'b-ok');
+                    const badgeTxt = r.status === 'outside_gps' ? 'ក្រៅ GPS' : (r.late_minutes > 0 ? `យឺត ${r.late_minutes}នាទី` : 'ទាន់ម៉ោង');
+                    const hrs = r.worked_minutes ? ` • ${Math.floor(r.worked_minutes/60)}ម៉ ${r.worked_minutes%60}ន` : '';
+                    return `
+                        <div class="log-item">
+                            <div>
+                                <div style="font-weight:800; color:#f8fafc;">👤 ${esc(r.staff_name)}</div>
+                                <div style="color:#94a3b8; font-size:11.5px;">ចូល៖ ${formatTimeKH(r.clock_in)} | ចេញ៖ ${formatTimeKH(r.clock_out)}${hrs}</div>
+                            </div>
+                            <span class="badge ${badgeClass}">${badgeTxt}</span>
+                        </div>`;
+                }).join('');
+            }
+            updatePersonalTodayStatus();
+        }
+
+        function updatePersonalTodayStatus() {
+            const staff = getSelectedStaff('staffSelect');
+            const box = document.getElementById('todayStatusBox');
+            const mine = cachedTodayLogs.find(x => x.staff_name === staff.name || (staff.id && x.staff_id === staff.id));
+            if (!mine) {
+                box.innerHTML = `ℹ️ <b>${staff.name || 'បុគ្គលិក'}</b> មិនទាន់បានចុចវត្តមានថ្ងៃនេះទេ (ម៉ោងចូលស្តង់ដារ៖ <b>${attConfig.workStart}</b>)។`;
+            } else {
+                const hrs = mine.worked_minutes ? ` | សរុប៖ <b>${Math.floor(mine.worked_minutes/60)} ម៉ោង ${mine.worked_minutes%60} នាទី</b>` : '';
+                box.innerHTML = `✅ <b>${mine.staff_name}</b> ថ្ងៃនេះ៖ ចូលម៉ោង <b>${formatTimeKH(mine.clock_in)}</b> | ចេញម៉ោង <b>${formatTimeKH(mine.clock_out)}</b>${hrs}`;
+            }
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadBranchConfig();
+            refreshGPS();
+        });
+    </script>
+</body>
+</html>
