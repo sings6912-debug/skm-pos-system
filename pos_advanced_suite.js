@@ -477,12 +477,52 @@
     window.addFloorPlanZone = async function() {
         const z = prompt('វាយឈ្មោះជាន់ ឬតំបន់ថ្មី (ឧ. ជាន់ទី ២, បន្ទប់ KTV, សួនច្បារ):');
         if (!z || !z.trim()) return;
+        const cleanZ = z.trim();
         const fp = getFloorPlanData();
-        if (!fp.zones.includes(z.trim())) fp.zones.push(z.trim());
-        fpActiveZone = z.trim();
+        if (!fp.zones.includes(cleanZ)) fp.zones.push(cleanZ);
+        fpActiveZone = cleanZ;
         window.renderFloorPlanUI();
         await persistSysSettings();
         toast(`✅ បានបន្ថែមជាន់/តំបន់ "${fpActiveZone}"!`);
+    };
+
+    window.renameActiveFloorPlanZone = async function() {
+        const fp = getFloorPlanData();
+        const oldZ = fpActiveZone;
+        if (!oldZ) return;
+        const next = prompt(`ដូរឈ្មោះជាន់/តំបន់ "${oldZ}" ទៅជា៖`, oldZ);
+        if (!next || !next.trim() || next.trim() === oldZ) return;
+        const newZ = next.trim();
+        if (fp.zones.includes(newZ)) {
+            return toast(`⚠️ ឈ្មោះជាន់ "${newZ}" មានរួចហើយ!`, true);
+        }
+        fp.zones = fp.zones.map(z => (z === oldZ ? newZ : z));
+        (fp.tables || []).forEach(t => { if (t && t.zone === oldZ) t.zone = newZ; });
+        fpActiveZone = newZ;
+        window.renderFloorPlanUI();
+        await persistSysSettings();
+        toast(`✅ បានដូរឈ្មោះជាន់ទៅជា "${newZ}"!`);
+    };
+
+    window.deleteActiveFloorPlanZone = async function() {
+        const fp = getFloorPlanData();
+        const targetZ = fpActiveZone;
+        if (!targetZ) return;
+        if ((fp.zones || []).length <= 1) {
+            return toast('⚠️ ត្រូវមានជាន់/តំបន់យ៉ាងតិច ១ ជានិច្ច មិនអាចលុបអស់បានទេ!', true);
+        }
+        const countInZone = (fp.tables || []).filter(t => t && t.zone === targetZ).length;
+        const msg = countInZone > 0
+            ? `ជាន់ "${targetZ}" មានតុចំនួន ${countInZone}។ ចុច OK ដើម្បីលុបទាំងជាន់ និងតុក្នុងជាន់នេះចោល (ឬ Cancel ដើម្បីបោះបង់)?`
+            : `តើអ្នកពិតជាចង់លុបជាន់/តំបន់ "${targetZ}" មែនទេ?`;
+        if (!confirm(msg)) return;
+
+        fp.zones = fp.zones.filter(z => z !== targetZ);
+        fp.tables = (fp.tables || []).filter(t => t && t.zone !== targetZ);
+        fpActiveZone = fp.zones[0] || '';
+        window.renderFloorPlanUI();
+        await persistSysSettings();
+        toast(`🗑️ បានលុបជាន់ "${targetZ}" រួចរាល់!`);
     };
 
     function isDuplicateTableName(fp, name, ignoreId = null) {
@@ -637,7 +677,27 @@
         if (typeof window.switchTab === 'function') {
             window.switchTab('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos'));
         }
-        toast(`🪑 បានជ្រើសរើស "${tbName}" សម្រាប់កុម្ម៉ង់!`);
+
+        // Expand mobile cart summary if collapsed & highlight checkout area
+        const sumBody = document.getElementById('cartSummaryBody');
+        if (sumBody && window.getComputedStyle(sumBody).display === 'none') {
+            sumBody.style.display = 'block';
+        }
+        const checkoutArea = document.querySelector('.pos-checkout-btns') || document.getElementById('mobileCartContainer');
+        if (checkoutArea) {
+            checkoutArea.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            checkoutArea.style.transition = 'box-shadow 0.25s ease';
+            checkoutArea.style.boxShadow = '0 0 0 3px rgba(16, 185, 129, 0.55)';
+            setTimeout(() => { checkoutArea.style.boxShadow = ''; }, 1400);
+        }
+
+        // If cart already has items, open checkout modal directly for instant payment
+        if (Array.isArray(window.cart) && window.cart.length > 0 && typeof window.openCheckoutModal === 'function') {
+            setTimeout(() => window.openCheckoutModal(), 180);
+            toast(`🪑 ជ្រើសរើស "${tbName}" — កំពុងបើកផ្ទាំងគិតលុយ!`);
+        } else {
+            toast(`🪑 បានជ្រើសរើស "${tbName}" — ត្រៀមគិតលុយ/បន្ថែមទំនិញ!`);
+        }
     };
 
     window.renderFloorPlanUI = function() {
@@ -655,9 +715,17 @@
             ).join('');
         }
         if (aCtrl) {
-            aCtrl.innerHTML = isManagerOrAdmin()
-                ? `<button type="button" class="btn ${fpEditMode ? 'btn-success' : 'btn-outline'}" style="padding:6px 12px; font-size:12.5px;" onclick="window.toggleFloorPlanEditMode()">${fpEditMode ? '💾 រួចរាល់ (Save Layout)' : '✏️ រៀបចំប្លង់ (Edit)'}</button>`
-                : '';
+            if (!isManagerOrAdmin()) {
+                aCtrl.innerHTML = '';
+            } else if (!fpEditMode) {
+                aCtrl.innerHTML = `<button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12.5px;" onclick="window.toggleFloorPlanEditMode()">✏️ រៀបចំប្លង់ (Edit)</button>`;
+            } else {
+                aCtrl.innerHTML = `
+                    <button type="button" class="btn btn-outline" style="padding:6px 10px; font-size:12px;" onclick="window.renameActiveFloorPlanZone()">✏️ ដូរឈ្មោះជាន់</button>
+                    <button type="button" class="btn btn-danger" style="padding:6px 10px; font-size:12px;" onclick="window.deleteActiveFloorPlanZone()">🗑️ លុបជាន់</button>
+                    <button type="button" class="btn btn-success" style="padding:6px 12px; font-size:12.5px;" onclick="window.toggleFloorPlanEditMode()">💾 រួចរាល់ (Save Layout)</button>
+                `;
+            }
         }
         if (addForm) addForm.style.display = fpEditMode ? 'flex' : 'none';
         if (hint) hint.style.display = fpEditMode ? 'inline' : 'none';
@@ -1074,6 +1142,8 @@
         };
         window.renderShiftModalUI();
         window.syncAdvancedPosButtons();
+        hookCheckoutAndStockInKitchenPrint();
+        setTimeout(hookCheckoutAndStockInKitchenPrint, 1200);
         await persistSysSettings();
         toast(`✅ បានបើកវេនលក់ដោយ ${cashier} (ដើមគ្រា $${openingUsd.toFixed(2)})!`);
     };
@@ -1402,6 +1472,222 @@
             advDash.style.display = h ? 'flex' : 'none';
         }
     };
+
+
+    // =========================================================
+    // 9. AUTO-DISPATCH TO KITCHEN / DEPARTMENT PRINTER ON CHECKOUT & STOCK-IN
+    // Supports:
+    //  - PC Desktop App (window.SKMDesktopBridge.printRawIp / printSilentHtml)
+    //  - Local Print Bridge (POST /print-batch to LAN IP:9100)
+    //  - Browser Print Fallback (if no IP/Desktop bridge is configured)
+    // Zero extra Supabase Egress!
+    // =========================================================
+    function getConfiguredKitchenTargets() {
+        const sys = window.sysSettings || {};
+        const targets = [];
+        const depts = Array.isArray(sys.deptPrinters) ? sys.deptPrinters : [];
+
+        depts.forEach(p => {
+            if (!p || !p.name) return;
+            const nm = String(p.name).toLowerCase();
+            const isKitchenOrBar =
+                nm.includes('kitchen') || nm.includes('ផ្ទះបាយ') ||
+                nm.includes('bar') || nm.includes('បារ') || nm.includes('ភេសជ្ជៈ') ||
+                p.type === 'network';
+            if (isKitchenOrBar) {
+                targets.push({
+                    id: p.id || p.name,
+                    name: p.name,
+                    type: p.type || (p.ip && p.ip !== 'default' ? 'network' : 'local'),
+                    ip: p.ip && p.ip !== 'default' ? String(p.ip).trim() : '',
+                    port: parseInt(p.port) || 9100,
+                    winPrinter: String(p.winPrinter || '').trim()
+                });
+            }
+        });
+
+        // Also include any printer explicitly mapped in categoryRouting
+        const routing = sys.categoryRouting || {};
+        Object.keys(routing).forEach(catKey => {
+            const pid = routing[catKey];
+            if (!pid || pid === 'none' || pid === 'cashier') return;
+            const found = depts.find(d => d && (d.id === pid || d.name === pid));
+            if (found && !targets.some(t => t.name === found.name)) {
+                targets.push({
+                    id: found.id || found.name,
+                    name: found.name,
+                    type: found.type || (found.ip && found.ip !== 'default' ? 'network' : 'local'),
+                    ip: found.ip && found.ip !== 'default' ? String(found.ip).trim() : '',
+                    port: parseInt(found.port) || 9100,
+                    winPrinter: String(found.winPrinter || '').trim()
+                });
+            }
+        });
+
+        return targets;
+    }
+
+    function buildKitchenTicketText(title, tableLabel, modeLabel, itemsList, noteText) {
+        const lines = [];
+        lines.push(`*** ${title} ***`);
+        lines.push(`Branch: ${getBranch()}`);
+        if (tableLabel) lines.push(`Table/Ref: ${tableLabel}`);
+        if (modeLabel) lines.push(`Mode: ${modeLabel}`);
+        lines.push(`Time: ${new Date().toLocaleTimeString('en-GB')}`);
+        lines.push('--------------------------------');
+        (itemsList || []).forEach(it => {
+            const q = it.cartQty || it.qty || 1;
+            lines.push(`${q}x  ${it.name || it.itemName || 'Item'}`);
+            if (it.modifierLabel) lines.push(`    -> ${it.modifierLabel}`);
+            if (it.note) lines.push(`    * ${it.note}`);
+        });
+        if (noteText) {
+            lines.push('--------------------------------');
+            lines.push(`Note: ${noteText}`);
+        }
+        return lines.join('\n');
+    }
+
+    function buildKitchenTicketHtml(title, tableLabel, modeLabel, itemsList, noteText) {
+        const rowsHtml = (itemsList || []).map(it => {
+            const q = it.cartQty || it.qty || 1;
+            const sub = [it.modifierLabel ? `(${esc(it.modifierLabel)})` : '', it.note ? `[${esc(it.note)}]` : ''].filter(Boolean).join(' ');
+            return `<tr>
+                <td style="padding:4px 0;font-weight:900;font-size:14px;width:44px;">${q}x</td>
+                <td style="padding:4px 0;font-weight:700;font-size:13px;">${esc(it.name || it.itemName || 'Item')}${sub ? `<div style="font-size:11px;font-weight:400;">${sub}</div>` : ''}</td>
+            </tr>`;
+        }).join('');
+
+        return `<div style="font-family:'Battambang','Kantumruy Pro',sans-serif;color:#000;padding:4px;">
+            <div style="text-align:center;font-weight:900;font-size:16px;border-bottom:1px dashed #000;padding-bottom:4px;margin-bottom:6px;">${esc(title)}</div>
+            <div style="font-size:11.5px;margin-bottom:6px;">
+                ${tableLabel ? `<div><b>តុ/យោង៖</b> ${esc(tableLabel)}</div>` : ''}
+                ${modeLabel ? `<div><b>ប្រភេទ៖</b> ${esc(modeLabel)}</div>` : ''}
+                <div><b>ម៉ោង៖</b> ${new Date().toLocaleLocaleString ? new Date().toLocaleTimeString('km-KH') : new Date().toLocaleTimeString()}</div>
+            </div>
+            <table style="width:100%;border-collapse:collapse;border-top:1px dashed #000;border-bottom:1px dashed #000;margin:6px 0;">${rowsHtml}</table>
+            ${noteText ? `<div style="font-size:12px;font-weight:700;margin-top:6px;">📝 ចំណាំ៖ ${esc(noteText)}</div>` : ''}
+        </div>`;
+    }
+
+    window.dispatchToKitchenPrinters = async function(ticketType, itemsList, opts = {}) {
+        const sys = window.sysSettings || {};
+        const pf = getPF();
+        const shouldRoute = Boolean(sys.toggleMultiPrinter) || Boolean(pf.floorPlan) || Boolean(pf.comboSets) || ticketType === 'stock_in';
+        if (!shouldRoute) return;
+        if (!Array.isArray(itemsList) || itemsList.length === 0) return;
+
+        const targets = getConfiguredKitchenTargets();
+        const tableLabel = opts.tableLabel || document.getElementById('posTableSelect')?.value || document.getElementById('posCustomerName')?.value || '';
+        const modeMap = { dinein: 'ញ៉ាំនៅហាង (Dine-In)', takeaway: 'ទិញខ្ចប់ (Takeaway)', delivery: 'ដឹកជញ្ជូន (Delivery)' };
+        const modeLabel = opts.modeLabel || (pf.orderModes ? (modeMap[window.currentPosOrderMode] || '') : '');
+        const noteText = opts.noteText || '';
+        const title = ticketType === 'stock_in'
+            ? 'បញ្ចូលស្តុកចុងភៅ (KITCHEN STOCK-IN)'
+            : 'បញ្ជាចម្អិនចុងភៅ (KITCHEN ORDER)';
+
+        const rawJobs = targets.filter(t => t.ip).map(t => ({
+            targetName: t.name,
+            ip: t.ip,
+            port: t.port || 9100,
+            text: buildKitchenTicketText(title, tableLabel, modeLabel, itemsList, noteText),
+            cutPaper: true,
+            openDrawer: false
+        }));
+
+        const bridgeUrl = String(sys.printBridgeUrl || 'http://127.0.0.1:9191').trim().replace(/\/+$/, '');
+        const mode = String(sys.silentPrintMode || 'browser');
+        const htmlDoc = buildKitchenTicketHtml(title, tableLabel, modeLabel, itemsList, noteText);
+        const winTarget = targets.find(t => t.winPrinter)?.winPrinter || String(sys.cashierWinPrinter || '').trim();
+
+        let dispatched = false;
+
+        // 1. Electron PC Desktop App native IPC
+        if (window.SKMDesktopBridge) {
+            if (rawJobs.length > 0 && typeof window.SKMDesktopBridge.printRawIp === 'function') {
+                try {
+                    const r = await window.SKMDesktopBridge.printRawIp(rawJobs);
+                    if (r && r.ok) dispatched = true;
+                } catch (e) {}
+            }
+            if (!dispatched && (mode === 'desktop_silent' || targets.length > 0) && typeof window.SKMDesktopBridge.printSilentHtml === 'function') {
+                try {
+                    const r2 = await window.SKMDesktopBridge.printSilentHtml({
+                        html: htmlDoc,
+                        deviceName: winTarget,
+                        paperMm: parseFloat(sys.customReceiptConfig?.paperMm) || 80,
+                        title
+                    });
+                    if (r2 && r2.ok) dispatched = true;
+                } catch (e) {}
+            }
+        }
+
+        // 2. Local Print Bridge HTTP server (LAN IP:9100)
+        if (!dispatched && rawJobs.length > 0 && navigator.onLine) {
+            try {
+                const resp = await fetch(`${bridgeUrl}/print-batch`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ jobs: rawJobs })
+                });
+                if (resp.ok) dispatched = true;
+            } catch (e) {}
+        }
+
+        // 3. Fallback: open clean kitchen slip in browser print window only when explicitly enabled & no silent bridge answered
+        if (!dispatched && sys.autoKitchenBrowserPrint === true) {
+            const w = window.open('', '_blank', 'width=380,height=560');
+            if (w) {
+                w.document.write(`<!DOCTYPE html><html lang="km"><head><meta charset="UTF-8"><title>${esc(title)}</title>
+                    <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&display=swap" rel="stylesheet">
+                    <style>@page{size:80mm auto;margin:0;}body{width:76mm;margin:0 auto;padding:4mm;font-family:'Battambang',sans-serif;}</style></head><body>${htmlDoc}</body></html>`);
+                w.document.close();
+                setTimeout(() => { try { w.print(); w.close(); } catch (e) {} }, 350);
+            }
+        }
+    };
+
+    function hookCheckoutAndStockInKitchenPrint() {
+        // Hook A: When checkout finishes (processCheckoutPaid)
+        if (typeof window.processCheckoutPaid === 'function' && !window.processCheckoutPaid.__skmKitchenHooked) {
+            const _origPay = window.processCheckoutPaid;
+            window.processCheckoutPaid = async function() {
+                const snapCart = Array.isArray(window.cart) ? window.cart.map(c => Object.assign({}, c)) : [];
+                const tblVal = document.getElementById('posTableSelect')?.value || document.getElementById('posCustomerName')?.value || '';
+                const res = await _origPay.apply(this, arguments);
+                if (snapCart.length > 0) {
+                    setTimeout(() => window.dispatchToKitchenPrinters('order', snapCart, { tableLabel: tblVal }), 220);
+                }
+                return res;
+            };
+            window.processCheckoutPaid.__skmKitchenHooked = true;
+        }
+
+        // Hook B: When saving/updating a product in Inventory (saveProduct) -> dispatch stock-in slip to kitchen if qty increased
+        if (typeof window.saveProduct === 'function' && !window.saveProduct.__skmKitchenHooked) {
+            const _origSaveP = window.saveProduct;
+            window.saveProduct = async function() {
+                const editId = document.getElementById('pId')?.value || '';
+                const pName = document.getElementById('pName')?.value || '';
+                const newQty = parseInt(document.getElementById('pQty')?.value) || 0;
+                const oldProd = editId ? (window.inventory || []).find(p => p && String(p.id) === String(editId)) : null;
+                const prevQty = oldProd ? (parseInt(oldProd.qty) || 0) : 0;
+                const addedQty = editId ? Math.max(0, newQty - prevQty) : newQty;
+
+                const res = await _origSaveP.apply(this, arguments);
+                if (addedQty > 0 && pName) {
+                    setTimeout(() => {
+                        window.dispatchToKitchenPrinters('stock_in', [{ name: pName, cartQty: addedQty }], {
+                            tableLabel: editId ? 'បន្ថែមស្តុក (Restock)' : 'ទំនិញថ្មី (New Stock)'
+                        });
+                    }, 250);
+                }
+                return res;
+            };
+            window.saveProduct.__skmKitchenHooked = true;
+        }
+    }
 
     function bootAdvancedSuite() {
         window.syncAdvancedPosButtons();
