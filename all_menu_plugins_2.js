@@ -20,10 +20,13 @@
 
     function isPowerShareEnabled() {
         try {
-            const sys = window.sysSettings || JSON.parse(localStorage.getItem(`ks2_${BRANCH_ID}_sys_settings`) || '{}');
-            if (sys && sys.pos2Enabled && sys.pos2Enabled.powerShareHub === false) return false;
+            const localSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH_ID}_sys_settings`) || '{}');
+            const sys = Object.assign({}, localSys, window.sysSettings || {});
+            if (sys && sys.pos2Enabled && typeof sys.pos2Enabled.powerShareHub === 'boolean') {
+                return sys.pos2Enabled.powerShareHub;
+            }
             const localP2 = JSON.parse(localStorage.getItem(`ks2_${BRANCH_ID}_pos2_enabled`) || '{}');
-            if (localP2 && localP2.powerShareHub === false) return false;
+            if (localP2 && typeof localP2.powerShareHub === 'boolean') return localP2.powerShareHub;
         } catch (e) {}
         return true;
     }

@@ -1471,6 +1471,120 @@
                     <input type="checkbox" id="pfInstallAppBtn" style="width:20px; height:20px; accent-color:var(--success); cursor:pointer;" onchange="saveAdminSettings()">
                 </div>
             </div>
+
+            <!-- 9.5 PACK 2 & PACK 3 ENTERPRISE MODULES (11 TOGGLEABLE FEATURES — ADMIN-ONLY) -->
+            <div class="section-box" style="border-left: 4px solid #6366f1; margin-top:20px; margin-bottom:0;">
+                <div class="section-title" style="font-size:14.5px; color:#6366f1; justify-content:space-between; flex-wrap:wrap;">
+                    <span><i class="fa-solid fa-cubes"></i> 9.5 មុខងារ Pro Pack 2 & Enterprise Pack 3 (១១ មុខងារ — បិទ/បើកតាមសាខា)</span>
+                    <span style="font-size:11.5px; background:rgba(99,102,241,0.12); color:#6366f1; padding:3px 10px; border-radius:999px;">ភ្ញៀវមិនឃើញប៊ូតុងកំណត់ទេ</span>
+                </div>
+
+                <!-- 1-Click Presets for Pack 2 & 3 -->
+                <div style="background:rgba(99,102,241,0.06); border:1px dashed rgba(99,102,241,0.4); border-radius:12px; padding:11px 13px; margin-bottom:14px;">
+                    <div style="font-size:12px; font-weight:800; color:#4f46e5; margin-bottom:8px;">⚡ រើសកញ្ចប់ Pack 2 & 3 ក្នុង ១ ចុច (Sync ឡើង Cloud ភ្លាមៗ — 0 Extra Egress)៖</div>
+                    <div class="action-btn-group" style="margin-bottom:0;">
+                        <button type="button" class="btn-action" style="background:#fff1f2; color:#e11d48; border:1px solid #fecdd3; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('basic_280')">🔒 ឈុតគោល $280</button>
+                        <button type="button" class="btn-action" style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('fnb')">🍜 មីហឹរ / កាហ្វេ</button>
+                        <button type="button" class="btn-action" style="background:#ecfdf5; color:#059669; border:1px solid #a7f3d0; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('pharmacy')">💊 ឱសថស្ថាន</button>
+                        <button type="button" class="btn-action" style="background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('cosmetics')">💄 ស្គីនខែ / ម៉ាត / លក់ដុំ</button>
+                        <button type="button" class="btn-action" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('electronics')">📱 ទូរស័ព្ទ / អេឡិចត្រូនិច</button>
+                        <button type="button" class="btn-action" style="background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('importer')">🚢 ដេប៉ូនាំចូល / ផ្ញើលក់</button>
+                        <button type="button" class="btn-action" style="background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('all_on')">👑 បើកទាំងអស់ (១១)</button>
+                    </div>
+                </div>
+
+                <div style="font-size:12.5px; font-weight:900; color:var(--brand-cyan); margin:6px 0 8px;">📦 Pack 2 — មុខងារលក់ & ប្រតិបត្តិការ (៨ មុខងារ)</div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🕒 វត្តមានបុគ្គលិក Pro (QR + GPS + សុំច្បាប់ + Telegram Alert)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">បុគ្គលិកស្កេន QR លើទូរស័ព្ទ (<code>attendance.html</code>) ចាប់ GPS ហាង និងផ្ញើដំណឹងចូល Telegram ម្ចាស់ហាងអូតូ</div>
+                    </div>
+                    <input type="checkbox" id="p2AttendancePro" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🏷️ ស្ទីកគ័របាកូដទំនិញ & កែវកាហ្វេ (Code-128 / Code-39 + USB Silent Print)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ព្រីនស្ទីកគ័រតម្លៃមានខ្សែបាកូដស្កេនបានពិត (40×30 / 50×30 / 30×20mm) និងស្ទីកគ័របិទកែវកាហ្វេ/ថ្នាំពេទ្យ</div>
+                    </div>
+                    <input type="checkbox" id="p2StickerPro" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🔗 ចែករំលែកម៉ឺនុយ & ទំនិញរហ័ស (Power QR Hub + ប៊ូតុង Share FB/Telegram លើ Menu)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ចុច ១ ដងស៊ែរ Link ម៉ឺនុយ ឬទំនិញណាមួយទៅ Telegram / Facebook (បិទទីនេះ = លាក់ទាំងលើ POS & <code>menu.html</code>)</div>
+                    </div>
+                    <input type="checkbox" id="p2PowerShareHub" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>📦 លក់ច្រើនឯកតា & លក់ដុំថែម (Multi-Unit & Wholesale Bonus + កាត់ស្តុកអូតូ)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">បាញ់បាកូដ ១ លោតតម្លៃ រាយ / បន្ទះ / កន្លះឡូ+១ / ១ឡូ+២ / កេះ និងកាត់ស្តុកដើមលើ Cloud ស្វ័យប្រវត្តិ</div>
+                    </div>
+                    <input type="checkbox" id="p2MultiUnitWholesale" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🧾 ព្រីនវិក្កយបត្រ ២ សន្លឹក & បាកូដស្កេនឆែក (Dual-Copy Receipt + Barcode)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ព្រីនច្បាប់អតិថិជន + ច្បាប់បញ្ជីហាង ភ្ជាប់បាកូដនៅបាតវិក្កយបត្រដើម្បីស្កេនឆែក/ដូរទំនិញវិញ</div>
+                    </div>
+                    <input type="checkbox" id="p2DualReceiptBarcode" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>📊 វិភាគទំនិញលក់ដាច់ & កប់ស្តុក (Fast-Moving & Dead Stock 30/60/90 ថ្ងៃ)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">គណនាទឹកប្រាក់ជាប់គាំងក្នុងឃ្លាំង, ទំនិញលក់ដាច់ខ្លាំង, ព្យាករណ៍ថ្ងៃស្តុកសល់ និងផ្ញើរបាយការណ៍ Telegram</div>
+                    </div>
+                    <input type="checkbox" id="p2StockHealthAnalytics" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🚨 ដាស់តឿនស្តុកជិតអស់អូតូ (Auto Low-Stock & Out-of-Stock Telegram Alert)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ផ្ញើសារចូល Telegram ម្ចាស់ហាងអូតូភ្លាមៗពេលស្តុកធ្លាក់ទាបជាងកម្រិតកំណត់ (មាន Cooldown ការពារ Spam)</div>
+                    </div>
+                    <input type="checkbox" id="p2AutoLowStockAlert" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🔄 Offline Order Queue & Smart TTL Cache (ការពារបាត់វិក្កយបត្រពេលដាច់អ៊ីនធឺណិត)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">រក្សាវិក្កយបត្រ/ចំណាយក្នុង FIFO Queue ពេលដាច់សេវា រួចបាញ់ Sync ឡើង Cloud អូតូពេលមានអ៊ីនធឺណិតវិញ</div>
+                    </div>
+                    <input type="checkbox" id="p2OfflineSyncQueue" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div style="font-size:12.5px; font-weight:900; color:#6366f1; margin:14px 0 8px;">🏢 Pack 3 — មុខងារជំនាញ & នាំចូល (៣ មុខងារ Enterprise)</div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>📱 លេខ Serial / IMEI & ប័ណ្ណធានាទំនិញ (Warranty Pro — Pack 3)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ស្កេនចុះបញ្ជី IMEI/Serial, ឆែកថ្ងៃផុតធានា, កត់ត្រាជួសជុល និងព្រីនប័ណ្ណធានា (ហាងទូរស័ព្ទ/អេឡិចត្រូនិច)</div>
+                    </div>
+                    <input type="checkbox" id="p3SerialWarranty" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🚢 ថ្លៃដើមនាំចូល & មធ្យមភាគ (Landed Cost & Moving Average Stock-In)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">បូកថ្លៃដឹកជញ្ជូន + ពន្ធគយ/CIPL ចូលថ្លៃដើម ១ ឯកតា គណនាថ្លៃដើមមធ្យម និងអាប់ដេតស្តុក POS ១ ចុច</div>
+                    </div>
+                    <input type="checkbox" id="p3LandedAvgCost" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row" style="margin-bottom:0;">
+                    <div>
+                        <div>🤝 គ្រប់គ្រងទំនិញផ្ញើលក់ (Consignment Management In & Out)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">តាមដានទំនិញទទួលផ្ញើលក់ពី Supplier ឬផ្ញើឱ្យហាងដៃគូលក់ កត់ត្រាលក់/ដកវិញ ទូទាត់លុយ និងផ្ញើ Telegram</div>
+                    </div>
+                    <input type="checkbox" id="p3ConsignmentPro" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+            </div>
         </div>
 
     </div>
@@ -2267,6 +2381,19 @@
         setPfChk('pfExpiryAlerts', pf.expiryAlerts);
         setPfChk('pfSerialImei', pf.serialImei);
         setPfChk('pfInstallAppBtn', pf.installAppBtn !== undefined ? pf.installAppBtn : true);
+        const p2Cfg = (sys && sys.pos2Enabled && typeof sys.pos2Enabled === 'object') ? sys.pos2Enabled : {};
+        const p3Cfg = (sys && sys.pos3Enabled && typeof sys.pos3Enabled === 'object') ? sys.pos3Enabled : {};
+        setPfChk('p2AttendancePro', p2Cfg.attendancePro !== false);
+        setPfChk('p2StickerPro', p2Cfg.stickerPro !== false);
+        setPfChk('p2PowerShareHub', p2Cfg.powerShareHub !== false);
+        setPfChk('p2MultiUnitWholesale', p2Cfg.multiUnitWholesale !== false);
+        setPfChk('p2DualReceiptBarcode', p2Cfg.dualReceiptBarcode !== false);
+        setPfChk('p2StockHealthAnalytics', p2Cfg.stockHealthAnalytics !== false);
+        setPfChk('p2AutoLowStockAlert', p2Cfg.autoLowStockAlert !== false);
+        setPfChk('p2OfflineSyncQueue', p2Cfg.offlineSyncQueue !== false);
+        setPfChk('p3SerialWarranty', p3Cfg.serialWarranty !== false);
+        setPfChk('p3LandedAvgCost', p3Cfg.landedAvgCost !== false);
+        setPfChk('p3ConsignmentPro', p3Cfg.consignmentPro !== false);
         if (document.getElementById('setAntiFraudDiscountLimit')) document.getElementById('setAntiFraudDiscountLimit').value = sys.antiFraudDiscountLimit || 15;
         if (document.getElementById('setAntiFraudTelegramChatId')) document.getElementById('setAntiFraudTelegramChatId').value = sys.antiFraudTelegramChatId || '';
         if (document.getElementById('setExpiryWarnDays')) document.getElementById('setExpiryWarnDays').value = sys.expiryWarnDays || 30;
@@ -2469,6 +2596,25 @@
             serialImei: document.getElementById('pfSerialImei')?.checked || false,
             installAppBtn: document.getElementById('pfInstallAppBtn')?.checked !== false
         };
+        sys.pos2Enabled = {
+            attendancePro: document.getElementById('p2AttendancePro')?.checked !== false,
+            stickerPro: document.getElementById('p2StickerPro')?.checked !== false,
+            powerShareHub: document.getElementById('p2PowerShareHub')?.checked !== false,
+            multiUnitWholesale: document.getElementById('p2MultiUnitWholesale')?.checked !== false,
+            dualReceiptBarcode: document.getElementById('p2DualReceiptBarcode')?.checked !== false,
+            stockHealthAnalytics: document.getElementById('p2StockHealthAnalytics')?.checked !== false,
+            autoLowStockAlert: document.getElementById('p2AutoLowStockAlert')?.checked !== false,
+            offlineSyncQueue: document.getElementById('p2OfflineSyncQueue')?.checked !== false
+        };
+        sys.pos3Enabled = {
+            serialWarranty: document.getElementById('p3SerialWarranty')?.checked !== false,
+            landedAvgCost: document.getElementById('p3LandedAvgCost')?.checked !== false,
+            consignmentPro: document.getElementById('p3ConsignmentPro')?.checked !== false
+        };
+        try {
+            localStorage.setItem(`ks2_${BRANCH}_pos2_enabled`, JSON.stringify(sys.pos2Enabled));
+            localStorage.setItem(`ks2_${BRANCH}_pos3_enabled`, JSON.stringify(sys.pos3Enabled));
+        } catch (e) {}
         sys.antiFraudDiscountLimit = parseFloat(document.getElementById('setAntiFraudDiscountLimit')?.value) || 15;
         sys.antiFraudTelegramChatId = (document.getElementById('setAntiFraudTelegramChatId')?.value || '').trim();
         sys.expiryWarnDays = parseInt(document.getElementById('setExpiryWarnDays')?.value) || 30;
@@ -3825,7 +3971,9 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         'pfCustomerDisplay','pfKds','pfMultiBranch','pfSuppliers','pfStockAudit','pfTelegramZReport',
         'pfSplitBill','pfPaymentSlip','pfGpsLocation','pfDigitalReceipt','pfProductTags',
         'pfFloorPlan','pfComboSets','pfShiftManagement','pfOrderModes','pfItemDiscounts','pfPosModifiers','pfMultiWarehouse',
-        'pfStrictAdminAuth','pfAntiFraudAudit','pfAntiFraudTelegram','pfExpiryAlerts','pfSerialImei','pfInstallAppBtn'
+        'pfStrictAdminAuth','pfAntiFraudAudit','pfAntiFraudTelegram','pfExpiryAlerts','pfSerialImei','pfInstallAppBtn',
+        'p2AttendancePro','p2StickerPro','p2PowerShareHub','p2MultiUnitWholesale','p2DualReceiptBarcode','p2StockHealthAnalytics','p2AutoLowStockAlert','p2OfflineSyncQueue',
+        'p3SerialWarranty','p3LandedAvgCost','p3ConsignmentPro'
     ];
 
     const PRO_PRESETS_CONFIG = {
@@ -3878,17 +4026,38 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         showToast(`✅ បានបើកកញ្ចប់មុខងារ Pro សម្រាប់ "${cfg.label}" រួចរាល់!`);
     }
 
+    const PACK23_PRESETS = {
+        basic_280: { label: '🔒 ឈុតគោល $280', p2AttendancePro: false, p2StickerPro: false, p2PowerShareHub: false, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: false, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false },
+        fnb: { label: '🍜 ហាងមីហឹរ / កាហ្វេ', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false },
+        pharmacy: { label: '💊 ឱសថស្ថាន', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: false, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: true, p3ConsignmentPro: false },
+        cosmetics: { label: '💄 ស្គីនខែ / ម៉ាត / លក់ដុំ', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: true, p3ConsignmentPro: true },
+        electronics: { label: '📱 ហាងទូរស័ព្ទ / អេឡិចត្រូនិច', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: false, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: false },
+        importer: { label: '🚢 ដេប៉ូនាំចូល / ផ្ញើលក់', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: false, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: true },
+        all_on: { label: '👑 បើកទាំងអស់ (១១ មុខ)', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: true }
+    };
+
+    function applyPack23Preset(key) {
+        const preset = PACK23_PRESETS[key];
+        if (!preset) return;
+        Object.keys(preset).forEach(id => {
+            if (id === 'label') return;
+            const el = document.getElementById(id);
+            if (el) el.checked = Boolean(preset[id]);
+        });
+        saveAdminSettings();
+        showToast(`✅ បានរៀបចំកញ្ចប់ Pack 2 & 3 សម្រាប់ "${preset.label}" រួចរាល់!`);
+    }
+
     function toggleAllProFeatures(state) {
         ALL_PRO_CHECKBOX_IDS.forEach(id => {
             const el = document.getElementById(id);
             if (el) el.checked = !!state;
         });
         saveAdminSettings();
-        showToast(state ? '✅ បានបើកមុខងារ Pro ទាំង ២៤ រួចរាល់!' : '⭕ បានបិទមុខងារ Pro ទាំង ២៤ រួចរាល់!');
+        showToast(state ? '✅ បានបើកមុខងារ Pro ទាំង ៣៥ រួចរាល់!' : '⭕ បានបិទមុខងារ Pro ទាំង ៣៥ រួចរាល់!');
     }
 
     window.onload = initAdmin;
 </script>
-    <script src="pack23_admin_toggles.js" defer></script>
 </body>
 </html>

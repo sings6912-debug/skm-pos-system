@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 3 v1.2 (Enterprise Modules — Admin-Settings Controlled, Zero Client Clutter)
+ * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 3 v1.3 (Enterprise Modules — Native Admin Tab 9 Controlled & Cloud-Priority Sync)
  * File: all_pos_plugins_3.js (Root Folder — alongside all_pos_plugins.js & all_pos_plugins_2.js)
  * Hosted on GitHub Pages (0 Bytes Supabase Egress/Storage)
  *
@@ -159,10 +159,13 @@
     function getPack3State() {
         let st = Object.assign({}, PACK3_DEFAULTS);
         try {
-            const sys = window.sysSettings || JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_sys_settings`) || '{}');
-            if (sys && sys.pos3Enabled) st = Object.assign(st, sys.pos3Enabled);
             const raw = localStorage.getItem(getPack3Key());
             if (raw) st = Object.assign(st, JSON.parse(raw));
+            const localSys = JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_sys_settings`) || '{}');
+            const sys = Object.assign({}, localSys, window.sysSettings || {});
+            if (sys && sys.pos3Enabled && typeof sys.pos3Enabled === 'object') {
+                st = Object.assign(st, sys.pos3Enabled);
+            }
         } catch (e) {}
         return st;
     }
@@ -340,6 +343,37 @@
     };
 
     // Toggle Control Center is managed strictly inside admin_settings.html (hidden from POS client Toolbox)
+
+    const PACK3_TOOL_TITLES = {
+        serialWarranty: 'លេខ Serial / IMEI & ធានាទំនិញ',
+        landedAvgCost: 'ថ្លៃដើមនាំចូល & មធ្យមភាគ (Landed Cost)',
+        consignmentPro: 'គ្រប់គ្រងទំនិញផ្ញើលក់ (Consignment)'
+    };
+
+    function syncPack3ToolboxVisibility() {
+        const st = getPack3State();
+        try { localStorage.setItem(getPack3Key(), JSON.stringify(st)); } catch (e) {}
+        const body = document.getElementById('skmToolboxMenuBody');
+        if (!body) return;
+        const disabledTitles = new Set(
+            Object.keys(PACK3_TOOL_TITLES).filter(k => st[k] === false).map(k => PACK3_TOOL_TITLES[k])
+        );
+        body.querySelectorAll('.skm-tool-wrapper').forEach(w => {
+            const label = w.querySelector('.skm-tool-item span')?.textContent?.trim() || '';
+            if (disabledTitles.has(label)) w.style.setProperty('display', 'none', 'important');
+        });
+    }
+    setTimeout(syncPack3ToolboxVisibility, 2800);
+    setTimeout(syncPack3ToolboxVisibility, 6800);
+    if (typeof window.skmApplyActivePlugins === 'function' && !window.skmApplyActivePlugins.__skmP3Wrapped) {
+        const _origApplyP3 = window.skmApplyActivePlugins;
+        window.skmApplyActivePlugins = function () {
+            const r = _origApplyP3.apply(this, arguments);
+            setTimeout(syncPack3ToolboxVisibility, 100);
+            return r;
+        };
+        window.skmApplyActivePlugins.__skmP3Wrapped = true;
+    }
 
     const pack3State = getPack3State();
 

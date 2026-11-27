@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 2 v7.2 (8 Pro Plugins — Clean Client UI & Admin-Settings Controlled)
+ * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 2 v7.3 (8 Pro Plugins — Native Admin Tab 9 Controlled & Cloud-Priority Sync)
  * File: all_pos_plugins_2.js (Root Folder — alongside all_pos_plugins.js)
  * Hosted on GitHub Pages (0 Bytes Supabase Egress/Storage)
  *
@@ -47,12 +47,14 @@
     function getPack2State() {
         let st = Object.assign({}, PACK2_DEFAULTS);
         try {
-            const sys = window.sysSettings || JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_sys_settings`) || '{}');
+            // Fallback local cache first, then Admin Settings (Cloud sys_settings.pos2Enabled) ALWAYS takes priority!
+            const raw = localStorage.getItem(getPack2StateKey());
+            if (raw) st = Object.assign(st, JSON.parse(raw));
+            const localSys = JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_sys_settings`) || '{}');
+            const sys = Object.assign({}, localSys, window.sysSettings || {});
             if (sys && sys.pos2Enabled && typeof sys.pos2Enabled === 'object') {
                 st = Object.assign(st, sys.pos2Enabled);
             }
-            const raw = localStorage.getItem(getPack2StateKey());
-            if (raw) st = Object.assign(st, JSON.parse(raw));
         } catch (e) {}
         return st;
     }
@@ -258,6 +260,42 @@
         s.textContent = `.skm-toolbox-popup{max-height:calc(100vh - 110px)!important;}.skm-toolbox-body{max-height:calc(100vh - 190px)!important;}`;
         document.head.appendChild(s);
     })();
+
+    const PACK2_TOOL_TITLES = {
+        attendancePro: 'វត្តមានបុគ្គលិក Pro (QR/GPS)',
+        stickerPro: 'ស្ទីកគ័របាកូដទំនិញ & កែវកាហ្វេ (Sticker Pro)',
+        powerShareHub: 'ចែករំលែកម៉ឺនុយ & ទំនិញ (Power QR)',
+        multiUnitWholesale: 'លក់ច្រើនឯកតា & លក់ដុំថែម (Multi-Unit)',
+        dualReceiptBarcode: 'ព្រីន ២ សន្លឹក & បាកូដវិក្កយបត្រ (Dual Receipt)',
+        stockHealthAnalytics: 'វិភាគលក់ដាច់ & កប់ស្តុក (Stock Health)',
+        autoLowStockAlert: 'ដាស់តឿនស្តុកជិតអស់អូតូ (Telegram Alert)',
+        offlineSyncQueue: 'Offline Queue & Smart Cache'
+    };
+
+    function syncPack2ToolboxVisibility() {
+        const st = getPack2State();
+        try { localStorage.setItem(getPack2StateKey(), JSON.stringify(st)); } catch (e) {}
+        const body = document.getElementById('skmToolboxMenuBody');
+        if (!body) return;
+        const disabledTitles = new Set(
+            Object.keys(PACK2_TOOL_TITLES).filter(k => st[k] === false).map(k => PACK2_TOOL_TITLES[k])
+        );
+        body.querySelectorAll('.skm-tool-wrapper').forEach(w => {
+            const label = w.querySelector('.skm-tool-item span')?.textContent?.trim() || '';
+            if (disabledTitles.has(label)) w.style.setProperty('display', 'none', 'important');
+        });
+    }
+    setTimeout(syncPack2ToolboxVisibility, 2600);
+    setTimeout(syncPack2ToolboxVisibility, 6500);
+    if (typeof window.skmApplyActivePlugins === 'function' && !window.skmApplyActivePlugins.__skmP2Wrapped) {
+        const _origApplyP2 = window.skmApplyActivePlugins;
+        window.skmApplyActivePlugins = function () {
+            const r = _origApplyP2.apply(this, arguments);
+            setTimeout(syncPack2ToolboxVisibility, 80);
+            return r;
+        };
+        window.skmApplyActivePlugins.__skmP2Wrapped = true;
+    }
 
     const pack2State = getPack2State();
 
