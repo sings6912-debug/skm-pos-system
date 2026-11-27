@@ -656,6 +656,52 @@
         toast('🗑️ បានលុបតុចេញពីប្លង់!');
     };
 
+    function findUnpaidInvoicesForTable(tbName) {
+        const target = String(tbName || '').trim().toLowerCase();
+        if (!target) return [];
+        return (window.invoices || []).filter(inv => {
+            if (!inv) return false;
+            const st = String(inv.status || 'unpaid').toLowerCase();
+            if (st === 'paid' || st === 'cancelled' || st === 'void') return false;
+            const cust = String(inv.customerName || inv.customer || '').trim().toLowerCase();
+            const note = String(inv.note || '').toLowerCase();
+            return cust === target || note.includes(`[${target}]`) || cust.includes(target);
+        });
+    }
+
+    window.loadUnpaidInvoiceItemsToCart = function(invId) {
+        const inv = (window.invoices || []).find(i => i && String(i.id || i.invoiceNo) === String(invId));
+        if (!inv) return toast('⚠️ រកមិនឃើញវិក្កយបត្រនេះទេ!', true);
+        const rawItems = Array.isArray(inv.items) ? inv.items : (Array.isArray(inv.cart) ? inv.cart : []);
+        if (!rawItems.length) return toast('⚠️ វិក្កយបត្រនេះគ្មានបញ្ជីមុខទំនិញលម្អិតទេ!', true);
+
+        const rate = window.cartRate || 4000;
+        window.cart = rawItems.map((it, idx) => {
+            const q = Math.max(1, parseInt(it.cartQty || it.qty || 1));
+            const pr = parseFloat(it.price || 0) || 0;
+            return {
+                id: it.id || ('INV_ITEM_' + idx + '_' + Date.now()),
+                name: it.name || it.itemName || 'Item',
+                baseName: it.baseName || it.name || it.itemName || 'Item',
+                price: pr,
+                riel: parseFloat(it.riel) || Math.round(pr * rate),
+                cartQty: q,
+                qty: q,
+                unit: it.unit || '',
+                category: it.category || '',
+                modifierLabel: it.modifierLabel || '',
+                modifierExtra: parseFloat(it.modifierExtra) || 0
+            };
+        });
+        window.__skmLoadedUnpaidInvId = inv.id || inv.invoiceNo;
+        const cName = document.getElementById('posCustomerName');
+        if (cName && (inv.customerName || inv.customer)) cName.value = inv.customerName || inv.customer;
+        if (typeof window.renderCart === 'function') window.renderCart();
+        const banner = document.getElementById('skmTableUnpaidBanner');
+        if (banner) banner.style.display = 'none';
+        toast(`📥 បានទាញ ${window.cart.length} មុខទំនិញពីវិក្កយបត្រ #${inv.id || inv.invoiceNo} ចូលកន្ត្រក!`);
+    };
+
     window.selectFloorPlanTable = function(tbName) {
         if (fpEditMode) return;
         const cName = document.getElementById('posCustomerName');
@@ -678,7 +724,6 @@
             window.switchTab('pos', '🛒 ប្រព័ន្ធលក់ (Point of Sale)', document.getElementById('nav-pos'));
         }
 
-        // Expand mobile cart summary if collapsed & highlight checkout area
         const sumBody = document.getElementById('cartSummaryBody');
         if (sumBody && window.getComputedStyle(sumBody).display === 'none') {
             sumBody.style.display = 'block';
@@ -691,12 +736,151 @@
             setTimeout(() => { checkoutArea.style.boxShadow = ''; }, 1400);
         }
 
-        // If cart already has items, open checkout modal directly for instant payment
-        if (Array.isArray(window.cart) && window.cart.length > 0 && typeof window.openCheckoutModal === 'function') {
-            setTimeout(() => window.openCheckoutModal(), 180);
-            toast(`🪑 ជ្រើសរើស "${tbName}" — កំពុងបើកផ្ទាំងគិតលុយ!`);
+        // Check if this table has unpaid/pending invoices
+        const matchedInvs = findUnpaidInvoicesForTable(tbName);
+        const cartItemsEl = document.getElementById('cartItems');
+        let banner = document.getElementById('skmTableUnpaidBanner');
+        if (!banner && cartItemsEl) {
+            banner = document.createElement('div');
+            banner.id = 'skmTableUnpaidBanner';
+            banner.style.cssText = 'display:none; margin:8px 10px 4px; padding:9px 11px; border-radius:10px; background:rgba(245,158,11,0.14); border:1px solid #f59e0b; font-size:12px;';
+            cartItemsEl.before(banner);
+        }
+
+        if (matchedInvs.length > 0) {
+            const firstInv = matchedInvs[0];
+            const invCode = firstInv.id || firstInv.invoiceNo || 'INV';
+            const totAmt = parseFloat(firstInv.totalAmount || firstInv.total || 0).toFixed(2);
+            if (banner) {
+                banner.innerHTML = `<div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <div><b style="color:#fbbf24;">🧾 ${esc(tbName)} មានវិក្កយបត្រមិនទាន់គិតលុយ</b><div style="font-size:11px; color:var(--text-muted);">#${esc(invCode)} • សរុប <b>$${totAmt}</b></div></div>
+                    <button type="button" class="btn btn-warning" style="padding:5px 10px; font-size:11.5px;" onclick="window.loadUnpaidInvoiceItemsToCart('${esc(invCode)}')">📥 ទាញមុខទំនិញចូលកន្ត្រក</button>
+                </div>`;
+                banner.style.display = 'block';
+            }
+            if (!Array.isArray(window.cart) || window.cart.length === 0) {
+                window.loadUnpaidInvoiceItemsToCart(invCode);
+                if (typeof window.openCheckoutModal === 'function') {
+                    setTimeout(() => window.openCheckoutModal(), 220);
+                }
+            }
+            toast(`🧾 ជ្រើសរើស "${tbName}" — រកឃើញវិក្កយបត្រមិនទាន់គិតលុយ $${totAmt}!`);
         } else {
-            toast(`🪑 បានជ្រើសរើស "${tbName}" — ត្រៀមគិតលុយ/បន្ថែមទំនិញ!`);
+            if (banner) banner.style.display = 'none';
+            if (Array.isArray(window.cart) && window.cart.length > 0 && typeof window.openCheckoutModal === 'function') {
+                setTimeout(() => window.openCheckoutModal(), 180);
+                toast(`🪑 ជ្រើសរើស "${tbName}" — កំពុងបើកផ្ទាំងគិតលុយ!`);
+            } else {
+                toast(`🪑 បានជ្រើសរើស "${tbName}" — ត្រៀមគិតលុយ/បន្ថែមទំនិញ!`);
+            }
+        }
+    };
+
+    // 🔄 Move Table / Merge Unpaid Table Bills Modal
+    window.openMoveMergeTableModal = function() {
+        const pf = getPF();
+        if (!pf.floorPlan) return toast('⚠️ មុខងារប្លង់តុ 2D ត្រូវបានបិទដោយ Admin Settings!', true);
+
+        const unpaidList = (window.invoices || []).filter(inv => {
+            if (!inv) return false;
+            const st = String(inv.status || 'unpaid').toLowerCase();
+            return st !== 'paid' && st !== 'cancelled' && st !== 'void';
+        });
+
+        const fpTables = getFloorPlanData().tables || [];
+        const selFrom = document.getElementById('skmMmSourceInv');
+        const selTo = document.getElementById('skmMmTargetTable');
+
+        let modal = document.getElementById('skmMoveMergeModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'skmMoveMergeModal';
+            modal.className = 'modal-overlay';
+            modal.style.zIndex = '10036';
+            modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+            modal.innerHTML = `
+                <div class="modal" style="max-width:460px; width:95%;">
+                    <div class="modal-header">
+                        <h2 style="font-size:17px;">🔄 ដូរតុ ឬ បូកបញ្ចូលតុ (Move / Merge Table)</h2>
+                        <button class="btn-outline" style="border:none; font-size:20px; padding:0;" onclick="document.getElementById('skmMoveMergeModal').style.display='none'">✕</button>
+                    </div>
+                    <div class="modal-body" style="display:flex; flex-direction:column; gap:12px;">
+                        <div>
+                            <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">1. ជ្រើសរើសវិក្កយបត្រ / តុដើម (មិនទាន់គិតលុយ):</label>
+                            <select id="skmMmSourceInv" class="form-control" style="width:100%;"></select>
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">2. តុគោលដៅ (Target Table):</label>
+                            <select id="skmMmTargetTable" class="form-control" style="width:100%;"></select>
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-top:6px;">
+                            <button type="button" class="btn btn-primary" onclick="window.executeMoveTable()">🔄 ដូរតុ (Move)</button>
+                            <button type="button" class="btn btn-warning" onclick="window.executeMergeTable()">🔀 បូកបញ្ចូលតុ (Merge)</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        const srcSel = document.getElementById('skmMmSourceInv');
+        const dstSel = document.getElementById('skmMmTargetTable');
+        if (srcSel) {
+            srcSel.innerHTML = unpaidList.length
+                ? unpaidList.map(inv => `<option value="${esc(inv.id || inv.invoiceNo)}">${esc(inv.customerName || inv.customer || 'ភ្ញៀវ')} — #${esc(inv.id || inv.invoiceNo)} ($${Number(inv.totalAmount || inv.total || 0).toFixed(2)})</option>`).join('')
+                : '<option value="">-- គ្មានវិក្កយបត្រមិនទាន់គិតលុយទេ --</option>';
+        }
+        if (dstSel) {
+            const curInputTbl = document.getElementById('posTableSelect')?.value || document.getElementById('posCustomerName')?.value || '';
+            const names = [...new Set([...fpTables.map(t => t.name), curInputTbl, 'តុលេខ 1', 'តុលេខ 2', 'តុលេខ 3', 'តុលេខ 4', 'តុលេខ 5', 'VIP 1', 'VIP 2'].filter(Boolean))];
+            dstSel.innerHTML = names.map(n => `<option value="${esc(n)}">${esc(n)}</option>`).join('');
+        }
+        modal.style.display = 'flex';
+    };
+
+    async function saveInvoicesAfterTableOp(msg) {
+        if (typeof window.saveInvoices === 'function') await window.saveInvoices();
+        else if (typeof window.getBranchKey === 'function') localStorage.setItem(window.getBranchKey('invoices_pro'), JSON.stringify(window.invoices || []));
+        if (typeof window.renderUnpaid === 'function') window.renderUnpaid();
+        window.renderFloorPlanUI();
+        document.getElementById('skmMoveMergeModal').style.display = 'none';
+        toast(msg);
+    }
+
+    window.executeMoveTable = async function() {
+        const invId = document.getElementById('skmMmSourceInv')?.value;
+        const dstTbl = document.getElementById('skmMmTargetTable')?.value;
+        if (!invId || !dstTbl) return toast('⚠️ សូមជ្រើសរើសវិក្កយបត្រ និងតុគោលដៅ!', true);
+        const inv = (window.invoices || []).find(i => i && String(i.id || i.invoiceNo) === String(invId));
+        if (!inv) return;
+        const oldName = inv.customerName || inv.customer || '';
+        inv.customerName = dstTbl;
+        if (inv.customer) inv.customer = dstTbl;
+        inv.note = String(inv.note || '').replace(/\[[^\]]+\]/g, '').trim() + ` [${dstTbl}] (ដូរពី ${oldName})`;
+        await saveInvoicesAfterTableOp(`🔄 បានដូរវិក្កយបត្រទៅ "${dstTbl}" រួចរាល់!`);
+    };
+
+    window.executeMergeTable = async function() {
+        const invId = document.getElementById('skmMmSourceInv')?.value;
+        const dstTbl = document.getElementById('skmMmTargetTable')?.value;
+        if (!invId || !dstTbl) return toast('⚠️ សូមជ្រើសរើសវិក្កយបត្រ និងតុគោលដៅ!', true);
+        const srcInv = (window.invoices || []).find(i => i && String(i.id || i.invoiceNo) === String(invId));
+        if (!srcInv) return;
+
+        const dstList = findUnpaidInvoicesForTable(dstTbl).filter(i => (i.id || i.invoiceNo) !== (srcInv.id || srcInv.invoiceNo));
+        const srcItems = Array.isArray(srcInv.items) ? srcInv.items : [];
+        const srcTot = parseFloat(srcInv.totalAmount || srcInv.total || 0) || 0;
+
+        if (dstList.length > 0) {
+            const targetInv = dstList[0];
+            targetInv.items = [...(Array.isArray(targetInv.items) ? targetInv.items : []), ...srcItems];
+            targetInv.totalAmount = Number(((parseFloat(targetInv.totalAmount || targetInv.total || 0) || 0) + srcTot).toFixed(2));
+            targetInv.total = targetInv.totalAmount;
+            window.invoices = (window.invoices || []).filter(i => i !== srcInv);
+            await saveInvoicesAfterTableOp(`🔀 បានបូកបញ្ចូលវិក្កយបត្រចូល "${dstTbl}" ($${targetInv.totalAmount.toFixed(2)})!`);
+        } else {
+            srcInv.customerName = dstTbl;
+            if (srcInv.customer) srcInv.customer = dstTbl;
+            await saveInvoicesAfterTableOp(`🔄 បានផ្ទេរវិក្កយបត្រទៅ "${dstTbl}"!`);
         }
     };
 
@@ -718,7 +902,8 @@
             if (!isManagerOrAdmin()) {
                 aCtrl.innerHTML = '';
             } else if (!fpEditMode) {
-                aCtrl.innerHTML = `<button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12.5px;" onclick="window.toggleFloorPlanEditMode()">✏️ រៀបចំប្លង់ (Edit)</button>`;
+                aCtrl.innerHTML = `<button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12.5px;" onclick="window.toggleFloorPlanEditMode()">✏️ រៀបចំប្លង់ (Edit)</button>
+                    <button type="button" class="btn btn-outline" style="padding:6px 12px; font-size:12.5px; border-color:#f59e0b; color:#f59e0b;" onclick="window.openMoveMergeTableModal()">🔄 ដូរ / បូកតុ</button>`;
             } else {
                 aCtrl.innerHTML = `
                     <button type="button" class="btn btn-outline" style="padding:6px 10px; font-size:12px;" onclick="window.renameActiveFloorPlanZone()">✏️ ដូរឈ្មោះជាន់</button>
