@@ -1476,7 +1476,7 @@
             <!-- 9.5 PACK 2 & PACK 3 ENTERPRISE MODULES (11 TOGGLEABLE FEATURES — ADMIN-ONLY) -->
             <div class="section-box" style="border-left: 4px solid #6366f1; margin-top:20px; margin-bottom:0;">
                 <div class="section-title" style="font-size:14.5px; color:#6366f1; justify-content:space-between; flex-wrap:wrap;">
-                    <span><i class="fa-solid fa-cubes"></i> 9.5 មុខងារ Pro Pack 2 & Enterprise Pack 3 (១១ មុខងារ — បិទ/បើកតាមសាខា)</span>
+                    <span><i class="fa-solid fa-cubes"></i> 9.5 មុខងារ Pro Pack 2 & Enterprise Pack 3 (១៤ មុខងារ — បិទ/បើកតាមសាខា)</span>
                     <span style="font-size:11.5px; background:rgba(99,102,241,0.12); color:#6366f1; padding:3px 10px; border-radius:999px;">ភ្ញៀវមិនឃើញប៊ូតុងកំណត់ទេ</span>
                 </div>
 
@@ -1490,7 +1490,9 @@
                         <button type="button" class="btn-action" style="background:#fdf2f8; color:#db2777; border:1px solid #fbcfe8; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('cosmetics')">💄 ស្គីនខែ / ម៉ាត / លក់ដុំ</button>
                         <button type="button" class="btn-action" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('electronics')">📱 ទូរស័ព្ទ / អេឡិចត្រូនិច</button>
                         <button type="button" class="btn-action" style="background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('importer')">🚢 ដេប៉ូនាំចូល / ផ្ញើលក់</button>
-                        <button type="button" class="btn-action" style="background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('all_on')">👑 បើកទាំងអស់ (១១)</button>
+                        <button type="button" class="btn-action" style="background:#ecfeff; color:#0e7490; border:1px solid #a5f3fc; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('gym_spa')">🏋️ Gym / Spa / តារាង</button>
+                        <button type="button" class="btn-action" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('rental')">🏠 ផ្ទះជួល / បន្ទប់ជួល</button>
+                        <button type="button" class="btn-action" style="background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('all_on')">👑 បើកទាំងអស់ (១៤)</button>
                     </div>
                 </div>
 
@@ -1560,7 +1562,7 @@
                     <input type="checkbox" id="p2OfflineSyncQueue" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
                 </div>
 
-                <div style="font-size:12.5px; font-weight:900; color:#6366f1; margin:14px 0 8px;">🏢 Pack 3 — មុខងារជំនាញ & នាំចូល (៣ មុខងារ Enterprise)</div>
+                <div style="font-size:12.5px; font-weight:900; color:#6366f1; margin:14px 0 8px;">🏢 Pack 3 — មុខងារជំនាញ & អាជីវកម្មសេវាកម្ម (៦ មុខងារ Enterprise)</div>
 
                 <div class="toggle-row">
                     <div>
@@ -1578,12 +1580,36 @@
                     <input type="checkbox" id="p3LandedAvgCost" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
                 </div>
 
-                <div class="toggle-row" style="margin-bottom:0;">
+                <div class="toggle-row">
                     <div>
                         <div>🤝 គ្រប់គ្រងទំនិញផ្ញើលក់ (Consignment Management In & Out)</div>
                         <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">តាមដានទំនិញទទួលផ្ញើលក់ពី Supplier ឬផ្ញើឱ្យហាងដៃគូលក់ កត់ត្រាលក់/ដកវិញ ទូទាត់លុយ និងផ្ញើ Telegram</div>
                     </div>
                     <input type="checkbox" id="p3ConsignmentPro" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>💵 ប្រព័ន្ធបើកប្រាក់ខែបុគ្គលិក Pro (Payroll Auto-Calc + Payslip)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">ទាញវត្តមាន នាទីយឺត និង Commission លក់អូតូ ➔ គណនាប្រាក់ខែសុទ្ធ ព្រីនក្រដាស Payslip និងផ្ញើ Telegram</div>
+                    </div>
+                    <input type="checkbox" id="p3PayrollPro" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row">
+                    <div>
+                        <div>🏋️ កាតសមាជិក & កក់ម៉ោង (Member Pass QR Check-in & Court/Spa Booking)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">កាតសមាជិកតាមខែ ឬតាមដង (Gym / តារាងវាយសី / Pickleball / Spa) ស្កេន QR Check-in និងតារាងកក់ម៉ោង</div>
+                    </div>
+                    <input type="checkbox" id="p3MemberPassBooking" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
+                </div>
+
+                <div class="toggle-row" style="margin-bottom:0;">
+                    <div>
+                        <div>🏠 គ្រប់គ្រងផ្ទះជួល / បន្ទប់ជួល (Rental & Utility Meter Billing + KHQR)</div>
+                        <div style="font-size:11.5px; color:var(--text-muted); font-weight:600; margin-top:2px;">កត់លេខកុងទ័រភ្លើង-ទឹកអូតូ គណនាថ្លៃបន្ទប់+ភ្លើង+ទឹក+សំរាម ព្រីនវិក្កយបត្រភ្ជាប់ Bakong KHQR & ផ្ញើ Telegram</div>
+                    </div>
+                    <input type="checkbox" id="p3RentalBilling" style="width:20px; height:20px; accent-color:#6366f1; cursor:pointer;" onchange="saveAdminSettings()">
                 </div>
             </div>
         </div>
@@ -2395,6 +2421,9 @@
         setPfChk('p3SerialWarranty', p3Cfg.serialWarranty !== false);
         setPfChk('p3LandedAvgCost', p3Cfg.landedAvgCost !== false);
         setPfChk('p3ConsignmentPro', p3Cfg.consignmentPro !== false);
+        setPfChk('p3PayrollPro', p3Cfg.payrollPro !== false);
+        setPfChk('p3MemberPassBooking', p3Cfg.memberPassBooking !== false);
+        setPfChk('p3RentalBilling', p3Cfg.rentalBilling !== false);
         if (document.getElementById('setAntiFraudDiscountLimit')) document.getElementById('setAntiFraudDiscountLimit').value = sys.antiFraudDiscountLimit || 15;
         if (document.getElementById('setAntiFraudTelegramChatId')) document.getElementById('setAntiFraudTelegramChatId').value = sys.antiFraudTelegramChatId || '';
         if (document.getElementById('setExpiryWarnDays')) document.getElementById('setExpiryWarnDays').value = sys.expiryWarnDays || 30;
@@ -2610,7 +2639,10 @@
         sys.pos3Enabled = {
             serialWarranty: document.getElementById('p3SerialWarranty')?.checked !== false,
             landedAvgCost: document.getElementById('p3LandedAvgCost')?.checked !== false,
-            consignmentPro: document.getElementById('p3ConsignmentPro')?.checked !== false
+            consignmentPro: document.getElementById('p3ConsignmentPro')?.checked !== false,
+            payrollPro: document.getElementById('p3PayrollPro')?.checked !== false,
+            memberPassBooking: document.getElementById('p3MemberPassBooking')?.checked !== false,
+            rentalBilling: document.getElementById('p3RentalBilling')?.checked !== false
         };
         try {
             localStorage.setItem(`ks2_${BRANCH}_pos2_enabled`, JSON.stringify(sys.pos2Enabled));
@@ -3974,7 +4006,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         'pfFloorPlan','pfComboSets','pfShiftManagement','pfOrderModes','pfItemDiscounts','pfPosModifiers','pfMultiWarehouse',
         'pfStrictAdminAuth','pfAntiFraudAudit','pfAntiFraudTelegram','pfExpiryAlerts','pfSerialImei','pfInstallAppBtn',
         'p2AttendancePro','p2StickerPro','p2PowerShareHub','p2MultiUnitWholesale','p2DualReceiptBarcode','p2StockHealthAnalytics','p2AutoLowStockAlert','p2OfflineSyncQueue',
-        'p3SerialWarranty','p3LandedAvgCost','p3ConsignmentPro'
+        'p3SerialWarranty','p3LandedAvgCost','p3ConsignmentPro','p3PayrollPro','p3MemberPassBooking','p3RentalBilling'
     ];
 
     const PRO_PRESETS_CONFIG = {
@@ -4028,13 +4060,15 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
     }
 
     const PACK23_PRESETS = {
-        basic_280: { label: '🔒 ឈុតគោល $280', p2AttendancePro: false, p2StickerPro: false, p2PowerShareHub: false, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: false, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false },
-        fnb: { label: '🍜 ហាងមីហឹរ / កាហ្វេ', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false },
-        pharmacy: { label: '💊 ឱសថស្ថាន', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: false, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: true, p3ConsignmentPro: false },
-        cosmetics: { label: '💄 ស្គីនខែ / ម៉ាត / លក់ដុំ', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: true, p3ConsignmentPro: true },
-        electronics: { label: '📱 ហាងទូរស័ព្ទ / អេឡិចត្រូនិច', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: false, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: false },
-        importer: { label: '🚢 ដេប៉ូនាំចូល / ផ្ញើលក់', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: false, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: true },
-        all_on: { label: '👑 បើកទាំងអស់ (១១ មុខ)', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: true }
+        basic_280: { label: '🔒 ឈុតគោល $280', p2AttendancePro: false, p2StickerPro: false, p2PowerShareHub: false, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: false, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false, p3PayrollPro: false, p3MemberPassBooking: false, p3RentalBilling: false },
+        fnb: { label: '🍜 ហាងមីហឹរ / កាហ្វេ', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false, p3PayrollPro: true, p3MemberPassBooking: false, p3RentalBilling: false },
+        pharmacy: { label: '💊 ឱសថស្ថាន', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: false, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: true, p3ConsignmentPro: false, p3PayrollPro: true, p3MemberPassBooking: false, p3RentalBilling: false },
+        cosmetics: { label: '💄 ស្គីនខែ / ម៉ាត / លក់ដុំ', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: true, p3ConsignmentPro: true, p3PayrollPro: true, p3MemberPassBooking: false, p3RentalBilling: false },
+        electronics: { label: '📱 ហាងទូរស័ព្ទ / អេឡិចត្រូនិច', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: false, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: false, p3PayrollPro: true, p3MemberPassBooking: false, p3RentalBilling: false },
+        importer: { label: '🚢 ដេប៉ូនាំចូល / ផ្ញើលក់', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: false, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: true, p3PayrollPro: true, p3MemberPassBooking: false, p3RentalBilling: false },
+        gym_spa: { label: '🏋️ Gym / Spa / តារាង', p2AttendancePro: true, p2StickerPro: false, p2PowerShareHub: true, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: false, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false, p3PayrollPro: true, p3MemberPassBooking: true, p3RentalBilling: false },
+        rental: { label: '🏠 ផ្ទះជួល / បន្ទប់ជួល', p2AttendancePro: false, p2StickerPro: false, p2PowerShareHub: false, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: false, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false, p3PayrollPro: false, p3MemberPassBooking: false, p3RentalBilling: true },
+        all_on: { label: '👑 បើកទាំងអស់ (១៤ មុខ)', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: true, p3PayrollPro: true, p3MemberPassBooking: true, p3RentalBilling: true }
     };
 
     function applyPack23Preset(key) {
@@ -4055,7 +4089,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
             if (el) el.checked = !!state;
         });
         saveAdminSettings();
-        showToast(state ? '✅ បានបើកមុខងារ Pro ទាំង ៣៥ រួចរាល់!' : '⭕ បានបិទមុខងារ Pro ទាំង ៣៥ រួចរាល់!');
+        showToast(state ? '✅ បានបើកមុខងារ Pro ទាំង ៣៨ រួចរាល់!' : '⭕ បានបិទមុខងារ Pro ទាំង ៣៨ រួចរាល់!');
     }
 
     window.onload = initAdmin;
