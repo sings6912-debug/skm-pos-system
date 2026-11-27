@@ -18,6 +18,27 @@ let kdsWindow = null;
 let webServer = null;
 let bridgeServer = null;
 
+function getSavedBranchFile() {
+    return path.join(app.getPath('userData'), 'skm_last_branch.json');
+}
+function getSavedBranch() {
+    try {
+        const f = getSavedBranchFile();
+        if (fs.existsSync(f)) {
+            const j = JSON.parse(fs.readFileSync(f, 'utf8'));
+            if (j && j.branch) return String(j.branch).trim();
+        }
+    } catch (e) {}
+    return 'branch_1';
+}
+function setSavedBranch(branchId) {
+    const b = String(branchId || '').trim();
+    if (!b) return;
+    try {
+        fs.writeFileSync(getSavedBranchFile(), JSON.stringify({ branch: b }, null, 2), 'utf8');
+    } catch (e) {}
+}
+
 // កំណត់ទីតាំងឯកសារ Web (គាំទ្រទាំងពេល Run Dev និងពេល Build ជា .exe រួច)
 function getWebRoot() {
     if (app.isPackaged) {
@@ -170,8 +191,11 @@ function startEmbeddedPrintBridge() {
 }
 
 // 3. ព្រីន HTML ស្វ័យប្រវត្តិ (Silent USB / Windows Thermal Printer — ស្គាល់អក្សរខ្មែរ, Logo, KHQR 100%)
-function printHtmlSilently({ html, deviceName = '', paperMm = 80, title = 'SKM Receipt' }) {
+function printHtmlSilently({ html, deviceName = '', paperMm = 80, paperHeightMm = 0, fullDocument = false, title = 'SKM Receipt' }) {
     return new Promise((resolve) => {
+        const rawHtml = String(html || '');
+        const isAlreadyDoc = Boolean(fullDocument) || /^\s*<!doctype\s+html|^\s*<html[\s>]/i.test(rawHtml);
+
         const printWin = new BrowserWindow({
             show: false,
             width: paperMm >= 150 ? 900 : 420,
@@ -184,18 +208,20 @@ function printHtmlSilently({ html, deviceName = '', paperMm = 80, title = 'SKM R
 
         const pageCss = paperMm >= 150
             ? `@page { size: A4 portrait; margin: 8mm; }`
-            : `@page { size: ${paperMm}mm auto; margin: 0; }`;
+            : (paperHeightMm > 0
+                ? `@page { size: ${paperMm}mm ${paperHeightMm}mm; margin: 0; }`
+                : `@page { size: ${paperMm}mm auto; margin: 0; }`);
 
-        const fullDoc = `<!DOCTYPE html><html lang="km"><head><meta charset="UTF-8"><title>${title}</title>
+        const fullDoc = isAlreadyDoc ? rawHtml : `<!DOCTYPE html><html lang="km"><head><meta charset="UTF-8"><title>${title}</title>
             <link href="https://fonts.googleapis.com/css2?family=Battambang:wght@400;700&family=Kantumruy+Pro:wght@400;700&display=swap" rel="stylesheet">
             <style>
                 ${pageCss}
                 * { box-sizing: border-box; }
                 body { margin: 0; padding: 0; background: #fff; color: #000; font-family: 'Kantumruy Pro', 'Battambang', sans-serif; }
-                #receipt-container { width: ${Math.max(48, paperMm - 4)}mm; max-width: 100%; margin: 0 auto; padding: 2mm; font-size: ${paperMm <= 60 ? 10 : 12}px; line-height: 1.4; }
+                #receipt-container { width: ${Math.max(30, paperMm - 4)}mm; max-width: 100%; margin: 0 auto; padding: 2mm; font-size: ${paperMm <= 60 ? 10 : 12}px; line-height: 1.4; }
                 .print-dashed-line { border-top: 1px dashed #000; margin: 6px 0; }
                 .skm-page-break { page-break-after: always; break-after: page; }
-            </style></head><body><div id="receipt-container">${html || ''}</div></body></html>`;
+            </style></head><body><div id="receipt-container">${rawHtml}</div></body></html>`;
 
         printWin.loadURL('data:text/html;charset=utf-8,' + encodeURIComponent(fullDoc));
 
@@ -295,9 +321,36 @@ function buildAppMenu() {
                     click: () => mainWindow && mainWindow.loadURL(`http://${HOST}:${WEB_PORT}/welcome.html?branch=${encodeURIComponent(getBr())}`)
                 },
                 {
+                    label: '🏢 ប្តូរសាខា (Switch Branch)',
+                    accelerator: 'CmdOrCtrl+B',
+                    click: () => {
+                        if (!mainWindow) return;
+                        mainWindow.webContents.executeJavaScript(`
+                            if (typeof window.openWelcomeBranchModal === 'function') {
+                                window.openWelcomeBranchModal();
+                            } else {
+                                const cur = new URLSearchParams(location.search).get('branch') || 'branch_1';
+                                const next = prompt('សូមបញ្ចូលលេខកូដសាខា (ឧ. branch_1):', cur);
+                                if (next && next.trim()) {
+                                    try { localStorage.setItem('skm_last_branch', next.trim()); } catch(e) {}
+                                    if (window.SKMDesktopBridge && window.SKMDesktopBridge.setBranch) window.SKMDesktopBridge.setBranch(next.trim());
+                                    const u = new URL(location.href);
+                                    u.searchParams.set('branch', next.trim());
+                                    location.href = u.toString();
+                                }
+                            }
+                        `).catch(() => {});
+                    }
+                },
+                {
                     label: '🛒 ផ្ទាំងលក់ (POS System)',
                     accelerator: 'CmdOrCtrl+1',
-                    click: () => mainWindow && mainWindow.loadURL(`http://${HOST}:${WEB_PORT}/index.html?branch=${encodeURIComponent(getBr())}`)
+                    click: async () => {
+                        if (!mainWindow) return;
+                        const br = getBr();
+                        try { await mainWindow.webContents.executeJavaScript(`sessionStorage.setItem('ks2_auth_passed', 'true');`); } catch (e) {}
+                        mainWindow.loadURL(`http://${HOST}:${WEB_PORT}/index.html?branch=${encodeURIComponent(br)}`);
+                    }
                 },
                 {
                     label: '⚙️ ការកំណត់ Admin Settings',
@@ -376,7 +429,14 @@ function createMainWindow() {
     });
 
     mainWindow.maximize();
-    mainWindow.loadURL(`http://${HOST}:${WEB_PORT}/welcome.html?branch=branch_1`);
+    const initialBranch = getSavedBranch();
+    mainWindow.loadURL(`http://${HOST}:${WEB_PORT}/welcome.html?branch=${encodeURIComponent(initialBranch)}`);
+    const syncUrlBranch = (_, navUrl) => {
+        const b = getCurrentBranchFromUrl(navUrl);
+        if (b && navUrl.includes('branch=')) setSavedBranch(b);
+    };
+    mainWindow.webContents.on('did-navigate', syncUrlBranch);
+    mainWindow.webContents.on('did-navigate-in-page', syncUrlBranch);
 
     mainWindow.webContents.setWindowOpenHandler(({ url }) => {
         if (url.startsWith(`http://${HOST}:${WEB_PORT}`)) {
@@ -440,6 +500,11 @@ ipcMain.handle('skm:open-customer-display', async (_, branch) => {
 ipcMain.handle('skm:open-kds-window', async (_, branch) => {
     openKdsDesktopWindow(branch || 'branch_1');
     return { ok: true };
+});
+
+ipcMain.handle('skm:set-branch', async (_, branch) => {
+    setSavedBranch(branch);
+    return { ok: true, branch: getSavedBranch() };
 });
 
 ipcMain.handle('skm:get-app-info', async () => ({

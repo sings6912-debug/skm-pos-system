@@ -800,7 +800,7 @@ window.skmRegisterBundledPlugin('menu', "ai_gemini_ai_concierge.js", function() 
 
         function getDynamicGeminiKey() {
             if (window.GEMINI_API_KEY && String(window.GEMINI_API_KEY).trim()) return String(window.GEMINI_API_KEY).trim();
-            const br = new URLSearchParams(window.location.search).get('branch') || 'HENG';
+            const br = new URLSearchParams(window.location.search).get('branch') || 'branch_1';
             try {
                 const localSys = JSON.parse(localStorage.getItem(`ks2_${br}_sys_settings`) || '{}');
                 const k = (window.sysSettings && (window.sysSettings.geminiApiKey || window.sysSettings.aiApiKey)) || localSys.geminiApiKey || localSys.aiApiKey || '';
