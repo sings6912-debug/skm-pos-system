@@ -1308,6 +1308,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
         if (window.supabase) {
             try {
                 supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+                window.supabaseClient = supabaseClient;
             } catch(e) {}
         }
         
@@ -2401,7 +2402,7 @@ const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZ
 
         function openDet(id) {
             const p = inventory.find(x=>String(x.id)===String(id)); if(!p) return;
-            curProd = p; selVar = (p.variants && p.variants.length) ? p.variants[0] : 'Base';
+            curProd = p; window.__skmCurrentDetailProd = { name: p.name || '', price: fmt(getPrc(p)) }; selVar = (p.variants && p.variants.length) ? p.variants[0] : 'Base';
             
             let vHtml = (p.variants || ['Base']).map(v => {
                 let safeV = String(v).replace(/'/g, "\\'");

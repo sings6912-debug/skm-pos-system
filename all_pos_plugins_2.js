@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 2 v7 (8 Pro Commercial Add-on Plugins — +Offline Order Sync Queue & Smart TTL Cache)
+ * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 2 v7.1 (8 Pro Plugins — Ultra-Low-Egress Audited)
  * File: all_pos_plugins_2.js (Root Folder — alongside all_pos_plugins.js)
  * Hosted on GitHub Pages (0 Bytes Supabase Egress/Storage)
  *
@@ -68,13 +68,13 @@
             localStorage.setItem(sysKey, JSON.stringify(sys));
 
             if (window.supabaseClient && navigator.onLine) {
-                const { data } = await window.supabaseClient.from('branch_store').select('sys_settings').eq('branch_id', br).maybeSingle();
-                const merged = Object.assign({}, (data && data.sys_settings) || {}, sys);
-                await window.supabaseClient.from('branch_store').upsert({
-                    branch_id: br,
-                    sys_settings: merged,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'branch_id' });
+                const cleanSys = typeof window.stripLocalThemeForCloud === 'function' ? window.stripLocalThemeForCloud(sys) : sys;
+                const nowIso = new Date().toISOString();
+                localStorage.setItem(`ks2_${br}_last_update`, new Date(nowIso).getTime().toString());
+                await window.supabaseClient.from('branch_store').update({
+                    sys_settings: cleanSys,
+                    updated_at: nowIso
+                }).eq('branch_id', br);
             }
         } catch (e) {}
     }
@@ -97,8 +97,10 @@
         try {
             sys = Object.assign({}, JSON.parse(localStorage.getItem(`ks2_${br}_sys_settings`) || '{}'), sys);
         } catch (e) {}
-        const token = (overrideCfg?.telegramToken || window.botToken || window.telegramBotToken || sys.telegramBotToken || sys.tgBotToken || sys.telegramToken || '').trim();
-        const chatId = (overrideCfg?.telegramChatId || window.chatId || window.telegramChatId || sys.telegramChatId || sys.tgChatId || '').trim();
+        const lsTok = localStorage.getItem(`ks2_${br}_telegram_bot_token`) || '';
+        const lsCid = localStorage.getItem(`ks2_${br}_telegram_chat_id`) || '';
+        const token = (overrideCfg?.telegramToken || window.botToken || window.telegramBotToken || window.orderBotToken || sys.orderTelegramBotToken || sys.telegramBotToken || sys.tgBotToken || sys.telegramToken || lsTok || '').trim();
+        const chatId = (overrideCfg?.telegramChatId || window.chatId || window.telegramChatId || window.orderChatId || sys.orderTelegramChatId || sys.telegramChatId || sys.tgChatId || lsCid || '').trim();
         return { token, chatId };
     }
 
@@ -281,11 +283,12 @@
                     window.sysSettings = sys;
                     localStorage.setItem(sysKey, JSON.stringify(sys));
                     if (window.supabaseClient && navigator.onLine) {
-                        const { data } = await window.supabaseClient.from('branch_store').select('sys_settings').eq('branch_id', br).maybeSingle();
-                        const merged = Object.assign({}, (data && data.sys_settings) || {}, sys);
-                        await window.supabaseClient.from('branch_store').upsert({
-                            branch_id: br, sys_settings: merged, updated_at: new Date().toISOString()
-                        }, { onConflict: 'branch_id' });
+                        const cleanSys = typeof window.stripLocalThemeForCloud === 'function' ? window.stripLocalThemeForCloud(sys) : sys;
+                        const nowIso = new Date().toISOString();
+                        localStorage.setItem(`ks2_${br}_last_update`, new Date(nowIso).getTime().toString());
+                        await window.supabaseClient.from('branch_store').update({
+                            sys_settings: cleanSys, updated_at: nowIso
+                        }).eq('branch_id', br);
                     }
                 } catch (e) {}
             }
@@ -454,7 +457,8 @@
                     if (window.supabaseClient && navigator.onLine) {
                         try {
                             const { data } = await window.supabaseClient.from('pos_staff_attendance')
-                                .select('*').eq('branch_id', br).like('work_date', `${ym}%`).order('work_date', { ascending: false });
+                                .select('id,work_date,staff_name,clock_in,clock_out,clock_in_lat,clock_in_lng,clock_in_distance_m,late_minutes,worked_minutes,status')
+                                .eq('branch_id', br).like('work_date', `${ym}%`).order('work_date', { ascending: false }).limit(150);
                             if (Array.isArray(data) && data.length) logs = data;
                         } catch (e) {}
                     }
@@ -1427,11 +1431,12 @@
                     localStorage.setItem(sysKey, JSON.stringify(sys));
 
                     if (window.supabaseClient && navigator.onLine) {
-                        const { data: row } = await window.supabaseClient.from('branch_store').select('sys_settings').eq('branch_id', br).maybeSingle();
-                        const merged = Object.assign({}, (row && row.sys_settings) || {}, sys);
-                        await window.supabaseClient.from('branch_store').upsert({
-                            branch_id: br, sys_settings: merged, updated_at: new Date().toISOString()
-                        }, { onConflict: 'branch_id' });
+                        const cleanSys = typeof window.stripLocalThemeForCloud === 'function' ? window.stripLocalThemeForCloud(sys) : sys;
+                        const nowIso = new Date().toISOString();
+                        localStorage.setItem(`ks2_${br}_last_update`, new Date(nowIso).getTime().toString());
+                        await window.supabaseClient.from('branch_store').update({
+                            sys_settings: cleanSys, updated_at: nowIso
+                        }).eq('branch_id', br);
                     }
                 } catch (e) {}
             }
@@ -1471,6 +1476,7 @@
                 const doneSet = new Set(doneIds);
                 const inventory = getInventoryList();
                 let changed = false;
+                const cloudDeductBatch = []; // [{ id, deductQty, newQty }]
 
                 // Check latest 25 invoices
                 invs.slice(0, 25).forEach(inv => {
@@ -1497,6 +1503,7 @@
                         const baseProd = inventory.find(p => p && (String(p.id) === String(meta.baseProductId) || String(p.customId) === String(meta.baseProductId)));
                         if (baseProd) {
                             baseProd.qty = Math.max(0, (Number(baseProd.qty) || 0) - totalDeduct);
+                            cloudDeductBatch.push({ id: baseProd.id, deductQty: totalDeduct, newQty: baseProd.qty });
                             deductedAny = true;
                             if (Array.isArray(window.historyLog)) {
                                 window.historyLog.unshift({
@@ -1521,10 +1528,30 @@
                     try { localStorage.setItem(`ks2_${br}_inv_pro`, JSON.stringify(inventory)); } catch (e) {}
                     if (typeof window.renderInventory === 'function') window.renderInventory();
                     if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
-                    if (typeof window.saveData === 'function' && window.userAccounts) {
-                        try { window.saveData(window.userAccounts); } catch (e) {}
+
+                    // Ultra-Low-Egress Cloud Sync: update ONLY the exact deducted product row(s) in pos_products (~60B each)
+                    if (window.supabaseClient && navigator.onLine && cloudDeductBatch.length) {
+                        (async () => {
+                            try {
+                                const nowIso = new Date().toISOString();
+                                for (const item of cloudDeductBatch) {
+                                    const { error: rpcErr } = await window.supabaseClient.rpc('deduct_stock_safely', {
+                                        p_product_id: item.id,
+                                        p_branch_id: br,
+                                        deduct_qty: item.deductQty
+                                    });
+                                    if (rpcErr) {
+                                        await window.supabaseClient.from('pos_products')
+                                            .update({ qty: item.newQty, updated_at: nowIso })
+                                            .eq('id', item.id)
+                                            .eq('branch_id', br);
+                                    }
+                                }
+                                if (typeof window.touchCloudSync === 'function') await window.touchCloudSync();
+                            } catch (e) {}
+                        })();
                     }
-                    showPack2Toast('📦 បានកាត់ស្តុកច្រើនឯកតា (Multi-Unit) ស្វ័យប្រវត្តិជោគជ័យ!');
+                    showPack2Toast('📦 បានកាត់ស្តុកច្រើនឯកតា (Multi-Unit) & Sync ឡើង Cloud ជោគជ័យ!');
                 } else if (doneSet.size > doneIds.length) {
                     localStorage.setItem(getMuDoneInvKey(), JSON.stringify(Array.from(doneSet).slice(-300)));
                 }
@@ -2049,7 +2076,7 @@
                             <div class="meta">
                                 <div>លេខវិក្កយបត្រ៖ <b>${escHtml(inv.id || 'N/A')}</b></div>
                                 <div>កាលបរិច្ឆេទ៖ ${escHtml(inv.date || new Date().toLocaleString('km-KH'))}</div>
-                                <div>អតិថិជន៖ ${escHtml(inv.customer || inv.customerName || 'ទូទៅ')}</div>
+                                <div>អតិថិជន៖ ${escHtml(inv.customerName || inv.customer || 'ទូទៅ')}</div>
                                 ${inv.seller || inv.cashier ? `<div>អ្នកលក់៖ ${escHtml(inv.seller || inv.cashier)}</div>` : ''}
                             </div>
                             <div class="dash"></div>
@@ -2242,7 +2269,7 @@
                     const invs = getAllInvoices().slice(0, 10);
                     box.innerHTML = invs.length ? invs.map((inv, idx) => `
                         <div onclick="window.SKMP2Dr.selectRecent(${idx})" style="padding:7px 10px;border-radius:9px;background:#0f172a;border:1px solid rgba(148,163,184,0.2);cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-size:12px;">
-                            <span><b>${escHtml(inv.id)}</b> • ${escHtml(inv.customer || 'ទូទៅ')}</span>
+                            <span><b>${escHtml(inv.id)}</b> • ${escHtml(inv.customerName || inv.customer || 'ទូទៅ')}</span>
                             <b style="color:#34d399;">$${Number(inv.totalAmount ?? inv.total ?? 0).toFixed(2)}</b>
                         </div>`).join('') : '<div style="color:#94a3b8;font-size:12px;text-align:center;">គ្មានទិន្នន័យ</div>';
                 },
@@ -2272,7 +2299,7 @@
                             <span style="font-size:11px;background:rgba(16,185,129,0.2);color:#34d399;padding:2px 8px;border-radius:999px;font-weight:800;">${escHtml(inv.status || 'paid')}</span>
                         </div>
                         <div style="font-size:11.5px;color:#cbd5e1;margin-bottom:8px;">
-                            👤 ${escHtml(inv.customer || 'ទូទៅ')} • 📅 ${escHtml(inv.date || '')}
+                            👤 ${escHtml(inv.customerName || inv.customer || 'ទូទៅ')} • 📅 ${escHtml(inv.date || '')}
                         </div>
                         <div style="max-height:95px;overflow-y:auto;margin-bottom:8px;font-size:12px;">
                             ${items.map(it => `<div style="display:flex;justify-content:space-between;padding:2px 0;"><span>• ${escHtml(it.name || it.title)} x${it.cartQty || it.qty || 1}</span><b>$${(Number(it.price||0)*Number(it.cartQty||it.qty||1)).toFixed(2)}</b></div>`).join('')}
@@ -2823,11 +2850,12 @@
                     localStorage.setItem(sysKey, JSON.stringify(sys));
 
                     if (window.supabaseClient && navigator.onLine) {
-                        const { data: row } = await window.supabaseClient.from('branch_store').select('sys_settings').eq('branch_id', br).maybeSingle();
-                        const merged = Object.assign({}, (row && row.sys_settings) || {}, sys);
-                        await window.supabaseClient.from('branch_store').upsert({
-                            branch_id: br, sys_settings: merged, updated_at: new Date().toISOString()
-                        }, { onConflict: 'branch_id' });
+                        const cleanSys = typeof window.stripLocalThemeForCloud === 'function' ? window.stripLocalThemeForCloud(sys) : sys;
+                        const nowIso = new Date().toISOString();
+                        localStorage.setItem(`ks2_${br}_last_update`, new Date(nowIso).getTime().toString());
+                        await window.supabaseClient.from('branch_store').update({
+                            sys_settings: cleanSys, updated_at: nowIso
+                        }).eq('branch_id', br);
                     }
                 } catch (e) {}
             }
@@ -3362,7 +3390,7 @@
             function loadCfg() {
                 let c = {
                     autoFlushOnline: true,
-                    ttlMinutes: 3,
+                    ttlMinutes: 5,
                     autoRefreshOnCloudUpdate: false,
                     showFloatingStatusWhenPending: true
                 };
@@ -3406,17 +3434,29 @@
                 try { localStorage.setItem(getMetaKey(), JSON.stringify(m)); } catch (e) {}
             }
 
-            // Build exact Supabase payload matching SKM POS schema
+            // Build exact Supabase payload matching SKM POS `pos_orders` schema (strips heavy base64 images for Low Egress!)
             function mapInvoiceToRow(inv) {
                 const br = getBranchId();
-                const items = Array.isArray(inv.items) ? inv.items : (Array.isArray(inv.cart) ? inv.cart : []);
+                const rawItems = Array.isArray(inv.items) ? inv.items : (Array.isArray(inv.cart) ? inv.cart : []);
+                const cleanItems = rawItems.map(it => {
+                    if (!it || typeof it !== 'object') return it;
+                    const { image: _stripImg, ...rest } = it;
+                    return rest;
+                });
+                const totAmt = Number(inv.totalAmount ?? inv.total ?? 0);
+                const st = String(inv.status || 'paid');
+                const paidAmt = inv.paidUsd != null ? Number(inv.paidUsd) : (inv.paidAmount != null ? Number(inv.paidAmount) : (st === 'paid' ? totAmt : 0));
                 return {
                     id: String(inv.id),
                     branch_id: br,
-                    customer_name: String(inv.customer || inv.customerName || 'អតិថិជនទូទៅ'),
-                    total_amount: Number(inv.totalAmount ?? inv.total ?? 0),
-                    status: String(inv.status || 'paid'),
-                    order_data: items,
+                    customer_name: String(inv.customerName || inv.customer || 'អតិថិជនទូទៅ'),
+                    customer_phone: String(inv.customerPhone || inv.phone || ''),
+                    total_amount: totAmt,
+                    paid_amount: paidAmt,
+                    status: st,
+                    seller: String(inv.seller || inv.cashier || (window.activeUser && (window.activeUser.fullName || window.activeUser.username)) || 'POS'),
+                    order_data: cleanItems,
+                    note: String(inv.note || ''),
                     timestamp: typeof inv.timestamp === 'number' ? inv.timestamp : (Date.parse(inv.timestamp || '') || Date.now())
                 };
             }
@@ -3586,13 +3626,21 @@
                 }
             }
 
-            // Smart TTL Cache Freshness Check (queries ONLY updated_at ~40 bytes)
-            let lastTtlCheckMs = 0;
+            // Ultra-Low-Egress Smart TTL Cache Freshness Check (queries ONLY updated_at ~40 bytes; avoids duplicating main.js sync!)
+            let lastTtlCheckMs = Date.now();
             async function checkCloudFreshness(manual = false) {
+                if (!manual && document.hidden) return;
                 const cfg = loadCfg();
-                const ttlMs = Math.max(1, Number(cfg.ttlMinutes || 3)) * 60000;
+                const ttlMs = Math.max(1, Number(cfg.ttlMinutes || 5)) * 60000;
                 const now = Date.now();
                 if (!manual && (now - lastTtlCheckMs) < ttlMs) return;
+                // If main.js already checked cloud recently, skip redundant query!
+                const br = getBranchId();
+                const mainLastTs = parseInt(localStorage.getItem(`ks2_${br}_last_update`) || '0', 10);
+                if (!manual && mainLastTs > 0 && (now - mainLastTs) < ttlMs) {
+                    lastTtlCheckMs = now;
+                    return;
+                }
                 if (!navigator.onLine || !window.supabaseClient) {
                     if (manual) showPack2Toast('📡 គ្មានអ៊ីនធឺណិត — កំពុងប្រើទិន្នន័យ Cache ក្នុងម៉ាស៊ីន!', true);
                     return;
@@ -3602,7 +3650,7 @@
                     const { data, error } = await window.supabaseClient
                         .from('branch_store')
                         .select('updated_at')
-                        .eq('branch_id', getBranchId())
+                        .eq('branch_id', br)
                         .maybeSingle();
                     if (error || !data) return;
 
@@ -3615,8 +3663,8 @@
 
                     if (prevRemote && newRemote && prevRemote !== newRemote) {
                         showPack2Toast('🔄 រកឃើញការអាប់ដេតតម្លៃ/ស្តុកថ្មីលើ Cloud!');
-                        if (cfg.autoRefreshOnCloudUpdate && typeof window.loadCloudData === 'function') {
-                            try { await window.loadCloudData(); } catch (e) {}
+                        if (cfg.autoRefreshOnCloudUpdate && typeof window.manualCloudSync === 'function') {
+                            try { await window.manualCloudSync(true); } catch (e) {}
                         }
                     } else if (manual) {
                         showPack2Toast('✅ Cache ក្នុងម៉ាស៊ីនថ្មីបំផុតដូច Cloud ហើយ (ស៊ីទិន្នន័យតិចបំផុត)!');

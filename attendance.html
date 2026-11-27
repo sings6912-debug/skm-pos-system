@@ -401,30 +401,61 @@
                 if (rawUsers) staffList = JSON.parse(rawUsers);
             } catch (e) {}
 
-            // 2. Cloud load from Supabase branch_store
+            // 1.5 Load cached shop_info if available on this phone
+            try {
+                const rawShop = localStorage.getItem(`ks2_${BRANCH_ID}_att_shop_info`);
+                if (rawShop) shopInfo = JSON.parse(rawShop);
+            } catch (e) {}
+
+            // 2. Ultra-Low-Egress Cloud load: check updated_at (~40 bytes) first before downloading logo/settings/users!
             if (sb && navigator.onLine) {
                 try {
-                    const { data } = await sb.from('branch_store')
-                        .select('shop_info, sys_settings, user_accounts')
-                        .eq('branch_id', BRANCH_ID)
-                        .maybeSingle();
-                    if (data) {
-                        if (data.shop_info) shopInfo = data.shop_info;
-                        if (data.sys_settings) {
-                            sysSettings = Object.assign({}, sysSettings, data.sys_settings);
-                            if (data.sys_settings.attendanceConfig) {
-                                attConfig = Object.assign(attConfig, data.sys_settings.attendanceConfig);
+                    const metaKey = `ks2_${BRANCH_ID}_att_branch_updated_at`;
+                    const cachedUpdatedAt = localStorage.getItem(metaKey) || '';
+                    const hasLocalBundle = Boolean(staffList && staffList.length > 0 && (shopInfo.shopName || localStorage.getItem(`ks2_${BRANCH_ID}_shop_name`)));
+                    let needFullFetch = !hasLocalBundle || !cachedUpdatedAt;
+
+                    if (!needFullFetch) {
+                        const { data: meta } = await sb.from('branch_store')
+                            .select('updated_at')
+                            .eq('branch_id', BRANCH_ID)
+                            .maybeSingle();
+                        if (meta && meta.updated_at && meta.updated_at !== cachedUpdatedAt) {
+                            needFullFetch = true;
+                        }
+                    }
+
+                    if (needFullFetch) {
+                        const { data } = await sb.from('branch_store')
+                            .select('shop_info, sys_settings, user_accounts, updated_at')
+                            .eq('branch_id', BRANCH_ID)
+                            .maybeSingle();
+                        if (data) {
+                            if (data.updated_at) localStorage.setItem(metaKey, data.updated_at);
+                            if (data.shop_info) {
+                                shopInfo = data.shop_info;
+                                try { localStorage.setItem(`ks2_${BRANCH_ID}_att_shop_info`, JSON.stringify(shopInfo)); } catch (e) {}
                             }
-                            if (!attConfig.telegramToken && (data.sys_settings.telegramBotToken || data.sys_settings.tgBotToken || data.sys_settings.telegramToken)) {
-                                attConfig.telegramToken = data.sys_settings.telegramBotToken || data.sys_settings.tgBotToken || data.sys_settings.telegramToken;
+                            if (data.sys_settings) {
+                                sysSettings = Object.assign({}, sysSettings, data.sys_settings);
+                                try { localStorage.setItem(`ks2_${BRANCH_ID}_sys_settings`, JSON.stringify(sysSettings)); } catch (e) {}
+                                if (data.sys_settings.attendanceConfig) {
+                                    attConfig = Object.assign(attConfig, data.sys_settings.attendanceConfig);
+                                    try { localStorage.setItem(`ks2_${BRANCH_ID}_attendance_cfg`, JSON.stringify(attConfig)); } catch (e) {}
+                                }
                             }
-                            if (!attConfig.telegramChatId && (data.sys_settings.telegramChatId || data.sys_settings.tgChatId)) {
-                                attConfig.telegramChatId = data.sys_settings.telegramChatId || data.sys_settings.tgChatId;
+                            if (Array.isArray(data.user_accounts) && data.user_accounts.length > 0) {
+                                staffList = data.user_accounts;
+                                try { localStorage.setItem(`ks2_${BRANCH_ID}_auth_users_pro`, JSON.stringify(staffList)); } catch (e) {}
                             }
                         }
-                        if (Array.isArray(data.user_accounts) && data.user_accounts.length > 0) {
-                            staffList = data.user_accounts;
-                        }
+                    }
+                    // Resolve Telegram credentials across all POS config fields
+                    if (!attConfig.telegramToken) {
+                        attConfig.telegramToken = (sysSettings.orderTelegramBotToken || sysSettings.telegramBotToken || sysSettings.tgBotToken || sysSettings.telegramToken || shopInfo.telegramBotToken || '').trim();
+                    }
+                    if (!attConfig.telegramChatId) {
+                        attConfig.telegramChatId = (sysSettings.orderTelegramChatId || sysSettings.telegramChatId || sysSettings.tgChatId || shopInfo.telegramChatId || '').trim();
                     }
                 } catch (e) {
                     console.warn('Cloud load warning:', e);
@@ -511,8 +542,8 @@
         }
 
         async function sendTelegramAlert(text) {
-            const token = (attConfig.telegramToken || sysSettings.telegramBotToken || sysSettings.tgBotToken || sysSettings.telegramToken || '').trim();
-            const chatId = (attConfig.telegramChatId || sysSettings.telegramChatId || sysSettings.tgChatId || '').trim();
+            const token = (attConfig.telegramToken || sysSettings.orderTelegramBotToken || sysSettings.telegramBotToken || sysSettings.tgBotToken || sysSettings.telegramToken || shopInfo.telegramBotToken || '').trim();
+            const chatId = (attConfig.telegramChatId || sysSettings.orderTelegramChatId || sysSettings.telegramChatId || sysSettings.tgChatId || shopInfo.telegramChatId || '').trim();
             if (!attConfig.telegramEnabled || !token || !chatId) return;
             try {
                 await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
@@ -744,10 +775,11 @@
             if (sb && navigator.onLine) {
                 try {
                     const { data } = await sb.from('pos_staff_attendance')
-                        .select('*')
+                        .select('id,staff_id,staff_name,work_date,clock_in,clock_out,late_minutes,worked_minutes,status')
                         .eq('branch_id', BRANCH_ID)
                         .eq('work_date', today)
-                        .order('updated_at', { ascending: false });
+                        .order('updated_at', { ascending: false })
+                        .limit(80);
                     if (Array.isArray(data) && data.length > 0) logs = data;
                 } catch (e) {}
             }

@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 3 (Enterprise & Specialty Modules + Unified Toggle Hub)
+ * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 3 v1.1 (Enterprise Modules + Unified Hub — Ultra-Low-Egress Audited)
  * File: all_pos_plugins_3.js (Root Folder — alongside all_pos_plugins.js & all_pos_plugins_2.js)
  * Hosted on GitHub Pages (0 Bytes Supabase Egress/Storage)
  *
@@ -49,8 +49,10 @@
         try {
             sys = Object.assign({}, JSON.parse(localStorage.getItem(`ks2_${br}_sys_settings`) || '{}'), sys);
         } catch (e) {}
-        const token = (window.botToken || window.telegramBotToken || sys.telegramBotToken || sys.tgBotToken || sys.telegramToken || '').trim();
-        const chatId = (window.chatId || window.telegramChatId || sys.telegramChatId || sys.tgChatId || '').trim();
+        const lsTok = localStorage.getItem(`ks2_${br}_telegram_bot_token`) || '';
+        const lsCid = localStorage.getItem(`ks2_${br}_telegram_chat_id`) || '';
+        const token = (window.botToken || window.telegramBotToken || window.orderBotToken || sys.orderTelegramBotToken || sys.telegramBotToken || sys.tgBotToken || sys.telegramToken || lsTok || '').trim();
+        const chatId = (window.chatId || window.telegramChatId || window.orderChatId || sys.orderTelegramChatId || sys.telegramChatId || sys.tgChatId || lsCid || '').trim();
         return { token, chatId };
     }
 
@@ -178,13 +180,13 @@
             localStorage.setItem(sysKey, JSON.stringify(sys));
 
             if (window.supabaseClient && navigator.onLine) {
-                const { data } = await window.supabaseClient.from('branch_store').select('sys_settings').eq('branch_id', br).maybeSingle();
-                const merged = Object.assign({}, (data && data.sys_settings) || {}, sys);
-                await window.supabaseClient.from('branch_store').upsert({
-                    branch_id: br,
-                    sys_settings: merged,
-                    updated_at: new Date().toISOString()
-                }, { onConflict: 'branch_id' });
+                const cleanSys = typeof window.stripLocalThemeForCloud === 'function' ? window.stripLocalThemeForCloud(sys) : sys;
+                const nowIso = new Date().toISOString();
+                localStorage.setItem(`ks2_${br}_last_update`, new Date(nowIso).getTime().toString());
+                await window.supabaseClient.from('branch_store').update({
+                    sys_settings: cleanSys,
+                    updated_at: nowIso
+                }).eq('branch_id', br);
             }
         } catch (e) {}
     }
@@ -354,22 +356,11 @@
         return fallback;
     }
 
+    // Ultra-Low-Egress: Keep Serial/Landed/Consignment logs local (0 Bytes Supabase Egress; never bloats branch_store for menu.html guests!)
     async function saveP3Data(localSuffix, cloudField, value) {
         const br = getBranchId();
-        localStorage.setItem(`ks2_${br}_${localSuffix}`, JSON.stringify(value));
         try {
-            const sysKey = `ks2_${br}_sys_settings`;
-            const sys = Object.assign({}, window.sysSettings || JSON.parse(localStorage.getItem(sysKey) || '{}'));
-            sys[cloudField] = value;
-            window.sysSettings = sys;
-            localStorage.setItem(sysKey, JSON.stringify(sys));
-            if (window.supabaseClient && navigator.onLine) {
-                const { data } = await window.supabaseClient.from('branch_store').select('sys_settings').eq('branch_id', br).maybeSingle();
-                const merged = Object.assign({}, (data && data.sys_settings) || {}, sys);
-                await window.supabaseClient.from('branch_store').upsert({
-                    branch_id: br, sys_settings: merged, updated_at: new Date().toISOString()
-                }, { onConflict: 'branch_id' });
-            }
+            localStorage.setItem(`ks2_${br}_${localSuffix}`, JSON.stringify(value));
         } catch (e) {}
     }
 
@@ -954,11 +945,26 @@
                         }
                     });
 
-                    try { localStorage.setItem(`ks2_${getBranchId()}_inv_pro`, JSON.stringify(inv)); } catch (e) {}
+                    const br = getBranchId();
+                    try { localStorage.setItem(`ks2_${br}_inv_pro`, JSON.stringify(inv)); } catch (e) {}
                     if (typeof window.renderInventory === 'function') window.renderInventory();
                     if (typeof window.renderPOSProducts === 'function') window.renderPOSProducts();
-                    if (typeof window.saveData === 'function' && window.userAccounts) {
-                        try { await window.saveData(window.userAccounts); } catch (e) {}
+
+                    // Ultra-Low-Egress Cloud Sync: update ONLY the exact restocked product rows in pos_products (~80B each)
+                    if (window.supabaseClient && navigator.onLine) {
+                        try {
+                            const nowIso = new Date().toISOString();
+                            for (const l of calc.lines) {
+                                const prod = inv.find(x => x && (String(x.id) === l.prodId || String(x.customId) === l.prodId));
+                                if (prod && prod.id != null) {
+                                    await window.supabaseClient.from('pos_products')
+                                        .update({ qty: l.newQty, cost: Number(l.newAvgCost.toFixed(2)), updated_at: nowIso })
+                                        .eq('id', prod.id)
+                                        .eq('branch_id', br);
+                                }
+                            }
+                            if (typeof window.touchCloudSync === 'function') await window.touchCloudSync();
+                        } catch (e) {}
                     }
 
                     const batches = loadBatches();
