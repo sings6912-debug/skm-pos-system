@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 3 v2.0 (6 Enterprise Modules — Payroll + Member Pass/Booking + Rental Billing • Admin Tab 9 Controlled)
+ * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 3 v2.1 (6 Enterprise Modules — Default OFF per Branch • Admin Tab 9 Opt-In)
  * File: all_pos_plugins_3.js (Root Folder — alongside all_pos_plugins.js & all_pos_plugins_2.js)
  * Hosted on GitHub Pages (0 Bytes Supabase Egress/Storage)
  *
@@ -129,48 +129,49 @@
     // ========================================================================
     // UNIFIED TOGGLE ENGINE (Controls Pack 2 [8 modules] + Pack 3 [3 modules])
     // ========================================================================
+    // Default OFF for ALL branches — Admin enables per branch in Admin Settings -> Tab 9 (Section 9.5)
     const PACK2_DEFAULTS = {
-        attendancePro: true,
-        stickerPro: true,
-        powerShareHub: true,
-        multiUnitWholesale: true,
-        dualReceiptBarcode: true,
-        stockHealthAnalytics: true,
-        autoLowStockAlert: true,
-        offlineSyncQueue: true
+        attendancePro: false,
+        stickerPro: false,
+        powerShareHub: false,
+        multiUnitWholesale: false,
+        dualReceiptBarcode: false,
+        stockHealthAnalytics: false,
+        autoLowStockAlert: false,
+        offlineSyncQueue: false
     };
     const PACK3_DEFAULTS = {
-        serialWarranty: true,
-        landedAvgCost: true,
-        consignmentPro: true,
-        payrollPro: true,
-        memberPassBooking: true,
-        rentalBilling: true
+        serialWarranty: false,
+        landedAvgCost: false,
+        consignmentPro: false,
+        payrollPro: false,
+        memberPassBooking: false,
+        rentalBilling: false
     };
 
     const getPack2Key = () => `ks2_${getBranchId()}_pos2_enabled`;
     const getPack3Key = () => `ks2_${getBranchId()}_pos3_enabled`;
 
     function getPack2State() {
-        let st = Object.assign({}, PACK2_DEFAULTS);
+        const st = Object.assign({}, PACK2_DEFAULTS);
         try {
-            const sys = window.sysSettings || JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_sys_settings`) || '{}');
-            if (sys && sys.pos2Enabled) st = Object.assign(st, sys.pos2Enabled);
-            const raw = localStorage.getItem(getPack2Key());
-            if (raw) st = Object.assign(st, JSON.parse(raw));
+            const localSys = JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_sys_settings`) || '{}');
+            const sys = Object.assign({}, localSys, window.sysSettings || {});
+            if (sys && sys.pos2Enabled && typeof sys.pos2Enabled === 'object') {
+                Object.keys(PACK2_DEFAULTS).forEach(k => { st[k] = sys.pos2Enabled[k] === true; });
+            }
         } catch (e) {}
         return st;
     }
 
     function getPack3State() {
-        let st = Object.assign({}, PACK3_DEFAULTS);
+        const st = Object.assign({}, PACK3_DEFAULTS);
         try {
-            const raw = localStorage.getItem(getPack3Key());
-            if (raw) st = Object.assign(st, JSON.parse(raw));
+            // Single Source of Truth: sys_settings.pos3Enabled (synced from Admin Settings Tab 9)
             const localSys = JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_sys_settings`) || '{}');
             const sys = Object.assign({}, localSys, window.sysSettings || {});
             if (sys && sys.pos3Enabled && typeof sys.pos3Enabled === 'object') {
-                st = Object.assign(st, sys.pos3Enabled);
+                Object.keys(PACK3_DEFAULTS).forEach(k => { st[k] = sys.pos3Enabled[k] === true; });
             }
         } catch (e) {}
         return st;
@@ -362,21 +363,44 @@
         rentalBilling: 'គ្រប់គ្រងផ្ទះជួល / បន្ទប់ជួល (Rental)'
     };
 
+    const p3Registry = {};
+    const p3Started = new Set();
+
+    function registerPack3Module(key, initFn) {
+        p3Registry[key] = initFn;
+        const st = getPack3State();
+        if (st[key] === true && !p3Started.has(key)) {
+            p3Started.add(key);
+            try { initFn(); } catch (e) { console.error('[SKM Pack3 Init Error]', key, e); }
+        }
+    }
+
     function syncPack3ToolboxVisibility() {
         const st = getPack3State();
-        try { localStorage.setItem(getPack3Key(), JSON.stringify(st)); } catch (e) {}
+        // Lazy-start any module enabled on Cloud after initial boot
+        Object.keys(p3Registry).forEach(k => {
+            if (st[k] === true && !p3Started.has(k)) {
+                p3Started.add(k);
+                try { p3Registry[k](); } catch (e) { console.error('[SKM Pack3 Lazy Init Error]', k, e); }
+            }
+        });
         const body = document.getElementById('skmToolboxMenuBody');
         if (!body) return;
         const disabledTitles = new Set(
-            Object.keys(PACK3_TOOL_TITLES).filter(k => st[k] === false).map(k => PACK3_TOOL_TITLES[k])
+            Object.keys(PACK3_TOOL_TITLES).filter(k => st[k] !== true).map(k => PACK3_TOOL_TITLES[k])
+        );
+        const enabledTitles = new Set(
+            Object.keys(PACK3_TOOL_TITLES).filter(k => st[k] === true).map(k => PACK3_TOOL_TITLES[k])
         );
         body.querySelectorAll('.skm-tool-wrapper').forEach(w => {
             const label = w.querySelector('.skm-tool-item span')?.textContent?.trim() || '';
             if (disabledTitles.has(label)) w.style.setProperty('display', 'none', 'important');
+            else if (enabledTitles.has(label)) w.style.removeProperty('display');
         });
     }
-    setTimeout(syncPack3ToolboxVisibility, 2800);
-    setTimeout(syncPack3ToolboxVisibility, 6800);
+    window.__SKM_SYNC_PACK3__ = syncPack3ToolboxVisibility;
+    setTimeout(syncPack3ToolboxVisibility, 2000);
+    setTimeout(syncPack3ToolboxVisibility, 5000);
     if (typeof window.skmApplyActivePlugins === 'function' && !window.skmApplyActivePlugins.__skmP3Wrapped) {
         const _origApplyP3 = window.skmApplyActivePlugins;
         window.skmApplyActivePlugins = function () {
@@ -386,8 +410,6 @@
         };
         window.skmApplyActivePlugins.__skmP3Wrapped = true;
     }
-
-    const pack3State = getPack3State();
 
     // Helper: save branch-scoped Pack 3 dataset locally + sync to Supabase branch_store.sys_settings[key]
     function loadP3Data(localSuffix, cloudField, fallback) {
@@ -413,8 +435,7 @@
     // [1/3] 📱 លេខ Serial / IMEI & ធានាទំនិញ (Serial / IMEI & Warranty Pro)
     // សម្រាប់ហាងទូរស័ព្ទ, កុំព្យូទ័រ, អេឡិចត្រូនិច, គ្រឿងបន្លាស់ និងម៉ាស៊ីនប្រើប្រាស់
     // ========================================================================
-    if (pack3State.serialWarranty !== false) {
-        (function initSerialWarrantyPlugin() {
+    registerPack3Module('serialWarranty', function initSerialWarrantyPlugin() {
             const loadSerials = () => loadP3Data('p3_serials', 'p3SerialRecords', []);
             const saveSerials = (arr) => saveP3Data('p3_serials', 'p3SerialRecords', arr.slice(0, 1500));
 
@@ -786,15 +807,13 @@
             };
 
             registerInPosToolbox('📱', 'លេខ Serial / IMEI & ធានាទំនិញ', () => window.SKMP3Serial.open('check'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [2/3] 🚢 ថ្លៃដើមនាំចូល & មធ្យមភាគ (Landed Cost & Moving Average Stock-In)
     // បូកបញ្ចូលថ្លៃដឹកជញ្ជូន + ពន្ធគយ ចូលថ្លៃដើម ១ ឯកតា ➔ គណនាថ្លៃដើមមធ្យម (Moving Average) ➔ អាប់ដេតស្តុក POS ១ ចុច!
     // ========================================================================
-    if (pack3State.landedAvgCost !== false) {
-        (function initLandedCostPlugin() {
+    registerPack3Module('landedAvgCost', function initLandedCostPlugin() {
             const loadBatches = () => loadP3Data('p3_landed_batches', 'p3LandedBatches', []);
             const saveBatches = (arr) => saveP3Data('p3_landed_batches', 'p3LandedBatches', arr.slice(0, 120));
 
@@ -1068,15 +1087,13 @@
             };
 
             registerInPosToolbox('🚢', 'ថ្លៃដើមនាំចូល & មធ្យមភាគ (Landed Cost)', () => window.SKMP3Landed.open('new'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [3/3] 🤝 គ្រប់គ្រងទំនិញផ្ញើលក់ (Consignment Management Pro — In & Out)
     // តាមដានទំនិញទទួលផ្ញើលក់ពីអ្នកផ្គត់ផ្គង់ ឬផ្ញើឱ្យហាងដៃគូលក់ • កត់ត្រាលក់បាន/ដកវិញ • ទូទាត់លុយ + Telegram
     // ========================================================================
-    if (pack3State.consignmentPro !== false) {
-        (function initConsignmentPlugin() {
+    registerPack3Module('consignmentPro', function initConsignmentPlugin() {
             const loadConsign = () => loadP3Data('p3_consignments', 'p3Consignments', []);
             const saveConsign = (arr) => saveP3Data('p3_consignments', 'p3Consignments', arr.slice(0, 600));
 
@@ -1315,16 +1332,14 @@
             };
 
             registerInPosToolbox('🤝', 'គ្រប់គ្រងទំនិញផ្ញើលក់ (Consignment)', () => window.SKMP3Consign.open('list'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [4/6] 💵 ប្រព័ន្ធបើកប្រាក់ខែបុគ្គលិក Pro (Payroll Auto-Calc + Payslip + Telegram)
     // ទាញបុគ្គលិកពី user_accounts + ទិន្នន័យវត្តមាន/នាទីយឺតពី Attendance Pro + លក់ពី POS (Commission)
     // គ្មាន Query ទៅ Supabase បន្ថែម (0 Bytes Supabase Egress)
     // ========================================================================
-    if (pack3State.payrollPro !== false) {
-        (function initPayrollProPlugin() {
+    registerPack3Module('payrollPro', function initPayrollProPlugin() {
             const loadProfiles = () => loadP3Data('p3_payroll_profiles', 'p3PayrollProfiles', {});
             const saveProfiles = (obj) => saveP3Data('p3_payroll_profiles', 'p3PayrollProfiles', obj);
             const loadRuns = () => loadP3Data('p3_payroll_runs', 'p3PayrollRuns', {});
@@ -1693,15 +1708,13 @@
             };
 
             registerInPosToolbox('💵', 'ប្រព័ន្ធបើកប្រាក់ខែបុគ្គលិក (Payroll)', () => window.SKMP3Payroll.open('sheet'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [5/6] 🏋️ កាតសមាជិក & កក់ម៉ោង (Member Pass QR Check-in & Court/Spa Booking)
     // សម្រាប់ Gym, តារាងវាយសី / Pickleball, Spa, សាឡន, បន្ទប់ KTV (0 Bytes Supabase Egress)
     // ========================================================================
-    if (pack3State.memberPassBooking !== false) {
-        (function initMemberPassBookingPlugin() {
+    registerPack3Module('memberPassBooking', function initMemberPassBookingPlugin() {
             const loadMembers = () => loadP3Data('p3_members', 'p3Members', []);
             const saveMembers = (arr) => saveP3Data('p3_members', 'p3Members', arr.slice(0, 1000));
             const loadBookings = () => loadP3Data('p3_bookings', 'p3Bookings', []);
@@ -2086,16 +2099,14 @@
             };
 
             registerInPosToolbox('🏋️', 'កាតសមាជិក & កក់ម៉ោង (Gym/Spa/តារាង)', () => window.SKMP3Member.open('checkin'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [6/6] 🏠 គ្រប់គ្រងផ្ទះជួល / បន្ទប់ជួល (Rental & Utility Meter Billing + KHQR)
     // កត់កុងទ័រភ្លើង-ទឹកចាស់/ថ្មី ➔ គណនាថ្លៃបន្ទប់ + ភ្លើង + ទឹក + សំរាមអូតូ ➔ វិក្កយបត្រភ្ជាប់ Bakong KHQR + Telegram
     // គ្មាន Query ទៅ Supabase បន្ថែម (0 Bytes Supabase Egress)
     // ========================================================================
-    if (pack3State.rentalBilling !== false) {
-        (function initRentalBillingPlugin() {
+    registerPack3Module('rentalBilling', function initRentalBillingPlugin() {
             const loadRooms = () => loadP3Data('p3_rental_rooms', 'p3RentalRooms', []);
             const saveRooms = (arr) => saveP3Data('p3_rental_rooms', 'p3RentalRooms', arr.slice(0, 500));
             const loadBills = () => loadP3Data('p3_rental_bills', 'p3RentalBills', []);
@@ -2437,6 +2448,5 @@
             };
 
             registerInPosToolbox('🏠', 'គ្រប់គ្រងផ្ទះជួល / បន្ទប់ជួល (Rental)', () => window.SKMP3Rental.open('billing'));
-        })();
-    }
+    });
 })();

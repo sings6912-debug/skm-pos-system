@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 2 v7.3 (8 Pro Plugins — Native Admin Tab 9 Controlled & Cloud-Priority Sync)
+ * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 2 v7.4 (8 Pro Plugins — Default OFF per Branch • Admin Tab 9 Opt-In)
  * File: all_pos_plugins_2.js (Root Folder — alongside all_pos_plugins.js)
  * Hosted on GitHub Pages (0 Bytes Supabase Egress/Storage)
  *
@@ -33,27 +33,28 @@
         return `ks2_${getBranchId()}_pos2_enabled`;
     }
 
+    // Default OFF for ALL branches — Admin enables per branch in Admin Settings -> Tab 9 (Section 9.5)
     const PACK2_DEFAULTS = {
-        attendancePro: true,
-        stickerPro: true,
-        powerShareHub: true,
-        multiUnitWholesale: true,
-        dualReceiptBarcode: true,
-        stockHealthAnalytics: true,
-        autoLowStockAlert: true,
-        offlineSyncQueue: true
+        attendancePro: false,
+        stickerPro: false,
+        powerShareHub: false,
+        multiUnitWholesale: false,
+        dualReceiptBarcode: false,
+        stockHealthAnalytics: false,
+        autoLowStockAlert: false,
+        offlineSyncQueue: false
     };
 
     function getPack2State() {
-        let st = Object.assign({}, PACK2_DEFAULTS);
+        const st = Object.assign({}, PACK2_DEFAULTS);
         try {
-            // Fallback local cache first, then Admin Settings (Cloud sys_settings.pos2Enabled) ALWAYS takes priority!
-            const raw = localStorage.getItem(getPack2StateKey());
-            if (raw) st = Object.assign(st, JSON.parse(raw));
+            // Single Source of Truth: sys_settings.pos2Enabled (synced from Admin Settings Tab 9)
             const localSys = JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_sys_settings`) || '{}');
             const sys = Object.assign({}, localSys, window.sysSettings || {});
             if (sys && sys.pos2Enabled && typeof sys.pos2Enabled === 'object') {
-                st = Object.assign(st, sys.pos2Enabled);
+                Object.keys(PACK2_DEFAULTS).forEach(k => {
+                    st[k] = sys.pos2Enabled[k] === true;
+                });
             }
         } catch (e) {}
         return st;
@@ -240,14 +241,14 @@
             }
             const st = getPack2State();
             document.getElementById('skmP2MgrBr').textContent = getBranchId();
-            document.getElementById('skmP2ChkAtt').checked = st.attendancePro !== false;
-            document.getElementById('skmP2ChkStk').checked = st.stickerPro !== false;
-            document.getElementById('skmP2ChkShr').checked = st.powerShareHub !== false;
-            document.getElementById('skmP2ChkMu').checked = st.multiUnitWholesale !== false;
-            document.getElementById('skmP2ChkDr').checked = st.dualReceiptBarcode !== false;
-            document.getElementById('skmP2ChkSh').checked = st.stockHealthAnalytics !== false;
-            document.getElementById('skmP2ChkLs').checked = st.autoLowStockAlert !== false;
-            document.getElementById('skmP2ChkOq').checked = st.offlineSyncQueue !== false;
+            document.getElementById('skmP2ChkAtt').checked = st.attendancePro === true;
+            document.getElementById('skmP2ChkStk').checked = st.stickerPro === true;
+            document.getElementById('skmP2ChkShr').checked = st.powerShareHub === true;
+            document.getElementById('skmP2ChkMu').checked = st.multiUnitWholesale === true;
+            document.getElementById('skmP2ChkDr').checked = st.dualReceiptBarcode === true;
+            document.getElementById('skmP2ChkSh').checked = st.stockHealthAnalytics === true;
+            document.getElementById('skmP2ChkLs').checked = st.autoLowStockAlert === true;
+            document.getElementById('skmP2ChkOq').checked = st.offlineSyncQueue === true;
             m.classList.add('open');
         }
     };
@@ -272,21 +273,44 @@
         offlineSyncQueue: 'Offline Queue & Smart Cache'
     };
 
+    const p2Registry = {};
+    const p2Started = new Set();
+
+    function registerPack2Module(key, initFn) {
+        p2Registry[key] = initFn;
+        const st = getPack2State();
+        if (st[key] === true && !p2Started.has(key)) {
+            p2Started.add(key);
+            try { initFn(); } catch (e) { console.error('[SKM Pack2 Init Error]', key, e); }
+        }
+    }
+
     function syncPack2ToolboxVisibility() {
         const st = getPack2State();
-        try { localStorage.setItem(getPack2StateKey(), JSON.stringify(st)); } catch (e) {}
+        // Lazy-start any module enabled on Cloud after initial boot
+        Object.keys(p2Registry).forEach(k => {
+            if (st[k] === true && !p2Started.has(k)) {
+                p2Started.add(k);
+                try { p2Registry[k](); } catch (e) { console.error('[SKM Pack2 Lazy Init Error]', k, e); }
+            }
+        });
         const body = document.getElementById('skmToolboxMenuBody');
         if (!body) return;
         const disabledTitles = new Set(
-            Object.keys(PACK2_TOOL_TITLES).filter(k => st[k] === false).map(k => PACK2_TOOL_TITLES[k])
+            Object.keys(PACK2_TOOL_TITLES).filter(k => st[k] !== true).map(k => PACK2_TOOL_TITLES[k])
+        );
+        const enabledTitles = new Set(
+            Object.keys(PACK2_TOOL_TITLES).filter(k => st[k] === true).map(k => PACK2_TOOL_TITLES[k])
         );
         body.querySelectorAll('.skm-tool-wrapper').forEach(w => {
             const label = w.querySelector('.skm-tool-item span')?.textContent?.trim() || '';
             if (disabledTitles.has(label)) w.style.setProperty('display', 'none', 'important');
+            else if (enabledTitles.has(label)) w.style.removeProperty('display');
         });
     }
-    setTimeout(syncPack2ToolboxVisibility, 2600);
-    setTimeout(syncPack2ToolboxVisibility, 6500);
+    window.__SKM_SYNC_PACK2__ = syncPack2ToolboxVisibility;
+    setTimeout(syncPack2ToolboxVisibility, 1800);
+    setTimeout(syncPack2ToolboxVisibility, 4800);
     if (typeof window.skmApplyActivePlugins === 'function' && !window.skmApplyActivePlugins.__skmP2Wrapped) {
         const _origApplyP2 = window.skmApplyActivePlugins;
         window.skmApplyActivePlugins = function () {
@@ -297,13 +321,10 @@
         window.skmApplyActivePlugins.__skmP2Wrapped = true;
     }
 
-    const pack2State = getPack2State();
-
     // ========================================================================
     // [1/8] 🕒 វត្តមានបុគ្គលិក Pro (QR + GPS + Leave + Telegram Alert)
     // ========================================================================
-    if (pack2State.attendancePro !== false) {
-        (function initAttendanceProPlugin() {
+    registerPack2Module('attendancePro', function initAttendanceProPlugin() {
             const getCfgKey = () => `ks2_${getBranchId()}_attendance_cfg`;
             const getLocalAttKey = () => `ks2_${getBranchId()}_staff_attendance_logs`;
             const getLocalLeaveKey = () => `ks2_${getBranchId()}_staff_leave_requests`;
@@ -636,16 +657,14 @@
             };
 
             registerInPosToolbox('🕒', 'វត្តមានបុគ្គលិក Pro (QR/GPS)', () => window.SKMP2Att.open('logs'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [2/8] 🏷️ ស្ទីកគ័របាកូដទំនិញ & កែវកាហ្វេ (Code-128 / Code-39 Scannable Barcode Sticker Pro)
     // ព្រីនស្ទីកគ័រតម្លៃមានខ្សែបាកូដស្កេនបានពិត (100% Offline SVG, crispEdges) សម្រាប់ប្រអប់ស្គីនខែ/ថ្នាំ/ម៉ាត
     // ព្រមទាំងរក្សាទម្រង់ស្ទីកគ័របិទកែវកាហ្វេ/តែគុជ និងគាំទ្រ Silent Print ទៅ USB Sticker Printer ក្នុង PC App
     // ========================================================================
-    if (pack2State.stickerPro !== false) {
-        (function initStickerProPlugin() {
+    registerPack2Module('stickerPro', function initStickerProPlugin() {
             const getCfgKey = () => `ks2_${getBranchId()}_sticker_cfg`;
 
             // ISO/IEC 15417 Code-128 patterns (0..106) — 100% offline & laser-scanner ready
@@ -1301,14 +1320,12 @@
             };
 
             registerInPosToolbox('🏷️', 'ស្ទីកគ័របាកូដទំនិញ & កែវកាហ្វេ (Sticker Pro)', () => window.SKMP2Stk.open('barcode'));
-        })();
-    }
+    });
     // ========================================================================
     // [3/8] 🔗 ចែករំលែកម៉ឺនុយ & ទំនិញរហ័ស (Power QR & Telegram/Facebook Share Hub)
     // ជំនួសការផ្ញើរូបភាពម្ដងមួយៗក្នុង Chat — ចុច ១ ដងស៊ែរ Link ម៉ឺនុយ ឬទំនិញទៅ Telegram/FB
     // ========================================================================
-    if (pack2State.powerShareHub !== false) {
-        (function initPowerSharePlugin() {
+    registerPack2Module('powerShareHub', function initPowerSharePlugin() {
             function getMenuUrl(extraQuery = '') {
                 const br = getBranchId();
                 const isLocal = /^https?:\/\/(127\.0\.0\.1|localhost)/i.test(window.location.href);
@@ -1437,15 +1454,13 @@
             };
 
             registerInPosToolbox('🔗', 'ចែករំលែកម៉ឺនុយ & ទំនិញ (Power QR)', () => window.SKMP2Share.open());
-        })();
-    }
+    });
 
     // ========================================================================
     // [4/8] 📦 លក់ច្រើនឯកតា & លក់ដុំថែម (Multi-Unit & Wholesale Bonus + Auto Stock Multiplier)
     // ស័ក្តិសមបំផុតសម្រាប់ ហាងបោះដុំ, ម៉ាត, គ្រឿងសំអាង (រាយ/កន្លះឡូ+១/១ឡូ+២/១កេះ) និង ឱសថស្ថាន (គ្រាប់/បន្ទះ/ប្រអប់)
     // ========================================================================
-    if (pack2State.multiUnitWholesale !== false) {
-        (function initMultiUnitWholesalePlugin() {
+    registerPack2Module('multiUnitWholesale', function initMultiUnitWholesalePlugin() {
             const getMuCfgKey = () => `ks2_${getBranchId()}_multi_unit_cfg`;
             const getMuDoneInvKey = () => `ks2_${getBranchId()}_multi_unit_deducted_ids`;
 
@@ -2014,15 +2029,13 @@
             };
 
             registerInPosToolbox('📦', 'លក់ច្រើនឯកតា & លក់ដុំថែម (Multi-Unit)', () => window.SKMP2Mu.open('sell'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [5/8] 🧾 ព្រីនវិក្កយបត្រ ២ សន្លឹក & បាកូដស្កេនឆែក (Dual-Copy Receipt + Barcode Scanner)
     // ព្រីនច្បាប់អតិថិជន + ច្បាប់បញ្ជីហាង ភ្ជាប់បាកូដនៅបាតវិក្កយបត្រ ងាយស្រួលបាញ់ស្កេនឆែក/ដូរទំនិញវិញ
     // ========================================================================
-    if (pack2State.dualReceiptBarcode !== false) {
-        (function initDualReceiptBarcodePlugin() {
+    registerPack2Module('dualReceiptBarcode', function initDualReceiptBarcodePlugin() {
             const getDrCfgKey = () => `ks2_${getBranchId()}_dual_receipt_cfg`;
             const getDrAutoPrintedKey = () => `ks2_${getBranchId()}_dual_receipt_printed_ids`;
 
@@ -2376,15 +2389,13 @@
             };
 
             registerInPosToolbox('🧾', 'ព្រីន ២ សន្លឹក & បាកូដវិក្កយបត្រ (Dual Receipt)', () => window.SKMP2Dr.open());
-        })();
-    }
+    });
 
     // ========================================================================
     // [6/8] 📊 វិភាគទំនិញលក់ដាច់ & ទំនិញកប់ស្តុកយូរ (Fast-Moving & Dead Stock 30/60/90 Days)
     // គណនាទឹកប្រាក់ជាប់គាំងក្នុងឃ្លាំង, ទំនិញលក់ដាច់ខ្លាំង, ថ្ងៃស្តុកនៅសល់ + ផ្ញើសង្ខេបចូល Telegram ម្ចាស់ហាង
     // ========================================================================
-    if (pack2State.stockHealthAnalytics !== false) {
-        (function initStockHealthPlugin() {
+    registerPack2Module('stockHealthAnalytics', function initStockHealthPlugin() {
             function getInv() {
                 if (Array.isArray(window.inventory) && window.inventory.length) return window.inventory;
                 try { return JSON.parse(localStorage.getItem(`ks2_${getBranchId()}_inv_pro`) || '[]'); } catch (e) { return []; }
@@ -2835,16 +2846,14 @@
             };
 
             registerInPosToolbox('📊', 'វិភាគលក់ដាច់ & កប់ស្តុក (Stock Health)', () => window.SKMP2Stock.open('dead'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [7/8] 🚨 ដាស់តឿនស្តុកជិតអស់អូតូ (Auto Low-Stock & Out-of-Stock Telegram Alert)
     // តាមដានស្តុកដោយស្វ័យប្រវត្តិពេលលក់ចេញ ➔ បាញ់ដំណឹងចូល Telegram ម្ចាស់ហាងភ្លាមៗពេលស្តុកធ្លាក់ទាបជាងកម្រិតកំណត់
     // មានប្រព័ន្ធការពារ Spam (Cooldown per item), កំណត់កម្រិតផ្ទាល់ខ្លួនតាមទំនិញ និង Reset អូតូពេលបញ្ចូលស្តុកវិញ
     // ========================================================================
-    if (pack2State.autoLowStockAlert !== false) {
-        (function initAutoLowStockAlertPlugin() {
+    registerPack2Module('autoLowStockAlert', function initAutoLowStockAlertPlugin() {
             const getLsCfgKey = () => `ks2_${getBranchId()}_low_stock_alert_cfg`;
             const getLsStateKey = () => `ks2_${getBranchId()}_low_stock_alert_state`;
             const getLsLogKey = () => `ks2_${getBranchId()}_low_stock_alert_logs`;
@@ -3417,16 +3426,14 @@
             };
 
             registerInPosToolbox('🚨', 'ដាស់តឿនស្តុកជិតអស់អូតូ (Telegram Alert)', () => window.SKMP2LowStock.open('watch'));
-        })();
-    }
+    });
 
     // ========================================================================
     // [8/8] 🔄 Offline Order Sync Queue & Smart TTL Cache (Anti-Data-Loss + Low-Egress)
     // 1. ធានាថាវិក្កយបត្រ និងចំណាយដែលបង្កើតពេលដាច់អ៊ីនធឺណិត/សេវាយឺត មិនបាត់ឡើយ (តម្រៀបក្នុង FIFO Queue ហើយបាញ់ឡើង Supabase អូតូពេលមានសេវាវិញ)
     // 2. ប្រើ Smart TTL Cache ឆែកតែ `branch_store.updated_at` (~40 bytes) ដើម្បីដឹងថាមានតម្លៃ/ស្តុកថ្មី ដោយមិនស៊ី Supabase Egress
     // ========================================================================
-    if (pack2State.offlineSyncQueue !== false) {
-        (function initOfflineSyncQueuePlugin() {
+    registerPack2Module('offlineSyncQueue', function initOfflineSyncQueuePlugin() {
             const getQKey = () => `ks2_${getBranchId()}_offline_sync_queue`;
             const getCfgKey = () => `ks2_${getBranchId()}_sync_cache_cfg`;
             const getLogKey = () => `ks2_${getBranchId()}_sync_queue_logs`;
@@ -3983,6 +3990,5 @@
             };
 
             registerInPosToolbox('🔄', 'Offline Queue & Smart Cache', () => window.SKMP2Sync.open('queue'));
-        })();
-    }
+    });
 })();

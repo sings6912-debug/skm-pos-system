@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE MENU - PLUGINS BUNDLE PACK 2 v7.1 (Power QR Share + Ultra-Low-Egress TTL Cache)
+ * SKM INTEGRATE MENU - PLUGINS BUNDLE PACK 2 v7.4 (Power QR Share Default OFF per Branch + Ultra-Low-Egress TTL Cache)
  * File: all_menu_plugins_2.js (Root Folder — alongside all_menu_plugins.js)
  * Features:
  *   1. Adds 1-Click Share to Facebook & Telegram buttons inside Menu Toolbox & Product Modals
@@ -18,22 +18,28 @@
     const MENU_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL (saves Supabase Egress)
     const TTL_META_KEY = `ks2_${BRANCH_ID}_menu_ttl_meta`;
 
+    // Default OFF for ALL branches — enabled ONLY when Admin turns ON powerShareHub in Admin Settings Tab 9
     function isPowerShareEnabled() {
         try {
             const localSys = JSON.parse(localStorage.getItem(`ks2_${BRANCH_ID}_sys_settings`) || '{}');
             const sys = Object.assign({}, localSys, window.sysSettings || {});
             if (sys && sys.pos2Enabled && typeof sys.pos2Enabled.powerShareHub === 'boolean') {
-                return sys.pos2Enabled.powerShareHub;
+                return sys.pos2Enabled.powerShareHub === true;
             }
-            const localP2 = JSON.parse(localStorage.getItem(`ks2_${BRANCH_ID}_pos2_enabled`) || '{}');
-            if (localP2 && typeof localP2.powerShareHub === 'boolean') return localP2.powerShareHub;
         } catch (e) {}
-        return true;
+        return false;
     }
 
+    let menuShareToolRegistered = false;
     function syncMenuShareVisibility() {
+        const enabled = isPowerShareEnabled();
+        if (enabled && !menuShareToolRegistered && typeof window.registerMenuTool === 'function') {
+            menuShareToolRegistered = true;
+            window.registerMenuTool('📤', 'ចែករំលែកម៉ឺនុយ (FB / Telegram)', () => openShareModal('', ''), null);
+        }
+        if (enabled) attachProductModalShareBar();
         const bar = document.getElementById('skmM2ProdShareBar');
-        if (bar) bar.style.display = isPowerShareEnabled() ? 'flex' : 'none';
+        if (bar) bar.style.display = enabled ? 'flex' : 'none';
     }
 
     function esc(s) {
@@ -87,15 +93,22 @@
         };
     }
 
-    // 1. Register inside Menu Toolbox Hub ONLY if Admin enabled powerShareHub
+    // 1. Register inside Menu Toolbox Hub ONLY if Admin enabled powerShareHub (supports async Cloud load)
     const tmr = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            if (isPowerShareEnabled()) {
-                window.registerMenuTool('📤', 'ចែករំលែកម៉ឺនុយ (FB / Telegram)', () => openShareModal('', ''), null);
-            }
-            clearInterval(tmr);
+            syncMenuShareVisibility();
+            if (menuShareToolRegistered) clearInterval(tmr);
         }
-    }, 450);
+    }, 550);
+    if (typeof window.skmApplyActivePlugins === 'function' && !window.skmApplyActivePlugins.__skmM2Wrapped) {
+        const _origApplyM2 = window.skmApplyActivePlugins;
+        window.skmApplyActivePlugins = function () {
+            const r = _origApplyM2.apply(this, arguments);
+            setTimeout(syncMenuShareVisibility, 80);
+            return r;
+        };
+        window.skmApplyActivePlugins.__skmM2Wrapped = true;
+    }
     setTimeout(() => clearInterval(tmr), 15000);
 
     // 2. Auto-inject Facebook + Telegram Share buttons into product detail modal on menu.html

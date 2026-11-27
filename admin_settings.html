@@ -1477,7 +1477,7 @@
             <div class="section-box" style="border-left: 4px solid #6366f1; margin-top:20px; margin-bottom:0;">
                 <div class="section-title" style="font-size:14.5px; color:#6366f1; justify-content:space-between; flex-wrap:wrap;">
                     <span><i class="fa-solid fa-cubes"></i> 9.5 មុខងារ Pro Pack 2 & Enterprise Pack 3 (១៤ មុខងារ — បិទ/បើកតាមសាខា)</span>
-                    <span style="font-size:11.5px; background:rgba(99,102,241,0.12); color:#6366f1; padding:3px 10px; border-radius:999px;">ភ្ញៀវមិនឃើញប៊ូតុងកំណត់ទេ</span>
+                    <span style="font-size:11.5px; background:rgba(99,102,241,0.12); color:#6366f1; padding:3px 10px; border-radius:999px;">បិទជាលំនាំដើមគ្រប់សាខា • ធីកបើកតាមសាខាត្រូវការ</span>
                 </div>
 
                 <!-- 1-Click Presets for Pack 2 & 3 -->
@@ -1493,6 +1493,7 @@
                         <button type="button" class="btn-action" style="background:#ecfeff; color:#0e7490; border:1px solid #a5f3fc; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('gym_spa')">🏋️ Gym / Spa / តារាង</button>
                         <button type="button" class="btn-action" style="background:#fffbeb; color:#b45309; border:1px solid #fde68a; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('rental')">🏠 ផ្ទះជួល / បន្ទប់ជួល</button>
                         <button type="button" class="btn-action" style="background:#f0fdf4; color:var(--success); border:1px solid #bbf7d0; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('all_on')">👑 បើកទាំងអស់ (១៤)</button>
+                        <button type="button" class="btn-action" style="background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; padding:7px 12px; font-size:12px;" onclick="applyPack23Preset('all_off')">⭕ បិទទាំងអស់ (១៤)</button>
                     </div>
                 </div>
 
@@ -2410,20 +2411,21 @@
         setPfChk('pfInstallAppBtn', pf.installAppBtn !== undefined ? pf.installAppBtn : true);
         const p2Cfg = (sys && sys.pos2Enabled && typeof sys.pos2Enabled === 'object') ? sys.pos2Enabled : {};
         const p3Cfg = (sys && sys.pos3Enabled && typeof sys.pos3Enabled === 'object') ? sys.pos3Enabled : {};
-        setPfChk('p2AttendancePro', p2Cfg.attendancePro !== false);
-        setPfChk('p2StickerPro', p2Cfg.stickerPro !== false);
-        setPfChk('p2PowerShareHub', p2Cfg.powerShareHub !== false);
-        setPfChk('p2MultiUnitWholesale', p2Cfg.multiUnitWholesale !== false);
-        setPfChk('p2DualReceiptBarcode', p2Cfg.dualReceiptBarcode !== false);
-        setPfChk('p2StockHealthAnalytics', p2Cfg.stockHealthAnalytics !== false);
-        setPfChk('p2AutoLowStockAlert', p2Cfg.autoLowStockAlert !== false);
-        setPfChk('p2OfflineSyncQueue', p2Cfg.offlineSyncQueue !== false);
-        setPfChk('p3SerialWarranty', p3Cfg.serialWarranty !== false);
-        setPfChk('p3LandedAvgCost', p3Cfg.landedAvgCost !== false);
-        setPfChk('p3ConsignmentPro', p3Cfg.consignmentPro !== false);
-        setPfChk('p3PayrollPro', p3Cfg.payrollPro !== false);
-        setPfChk('p3MemberPassBooking', p3Cfg.memberPassBooking !== false);
-        setPfChk('p3RentalBilling', p3Cfg.rentalBilling !== false);
+        // Default OFF (false) for all branches until Admin explicitly turns ON in Tab 9 -> Section 9.5
+        setPfChk('p2AttendancePro', p2Cfg.attendancePro === true);
+        setPfChk('p2StickerPro', p2Cfg.stickerPro === true);
+        setPfChk('p2PowerShareHub', p2Cfg.powerShareHub === true);
+        setPfChk('p2MultiUnitWholesale', p2Cfg.multiUnitWholesale === true);
+        setPfChk('p2DualReceiptBarcode', p2Cfg.dualReceiptBarcode === true);
+        setPfChk('p2StockHealthAnalytics', p2Cfg.stockHealthAnalytics === true);
+        setPfChk('p2AutoLowStockAlert', p2Cfg.autoLowStockAlert === true);
+        setPfChk('p2OfflineSyncQueue', p2Cfg.offlineSyncQueue === true);
+        setPfChk('p3SerialWarranty', p3Cfg.serialWarranty === true);
+        setPfChk('p3LandedAvgCost', p3Cfg.landedAvgCost === true);
+        setPfChk('p3ConsignmentPro', p3Cfg.consignmentPro === true);
+        setPfChk('p3PayrollPro', p3Cfg.payrollPro === true);
+        setPfChk('p3MemberPassBooking', p3Cfg.memberPassBooking === true);
+        setPfChk('p3RentalBilling', p3Cfg.rentalBilling === true);
         if (document.getElementById('setAntiFraudDiscountLimit')) document.getElementById('setAntiFraudDiscountLimit').value = sys.antiFraudDiscountLimit || 15;
         if (document.getElementById('setAntiFraudTelegramChatId')) document.getElementById('setAntiFraudTelegramChatId').value = sys.antiFraudTelegramChatId || '';
         if (document.getElementById('setExpiryWarnDays')) document.getElementById('setExpiryWarnDays').value = sys.expiryWarnDays || 30;
@@ -2627,22 +2629,22 @@
             installAppBtn: document.getElementById('pfInstallAppBtn')?.checked !== false
         };
         sys.pos2Enabled = {
-            attendancePro: document.getElementById('p2AttendancePro')?.checked !== false,
-            stickerPro: document.getElementById('p2StickerPro')?.checked !== false,
-            powerShareHub: document.getElementById('p2PowerShareHub')?.checked !== false,
-            multiUnitWholesale: document.getElementById('p2MultiUnitWholesale')?.checked !== false,
-            dualReceiptBarcode: document.getElementById('p2DualReceiptBarcode')?.checked !== false,
-            stockHealthAnalytics: document.getElementById('p2StockHealthAnalytics')?.checked !== false,
-            autoLowStockAlert: document.getElementById('p2AutoLowStockAlert')?.checked !== false,
-            offlineSyncQueue: document.getElementById('p2OfflineSyncQueue')?.checked !== false
+            attendancePro: Boolean(document.getElementById('p2AttendancePro')?.checked),
+            stickerPro: Boolean(document.getElementById('p2StickerPro')?.checked),
+            powerShareHub: Boolean(document.getElementById('p2PowerShareHub')?.checked),
+            multiUnitWholesale: Boolean(document.getElementById('p2MultiUnitWholesale')?.checked),
+            dualReceiptBarcode: Boolean(document.getElementById('p2DualReceiptBarcode')?.checked),
+            stockHealthAnalytics: Boolean(document.getElementById('p2StockHealthAnalytics')?.checked),
+            autoLowStockAlert: Boolean(document.getElementById('p2AutoLowStockAlert')?.checked),
+            offlineSyncQueue: Boolean(document.getElementById('p2OfflineSyncQueue')?.checked)
         };
         sys.pos3Enabled = {
-            serialWarranty: document.getElementById('p3SerialWarranty')?.checked !== false,
-            landedAvgCost: document.getElementById('p3LandedAvgCost')?.checked !== false,
-            consignmentPro: document.getElementById('p3ConsignmentPro')?.checked !== false,
-            payrollPro: document.getElementById('p3PayrollPro')?.checked !== false,
-            memberPassBooking: document.getElementById('p3MemberPassBooking')?.checked !== false,
-            rentalBilling: document.getElementById('p3RentalBilling')?.checked !== false
+            serialWarranty: Boolean(document.getElementById('p3SerialWarranty')?.checked),
+            landedAvgCost: Boolean(document.getElementById('p3LandedAvgCost')?.checked),
+            consignmentPro: Boolean(document.getElementById('p3ConsignmentPro')?.checked),
+            payrollPro: Boolean(document.getElementById('p3PayrollPro')?.checked),
+            memberPassBooking: Boolean(document.getElementById('p3MemberPassBooking')?.checked),
+            rentalBilling: Boolean(document.getElementById('p3RentalBilling')?.checked)
         };
         try {
             localStorage.setItem(`ks2_${BRANCH}_pos2_enabled`, JSON.stringify(sys.pos2Enabled));
@@ -4068,6 +4070,7 @@ body, #storePage { background-color: ${t.bgMain} !important; ${pat} color: ${t.t
         importer: { label: '🚢 ដេប៉ូនាំចូល / ផ្ញើលក់', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: false, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: true, p3PayrollPro: true, p3MemberPassBooking: false, p3RentalBilling: false },
         gym_spa: { label: '🏋️ Gym / Spa / តារាង', p2AttendancePro: true, p2StickerPro: false, p2PowerShareHub: true, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: false, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false, p3PayrollPro: true, p3MemberPassBooking: true, p3RentalBilling: false },
         rental: { label: '🏠 ផ្ទះជួល / បន្ទប់ជួល', p2AttendancePro: false, p2StickerPro: false, p2PowerShareHub: false, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: false, p2OfflineSyncQueue: true, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false, p3PayrollPro: false, p3MemberPassBooking: false, p3RentalBilling: true },
+        all_off: { label: '⭕ បិទទាំងអស់ (១៤ មុខ)', p2AttendancePro: false, p2StickerPro: false, p2PowerShareHub: false, p2MultiUnitWholesale: false, p2DualReceiptBarcode: false, p2StockHealthAnalytics: false, p2AutoLowStockAlert: false, p2OfflineSyncQueue: false, p3SerialWarranty: false, p3LandedAvgCost: false, p3ConsignmentPro: false, p3PayrollPro: false, p3MemberPassBooking: false, p3RentalBilling: false },
         all_on: { label: '👑 បើកទាំងអស់ (១៤ មុខ)', p2AttendancePro: true, p2StickerPro: true, p2PowerShareHub: true, p2MultiUnitWholesale: true, p2DualReceiptBarcode: true, p2StockHealthAnalytics: true, p2AutoLowStockAlert: true, p2OfflineSyncQueue: true, p3SerialWarranty: true, p3LandedAvgCost: true, p3ConsignmentPro: true, p3PayrollPro: true, p3MemberPassBooking: true, p3RentalBilling: true }
     };
 
