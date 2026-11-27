@@ -1329,7 +1329,8 @@
         window.syncAdvancedPosButtons();
         hookCheckoutAndStockInKitchenPrint();
         hookCancelDeleteGuardsAndAlerts();
-        setTimeout(() => { hookCheckoutAndStockInKitchenPrint(); hookCancelDeleteGuardsAndAlerts(); }, 1200);
+        hookCartDeltaDisplay();
+        setTimeout(() => { hookCheckoutAndStockInKitchenPrint(); hookCancelDeleteGuardsAndAlerts(); hookCartDeltaDisplay(); }, 1200);
         await persistSysSettings();
         toast(`✅ បានបើកវេនលក់ដោយ ${cashier} (ដើមគ្រា $${openingUsd.toFixed(2)})!`);
     };
@@ -2141,6 +2142,96 @@
                 return res;
             };
             window.saveNewUser.__skmPermHooked = true;
+        }
+    }
+
+
+    // =========================================================
+    // 11. CART QTY DELTA TRACKER & KITCHEN REDUCTION NOTICE
+    // Shows exact (+N / -N) delta when customer adds or removes items before checkout
+    // Sends a clean reduction slip to kitchen if items were reduced/removed after order
+    // Zero extra Supabase Egress!
+    // =========================================================
+    const cartPrevQtySnapshot = {};
+
+    function syncCartQtyDeltaAndAlerts() {
+        const curCart = Array.isArray(window.cart) ? window.cart : [];
+        const activeIds = new Set();
+        const tblVal = document.getElementById('posTableSelect')?.value || document.getElementById('posCustomerName')?.value || '';
+
+        curCart.forEach(item => {
+            if (!item || item.id == null) return;
+            const key = String(item.id);
+            activeIds.add(key);
+            const curQ = Math.max(0, parseInt(item.cartQty ?? item.qty ?? 1) || 0);
+            if (!(key in cartPrevQtySnapshot)) {
+                cartPrevQtySnapshot[key] = curQ;
+                item._qtyDeltaLabel = '';
+            } else {
+                const prevQ = cartPrevQtySnapshot[key];
+                const diff = curQ - prevQ;
+                if (diff > 0) {
+                    item._qtyDeltaLabel = `+${diff} ថែម (ដើម ${prevQ})`;
+                } else if (diff < 0) {
+                    item._qtyDeltaLabel = `${diff} ដក (ដើម ${prevQ})`;
+                    const sys = window.sysSettings || {};
+                    if (sys.toggleMultiPrinter && typeof window.dispatchToKitchenPrinters === 'function') {
+                        window.dispatchToKitchenPrinters('cancel', [{
+                            id: item.id,
+                            name: `${item.baseName || item.name} (ដកចំនួន ${Math.abs(diff)})`,
+                            cartQty: Math.abs(diff)
+                        }], { tableLabel: tblVal, noteText: `ដកចំនួនពី ${prevQ} ទៅ ${curQ}` });
+                    }
+                }
+                cartPrevQtySnapshot[key] = curQ;
+            }
+        });
+
+        // Clean removed cart items & notify kitchen if removed
+        Object.keys(cartPrevQtySnapshot).forEach(key => {
+            if (!activeIds.has(key)) {
+                const prevQ = cartPrevQtySnapshot[key];
+                delete cartPrevQtySnapshot[key];
+                if (prevQ > 0) {
+                    const sys = window.sysSettings || {};
+                    if (sys.toggleMultiPrinter && typeof window.dispatchToKitchenPrinters === 'function') {
+                        window.dispatchToKitchenPrinters('cancel', [{
+                            id: key,
+                            name: `លុបមុខទំនិញចេញពីកន្ត្រក (ID: ${key})`,
+                            cartQty: prevQ
+                        }], { tableLabel: tblVal, noteText: `ដកចេញទាំងអស់ (${prevQ})` });
+                    }
+                }
+            }
+        });
+
+        // Render clean badge inside #cartItems without touching stock quantities
+        const cartBox = document.getElementById('cartItems');
+        if (!cartBox) return;
+        curCart.forEach(item => {
+            if (!item || !item._qtyDeltaLabel) return;
+            const targetRow = cartBox.querySelector(`[data-cart-id="${CSS.escape(String(item.id))}"]`)
+                || Array.from(cartBox.children).find(el => el.textContent && el.textContent.includes(String(item.baseName || item.name || '').slice(0, 12)));
+            if (targetRow && !targetRow.querySelector('.skm-qty-delta-badge')) {
+                const badge = document.createElement('span');
+                badge.className = 'skm-qty-delta-badge';
+                const isAdd = item._qtyDeltaLabel.startsWith('+');
+                badge.style.cssText = `margin-left:6px; padding:1px 7px; border-radius:999px; font-size:10.5px; font-weight:800; background:${isAdd ? 'rgba(16,185,129,0.16)' : 'rgba(239,68,68,0.16)'}; color:${isAdd ? '#10b981' : '#ef4444'};`;
+                badge.textContent = item._qtyDeltaLabel;
+                targetRow.appendChild(badge);
+            }
+        });
+    }
+
+    function hookCartDeltaDisplay() {
+        if (typeof window.renderCart === 'function' && !window.renderCart.__skmDeltaHooked) {
+            const _origRenderCart = window.renderCart;
+            window.renderCart = function() {
+                const r = _origRenderCart.apply(this, arguments);
+                setTimeout(syncCartQtyDeltaAndAlerts, 25);
+                return r;
+            };
+            window.renderCart.__skmDeltaHooked = true;
         }
     }
 
