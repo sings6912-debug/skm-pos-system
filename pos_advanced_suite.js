@@ -1328,7 +1328,8 @@
         window.renderShiftModalUI();
         window.syncAdvancedPosButtons();
         hookCheckoutAndStockInKitchenPrint();
-        setTimeout(hookCheckoutAndStockInKitchenPrint, 1200);
+        hookCancelDeleteGuardsAndAlerts();
+        setTimeout(() => { hookCheckoutAndStockInKitchenPrint(); hookCancelDeleteGuardsAndAlerts(); }, 1200);
         await persistSysSettings();
         toast(`✅ បានបើកវេនលក់ដោយ ${cashier} (ដើមគ្រា $${openingUsd.toFixed(2)})!`);
     };
@@ -1755,12 +1756,32 @@
         </div>`;
     }
 
+    const recentKitchenDispatchMap = {};
+    function isDuplicateKitchenDispatch(ticketType, tableLabel, itemsList) {
+        const sigItems = (itemsList || []).map(it =>
+            `${String(it.id || it.name || it.itemName || '')}:${Number(it.cartQty || it.qty || 1)}:${String(it.modifierLabel || '')}`
+        ).sort().join('|');
+        const sig = `${ticketType}::${String(tableLabel || '').trim().toLowerCase()}::${sigItems}`;
+        const now = Date.now();
+        // Clean entries older than 8 seconds
+        Object.keys(recentKitchenDispatchMap).forEach(k => {
+            if (now - recentKitchenDispatchMap[k] > 8000) delete recentKitchenDispatchMap[k];
+        });
+        if (recentKitchenDispatchMap[sig] && (now - recentKitchenDispatchMap[sig]) < 5000) {
+            return true;
+        }
+        recentKitchenDispatchMap[sig] = now;
+        return false;
+    }
+
     window.dispatchToKitchenPrinters = async function(ticketType, itemsList, opts = {}) {
         const sys = window.sysSettings || {};
         const pf = getPF();
         const shouldRoute = Boolean(sys.toggleMultiPrinter) || Boolean(pf.floorPlan) || Boolean(pf.comboSets) || ticketType === 'stock_in';
         if (!shouldRoute) return;
         if (!Array.isArray(itemsList) || itemsList.length === 0) return;
+        const _preTable = opts.tableLabel || document.getElementById('posTableSelect')?.value || document.getElementById('posCustomerName')?.value || '';
+        if (isDuplicateKitchenDispatch(ticketType, _preTable, itemsList)) return;
 
         const targets = getConfiguredKitchenTargets();
         const tableLabel = opts.tableLabel || document.getElementById('posTableSelect')?.value || document.getElementById('posCustomerName')?.value || '';
@@ -1871,6 +1892,255 @@
                 return res;
             };
             window.saveProduct.__skmKitchenHooked = true;
+        }
+    }
+
+
+    // =========================================================
+    // 10. CANCEL / DELETE ALERT TO KITCHEN + PASSWORD GATE + PER-STAFF PERMISSION
+    // Zero extra Supabase Egress!
+    // =========================================================
+    function getStaffPermMap() {
+        if (!window.sysSettings) window.sysSettings = {};
+        if (!window.sysSettings.staffPermOverrides || typeof window.sysSettings.staffPermOverrides !== 'object') {
+            window.sysSettings.staffPermOverrides = {};
+        }
+        return window.sysSettings.staffPermOverrides;
+    }
+
+    function getActiveStaffKey() {
+        const u = window.activeUser || {};
+        return String(u.id || u.username || '').trim().toLowerCase();
+    }
+
+    function getActiveStaffOverride() {
+        const key = getActiveStaffKey();
+        if (!key) return null;
+        const map = getStaffPermMap();
+        return map[key] || null;
+    }
+
+    window.canPerformProtectedAction = function(actionKind) {
+        if (isManagerOrAdmin()) return true;
+        const ov = getActiveStaffOverride();
+        if (ov) {
+            if (actionKind === 'delete_invoice' && typeof ov.canDeleteInvoice === 'boolean') return ov.canDeleteInvoice;
+            if (actionKind === 'cancel_order' && typeof ov.canCancelOrder === 'boolean') return ov.canCancelOrder;
+        }
+        const pf = getPF();
+        if (pf.strictAdminAuth === true) return false;
+        return true;
+    };
+
+    function verifyDeletePassword(inputPw) {
+        const clean = String(inputPw || '').trim();
+        if (!clean) return false;
+        const sys = window.sysSettings || {};
+        const customDelPw = String(sys.deleteActionPassword || '').trim();
+        if (customDelPw && clean === customDelPw) return true;
+        if (sys.storePin && clean === String(sys.storePin).trim()) return true;
+
+        const u = window.activeUser || {};
+        const accs = Array.isArray(window.userAccounts) ? window.userAccounts : [];
+        const matchSelf = accs.find(a => a && (
+            (u.id && String(a.id) === String(u.id)) ||
+            (u.username && String(a.username || '').toLowerCase() === String(u.username).toLowerCase())
+        ));
+        const candidateAcc = matchSelf || accs.find(a => a && String(a.role || '').toLowerCase() === 'admin');
+        if (candidateAcc && candidateAcc.password) {
+            if (typeof window.verifyPassword === 'function') {
+                if (window.verifyPassword(clean, candidateAcc.password)) return true;
+            }
+            if (String(candidateAcc.password) === clean) return true;
+        }
+        return false;
+    }
+
+    window.promptPasswordThenRun = function(titleText, descText, onVerifiedCallback) {
+        let modal = document.getElementById('skmProtectedPwModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'skmProtectedPwModal';
+            modal.className = 'modal-overlay';
+            modal.style.zIndex = '10045';
+            modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+            modal.innerHTML = `
+                <div class="modal" style="max-width:400px; width:94%;">
+                    <div class="modal-header">
+                        <h2 id="skmPwModalTitle" style="font-size:17px; color:var(--danger);">🔐 ទាមទារលេខកូដសម្ងាត់</h2>
+                        <button class="btn-outline" style="border:none; font-size:20px; padding:0;" onclick="document.getElementById('skmProtectedPwModal').style.display='none'">✕</button>
+                    </div>
+                    <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
+                        <p id="skmPwModalDesc" style="font-size:12.5px; color:var(--text-muted); margin:0;"></p>
+                        <input type="password" id="skmPwModalInput" class="form-control" placeholder="បញ្ចូលលេខកូដសម្ងាត់..." style="width:100%; font-size:15px; font-weight:800;" onkeydown="if(event.key==='Enter') window.confirmProtectedPwAction()">
+                        <div id="skmPwModalErr" style="display:none; color:var(--danger); font-size:12px; font-weight:800;"></div>
+                        <div style="display:flex; gap:8px; margin-top:4px;">
+                            <button type="button" class="btn btn-outline" style="flex:1;" onclick="document.getElementById('skmProtectedPwModal').style.display='none'">បោះបង់</button>
+                            <button type="button" class="btn btn-danger" style="flex:1.5;" onclick="window.confirmProtectedPwAction()">✅ ផ្ទៀងផ្ទាត់ & បន្ត</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        window.__skmPendingPwCallback = onVerifiedCallback;
+        document.getElementById('skmPwModalTitle').innerText = titleText || '🔐 ទាមទារលេខកូដសម្ងាត់';
+        document.getElementById('skmPwModalDesc').innerText = descText || 'សូមបញ្ចូលលេខកូដសម្ងាត់ដើម្បីបញ្ជាក់ការលុប/បោះបង់៖';
+        const errEl = document.getElementById('skmPwModalErr');
+        if (errEl) { errEl.style.display = 'none'; errEl.innerText = ''; }
+        const inp = document.getElementById('skmPwModalInput');
+        if (inp) inp.value = '';
+        modal.style.display = 'flex';
+        setTimeout(() => inp?.focus(), 60);
+    };
+
+    window.confirmProtectedPwAction = async function() {
+        const inp = document.getElementById('skmPwModalInput');
+        const errEl = document.getElementById('skmPwModalErr');
+        const pw = inp ? inp.value : '';
+        if (!verifyDeletePassword(pw)) {
+            if (errEl) {
+                errEl.innerText = '❌ លេខកូដសម្ងាត់មិនត្រឹមត្រូវទេ!';
+                errEl.style.display = 'block';
+            }
+            return;
+        }
+        const cb = window.__skmPendingPwCallback;
+        window.__skmPendingPwCallback = null;
+        document.getElementById('skmProtectedPwModal').style.display = 'none';
+        if (typeof cb === 'function') await cb();
+    };
+
+    window.notifyKitchenCancelledOrder = async function(reasonLabel, itemsList, refLabel) {
+        const list = Array.isArray(itemsList) && itemsList.length > 0
+            ? itemsList
+            : [{ name: reasonLabel || 'បោះបង់ការកុម្ម៉ង់', cartQty: 1 }];
+        const tbl = refLabel || document.getElementById('posTableSelect')?.value || document.getElementById('posCustomerName')?.value || '';
+        const textTitle = `❌ CANCEL / លុបបញ្ជា (${reasonLabel || 'VOID'})`;
+
+        // Send via existing kitchen dispatch helper
+        await window.dispatchToKitchenPrinters('cancel', list, {
+            tableLabel: tbl,
+            noteText: `លុប/បោះបង់ដោយ៖ ${window.activeUser?.fullName || window.activeUser?.username || 'Staff'}`
+        });
+
+        // Also send direct Telegram alert to Order/Service Telegram if configured
+        const sys = window.sysSettings || {};
+        const tok = (sys.orderTelegramBotToken || sys.serviceTelegramBotToken || sys.telegramBotToken || window.telegramBotToken || '').trim();
+        const cid = (sys.orderTelegramChatId || sys.serviceTelegramChatId || sys.telegramChatId || window.telegramChatId || '').trim();
+        if (tok && cid && navigator.onLine) {
+            const lines = list.map(it => `• ${it.cartQty || it.qty || 1}x ${esc(it.name || it.itemName || 'Item')}`).join('\n');
+            const msg = `🚨 <b>${esc(textTitle)}</b>\n🏪 ហាង: <b>${esc(window.shopName || getBranch())}</b>\n🪑 តុ/យោង: <b>${esc(tbl || '-')}</b>\n👤 អ្នកលុប: ${esc(window.activeUser?.fullName || window.activeUser?.username || 'User')}\n\n${lines}`;
+            fetch(`https://api.telegram.org/bot${tok}/sendMessage`, {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ chat_id: cid, text: msg, parse_mode: 'HTML' })
+            }).catch(() => {});
+        }
+    };
+
+    function hookCancelDeleteGuardsAndAlerts() {
+        // 1. Guard clearCart() with password + notify kitchen/Telegram when items were in cart
+        if (typeof window.clearCart === 'function' && !window.clearCart.__skmGuardHooked) {
+            const _origClear = window.clearCart;
+            window.clearCart = function() {
+                const items = Array.isArray(window.cart) ? window.cart.map(c => Object.assign({}, c)) : [];
+                if (items.length === 0) return _origClear.apply(this, arguments);
+                const tbl = document.getElementById('posTableSelect')?.value || document.getElementById('posCustomerName')?.value || '';
+                window.promptPasswordThenRun(
+                    '🔐 បញ្ជាក់លេខកូដដើម្បីបោះបង់កន្ត្រក',
+                    `កន្ត្រកមាន ${items.length} មុខ។ បញ្ចូលលេខកូដដើម្បីបោះបង់ និងជូនដំណឹងទៅផ្ទះបាយ៖`,
+                    () => {
+                        _origClear.apply(window, arguments);
+                        window.notifyKitchenCancelledOrder('បោះបង់កន្ត្រក (Clear Cart)', items, tbl);
+                    }
+                );
+            };
+            window.clearCart.__skmGuardHooked = true;
+        }
+
+        // 2. Guard deleteInvoice() with password + permission check + notify kitchen/Telegram
+        if (typeof window.deleteInvoice === 'function' && !window.deleteInvoice.__skmGuardHooked) {
+            const _origDelInv = window.deleteInvoice;
+            window.deleteInvoice = function(invId) {
+                if (!window.canPerformProtectedAction('delete_invoice')) {
+                    return toast('⛔ គណនីនេះមិនមានសិទ្ធិលុបវិក្កយបត្រទេ! សូមសួរ Admin។', true);
+                }
+                const inv = (window.invoices || []).find(i => i && String(i.id || i.invoiceNo) === String(invId));
+                const items = inv && Array.isArray(inv.items) ? inv.items : [];
+                const tbl = inv ? (inv.customerName || inv.customer || inv.id || '') : String(invId || '');
+                window.promptPasswordThenRun(
+                    '🔐 បញ្ជាក់លេខកូដដើម្បីលុបវិក្កយបត្រ',
+                    `វិក្កយបត្រ #${tbl} — បញ្ចូលលេខកូដដើម្បីលុប និងផ្ញើដំណឹងទៅផ្ទះបាយ៖`,
+                    async () => {
+                        await _origDelInv.call(window, invId);
+                        window.notifyKitchenCancelledOrder(`លុបវិក្កយបត្រ #${tbl}`, items, tbl);
+                    }
+                );
+            };
+            window.deleteInvoice.__skmGuardHooked = true;
+        }
+
+        // 3. Enhance User Management Modal so Admin can set per-staff permissions & custom delete password
+        if (typeof window.openUserModal === 'function' && !window.openUserModal.__skmPermHooked) {
+            const _origOpenUser = window.openUserModal;
+            window.openUserModal = function(userId) {
+                _origOpenUser.apply(this, arguments);
+                setTimeout(() => {
+                    const body = document.querySelector('#userManageModal .modal-body');
+                    if (!body) return;
+                    let box = document.getElementById('skmStaffCustomPermBox');
+                    if (!box) {
+                        box = document.createElement('div');
+                        box.id = 'skmStaffCustomPermBox';
+                        box.style.cssText = 'margin-top:14px; padding:12px; border-radius:10px; border:1px dashed var(--primary); background:rgba(56,189,248,0.06); font-size:12.5px;';
+                        box.innerHTML = `
+                            <div style="font-weight:900; color:var(--primary); margin-bottom:8px;">🛡️ សិទ្ធិបន្ថែមតាមគណនីបុគ្គលិក (Admin កំណត់ដោយខ្លួនឯង)</div>
+                            <label style="display:flex; align-items:center; gap:8px; margin-bottom:6px; cursor:pointer;">
+                                <input type="checkbox" id="skmPermCanDelInv"> <span>អនុញ្ញាតឱ្យលុបវិក្កយបត្រ (ត្រូវមានលេខកូដ)</span>
+                            </label>
+                            <label style="display:flex; align-items:center; gap:8px; margin-bottom:10px; cursor:pointer;">
+                                <input type="checkbox" id="skmPermCanCancelOrd"> <span>អនុញ្ញាតឱ្យបោះបង់កន្ត្រក/បញ្ជា (ត្រូវមានលេខកូដ)</span>
+                            </label>
+                            <div>
+                                <label style="display:block; font-size:11.5px; font-weight:800; margin-bottom:4px;">🔑 លេខកូដពិសេសសម្រាប់លុប/បោះបង់ (ទទេ = ប្រើលេខកូដគណនី/ហាង):</label>
+                                <input type="password" id="skmCustomDeletePw" class="form-control" placeholder="កំណត់លេខកូដលុប (បើចង់ដាក់ផ្សេង)..." style="width:100%;">
+                            </div>`;
+                        body.appendChild(box);
+                    }
+                    const editId = document.getElementById('editUserId')?.value || '';
+                    const uName = (document.getElementById('nuUsername')?.value || '').trim().toLowerCase();
+                    const k = String(editId || uName || '').toLowerCase();
+                    const map = getStaffPermMap();
+                    const curOv = (k && map[k]) ? map[k] : {};
+                    document.getElementById('skmPermCanDelInv').checked = curOv.canDeleteInvoice !== false;
+                    document.getElementById('skmPermCanCancelOrd').checked = curOv.canCancelOrder !== false;
+                    document.getElementById('skmCustomDeletePw').value = window.sysSettings?.deleteActionPassword || '';
+                }, 40);
+            };
+            window.openUserModal.__skmPermHooked = true;
+        }
+
+        if (typeof window.saveNewUser === 'function' && !window.saveNewUser.__skmPermHooked) {
+            const _origSaveUser = window.saveNewUser;
+            window.saveNewUser = async function() {
+                const editId = (document.getElementById('editUserId')?.value || '').trim().toLowerCase();
+                const uName = (document.getElementById('nuUsername')?.value || '').trim().toLowerCase();
+                const canDel = document.getElementById('skmPermCanDelInv')?.checked !== false;
+                const canCan = document.getElementById('skmPermCanCancelOrd')?.checked !== false;
+                const customPw = (document.getElementById('skmCustomDeletePw')?.value || '').trim();
+
+                const res = await _origSaveUser.apply(this, arguments);
+                const key = editId || uName;
+                if (key) {
+                    const map = getStaffPermMap();
+                    map[key] = { canDeleteInvoice: canDel, canCancelOrder: canCan };
+                }
+                if (!window.sysSettings) window.sysSettings = {};
+                window.sysSettings.deleteActionPassword = customPw;
+                await persistSysSettings();
+                return res;
+            };
+            window.saveNewUser.__skmPermHooked = true;
         }
     }
 
