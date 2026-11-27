@@ -455,7 +455,7 @@
                         <div style="display:flex; gap:14px; font-size:12px; margin-bottom:10px; color:var(--text-muted); flex-wrap:wrap;">
                             <span>🟢 <b>ទំនេរ (Available)</b> — ចុចដើម្បីជ្រើសរើសតុលក់</span>
                             <span>🟠 <b>កំពុងមានភ្ញៀវ (Occupied)</b> — មានវិក្កយបត្រមិនទាន់គិតលុយ</span>
-                            <span id="skmFpEditHint" style="display:none; color:var(--warning); font-weight:800;">✋ ម៉ូដកែប្លង់៖ អូសតុដើម្បីផ្លាស់ទី ឬចុច ✕ ដើម្បីលុប</span>
+                            <span id="skmFpEditHint" style="display:none; color:var(--warning); font-weight:800;">✋ ម៉ូដកែប្លង់៖ អូសតុដើម្បីផ្លាស់ទី • ចុច ✏️ ដើម្បីកែឈ្មោះ/រាង/កៅអី • ចុច ✕ ដើម្បីលុប</span>
                         </div>
 
                         <div id="skmFpCanvas" style="position:relative; width:100%; height:440px; border-radius:16px; border:1.5px dashed var(--border); background-color:rgba(15,23,42,0.55); background-image:radial-gradient(rgba(148,163,184,0.22) 1px, transparent 1px); background-size:22px 22px; overflow:auto; touch-action:none;"></div>
@@ -485,12 +485,23 @@
         toast(`✅ បានបន្ថែមជាន់/តំបន់ "${fpActiveZone}"!`);
     };
 
+    function isDuplicateTableName(fp, name, ignoreId = null) {
+        const target = String(name || '').trim().toLowerCase();
+        if (!target) return false;
+        return (fp.tables || []).some(t =>
+            t && t.id !== ignoreId && String(t.name || '').trim().toLowerCase() === target
+        );
+    }
+
     window.addFloorPlanTable = async function() {
         const name = (document.getElementById('fpNewName')?.value || '').trim();
         if (!name) return toast('⚠️ សូមបញ្ចូលឈ្មោះតុ!', true);
+        const fp = getFloorPlanData();
+        if (isDuplicateTableName(fp, name)) {
+            return toast(`⚠️ ឈ្មោះតុ "${name}" មានរួចហើយ! សូមដាក់ឈ្មោះផ្សេងកុំឱ្យជាន់គ្នា។`, true);
+        }
         const shape = document.getElementById('fpNewShape')?.value || 'square';
         const seats = parseInt(document.getElementById('fpNewSeats')?.value) || 4;
-        const fp = getFloorPlanData();
         const zoneCount = fp.tables.filter(t => t.zone === fpActiveZone).length;
         const col = zoneCount % 5;
         const row = Math.floor(zoneCount / 5);
@@ -507,6 +518,93 @@
         window.renderFloorPlanUI();
         await persistSysSettings();
         toast(`✅ បានបន្ថែមតុ "${name}"!`);
+    };
+
+    window.openEditFloorPlanTableModal = function(tbId, ev) {
+        if (ev) ev.stopPropagation();
+        const fp = getFloorPlanData();
+        const tb = fp.tables.find(t => t.id === tbId);
+        if (!tb) return;
+
+        let modal = document.getElementById('skmFpEditTableModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'skmFpEditTableModal';
+            modal.className = 'modal-overlay';
+            modal.style.zIndex = '10035';
+            modal.onclick = (e) => { if (e.target === modal) modal.style.display = 'none'; };
+            modal.innerHTML = `
+                <div class="modal" style="max-width:420px; width:94%;">
+                    <div class="modal-header">
+                        <h2 style="font-size:17px;">✏️ កែសម្រួលព័ត៌មានតុ (Edit Table)</h2>
+                        <button class="btn-outline" style="border:none; font-size:20px; padding:0;" onclick="document.getElementById('skmFpEditTableModal').style.display='none'">✕</button>
+                    </div>
+                    <div class="modal-body" style="display:flex; flex-direction:column; gap:10px;">
+                        <input type="hidden" id="fpEditId">
+                        <div>
+                            <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">ឈ្មោះតុ (Table Name):</label>
+                            <input id="fpEditName" class="form-control" style="width:100%;" placeholder="ឧ. តុលេខ 5 ឬ VIP 1" onkeydown="if(event.key==='Enter') window.saveEditFloorPlanTable()">
+                        </div>
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+                            <div>
+                                <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">រាងតុ (Shape):</label>
+                                <select id="fpEditShape" class="form-control" style="width:100%;">
+                                    <option value="square">⬜ ជ្រុង (Square)</option>
+                                    <option value="round">⚪ មូល (Round)</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">ចំនួនកៅអី (Seats):</label>
+                                <input id="fpEditSeats" type="number" min="1" max="30" class="form-control" style="width:100%;">
+                            </div>
+                        </div>
+                        <div>
+                            <label style="font-size:12px; font-weight:800; display:block; margin-bottom:4px;">ជាន់ / តំបន់ (Zone):</label>
+                            <select id="fpEditZone" class="form-control" style="width:100%;"></select>
+                        </div>
+                        <div style="display:flex; gap:8px; margin-top:6px;">
+                            <button type="button" class="btn btn-outline" style="flex:1;" onclick="document.getElementById('skmFpEditTableModal').style.display='none'">បោះបង់</button>
+                            <button type="button" class="btn btn-success" style="flex:1.5;" onclick="window.saveEditFloorPlanTable()">💾 រក្សាទុក</button>
+                        </div>
+                    </div>
+                </div>`;
+            document.body.appendChild(modal);
+        }
+
+        document.getElementById('fpEditId').value = tb.id;
+        document.getElementById('fpEditName').value = tb.name || '';
+        document.getElementById('fpEditShape').value = tb.shape || 'square';
+        document.getElementById('fpEditSeats').value = tb.seats || 4;
+        const zSel = document.getElementById('fpEditZone');
+        if (zSel) {
+            zSel.innerHTML = (fp.zones || ['ជាន់ទី ១']).map(z => `<option value="${esc(z)}">${esc(z)}</option>`).join('');
+            zSel.value = tb.zone || fpActiveZone;
+        }
+        modal.style.display = 'flex';
+        setTimeout(() => document.getElementById('fpEditName')?.focus(), 60);
+    };
+
+    window.saveEditFloorPlanTable = async function() {
+        const fp = getFloorPlanData();
+        const tbId = document.getElementById('fpEditId')?.value;
+        const tb = fp.tables.find(t => t.id === tbId);
+        if (!tb) return;
+
+        const newName = (document.getElementById('fpEditName')?.value || '').trim();
+        if (!newName) return toast('⚠️ សូមបញ្ចូលឈ្មោះតុ!', true);
+        if (isDuplicateTableName(fp, newName, tbId)) {
+            return toast(`⚠️ ឈ្មោះតុ "${newName}" មានរួចហើយ! សូមដាក់ឈ្មោះផ្សេងកុំឱ្យជាន់គ្នា។`, true);
+        }
+
+        tb.name = newName;
+        tb.shape = document.getElementById('fpEditShape')?.value || 'square';
+        tb.seats = Math.max(1, parseInt(document.getElementById('fpEditSeats')?.value) || 4);
+        tb.zone = document.getElementById('fpEditZone')?.value || tb.zone;
+
+        document.getElementById('skmFpEditTableModal').style.display = 'none';
+        window.renderFloorPlanUI();
+        await persistSysSettings();
+        toast(`✅ បានកែសម្រួលតុ "${newName}" រួចរាល់!`);
     };
 
     window.deleteFloorPlanTable = async function(tbId, ev) {
@@ -580,7 +678,7 @@
                 <div class="skm-fp-node" data-tbid="${esc(t.id)}"
                      style="position:absolute; left:${t.x || 20}px; top:${t.y || 20}px; width:116px; height:${isRound ? '116px' : '96px'}; border-radius:${isRound ? '50%' : '16px'}; background:${bg}; border:2px solid ${border}; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:8px; cursor:${fpEditMode ? 'grab' : 'pointer'}; user-select:none; box-shadow:0 8px 20px rgba(0,0,0,0.28); transition:box-shadow 0.2s;"
                      onclick="window.selectFloorPlanTable('${esc(t.name)}')">
-                    ${fpEditMode ? `<button type="button" onclick="window.deleteFloorPlanTable('${esc(t.id)}', event)" style="position:absolute; top:-8px; right:-8px; width:22px; height:22px; border-radius:50%; border:none; background:#ef4444; color:#fff; font-size:11px; font-weight:900; cursor:pointer;">✕</button>` : ''}
+                    ${fpEditMode ? `<button type="button" title="កែឈ្មោះ / រាង / កៅអី" onclick="window.openEditFloorPlanTableModal('${esc(t.id)}', event)" style="position:absolute; top:-8px; left:-8px; width:24px; height:24px; border-radius:50%; border:none; background:#0ea5e9; color:#fff; font-size:11px; font-weight:900; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.35);">✏️</button><button type="button" title="លុបតុ" onclick="window.deleteFloorPlanTable('${esc(t.id)}', event)" style="position:absolute; top:-8px; right:-8px; width:24px; height:24px; border-radius:50%; border:none; background:#ef4444; color:#fff; font-size:11px; font-weight:900; cursor:pointer; box-shadow:0 2px 6px rgba(0,0,0,0.35);">✕</button>` : ''}
                     <div style="font-weight:900; font-size:14px; color:#fff; text-shadow:0 1px 4px rgba(0,0,0,0.6);">${esc(t.name)}</div>
                     <div style="font-size:11px; color:#e2e8f0; margin-top:2px;">🪑 ${t.seats || 4} កៅអី</div>
                     ${occ
