@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 2 v7.1 (8 Pro Plugins — Ultra-Low-Egress Audited)
+ * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 2 v7.2 (8 Pro Plugins — Clean Client UI & Admin-Settings Controlled)
  * File: all_pos_plugins_2.js (Root Folder — alongside all_pos_plugins.js)
  * Hosted on GitHub Pages (0 Bytes Supabase Egress/Storage)
  *
@@ -135,7 +135,7 @@
             .skm-p2-tab { border:1px solid rgba(148,163,184,0.25); background:rgba(15,23,42,0.75); color:#cbd5e1; padding:7px 13px; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
             .skm-p2-tab.active { background:linear-gradient(135deg,#0284c7,#10b981); color:#fff; border-color:transparent; }
             .skm-p2-body { padding:16px 20px; overflow-y:auto; flex:1; }
-            .skm-p2-card { background:#1e293b; border:1px solid rgba(148,163,184,0.2); border-radius:14px; padding:14px; }
+            .skm-p2-card { background:#1e293b; border:1px solid rgba(148,163,184,0.2); border-radius:14px; padding:14px; min-width:0; box-sizing:border-box; }
             .skm-p2-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:11px; }
             .skm-p2-input, .skm-p2-select { width:100%; padding:9px 11px; border-radius:10px; border:1px solid rgba(148,163,184,0.3); background:#0f172a; color:#fff; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; }
             .skm-p2-label { display:block; font-size:11.5px; color:#cbd5e1; margin-bottom:4px; font-weight:700; }
@@ -150,8 +150,11 @@
             .skm-p2-table th, .skm-p2-table td { padding:9px 10px; border-bottom:1px solid rgba(148,163,184,0.16); text-align:left; }
             .skm-p2-table th { background:#1e293b; color:#38bdf8; position:sticky; top:0; }
             .skm-p2-chip { border:1px solid rgba(245,158,11,0.45); background:rgba(245,158,11,0.12); color:#fcd34d; padding:4px 9px; border-radius:999px; font-size:11.5px; font-weight:700; cursor:pointer; font-family:inherit; }
-            .skm-p2-2col { display:grid; grid-template-columns:1.15fr 0.95fr; gap:14px; }
-            @media (max-width:740px) { .skm-p2-2col { grid-template-columns:1fr; } }
+            .skm-p2-2col { display:grid; grid-template-columns:minmax(0,1.15fr) minmax(0,0.95fr); gap:14px; align-items:start; }
+            .skm-p2-qr-layout { display:grid; grid-template-columns:300px minmax(0,1fr); gap:16px; align-items:stretch; }
+            @media (max-width:780px) { .skm-p2-2col, .skm-p2-qr-layout { grid-template-columns:minmax(0,1fr); } }
+            .skm-toolbox-popup { max-height:calc(100vh - 110px) !important; }
+            .skm-toolbox-body { max-height:calc(100vh - 190px) !important; }
         `;
         document.head.appendChild(st);
     }
@@ -247,6 +250,15 @@
         }
     };
 
+    // Auto-expand POS Toolbox height so it only scrolls when tools truly fill the screen
+    (function fixPosToolboxHeight() {
+        if (document.getElementById('skmPosToolboxHeightFix')) return;
+        const s = document.createElement('style');
+        s.id = 'skmPosToolboxHeightFix';
+        s.textContent = `.skm-toolbox-popup{max-height:calc(100vh - 110px)!important;}.skm-toolbox-body{max-height:calc(100vh - 190px)!important;}`;
+        document.head.appendChild(s);
+    })();
+
     const pack2State = getPack2State();
 
     // ========================================================================
@@ -340,7 +352,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">Pack 2 • បុគ្គលិកស្កេន QR លើទូរស័ព្ទ ចាប់ GPS និងផ្ញើសារជូនម្ចាស់ហាងអូតូ</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p2-btn gray" onclick="window.SKM_POS_PACK2.openManager()" title="បិទ/បើក Pack 2">⚙️</button>
                                 <button class="skm-p2-btn red" onclick="document.getElementById('skmP2AttModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
@@ -862,7 +873,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">ខ្សែបាកូដស្កេនបានពិត (Code-128 / Code-39 Offline) + ស្ទីកគ័រកែវ + USB Silent Printer</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p2-btn gray" onclick="window.SKM_POS_PACK2.openManager()">⚙️</button>
                                 <button class="skm-p2-btn red" onclick="document.getElementById('skmP2StkModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
@@ -1278,36 +1288,37 @@
                 m.className = 'skm-p2-overlay';
                 m.onclick = (e) => { if (e.target === m) m.classList.remove('open'); };
                 m.innerHTML = `
-                    <div class="skm-p2-box" style="max-width:860px;">
+                    <div class="skm-p2-box" style="max-width:1040px;width:96vw;">
                         <div class="skm-p2-head">
                             <div>
                                 <div style="font-size:16px;font-weight:900;color:#38bdf8;">🔗 ចែករំលែកម៉ឺនុយ & ទំនិញរហ័ស (Power QR Hub)</div>
                                 <div style="font-size:11.5px;color:#94a3b8;">ឈប់ផ្ញើរូបភាពម្ដងមួយៗ — ចុច ១ ដងស៊ែរ Link ម៉ឺនុយ ឬទំនិញទៅ Telegram / Facebook</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p2-btn gray" onclick="window.SKM_POS_PACK2.openManager()">⚙️</button>
                                 <button class="skm-p2-btn red" onclick="document.getElementById('skmP2ShareModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
-                        <div class="skm-p2-body skm-p2-2col">
+                        <div class="skm-p2-body skm-p2-qr-layout">
                             <!-- LEFT: STORE LINK + QR -->
-                            <div class="skm-p2-card" style="text-align:center;">
-                                <div style="font-size:14px;font-weight:900;color:#34d399;margin-bottom:6px;" id="skmP2ShShop">🏪 ម៉ឺនុយអនឡាញហាង</div>
-                                <img id="skmP2ShQr" src="" style="width:180px;height:180px;background:#fff;padding:8px;border-radius:14px;margin:6px auto;display:block;">
-                                <input id="skmP2ShUrl" class="skm-p2-input" readonly style="font-size:11.5px;text-align:center;margin:8px 0;">
+                            <div class="skm-p2-card" style="text-align:center;display:flex;flex-direction:column;justify-content:space-between;">
+                                <div>
+                                    <div style="font-size:14.5px;font-weight:900;color:#34d399;margin-bottom:8px;" id="skmP2ShShop">🏪 ម៉ឺនុយអនឡាញហាង</div>
+                                    <img id="skmP2ShQr" src="" style="width:190px;height:190px;background:#fff;padding:8px;border-radius:14px;margin:6px auto;display:block;">
+                                    <input id="skmP2ShUrl" class="skm-p2-input" readonly style="font-size:11px;text-align:center;margin:10px 0;">
+                                </div>
                                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px;">
-                                    <button class="skm-p2-btn tg" onclick="window.SKMP2Share.shareShop('tg')">✈️ ស៊ែរ Telegram</button>
-                                    <button class="skm-p2-btn fb" onclick="window.SKMP2Share.shareShop('fb')">📘 ស៊ែរ Facebook</button>
-                                    <button class="skm-p2-btn green" onclick="window.SKMP2Share.copyShopPitch()">📋 Copy សារលក់</button>
-                                    <button class="skm-p2-btn amber" onclick="window.SKMP2Share.printQrCard()">🖨️ ព្រីនកាត QR</button>
+                                    <button class="skm-p2-btn tg" style="padding:9px 8px;font-size:12px;" onclick="window.SKMP2Share.shareShop('tg')">✈️ Telegram</button>
+                                    <button class="skm-p2-btn fb" style="padding:9px 8px;font-size:12px;" onclick="window.SKMP2Share.shareShop('fb')">📘 Facebook</button>
+                                    <button class="skm-p2-btn green" style="padding:9px 8px;font-size:12px;" onclick="window.SKMP2Share.copyShopPitch()">📋 Copy សារ</button>
+                                    <button class="skm-p2-btn amber" style="padding:9px 8px;font-size:12px;" onclick="window.SKMP2Share.printQrCard()">🖨️ ព្រីន QR</button>
                                 </div>
                             </div>
 
-                            <!-- RIGHT: SEARCH & SHARE SPECIFIC PRODUCT -->
-                            <div class="skm-p2-card" style="display:flex;flex-direction:column;">
+                            <!-- RIGHT: SEARCH & SHARE SPECIFIC PRODUCT (Auto-fit height, zero horizontal clip) -->
+                            <div class="skm-p2-card" style="display:flex;flex-direction:column;min-width:0;overflow:hidden;">
                                 <strong style="font-size:13.5px;color:#38bdf8;margin-bottom:8px;">🛍️ ស៊ែរទំនិញណាមួយទៅភ្ញៀវភ្លាមៗ</strong>
                                 <input id="skmP2ShSearch" class="skm-p2-input" placeholder="🔍 វាយឈ្មោះទំនិញ ឬប្រភេទ..." oninput="window.SKMP2Share.renderList(this.value)" style="margin-bottom:10px;">
-                                <div id="skmP2ShList" style="flex:1;max-height:290px;overflow-y:auto;display:flex;flex-direction:column;gap:8px;"></div>
+                                <div id="skmP2ShList" style="flex:1;max-height:calc(88vh - 190px);overflow-y:auto;overflow-x:hidden;display:flex;flex-direction:column;gap:8px;padding-right:2px;"></div>
                             </div>
                         </div>
                     </div>
@@ -1343,15 +1354,15 @@
                         const safeName = escHtml(p.name || 'Item');
                         const encName = encodeURIComponent(p.name || '');
                         return `
-                            <div style="background:#0f172a;border:1px solid rgba(148,163,184,0.2);border-radius:12px;padding:9px 11px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
-                                <div style="min-width:0;">
-                                    <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${safeName}</div>
+                            <div style="background:#0f172a;border:1px solid rgba(148,163,184,0.2);border-radius:12px;padding:10px 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;width:100%;box-sizing:border-box;min-width:0;">
+                                <div style="flex:1;min-width:0;overflow:hidden;">
+                                    <div style="font-size:13px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${safeName}">${safeName}</div>
                                     <div style="font-size:11.5px;color:#34d399;font-weight:800;">$${pr} <span style="color:#94a3b8;font-weight:400;">(${escHtml(p.category || 'ទូទៅ')})</span></div>
                                 </div>
-                                <div style="display:flex;gap:5px;flex-shrink:0;">
-                                    <button class="skm-p2-btn tg" style="padding:5px 8px;font-size:11px;" onclick="window.SKMP2Share.shareItem('tg', decodeURIComponent('${encName}'), '${pr}')">✈️</button>
-                                    <button class="skm-p2-btn fb" style="padding:5px 8px;font-size:11px;" onclick="window.SKMP2Share.shareItem('fb', decodeURIComponent('${encName}'), '${pr}')">📘</button>
-                                    <button class="skm-p2-btn green" style="padding:5px 8px;font-size:11px;" onclick="window.SKMP2Share.shareItem('copy', decodeURIComponent('${encName}'), '${pr}')">📋</button>
+                                <div style="display:flex;gap:6px;flex-shrink:0;">
+                                    <button class="skm-p2-btn tg" style="padding:6px 9px;font-size:12px;min-width:34px;" title="ស៊ែរ Telegram" onclick="window.SKMP2Share.shareItem('tg', decodeURIComponent('${encName}'), '${pr}')">✈️</button>
+                                    <button class="skm-p2-btn fb" style="padding:6px 9px;font-size:12px;min-width:34px;" title="ស៊ែរ Facebook" onclick="window.SKMP2Share.shareItem('fb', decodeURIComponent('${encName}'), '${pr}')">📘</button>
+                                    <button class="skm-p2-btn green" style="padding:6px 9px;font-size:12px;min-width:34px;" title="ចម្លង Link" onclick="window.SKMP2Share.shareItem('copy', decodeURIComponent('${encName}'), '${pr}')">📋</button>
                                 </div>
                             </div>`;
                     }).join('');
@@ -1726,7 +1737,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">បាញ់បាកូដ ១ លោតតម្លៃច្រើនឯកតា (រាយ / បន្ទះ / ឡូ+ថែម / កេះ) & កាត់ស្តុកស្វ័យប្រវត្តិ</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p2-btn gray" onclick="window.SKM_POS_PACK2.openManager()" title="បិទ/បើក Pack 2">⚙️</button>
                                 <button class="skm-p2-btn red" onclick="document.getElementById('skmP2MuModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
@@ -2184,7 +2194,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">បាញ់បាកូដបាតវិក្កយបត្រដើម្បីឆែក/ដូរទំនិញវិញ • ព្រីន ១ ឬ ២ សន្លឹក (អតិថិជន + បញ្ជីហាង)</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p2-btn gray" onclick="window.SKM_POS_PACK2.openManager()">⚙️</button>
                                 <button class="skm-p2-btn red" onclick="document.getElementById('skmP2DrModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
@@ -2541,7 +2550,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">ដឹងភ្លាមៗថាទំនិញណាលក់ដាច់ខ្លាំង ទំនិញណាកប់ស្តុកជាប់លុយក្នុងឃ្លាំង និងថ្ងៃស្តុកនៅសល់</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p2-btn gray" onclick="window.SKM_POS_PACK2.openManager()" title="បិទ/បើក Pack 2">⚙️</button>
                                 <button class="skm-p2-btn red" onclick="document.getElementById('skmP2StockHealthModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
@@ -3072,7 +3080,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">ផ្ញើដំណឹងចូល Telegram ម្ចាស់ហាងស្វ័យប្រវត្តិភ្លាមៗ ពេលបុគ្គលិកលក់ដល់ស្តុកទាបជាងកម្រិតកំណត់</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p2-btn gray" onclick="window.SKM_POS_PACK2.openManager()" title="បិទ/បើក Pack 2">⚙️</button>
                                 <button class="skm-p2-btn red" onclick="document.getElementById('skmP2LowStockModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
@@ -3744,7 +3751,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">ធានាវិក្កយបត្រមិនបាត់ពេលដាច់អ៊ីនធឺណិត (Auto-Retry FIFO) + កាត់បន្ថយ Supabase Egress ៨០%+</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p2-btn gray" onclick="window.SKM_POS_PACK2.openManager()">⚙️</button>
                                 <button class="skm-p2-btn red" onclick="document.getElementById('skmP2OqModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>

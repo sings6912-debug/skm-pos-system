@@ -1,6 +1,6 @@
 /**
  * ============================================================================
- * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 3 v1.1 (Enterprise Modules + Unified Hub — Ultra-Low-Egress Audited)
+ * SKM INTEGRATE POS - PLUGINS BUNDLE PACK 3 v1.2 (Enterprise Modules — Admin-Settings Controlled, Zero Client Clutter)
  * File: all_pos_plugins_3.js (Root Folder — alongside all_pos_plugins.js & all_pos_plugins_2.js)
  * Hosted on GitHub Pages (0 Bytes Supabase Egress/Storage)
  *
@@ -100,9 +100,9 @@
             .skm-p3-tab { border:1px solid rgba(148,163,184,0.25); background:rgba(15,23,42,0.75); color:#cbd5e1; padding:7px 13px; border-radius:10px; font-size:12.5px; font-weight:700; cursor:pointer; font-family:inherit; }
             .skm-p3-tab.active { background:linear-gradient(135deg,#6366f1,#0ea5e9); color:#fff; border-color:transparent; }
             .skm-p3-body { padding:16px 20px; overflow-y:auto; flex:1; }
-            .skm-p3-card { background:#1e293b; border:1px solid rgba(148,163,184,0.2); border-radius:14px; padding:14px; }
+            .skm-p3-card { background:#1e293b; border:1px solid rgba(148,163,184,0.2); border-radius:14px; padding:14px; min-width:0; box-sizing:border-box; }
             .skm-p3-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(195px,1fr)); gap:10px; }
-            .skm-p3-2col { display:grid; grid-template-columns:1.1fr 1fr; gap:14px; }
+            .skm-p3-2col { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:14px; }
             @media (max-width:760px) { .skm-p3-2col { grid-template-columns:1fr; } }
             .skm-p3-input, .skm-p3-select, .skm-p3-textarea { width:100%; padding:8px 11px; border-radius:10px; border:1px solid rgba(148,163,184,0.3); background:#0f172a; color:#fff; font-size:13px; outline:none; font-family:inherit; box-sizing:border-box; }
             .skm-p3-label { display:block; font-size:11.5px; color:#cbd5e1; margin-bottom:4px; font-weight:700; }
@@ -339,8 +339,7 @@
         }
     };
 
-    // Always register the Unified Control Center in Toolbox so Admin can turn modules back ON anytime
-    registerInPosToolbox('🎛️', 'បិទ/បើកមុខងារ Pro (Pack 2 & 3)', () => window.SKM_POS_PACK3.openControlCenter());
+    // Toggle Control Center is managed strictly inside admin_settings.html (hidden from POS client Toolbox)
 
     const pack3State = getPack3State();
 
@@ -401,7 +400,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">កត់ត្រាលេខ IMEI/Serial • ស្កេនឆែកថ្ងៃផុតធានា • ព្រីនប័ណ្ណធានា • កត់ត្រាជួសជុល</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p3-btn gray" onclick="window.SKM_POS_PACK3.openControlCenter()" title="បិទ/បើកមុខងារ">🎛️</button>
                                 <button class="skm-p3-btn red" onclick="document.getElementById('skmP3SerialModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
@@ -804,7 +802,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">បញ្ចូលស្តុក + បែងចែកថ្លៃដឹកជញ្ជូន/ពន្ធគយ ➔ គណនាថ្លៃដើមមធ្យមអូតូ & អាប់ដេតស្តុក POS</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p3-btn gray" onclick="window.SKM_POS_PACK3.openControlCenter()">🎛️</button>
                                 <button class="skm-p3-btn red" onclick="document.getElementById('skmP3LandedModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>
@@ -1064,7 +1061,6 @@
                                 <div style="font-size:11.5px;color:#94a3b8;">ទំនិញទទួលផ្ញើលក់ (In) & ផ្ញើឱ្យដៃគូលក់ (Out) • កត់ត្រាចំនួនលក់/ដកវិញ • ទូទាត់លុយច្បាស់លាស់</div>
                             </div>
                             <div style="display:flex;gap:6px;">
-                                <button class="skm-p3-btn gray" onclick="window.SKM_POS_PACK3.openControlCenter()">🎛️</button>
                                 <button class="skm-p3-btn red" onclick="document.getElementById('skmP3ConsignModal').classList.remove('open')">✕ បិទ</button>
                             </div>
                         </div>

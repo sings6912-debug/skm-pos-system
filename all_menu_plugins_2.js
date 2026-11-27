@@ -18,6 +18,21 @@
     const MENU_TTL_MS = 5 * 60 * 1000; // 5 minutes TTL (saves Supabase Egress)
     const TTL_META_KEY = `ks2_${BRANCH_ID}_menu_ttl_meta`;
 
+    function isPowerShareEnabled() {
+        try {
+            const sys = window.sysSettings || JSON.parse(localStorage.getItem(`ks2_${BRANCH_ID}_sys_settings`) || '{}');
+            if (sys && sys.pos2Enabled && sys.pos2Enabled.powerShareHub === false) return false;
+            const localP2 = JSON.parse(localStorage.getItem(`ks2_${BRANCH_ID}_pos2_enabled`) || '{}');
+            if (localP2 && localP2.powerShareHub === false) return false;
+        } catch (e) {}
+        return true;
+    }
+
+    function syncMenuShareVisibility() {
+        const bar = document.getElementById('skmM2ProdShareBar');
+        if (bar) bar.style.display = isPowerShareEnabled() ? 'flex' : 'none';
+    }
+
     function esc(s) {
         return String(s == null ? '' : s)
             .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -69,10 +84,12 @@
         };
     }
 
-    // 1. Register inside Menu Toolbox Hub
+    // 1. Register inside Menu Toolbox Hub ONLY if Admin enabled powerShareHub
     const tmr = setInterval(() => {
         if (typeof window.registerMenuTool === 'function') {
-            window.registerMenuTool('📤', 'ចែករំលែកម៉ឺនុយ (FB / Telegram)', () => openShareModal('', ''), null);
+            if (isPowerShareEnabled()) {
+                window.registerMenuTool('📤', 'ចែករំលែកម៉ឺនុយ (FB / Telegram)', () => openShareModal('', ''), null);
+            }
             clearInterval(tmr);
         }
     }, 450);
@@ -80,6 +97,7 @@
 
     // 2. Auto-inject Facebook + Telegram Share buttons into product detail modal on menu.html
     function attachProductModalShareBar() {
+        if (!isPowerShareEnabled()) { syncMenuShareVisibility(); return; }
         const modal = document.getElementById('detailModal') || document.getElementById('prodModal') || document.getElementById('productModal') || document.getElementById('itemDetailModal');
         if (!modal || document.getElementById('skmM2ProdShareBar')) return;
         const target = modal.querySelector('.modal-content, .modal-box, .modal-body') || modal;
@@ -204,7 +222,8 @@
     }
 
     function bootMenuPack2() {
-        setTimeout(attachProductModalShareBar, 600);
+        setTimeout(() => { attachProductModalShareBar(); syncMenuShareVisibility(); }, 900);
+        setTimeout(() => { attachProductModalShareBar(); syncMenuShareVisibility(); }, 2500);
         // Mark boot time so we don't fire a redundant Supabase request right after menu.html's init()!
         try {
             const meta = JSON.parse(localStorage.getItem(TTL_META_KEY) || '{}');
